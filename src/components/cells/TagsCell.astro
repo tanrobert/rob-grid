@@ -1,0 +1,26 @@
+---
+import TagButtons from '../TagButtons.astro';
+
+interface Props {
+  tags: Array<{ tag: string; slug: string; count: number }>;
+  total: number;
+}
+const { tags, total } = Astro.props;
+---
+
+<div class="tags" role="group" aria-label="Filtra i progetti per tag">
+  <TagButtons tags={tags} total={total} />
+</div>
+
+<style>
+  .tags {
+    position: absolute; inset: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    align-content: end;
+    column-gap: var(--pad);
+    padding: calc(var(--pad) + 22px) var(--pad) var(--pad);
+    overflow: auto;
+    overscroll-behavior: contain;
+  }
+</style>

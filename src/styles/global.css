@@ -1,0 +1,293 @@
+/* ── Font ─────────────────────────────────────────────── */
+@font-face { font-family: 'SohneMono'; src: url('/fonts/SohneMono-Buch.otf') format('opentype'); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: 'SohneMono'; src: url('/fonts/SohneMono-Kraftig.otf') format('opentype'); font-weight: 500; font-style: normal; font-display: swap; }
+@font-face { font-family: 'UntitledSans'; src: url('/fonts/UntitledSans-Regular.otf') format('opentype'); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: 'UntitledSans'; src: url('/fonts/UntitledSans-Medium.otf') format('opentype'); font-weight: 500; font-style: normal; font-display: swap; }
+
+/* ── Token ────────────────────────────────────────────── */
+:root {
+  --red:   hsl(8 87% 54%);      /* rosso di terminal-astro */
+  --paper: hsl(0 0% 100%);
+
+  --font-mono: 'SohneMono', 'Courier New', monospace;
+  --font-sans: 'UntitledSans', 'Helvetica Neue', sans-serif;
+
+  /* modulo: tutto è multiplo di 10px */
+  --m:    10px;
+  --gap:  var(--m);
+  --pad:  calc(var(--m) * 2);
+  --line: 1px;
+
+  --cols: 6;
+
+  --ease-out:   cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-morph: cubic-bezier(0.72, 0, 0.18, 1);
+  --t-morph:    720ms;
+
+  color-scheme: light;
+}
+
+@media (max-width: 1023px) { :root { --cols: 4; } }
+@media (max-width: 599px)  { :root { --cols: 2; --pad: calc(var(--m) * 1.4); } }
+
+/* ── Base ─────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  background: var(--paper);
+  color: var(--red);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  -webkit-text-size-adjust: 100%;
+}
+
+body { min-height: 100svh; }
+
+::selection { background: var(--red); color: var(--paper); }
+
+a { color: inherit; text-decoration: none; }
+a, button, [role="button"] { touch-action: manipulation; }
+img, video, svg { display: block; max-width: 100%; }
+
+h1, h2, h3, h4 { font-weight: 500; text-wrap: balance; }
+p { text-wrap: pretty; }
+
+:focus-visible { outline: 2px solid var(--red); outline-offset: 3px; }
+
+.mono {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 1.2;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+}
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+.skip-link {
+  position: absolute; top: -100%; left: var(--gap); z-index: 9999;
+  padding: 8px 20px; background: var(--red); color: var(--paper);
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+  transition: top 0.2s;
+}
+.skip-link:focus { top: var(--gap); }
+
+/* ── Foglio + griglia ─────────────────────────────────── */
+.sheet {
+  container-type: inline-size;
+  padding: var(--gap);
+}
+
+.grid {
+  /* unità = lato della cella quadrata */
+  --u: calc((100cqw - (var(--cols) - 1) * var(--gap)) / var(--cols));
+  --step: calc(var(--u) + var(--gap));
+
+  display: grid;
+  grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+  grid-auto-rows: var(--u);
+  grid-auto-flow: row dense;
+  gap: var(--gap);
+
+  /* crocini di registro agli incroci, visibili solo nei gap.
+     SVG senza viewBox: le coordinate restano in px qualunque sia la dimensione della cella. */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23f03f24'%3E%3Crect width='5' height='1'/%3E%3Crect width='1' height='5'/%3E%3Crect x='100%25' width='4' height='1' transform='translate(-4 0)'/%3E%3Crect y='100%25' width='1' height='4' transform='translate(0 -4)'/%3E%3C/g%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: var(--step) var(--step);
+  background-position: calc(var(--u) + var(--gap) / 2 - 0.5px) calc(var(--u) + var(--gap) / 2 - 0.5px);
+}
+
+/* ── Vuoti: riempiono i buchi dell'incastro, uno per breakpoint ── */
+.void {
+  display: none;
+  position: relative;
+  background: var(--paper);
+  box-shadow: inset 0 0 0 var(--line) var(--red);
+}
+.paper { position: absolute; inset: 0; width: 100%; height: 100%; }
+.paper line {
+  stroke: var(--red);
+  stroke-width: 1px;
+  vector-effect: non-scaling-stroke;
+  shape-rendering: crispEdges;
+  opacity: 0.22;
+}
+.paper line.half { opacity: 0.5; }
+
+/* vuoti ricalcolati nel browser (archivio filtrato): valgono per il breakpoint corrente */
+.void--live { display: block; }
+@media (min-width: 1024px) { .void--lg { display: block; } }
+@media (min-width: 600px) and (max-width: 1023px) { .void--md { display: block; } }
+@media (max-width: 599px) { .void--sm { display: block; } }
+
+/* ── Cella ────────────────────────────────────────────── */
+.cell {
+  position: relative;
+  grid-column: span var(--w);
+  grid-row: span var(--h);
+  container-type: size;
+  overflow: clip;
+  background: var(--paper);
+  color: var(--red);
+}
+@media (max-width: 1023px) { .cell { grid-column: span var(--w-md); grid-row: span var(--h-md); } }
+@media (max-width: 599px)  { .cell { grid-column: span var(--w-sm); grid-row: span var(--h-sm); } }
+@media (min-width: 1024px) { .cell.hide-lg { display: none; } }
+@media (min-width: 600px) and (max-width: 1023px) { .cell.hide-md { display: none; } }
+@media (max-width: 599px) { .cell.hide-sm { display: none; } }
+
+/* filo 1px sopra al contenuto (anche sui media) */
+.cell::after {
+  content: '';
+  position: absolute; inset: 0; z-index: 3;
+  box-shadow: inset 0 0 0 var(--line) var(--red);
+  pointer-events: none;
+}
+
+.cell--red { background: var(--red); color: var(--paper); }
+
+/* linguetta tecnica: indice · nome */
+.cell__label {
+  position: absolute; top: 0; left: 0; z-index: 2;
+  display: flex; gap: 8px;
+  padding: 6px 8px 5px;
+  background: var(--paper);
+  box-shadow: inset calc(var(--line) * -1) calc(var(--line) * -1) 0 0 var(--red);
+  white-space: nowrap;
+}
+.cell--red .cell__label {
+  background: var(--red);
+  box-shadow: inset calc(var(--line) * -1) calc(var(--line) * -1) 0 0 color-mix(in srgb, var(--paper) 45%, transparent);
+}
+
+/* freccia delle celle cliccabili */
+.cell__go {
+  position: absolute; top: 0; right: 0; z-index: 2;
+  display: grid; place-items: center;
+  width: 30px; height: 30px;
+  background: var(--paper);
+  box-shadow: inset var(--line) calc(var(--line) * -1) 0 0 var(--red);
+  font-family: var(--font-mono); font-size: 13px;
+  transition: background-color 200ms ease, color 200ms ease;
+}
+.cell__go span { display: block; transition: transform 300ms var(--ease-out); }
+/* freccia (src/assets/arrow.svg): il colore segue il testo, così si inverte in hover */
+.cell__go svg { width: 11px; height: 11px; }
+.cell__go svg * { fill: currentColor; }
+.cell--red .cell__go { background: var(--red); box-shadow: inset var(--line) calc(var(--line) * -1) 0 0 color-mix(in srgb, var(--paper) 45%, transparent); }
+
+@media (hover: hover) and (pointer: fine) {
+  .cell--link:hover .cell__go { background: var(--red); color: var(--paper); }
+  .cell--red.cell--link:hover .cell__go { background: var(--paper); color: var(--red); }
+  .cell--link:hover .cell__go span { transform: translate(2px, -2px); }
+  /* ✕ di chiusura nelle celle "hero" (es. contatore dell'archivio) */
+  .cell[data-hero] .cell__go:hover { background: var(--red); color: var(--paper); }
+}
+
+/* ── Media in bicromia rosso/bianco ───────────────────── */
+.duo { position: absolute; inset: 0; background: var(--paper); }
+.duo img, .duo video {
+  width: 100%; height: 100%; object-fit: cover;
+  filter: grayscale(1) contrast(1.2) brightness(1.08);
+  transform: scale(1.001);
+  transition: filter 400ms ease, transform 900ms var(--ease-out);
+}
+.duo::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: var(--red);
+  mix-blend-mode: screen;
+  transition: opacity 400ms ease;
+  pointer-events: none;
+}
+@media (hover: hover) and (pointer: fine) {
+  .cell--link:hover .duo img, .cell--link:hover .duo video { filter: none; transform: scale(1.03); }
+  .cell--link:hover .duo::after { opacity: 0; }
+}
+
+/* Hero delle pagine progetto: colore originale, come la cella in hover.
+   Così l'espansione parte e arriva sullo stesso stato, senza stacco. */
+.hero .duo img, .hero .duo video { filter: none; }
+.hero .duo::after { opacity: 0; }
+
+/* ── Intro (solo al primo caricamento) ────────────────── */
+@keyframes cell-in {
+  from { clip-path: inset(0 0 100% 0); }
+  to   { clip-path: inset(0 0 0 0); }
+}
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+.is-intro .cell {
+  animation: cell-in 800ms var(--ease-morph) both;
+  animation-delay: calc(var(--i) * 30ms);
+}
+.is-intro .cell > * {
+  /* backwards, non both: a fine animazione l'opacità torna libera (serve ai filtri) */
+  animation: fade-in 500ms ease backwards;
+  animation-delay: calc(var(--i) * 30ms + 400ms);
+}
+
+/* animazioni infinite in pausa fuori schermo */
+[data-offscreen] .loop { animation-play-state: paused !important; }
+
+/* ── View Transitions: la cella si espande nella pagina ─ */
+::view-transition-group(*.morph) {
+  animation-duration: var(--t-morph);
+  animation-timing-function: var(--ease-morph);
+}
+/* niente scaling: il riquadro si allarga come una finestra e rivela la pagina,
+   ancorata in alto a sinistra (dove sta la linguetta in entrambi gli stati) */
+::view-transition-image-pair(*.morph) { overflow: clip; }
+::view-transition-old(*.morph),
+::view-transition-new(*.morph) {
+  width: auto; height: auto;
+  inset: 0 auto auto 0;
+  object-fit: none;
+  mix-blend-mode: normal;
+}
+::view-transition-old(*.morph) { animation: 220ms ease both vt-out; }
+::view-transition-new(*.morph) { animation: 220ms ease both vt-in; }
+
+/* il titolo scivola dalla didascalia al titolo della pagina, insieme alla finestra.
+   Riquadri con le stesse proporzioni: le due foto si scalano senza deformarsi. */
+::view-transition-group(*.title) {
+  animation-duration: var(--t-morph);
+  animation-timing-function: var(--ease-morph);
+}
+::view-transition-old(*.title),
+::view-transition-new(*.title) {
+  width: 100%; height: 100%;
+  animation-duration: var(--t-morph);
+  animation-timing-function: var(--ease-morph);
+}
+
+/* ── View Transition del filtro archivio: le caselle scivolano al nuovo posto ── */
+::view-transition-group(*.tile) {
+  animation-duration: 560ms;
+  animation-timing-function: var(--ease-morph);
+}
+html.vt-filter::view-transition-old(root),
+html.vt-filter::view-transition-new(root) { animation-duration: 280ms; animation-delay: 0s; }
+
+::view-transition-old(root) { animation: 260ms ease both vt-out; }
+::view-transition-new(root) { animation: 360ms ease calc(var(--t-morph) * 0.55) both vt-in; }
+@keyframes vt-out { to { opacity: 0; } }
+@keyframes vt-in  { from { opacity: 0; } }
+
+/* ── Riduzione del movimento ──────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .is-intro .cell, .is-intro .cell > * { animation: none !important; }
+  .loop { animation: none !important; }
+  ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
+}

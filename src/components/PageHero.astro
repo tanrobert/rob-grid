@@ -1,0 +1,36 @@
+---
+import { morphName } from '../lib/grid';
+import type { Tone } from '../data/grid-types';
+import Close from '../assets/close.svg';
+
+interface Props {
+  /** href della cella di origine: deve coincidere per far funzionare l'espansione */
+  from: string;
+  label: string;
+  tone?: Tone;
+}
+const { from, label, tone = 'paper' } = Astro.props;
+---
+
+<header
+  class:list={['cell', 'hero', tone === 'red' && 'cell--red']}
+  style={`view-transition-name:${morphName(from)};view-transition-class:morph`}
+  data-hero={morphName(from)}
+>
+  <span class="cell__label mono" aria-hidden="true"><span>00</span><span>{label}</span></span>
+  <a href="/" class="cell__go hero__back" aria-label="Chiudi e torna alla griglia" data-close><span><Close /></span></a>
+  <slot />
+</header>
+
+<style>
+  .hero {
+    height: clamp(420px, 72svh, 900px);
+    margin-bottom: var(--gap);
+  }
+  .hero__back { width: 44px; height: 44px; }
+  .hero__back :global(svg) { width: 14px; height: 14px; }
+  @media (hover: hover) and (pointer: fine) {
+    .hero__back:hover { background: var(--red); color: var(--paper); }
+    .cell--red .hero__back:hover { background: var(--paper); color: var(--red); }
+  }
+</style>

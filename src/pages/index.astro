@@ -1,0 +1,13 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Grid from '../components/Grid.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+import { grid } from '../data/grid';
+---
+
+<Layout>
+  <main id="main" class="sheet">
+    <Grid cells={grid} />
+    <SiteFooter />
+  </main>
+</Layout>

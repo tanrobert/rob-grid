@@ -1,0 +1,23 @@
+---
+const year = new Date().getFullYear();
+---
+
+<footer class="foot mono">
+  <span>© {year} Roberto</span>
+  <span>Griglia v0.1 — modulo 10 px</span>
+  <a href="/info">Info ↗</a>
+</footer>
+
+<style>
+  .foot {
+    display: flex; justify-content: space-between; gap: var(--pad);
+    margin-top: var(--gap);
+    padding: 12px 0 calc(2px + env(safe-area-inset-bottom));
+    border-top: var(--line) solid var(--red);
+  }
+  @media (max-width: 599px) { .foot span:nth-child(2) { display: none; } }
+  @media (hover: hover) and (pointer: fine) {
+    .foot a { transition: opacity 200ms ease; }
+    .foot a:hover { opacity: 0.6; }
+  }
+</style>

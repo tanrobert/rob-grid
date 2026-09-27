@@ -1,0 +1,59 @@
+---
+import type { Cell } from '../data/grid-types';
+import Layout from '../layouts/Layout.astro';
+import Grid from '../components/Grid.astro';
+import TagButtons from '../components/TagButtons.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+import { allTags, projectsByYear } from '../lib/tags';
+
+// Misure nell'archivio: featured 2×2, gli altri 1×1
+const FEATURED = { w: 2, h: 2 };
+const REGULAR = { w: 1, h: 1 };
+
+const cells: Cell[] = [
+  { id: 'archivio', type: 'archive-head', w: 2, h: 2, sm: { h: 1 }, heroOf: '/archivio', total: projectsByYear.length },
+  { id: 'tag', type: 'tags', w: 4, h: 2, md: { w: 2 }, hideOn: ['sm'], tags: allTags },
+  ...projectsByYear.map((p): Cell => ({
+    id: `p-${p.slug}`,
+    label: p.slug,
+    type: 'project',
+    slug: p.slug,
+    ...(p.featured ? FEATURED : REGULAR),
+  })),
+];
+---
+
+<Layout
+  titolo="Archivio — Roberto"
+  descrizione="Archivio dei progetti di Roberto, graphic designer: identità visive, packaging, menu e siti web. Filtra per tag e trova il lavoro più vicino al tuo."
+>
+  <main id="main" class="sheet">
+    <!-- mobile: filtri in una striscia fissa in alto -->
+    <div class="tagbar" role="group" aria-label="Filtra i progetti per tag">
+      <TagButtons tags={allTags} total={projectsByYear.length} />
+    </div>
+    <Grid cells={cells} filterable />
+    <SiteFooter />
+  </main>
+</Layout>
+
+<style>
+  .tagbar { display: none; }
+
+  @media (max-width: 599px) {
+    .tagbar {
+      position: sticky; top: 0; z-index: 10;
+      display: flex; gap: var(--line);
+      margin: calc(var(--gap) * -1) calc(var(--gap) * -1) var(--gap);
+      padding: var(--gap);
+      padding-top: max(var(--gap), env(safe-area-inset-top));
+      background: var(--paper);
+      box-shadow: inset 0 calc(var(--line) * -1) 0 var(--red);
+      overflow-x: auto;
+      overscroll-behavior-x: contain;
+      scrollbar-width: none;
+    }
+    .tagbar::-webkit-scrollbar { display: none; }
+    .tagbar :global(.tagbtn) { flex-shrink: 0; border: var(--line) solid var(--red); }
+  }
+</style>

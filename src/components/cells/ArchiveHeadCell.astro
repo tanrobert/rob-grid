@@ -1,0 +1,33 @@
+---
+interface Props {
+  total: number;
+}
+const { total } = Astro.props;
+const pad = (n: number) => String(n).padStart(2, '0');
+---
+
+<div class="head">
+  <h1 class="sr-only">Archivio progetti</h1>
+  <p class="value" data-count>{pad(total)}</p>
+  <p class="mono caption" aria-live="polite">
+    <span>Progetti</span><span>Tag: <b data-current>tutti</b></span>
+  </p>
+</div>
+
+<style>
+  .head {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; justify-content: flex-end; gap: var(--m);
+    padding: calc(var(--pad) + 22px) var(--pad) var(--pad);
+  }
+  .value {
+    font-weight: 500;
+    font-size: min(58cqb, 62cqi);
+    line-height: 0.78;
+    letter-spacing: -0.06em;
+    font-variant-numeric: tabular-nums;
+    margin-left: -0.06em;
+  }
+  .caption { display: flex; justify-content: space-between; gap: var(--m); }
+  .caption b { font-weight: 500; }
+</style>

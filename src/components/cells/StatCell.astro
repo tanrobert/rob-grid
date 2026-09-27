@@ -1,0 +1,28 @@
+---
+interface Props {
+  value: string;
+  caption: string;
+}
+const { value, caption } = Astro.props;
+---
+
+<div class="stat">
+  <p class="value" style={`--len:${Math.max(2, value.length)}`}>{value}</p>
+  <p class="mono">{caption}</p>
+</div>
+
+<style>
+  .stat {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; justify-content: flex-end; gap: var(--m);
+    padding: var(--pad);
+  }
+  .value {
+    font-weight: 500;
+    font-size: min(58cqb, calc(124cqi / var(--len)));
+    line-height: 0.78;
+    letter-spacing: -0.06em;
+    font-variant-numeric: tabular-nums;
+    margin-left: -0.06em;
+  }
+</style>

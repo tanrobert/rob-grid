@@ -1,0 +1,17 @@
+---
+import type { SvgName } from '../data/grid-types';
+import LogoR from '../assets/logo-r.svg';
+import Roberto from '../assets/roberto.svg';
+import LogoCompleto from '../assets/logo-completo.svg';
+
+interface Props {
+  name: SvgName;
+  class?: string;
+}
+
+const map = { 'logo-r': LogoR, 'roberto': Roberto, 'logo-completo': LogoCompleto };
+const { name, class: className } = Astro.props;
+const Svg = map[name];
+---
+
+<Svg class={className} aria-hidden="true" focusable="false" />

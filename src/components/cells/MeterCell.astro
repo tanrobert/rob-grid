@@ -1,0 +1,29 @@
+---
+// Lettura live della griglia: utile mentre si definisce il layout.
+const rows = [
+  ['Col', 'cols'],
+  ['Unità', 'u'],
+  ['Gap', 'gap'],
+  ['Viewport', 'vw'],
+] as const;
+---
+
+<dl class="meter mono" data-meter>
+  {rows.map(([k, key]) => (
+    <div><dt>{k}</dt><dd data-key={key}>—</dd></div>
+  ))}
+</dl>
+
+<style>
+  .meter {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; justify-content: flex-end;
+    padding: var(--pad);
+  }
+  .meter div {
+    display: flex; justify-content: space-between;
+    padding: 6px 0 5px;
+    border-bottom: var(--line) solid currentColor;
+  }
+  .meter div:first-child { border-top: var(--line) solid currentColor; }
+</style>

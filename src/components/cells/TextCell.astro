@@ -1,0 +1,59 @@
+---
+import { morphName } from '../../lib/grid';
+
+interface Props {
+  eyebrow?: string;
+  title: string;
+  body?: string;
+  as?: 'h1' | 'h2' | 'p';
+  size?: 's' | 'm' | 'l';
+  titleOf?: string;
+}
+const { eyebrow, title, body, as: Tag = 'h2', size = 'm', titleOf } = Astro.props;
+// arrivo del titolo che scivola dalla didascalia della cella d'origine
+const titleName = titleOf ? `title-${morphName(titleOf)}` : undefined;
+// un "_" finale diventa un cursore lampeggiante
+const caret = title.endsWith('_');
+const text = caret ? title.slice(0, -1) : title;
+---
+
+<div class:list={['text', `text--${size}`]}>
+  {eyebrow && <p class="eyebrow mono">{eyebrow}</p>}
+  <Tag
+    class:list={['title', titleName && 'title--fit']}
+    style={titleName ? `view-transition-name:${titleName};view-transition-class:title` : undefined}
+    data-title-hero={titleName}
+  >{text}{caret && <span class="caret loop" aria-hidden="true">_</span>}</Tag>
+  {body && <p class="body">{body}</p>}
+</div>
+
+<style>
+  .text {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; justify-content: flex-end;
+    gap: var(--m);
+    padding: calc(var(--pad) + 22px) var(--pad) var(--pad);
+  }
+  .eyebrow { margin-bottom: auto; }
+
+  .title {
+    font-family: var(--font-sans);
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: -0.025em;
+  }
+  .text--l .title { font-size: clamp(24px, min(8.4cqi, 13cqb), 72px); line-height: 1.02; }
+  .text--m .title { font-size: clamp(28px, min(22cqi, 34cqb), 128px); letter-spacing: -0.04em; }
+  .text--s .title { font-size: clamp(18px, min(6.4cqi, 13cqb), 40px); }
+
+  /* riquadro stretto sul testo: stesse proporzioni della didascalia di partenza */
+  .title--fit { align-self: flex-start; max-width: 100%; }
+
+  .body {
+    max-width: 44ch;
+    font-size: 14px; line-height: 1.35;
+  }
+
+  .caret { animation: blink 1.1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+</style>

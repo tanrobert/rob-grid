@@ -1,0 +1,67 @@
+---
+// Ora e meteo di Itri (LT). Meteo da Open-Meteo, senza chiave API.
+const PLACE = { name: 'Itri', lat: 41.2914, lon: 13.5292, tz: 'Europe/Rome' };
+
+// Il nuvolone di base (48×48) riusato da più icone
+const cloud = 'M13 34H35A7 7 0 0 0 35 20A10 10 0 0 0 16 19A7.5 7.5 0 0 0 13 34Z';
+const rays = Array.from({ length: 8 }, (_, i) => {
+  const a = (i * Math.PI) / 4;
+  const f = (n: number) => n.toFixed(2);
+  return `M${f(24 + 13 * Math.cos(a))} ${f(24 + 13 * Math.sin(a))}L${f(24 + 18 * Math.cos(a))} ${f(24 + 18 * Math.sin(a))}`;
+}).join('');
+---
+
+<div class="clock" data-clock data-tz={PLACE.tz}>
+  <div class="sky" data-weather data-lat={PLACE.lat} data-lon={PLACE.lon}>
+    <svg viewBox="0 0 48 48" role="img" aria-label="Meteo non disponibile" data-icon>
+      <g data-w="sun"><circle cx="24" cy="24" r="8" /><path d={rays} /></g>
+      <g data-w="moon"><path d="M29 10A14 14 0 1 0 38 33A11 11 0 0 1 29 10Z" /></g>
+      <g data-w="partly">
+        <g transform="scale(0.75)"><circle cx="24" cy="24" r="8" /><path d={rays} /></g>
+        <path class="mask" d={cloud} transform="translate(3 4)" />
+      </g>
+      <g data-w="cloud"><path d={cloud} transform="translate(0 2)" /></g>
+      <g data-w="fog"><path d="M10 18H38M14 24H34M10 30H38M16 36H32" /></g>
+      <g data-w="rain"><path d={cloud} transform="translate(0 -4)" /><path d="M18 36L15 42M25 36L22 42M32 36L29 42" /></g>
+      <g data-w="snow"><path d={cloud} transform="translate(0 -4)" /><path d="M17 37V41M15 39H19M24 40V44M22 42H26M31 37V41M29 39H33" /></g>
+      <g data-w="storm"><path d={cloud} transform="translate(0 -4)" /><path d="M26 32L21 39H27L22 46" /></g>
+    </svg>
+  </div>
+  <p class="time"><span data-hm>--:--</span><span class="sec" data-s>--</span></p>
+  <p class="meta mono" aria-live="polite"><span>{PLACE.name} <span data-temp></span></span><span data-date>—</span></p>
+</div>
+
+<style>
+  .clock {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; gap: var(--m);
+    padding: calc(var(--pad) + 22px) var(--pad) var(--pad);
+  }
+  .sky {
+    flex: 1; min-height: 0;
+    display: grid; place-items: center;
+  }
+  .sky svg {
+    height: min(100%, 34cqi);
+    width: auto;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2px;
+    stroke-linecap: square;
+    stroke-linejoin: miter;
+  }
+  .sky path, .sky circle { vector-effect: non-scaling-stroke; }
+  .sky .mask { fill: var(--paper); }
+  .sky [data-w] { display: none; }
+  .sky [data-w].on { display: inline; }
+  .time {
+    display: flex; align-items: flex-start; gap: 0.12em;
+    font-family: var(--font-mono);
+    font-size: min(24cqi, 30cqb);
+    line-height: 0.8;
+    letter-spacing: -0.04em;
+    font-variant-numeric: tabular-nums;
+  }
+  .sec { font-size: 0.36em; line-height: 1; letter-spacing: 0; }
+  .meta { display: flex; justify-content: space-between; }
+</style>

@@ -1,0 +1,50 @@
+---
+import type { ImageMetadata } from 'astro';
+import { Image, getImage } from 'astro:assets';
+
+interface Props {
+  image?: ImageMetadata;
+  video?: string;
+  alt: string;
+  sizes: string;
+  /** Titolo e meta mostrati nella barra in basso */
+  title?: string;
+  meta?: string;
+}
+const { image, video, alt, sizes, title, meta } = Astro.props;
+const poster = image && video ? await getImage({ src: image, width: 1280, format: 'webp' }) : undefined;
+---
+
+<div class="duo">
+  {video ? (
+    <video data-autoplay muted loop playsinline preload="none" poster={poster?.src} aria-label={alt}>
+      <source src={video} type="video/mp4" />
+    </video>
+  ) : image && (
+    <Image src={image} alt={alt} widths={[400, 800, 1200, 1600]} sizes={sizes} loading="lazy" decoding="async" />
+  )}
+</div>
+
+{title && (
+  <div class="caption">
+    <span class="caption__title" data-morph-title>{title}</span>
+    {meta && <span class="mono">{meta}</span>}
+  </div>
+)}
+
+<style>
+  .caption {
+    position: absolute; left: 0; right: 0; bottom: 0; z-index: 2;
+    display: flex; justify-content: space-between; align-items: baseline; gap: var(--m);
+    padding: 8px 12px 7px;
+    background: var(--paper);
+    box-shadow: inset 0 var(--line) 0 0 var(--red);
+  }
+  .caption__title {
+    font-weight: 500;
+    font-size: 15px;
+    letter-spacing: -0.01em;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .caption .mono { flex-shrink: 0; }
+</style>

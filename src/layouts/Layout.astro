@@ -1,0 +1,47 @@
+---
+import { ClientRouter } from 'astro:transitions';
+import '../styles/global.css';
+
+interface Props {
+  titolo?: string;
+  descrizione?: string;
+}
+
+const {
+  titolo = 'Roberto — Graphic designer',
+  descrizione = 'Identità visive, packaging e siti web. Portfolio di Roberto, graphic designer: progetti per ristorazione, ospitalità, cultura e imprese.',
+} = Astro.props;
+
+const canonical = new URL(Astro.url.pathname, Astro.site);
+---
+
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light" />
+    <meta name="theme-color" content="#ffffff" />
+    <title>{titolo}</title>
+    <meta name="description" content={descrizione} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preload" href="/fonts/UntitledSans-Medium.otf" as="font" type="font/otf" crossorigin />
+    <link rel="preload" href="/fonts/SohneMono-Buch.otf" as="font" type="font/otf" crossorigin />
+    <!-- Intro solo al caricamento "vero": il ClientRouter non riesegue questo script nelle navigazioni -->
+    <script is:inline>
+      if (!matchMedia('(prefers-reduced-motion: reduce)').matches) document.documentElement.classList.add('is-intro');
+    </script>
+    <ClientRouter />
+  </head>
+  <body>
+    <a href="#main" class="skip-link">Salta al contenuto principale</a>
+    <slot />
+  </body>
+</html>
+
+<script>
+  import '../scripts/morph';
+  import { initCells } from '../scripts/cells';
+  document.addEventListener('astro:page-load', initCells);
+</script>

@@ -1,0 +1,50 @@
+---
+import SvgAsset from '../SvgAsset.astro';
+import type { SvgName } from '../../data/grid-types';
+
+interface Props {
+  svg: SvgName;
+  speed?: number;
+  reverse?: boolean;
+}
+const { svg, speed = 40, reverse = false } = Astro.props;
+// due metà identiche: la traccia scorre del 50% e riparte senza stacco
+const copies = [0, 1, 2];
+---
+
+<div class="marquee" aria-hidden="true">
+  <div class:list={['track', 'loop', reverse && 'track--reverse']} style={`--speed:${speed}s`}>
+    {[0, 1].map(() => (
+      <div class="half">
+        {copies.map(() => <SvgAsset name={svg} class="item" />)}
+      </div>
+    ))}
+  </div>
+</div>
+<span class="sr-only">Roberto</span>
+
+<style>
+  .marquee {
+    position: absolute; inset: 0;
+    display: flex; align-items: center;
+    overflow: hidden;
+  }
+  .track {
+    display: flex; width: max-content;
+    animation: marquee var(--speed) linear infinite;
+  }
+  .track--reverse { animation-direction: reverse; }
+  .half { display: flex; }
+  .half :global(.item) {
+    /* stessa altezza del logo-r nella cella 1×1: lato cella meno il padding */
+    --h: calc(100cqb - 2 * var(--pad));
+    height: var(--h); width: auto; max-width: none;
+    /* spazio tra una copia e l'altra = spazio O→B nel lettering (29.1 su 123.6 di altezza),
+       perché tra la O finale e la R iniziale si forma la stessa coppia tonda→asta */
+    margin-right: calc(var(--h) * 29.1 / 123.6);
+  }
+  @keyframes marquee {
+    from { transform: translate3d(0, 0, 0); }
+    to   { transform: translate3d(-50%, 0, 0); }
+  }
+</style>

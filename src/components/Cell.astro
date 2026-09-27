@@ -1,0 +1,58 @@
+---
+import type { Cell } from '../data/grid-types';
+import { spanStyle, morphName } from '../lib/grid';
+import Arrow from '../assets/arrow.svg';
+import Close from '../assets/close.svg';
+
+interface Props {
+  cell: Cell;
+  index: number;
+  /** href calcolato (es. per i progetti), ha la precedenza su cell.href */
+  href?: string;
+  /** attributi extra sull'elemento (es. data-tags nell'archivio) */
+  attrs?: Record<string, string>;
+}
+
+const { cell, index, attrs = {} } = Astro.props;
+const href = Astro.props.href ?? cell.href;
+const n = String(index + 1).padStart(2, '0');
+
+const classes = ['cell', `cell--${cell.type}`, cell.tone === 'red' && 'cell--red', href && 'cell--link', ...(cell.hideOn ?? []).map(bp => `hide-${bp}`)];
+const isHome = href === '/';
+const label = cell.label === false ? null : (cell.label ?? cell.id);
+
+// cella "hero": è il punto d'arrivo dell'espansione da un'altra pagina
+const hero = cell.heroOf ? morphName(cell.heroOf) : undefined;
+const style = `${spanStyle(cell)};--i:${index}${hero ? `;view-transition-name:${hero};view-transition-class:morph` : ''}`;
+---
+
+{href ? (
+  <a
+    href={href}
+    class:list={classes}
+    style={style}
+    data-cell={cell.type}
+    data-id={cell.id}
+    data-morph={isHome ? undefined : morphName(href)}
+    data-close={isHome ? '' : undefined}
+    {...attrs}
+  >
+    {label && (
+      <span class="cell__label mono" aria-hidden="true">
+        <span>{n}</span><span>{label}</span>
+      </span>
+    )}
+    <span class="cell__go" aria-hidden="true"><span><Arrow /></span></span>
+    <slot />
+  </a>
+) : (
+  <div class:list={classes} style={style} data-cell={cell.type} data-id={cell.id} data-hero={hero} {...attrs}>
+    {label && (
+      <span class="cell__label mono" aria-hidden="true">
+        <span>{n}</span><span>{label}</span>
+      </span>
+    )}
+    {hero && <a href="/" class="cell__go" aria-label="Chiudi e torna alla griglia" data-close><span><Close /></span></a>}
+    <slot />
+  </div>
+)}

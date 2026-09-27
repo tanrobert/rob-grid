@@ -1,0 +1,8 @@
+node_modules
+dist
+.astro
+.vercel
+.env*
+
+# screenshot di lavoro
+firefox_*.png

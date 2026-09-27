@@ -1,0 +1,82 @@
+---
+import type { Cell as CellData } from '../data/grid-types';
+import { getProject } from '../data/projects';
+import { COLS, mediaSizes, resolveSpans, findVoids } from '../lib/grid';
+import Cell from './Cell.astro';
+import SvgCell from './cells/SvgCell.astro';
+import MarqueeCell from './cells/MarqueeCell.astro';
+import TextCell from './cells/TextCell.astro';
+import ListCell from './cells/ListCell.astro';
+import StatCell from './cells/StatCell.astro';
+import MediaCell from './cells/MediaCell.astro';
+import ClockCell from './cells/ClockCell.astro';
+import MeterCell from './cells/MeterCell.astro';
+import CursorCell from './cells/CursorCell.astro';
+import MarkCell from './cells/MarkCell.astro';
+import ArchiveHeadCell from './cells/ArchiveHeadCell.astro';
+import TagsCell from './cells/TagsCell.astro';
+import GridPaper from './GridPaper.astro';
+import { tagSlug } from '../lib/tags';
+
+interface Props {
+  cells: CellData[];
+  /** Archivio: i progetti ricevono data-tags per i filtri */
+  filterable?: boolean;
+}
+const { cells, filterable = false } = Astro.props;
+
+const ids = new Set<string>();
+for (const c of cells) {
+  if (ids.has(c.id)) throw new Error(`[grid] id duplicato: "${c.id}"`);
+  ids.add(c.id);
+}
+
+// buchi lasciati dall'incastro automatico, per ogni breakpoint
+const voids = (Object.keys(COLS) as (keyof typeof COLS)[]).flatMap(bp =>
+  findVoids(cells.filter(c => !c.hideOn?.includes(bp)).map(c => resolveSpans(c)[bp]), COLS[bp]).map(v => ({ ...v, bp })),
+);
+---
+
+<div class="grid" data-filterable={filterable ? '' : undefined}>
+  {cells.map((cell, i) => {
+    if (cell.type === 'project') {
+      const p = getProject(cell.slug);
+      if (!p) throw new Error(`[grid] progetto non trovato: "${cell.slug}"`);
+      return (
+        <Cell
+          cell={cell}
+          index={i}
+          href={cell.href ?? `/progetti/${p.slug}`}
+          attrs={filterable ? { 'data-tags': p.tags.map(tagSlug).join(' ') } : undefined}
+        >
+          <MediaCell image={p.image} video={p.video} alt={`${p.title} — ${p.description}`} sizes={mediaSizes(cell)} title={p.title} meta={p.period} />
+        </Cell>
+      );
+    }
+    return (
+      <Cell cell={cell} index={i}>
+        {cell.type === 'svg' && <SvgCell svg={cell.svg} fit={cell.fit} />}
+        {cell.type === 'marquee' && <MarqueeCell svg={cell.svg} speed={cell.speed} reverse={cell.reverse} />}
+        {cell.type === 'text' && <TextCell eyebrow={cell.eyebrow} title={cell.title} body={cell.body} as={cell.as} size={cell.size} titleOf={cell.titleOf} />}
+        {cell.type === 'list' && <ListCell title={cell.title} items={cell.items} />}
+        {cell.type === 'stat' && <StatCell value={cell.value} caption={cell.caption} />}
+        {cell.type === 'media' && <MediaCell image={cell.image} video={cell.video} alt={cell.alt} sizes={mediaSizes(cell)} title={cell.caption} />}
+        {cell.type === 'clock' && <ClockCell />}
+        {cell.type === 'meter' && <MeterCell />}
+        {cell.type === 'cursor' && <CursorCell />}
+        {cell.type === 'mark' && <MarkCell />}
+        {cell.type === 'archive-head' && <ArchiveHeadCell total={cell.total} />}
+        {cell.type === 'tags' && <TagsCell tags={cell.tags} total={cells.filter(c => c.type === 'project').length} />}
+      </Cell>
+    );
+  })}
+  {voids.map(v => (
+    <div
+      class:list={['void', `void--${v.bp}`]}
+      style={`grid-column:${v.col} / span ${v.w};grid-row:${v.row} / span ${v.h}`}
+      aria-hidden="true"
+    >
+      <GridPaper w={v.w} h={v.h} />
+    </div>
+  ))}
+</div>
