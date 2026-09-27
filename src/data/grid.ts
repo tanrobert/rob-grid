@@ -54,6 +54,7 @@ export const grid: Cell[] = [
     body: 'Ogni progetto parte da un sistema: poche regole, applicate con rigore.',
   },
   { id: 'registro', type: 'mark', w: 1, h: 1 },
+  { id: 'occhio',   type: 'eye',  w: 1, h: 1 },
 
   // ── righe 6–7 ─────────────────────────────────────────
   { id: 'marchio', type: 'svg',     w: 2, h: 2, svg: 'logo-completo' },

@@ -13,6 +13,7 @@ import ClockCell from './cells/ClockCell.astro';
 import MeterCell from './cells/MeterCell.astro';
 import CursorCell from './cells/CursorCell.astro';
 import MarkCell from './cells/MarkCell.astro';
+import EyeCell from './cells/EyeCell.astro';
 import ArchiveHeadCell from './cells/ArchiveHeadCell.astro';
 import TagsCell from './cells/TagsCell.astro';
 import GridPaper from './GridPaper.astro';
@@ -65,6 +66,7 @@ const voids = (Object.keys(COLS) as (keyof typeof COLS)[]).flatMap(bp =>
         {cell.type === 'meter' && <MeterCell />}
         {cell.type === 'cursor' && <CursorCell />}
         {cell.type === 'mark' && <MarkCell />}
+        {cell.type === 'eye' && <EyeCell />}
         {cell.type === 'archive-head' && <ArchiveHeadCell total={cell.total} />}
         {cell.type === 'tags' && <TagsCell tags={cell.tags} total={cells.filter(c => c.type === 'project').length} />}
       </Cell>

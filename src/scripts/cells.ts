@@ -75,6 +75,36 @@ export function initCells() {
     });
   });
 
+  // ── Occhio: iride e pupilla seguono il puntatore ───────
+  document.querySelectorAll<SVGSVGElement>('svg[data-eye]').forEach(svg => {
+    const iris = svg.querySelector<SVGGElement>('[data-iris]')!;
+    const pupil = svg.querySelector<SVGGElement>('[data-pupil]')!;
+    // escursione massima (unità del viewBox 100×100): la mandorla è più larga che alta
+    const IRIS = { x: 14, y: 6 }, PUPIL = { x: 4, y: 3 };
+    let tx = 0, ty = 0, x = 0, y = 0, raf = 0;
+
+    const frame = () => {
+      // inseguimento morbido; con "riduci movimento" va dritto al bersaglio
+      const k = reduced ? 1 : 0.18;
+      x += (tx - x) * k; y += (ty - y) * k;
+      iris.setAttribute('transform', `translate(${(x * IRIS.x).toFixed(2)} ${(y * IRIS.y).toFixed(2)})`);
+      pupil.setAttribute('transform', `translate(${(x * PUPIL.x).toFixed(2)} ${(y * PUPIL.y).toFixed(2)})`);
+      raf = Math.abs(tx - x) + Math.abs(ty - y) > 0.001 ? requestAnimationFrame(frame) : 0;
+    };
+
+    addEventListener('pointermove', e => {
+      const r = svg.getBoundingClientRect();
+      const dx = e.clientX - (r.left + r.width / 2);
+      const dy = e.clientY - (r.top + r.height / 2);
+      // direzione verso il cursore; l'intensità cresce con la distanza fino a ~mezzo viewport
+      const d = Math.hypot(dx, dy) || 1;
+      const f = Math.min(1, d / (Math.min(innerWidth, innerHeight) * 0.5));
+      tx = (dx / d) * f; ty = (dy / d) * f;
+      if (!raf) raf = requestAnimationFrame(frame);
+    }, { signal, passive: true });
+    teardown.push(() => cancelAnimationFrame(raf));
+  });
+
   // ── Misure della griglia ───────────────────────────────
   const grid = document.querySelector<HTMLElement>('.grid');
   const meter = document.querySelector<HTMLElement>('[data-meter]');

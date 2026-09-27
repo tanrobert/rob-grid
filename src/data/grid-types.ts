@@ -46,6 +46,7 @@ export type Cell = CellBase & (
   | { type: 'cursor' }
   | { type: 'meter' }
   | { type: 'mark' }
+  | { type: 'eye' }
   // solo archivio
   | { type: 'archive-head'; total: number }
   | { type: 'tags'; tags: Array<{ tag: string; slug: string; count: number }> }

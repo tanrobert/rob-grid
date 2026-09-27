@@ -25,7 +25,9 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <title>{titolo}</title>
     <meta name="description" content={descrizione} />
     <link rel="canonical" href={canonical} />
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="preload" href="/fonts/UntitledSans-Medium.otf" as="font" type="font/otf" crossorigin />
     <link rel="preload" href="/fonts/SohneMono-Buch.otf" as="font" type="font/otf" crossorigin />
     <!-- Intro solo al caricamento "vero": il ClientRouter non riesegue questo script nelle navigazioni -->

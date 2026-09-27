@@ -1,0 +1,51 @@
+---
+// Occhio: cerchio esterno, mandorla, iride e pupilla che seguono il cursore.
+// Geometria in un quadrato 100×100 centrato su (50,50).
+const almond = 'M16 50Q50 22 84 50Q50 78 16 50Z';
+// id unico: più occhi nella stessa pagina non si rubano il ritaglio
+const clipId = `eye-clip-${Math.random().toString(36).slice(2, 8)}`;
+---
+
+<div class="eye" aria-hidden="true">
+  <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" data-eye>
+    <defs>
+      <clipPath id={clipId}><path d={almond} /></clipPath>
+    </defs>
+    <circle cx="50" cy="50" r="46" />
+    <g class="lid loop">
+      <path d={almond} />
+      <g clip-path={`url(#${clipId})`}>
+        <g data-iris>
+          <circle cx="50" cy="50" r="13" />
+          <g data-pupil>
+            <circle class="pupil" cx="50" cy="50" r="6" />
+            <circle class="glint" cx="52" cy="48" r="1.6" />
+          </g>
+        </g>
+      </g>
+    </g>
+  </svg>
+</div>
+
+<style>
+  .eye {
+    position: absolute; inset: 0;
+    display: grid; place-items: center;
+    padding: calc(var(--pad) + 12px);
+  }
+  svg { width: 100%; height: 100%; overflow: visible; }
+  circle, path { vector-effect: non-scaling-stroke; stroke-width: 1px; }
+  .pupil { fill: currentColor; stroke: none; }
+  .glint { fill: var(--paper); stroke: none; }
+
+  /* battito di palpebra: breve, ogni ~6 secondi */
+  .lid {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: blink 6.4s var(--ease-out) infinite;
+  }
+  @keyframes blink {
+    0%, 94%, 100% { transform: scaleY(1); }
+    96.5%         { transform: scaleY(0.06); }
+  }
+</style>
