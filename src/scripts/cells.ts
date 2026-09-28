@@ -4,6 +4,7 @@
  */
 
 import { initArchive } from './archive';
+import { pad2 } from '../lib/format';
 
 let cleanup: (() => void) | null = null;
 
@@ -52,11 +53,13 @@ export function initCells() {
       timeZone: tz, hour: '2-digit', minute: '2-digit', second: '2-digit',
       year: 'numeric', month: '2-digit', day: '2-digit', hourCycle: 'h23',
     });
+    // scrive solo se il testo cambia: la data sta in una regione aria-live
+    const put = (node: Element, text: string) => { if (node.textContent !== text) node.textContent = text; };
     const tick = () => {
       const p = Object.fromEntries(fmt.formatToParts(new Date()).map(x => [x.type, x.value]));
-      hm.textContent = `${p.hour}:${p.minute}`;
-      s.textContent = p.second;
-      date.textContent = `${p.year}.${p.month}.${p.day}`;
+      put(hm, `${p.hour}:${p.minute}`);
+      put(s, p.second);
+      put(date, `${p.year}.${p.month}.${p.day}`);
     };
     tick();
     const id = setInterval(tick, 1000);
@@ -65,12 +68,14 @@ export function initCells() {
 
   // ── Meteo ──────────────────────────────────────────────
   document.querySelectorAll<HTMLElement>('[data-weather]').forEach(el => {
-    loadWeather(Number(el.dataset.lat), Number(el.dataset.lon), signal).then(w => {
+    const clock = el.closest<HTMLElement>('[data-clock]');
+    const tz = clock?.dataset.tz ?? 'Europe/Rome';
+    loadWeather(Number(el.dataset.lat), Number(el.dataset.lon), tz, signal).then(w => {
       if (!w || signal.aborted) return;
       const [key, label] = weatherIcon(w.code, w.isDay);
       el.querySelector(`[data-w="${key}"]`)?.classList.add('on');
-      el.querySelector('[data-icon]')?.setAttribute('aria-label', `Meteo a Itri: ${label}, ${w.temp}°`);
-      const temp = el.closest('.clock')?.querySelector('[data-temp]');
+      el.querySelector('[data-icon]')?.setAttribute('aria-label', `Meteo a ${el.dataset.place}: ${label}, ${w.temp}°`);
+      const temp = clock?.querySelector('[data-temp]');
       if (temp) temp.textContent = `${w.temp}°`;
     });
   });
@@ -114,7 +119,7 @@ export function initCells() {
       const cs = getComputedStyle(grid);
       const cols = cs.gridTemplateColumns.split(' ').length;
       const u = parseFloat(cs.gridAutoRows);
-      set('cols', String(cols).padStart(2, '0'));
+      set('cols', pad2(cols));
       set('u', `${u.toFixed(1)}px`);
       set('gap', cs.columnGap);
       set('vw', `${innerWidth}×${innerHeight}`);
@@ -158,14 +163,14 @@ export function initCells() {
 interface Weather { code: number; isDay: boolean; temp: number }
 const WEATHER_TTL = 15 * 60 * 1000;
 
-async function loadWeather(lat: number, lon: number, signal: AbortSignal): Promise<Weather | null> {
+async function loadWeather(lat: number, lon: number, tz: string, signal: AbortSignal): Promise<Weather | null> {
   const key = `meteo:${lat},${lon}`;
   try {
     const cached = JSON.parse(sessionStorage.getItem(key) ?? 'null');
     if (cached && Date.now() - cached.t < WEATHER_TTL) return cached.w;
   } catch {}
   try {
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,is_day&timezone=Europe%2FRome`;
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,is_day&timezone=${encodeURIComponent(tz)}`;
     const res = await fetch(url, { signal });
     if (!res.ok) return null;
     const { current: c } = await res.json();

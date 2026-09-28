@@ -1,15 +1,17 @@
 import type { Cell, Span } from '../data/grid-types';
 
-/** Colonne per breakpoint — tenere allineato con --cols in global.css. */
+/** Colonne e soglie per breakpoint — tenere allineati con --cols e le media query di global.css. */
 export const COLS = { lg: 6, md: 4, sm: 2 } as const;
 export const BREAKPOINTS = { md: 600, lg: 1024 } as const;
+/** Altezza massima di una cella, in unità */
+const MAX_H = 12;
 
 const clamp = (n: number, max: number) => Math.max(1, Math.min(Math.round(n), max));
 
 export function resolveSpans(cell: Cell): Record<keyof typeof COLS, Span> {
-  const lg = { w: clamp(cell.w, COLS.lg), h: clamp(cell.h, 12) };
-  const md = { w: clamp(cell.md?.w ?? lg.w, COLS.md), h: clamp(cell.md?.h ?? lg.h, 12) };
-  const sm = { w: clamp(cell.sm?.w ?? md.w, COLS.sm), h: clamp(cell.sm?.h ?? md.h, 12) };
+  const lg = { w: clamp(cell.w, COLS.lg), h: clamp(cell.h, MAX_H) };
+  const md = { w: clamp(cell.md?.w ?? lg.w, COLS.md), h: clamp(cell.md?.h ?? lg.h, MAX_H) };
+  const sm = { w: clamp(cell.sm?.w ?? md.w, COLS.sm), h: clamp(cell.sm?.h ?? md.h, MAX_H) };
   return { lg, md, sm };
 }
 

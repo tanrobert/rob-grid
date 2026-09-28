@@ -34,7 +34,7 @@ const clipId = `eye-clip-${Math.random().toString(36).slice(2, 8)}`;
     padding: calc(var(--pad) + 12px);
   }
   svg { width: 100%; height: 100%; overflow: visible; }
-  circle, path { vector-effect: non-scaling-stroke; stroke-width: 1px; }
+  circle, path { vector-effect: non-scaling-stroke; stroke-width: var(--line); }
   .pupil { fill: currentColor; stroke: none; }
   .glint { fill: var(--paper); stroke: none; }
 
@@ -42,9 +42,9 @@ const clipId = `eye-clip-${Math.random().toString(36).slice(2, 8)}`;
   .lid {
     transform-box: fill-box;
     transform-origin: center;
-    animation: blink 6.4s var(--ease-out) infinite;
+    animation: eye-blink 6.4s var(--ease-out) infinite;
   }
-  @keyframes blink {
+  @keyframes eye-blink {
     0%, 94%, 100% { transform: scaleY(1); }
     96.5%         { transform: scaleY(0.06); }
   }

@@ -1,16 +1,15 @@
 ---
 import SvgAsset from '../SvgAsset.astro';
-import type { SvgName } from '../../data/grid-types';
+import { svgs, type SvgName } from '../../data/svgs';
 
 interface Props {
   svg: SvgName;
   fit?: 'contain' | 'bleed';
 }
 const { svg, fit = 'contain' } = Astro.props;
-const names: Record<SvgName, string> = { 'logo-r': 'Logo R', 'roberto': 'Roberto', 'logo-completo': 'Roberto — logo completo' };
 ---
 
-<div class:list={['svg', `svg--${fit}`]} role="img" aria-label={names[svg]}>
+<div class:list={['svg', `svg--${fit}`]} role="img" aria-label={svgs[svg].label}>
   <SvgAsset name={svg} />
 </div>
 

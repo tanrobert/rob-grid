@@ -32,7 +32,7 @@ const text = caret ? title.slice(0, -1) : title;
     position: absolute; inset: 0;
     display: flex; flex-direction: column; justify-content: flex-end;
     gap: var(--m);
-    padding: calc(var(--pad) + 22px) var(--pad) var(--pad);
+    padding: var(--pad-label) var(--pad) var(--pad);
   }
   .eyebrow { margin-bottom: auto; }
 
@@ -54,6 +54,6 @@ const text = caret ? title.slice(0, -1) : title;
     font-size: 14px; line-height: 1.35;
   }
 
-  .caret { animation: blink 1.1s steps(1) infinite; }
-  @keyframes blink { 50% { opacity: 0; } }
+  .caret { animation: caret-blink 1.1s steps(1) infinite; }
+  @keyframes caret-blink { 50% { opacity: 0; } }
 </style>

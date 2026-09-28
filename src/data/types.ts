@@ -9,6 +9,6 @@ export interface Project {
   description: string;
   featured?: boolean;
   image?: ImageMetadata;
-  /** Path to a looping background video (in /public), shown instead of `image` on the fullscreen cover */
+  /** Video in loop (percorso in /public), mostrato al posto di `image`, che gli fa da poster */
   video?: string;
 }

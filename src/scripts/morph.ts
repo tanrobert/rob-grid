@@ -22,6 +22,9 @@ function nameCell(cell: HTMLElement, name: string, withTitle: boolean) {
   if (title && withTitle) setName(title, `title-${name}`, 'title');
 }
 
+/** Click sinistro senza modificatori: gli altri (nuova scheda, ecc.) restano al browser */
+const isPlainClick = (e: MouseEvent) => e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey;
+
 function remember(id: string) {
   try { sessionStorage.setItem(KEY, id); } catch {}
 }
@@ -31,7 +34,7 @@ function recall(): string | null {
 
 // Andata: la cella cliccata prende il nome dell'hero di destinazione
 document.addEventListener('click', e => {
-  if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+  if (e.defaultPrevented || !isPlainClick(e)) return;
   const cell = (e.target as Element).closest<HTMLElement>('a[data-morph]');
   if (!cell) return;
   document.querySelectorAll<HTMLElement>('[data-morph], [data-morph-title]').forEach(el => el.style.removeProperty('view-transition-name'));
@@ -64,7 +67,7 @@ function close() {
 
 document.addEventListener('click', e => {
   const back = (e.target as Element).closest('a[data-close]');
-  if (!back || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+  if (!back || !isPlainClick(e)) return;
   e.preventDefault();
   close();
 });

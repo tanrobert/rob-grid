@@ -8,13 +8,14 @@ import Grid from '../../components/Grid.astro';
 import SiteFooter from '../../components/SiteFooter.astro';
 import { projects } from '../../data/projects';
 import { tagSlug } from '../../lib/tags';
+import { projectYear } from '../../lib/projects';
 
 export const getStaticPaths = (() =>
   projects.map(p => ({ params: { slug: p.slug }, props: { project: p } }))
 ) satisfies GetStaticPaths;
 
 const { project: p } = Astro.props;
-const year = p.period.match(/\d{4}/)?.[0] ?? '—';
+const year = String(projectYear(p) || '—');
 
 const cells: Cell[] = [
   { id: 'progetto', type: 'text', w: 3, h: 1, as: 'h1', size: 's', eyebrow: 'Progetto', title: p.title, body: p.description, titleOf: `/progetti/${p.slug}` },

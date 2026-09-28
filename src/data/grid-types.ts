@@ -1,13 +1,12 @@
 import type { ImageMetadata } from 'astro';
+import type { SvgName } from './svgs';
+import type { TagCount } from '../lib/tags';
 
 /** Unità occupate da una cella: w = colonne, h = righe (1 unità = 1 quadrato della griglia). */
 export interface Span {
   w: number;
   h: number;
 }
-
-/** SVG disponibili (vedi src/components/SvgAsset.astro). */
-export type SvgName = 'logo-r' | 'roberto' | 'logo-completo';
 
 /** Colore di fondo della cella. */
 export type Tone = 'paper' | 'red';
@@ -32,7 +31,11 @@ interface CellBase extends Span {
 
 export type Cell = CellBase & (
   | { type: 'svg'; svg: SvgName; fit?: 'contain' | 'bleed' }
-  | { type: 'marquee'; svg: SvgName; /** secondi per un giro completo */ speed?: number; reverse?: boolean }
+  | {
+      type: 'marquee'; svg: SvgName; /** secondi per un giro completo */ speed?: number; reverse?: boolean;
+      /** Scorre dall'alto in basso invece che da destra a sinistra */
+      vertical?: boolean;
+    }
   | {
       type: 'text'; eyebrow?: string; title: string; body?: string; as?: 'h1' | 'h2' | 'p'; size?: 's' | 'm' | 'l';
       /** Il titolo è l'arrivo del titolo della cella con questo href (scivola dalla didascalia). */
@@ -49,7 +52,5 @@ export type Cell = CellBase & (
   | { type: 'eye' }
   // solo archivio
   | { type: 'archive-head'; total: number }
-  | { type: 'tags'; tags: Array<{ tag: string; slug: string; count: number }> }
+  | { type: 'tags'; tags: TagCount[] }
 );
-
-export type CellType = Cell['type'];

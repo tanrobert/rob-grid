@@ -16,7 +16,6 @@ import MarkCell from './cells/MarkCell.astro';
 import EyeCell from './cells/EyeCell.astro';
 import ArchiveHeadCell from './cells/ArchiveHeadCell.astro';
 import TagsCell from './cells/TagsCell.astro';
-import GridPaper from './GridPaper.astro';
 import { tagSlug } from '../lib/tags';
 
 interface Props {
@@ -57,7 +56,7 @@ const voids = (Object.keys(COLS) as (keyof typeof COLS)[]).flatMap(bp =>
     return (
       <Cell cell={cell} index={i}>
         {cell.type === 'svg' && <SvgCell svg={cell.svg} fit={cell.fit} />}
-        {cell.type === 'marquee' && <MarqueeCell svg={cell.svg} speed={cell.speed} reverse={cell.reverse} />}
+        {cell.type === 'marquee' && <MarqueeCell svg={cell.svg} speed={cell.speed} reverse={cell.reverse} vertical={cell.vertical} />}
         {cell.type === 'text' && <TextCell eyebrow={cell.eyebrow} title={cell.title} body={cell.body} as={cell.as} size={cell.size} titleOf={cell.titleOf} />}
         {cell.type === 'list' && <ListCell title={cell.title} items={cell.items} />}
         {cell.type === 'stat' && <StatCell value={cell.value} caption={cell.caption} />}
@@ -77,8 +76,6 @@ const voids = (Object.keys(COLS) as (keyof typeof COLS)[]).flatMap(bp =>
       class:list={['void', `void--${v.bp}`]}
       style={`grid-column:${v.col} / span ${v.w};grid-row:${v.row} / span ${v.h}`}
       aria-hidden="true"
-    >
-      <GridPaper w={v.w} h={v.h} />
-    </div>
+    ></div>
   ))}
 </div>

@@ -1,18 +1,21 @@
 ---
 import SvgAsset from '../SvgAsset.astro';
-import type { SvgName } from '../../data/grid-types';
+import { svgs, type SvgName } from '../../data/svgs';
 
 interface Props {
   svg: SvgName;
   speed?: number;
   reverse?: boolean;
+  /** scorre dall'alto in basso */
+  vertical?: boolean;
 }
-const { svg, speed = 40, reverse = false } = Astro.props;
-// due metà identiche: la traccia scorre del 50% e riparte senza stacco
-const copies = [0, 1, 2];
+const { svg, speed = 40, reverse = false, vertical = false } = Astro.props;
+// due metà identiche: la traccia scorre del 50% e riparte senza stacco.
+// Orizzontale: tre copie per metà. Verticale: il logo è già più alto della cella, ne basta una.
+const copies = vertical ? [0] : [0, 1, 2];
 ---
 
-<div class="marquee" aria-hidden="true">
+<div class:list={['marquee', vertical && 'marquee--y']} aria-hidden="true">
   <div class:list={['track', 'loop', reverse && 'track--reverse']} style={`--speed:${speed}s`}>
     {[0, 1].map(() => (
       <div class="half">
@@ -21,7 +24,7 @@ const copies = [0, 1, 2];
     ))}
   </div>
 </div>
-<span class="sr-only">Roberto</span>
+<span class="sr-only">{svgs[svg].label}</span>
 
 <style>
   .marquee {
@@ -46,5 +49,25 @@ const copies = [0, 1, 2];
   @keyframes marquee {
     from { transform: translate3d(0, 0, 0); }
     to   { transform: translate3d(-50%, 0, 0); }
+  }
+
+  /* ── Verticale: scorre verso il basso ── */
+  .marquee--y { flex-direction: column; }
+  .marquee--y .track {
+    flex-direction: column; width: auto; height: max-content;
+    animation-name: marquee-y;
+  }
+  .marquee--y .half { flex-direction: column; }
+  .marquee--y .half :global(.item) {
+    /* larghezza = altezza del "roberto" orizzontale: lato cella meno il padding */
+    --w: calc(100cqi - 2 * var(--pad));
+    width: var(--w); height: auto; max-height: none;
+    margin-right: 0;
+    /* spazio tra una copia e l'altra = stacco tra lettering e R grande nel logo (82.94 su 247.21 di larghezza) */
+    margin-bottom: calc(var(--w) * 82.94 / 247.21);
+  }
+  @keyframes marquee-y {
+    from { transform: translate3d(0, -50%, 0); }
+    to   { transform: translate3d(0, 0, 0); }
   }
 </style>

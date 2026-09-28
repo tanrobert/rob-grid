@@ -1,8 +1,9 @@
 ---
 import TagButtons from '../TagButtons.astro';
+import type { TagCount } from '../../lib/tags';
 
 interface Props {
-  tags: Array<{ tag: string; slug: string; count: number }>;
+  tags: TagCount[];
   total: number;
 }
 const { tags, total } = Astro.props;
@@ -19,7 +20,7 @@ const { tags, total } = Astro.props;
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     align-content: end;
     column-gap: var(--pad);
-    padding: calc(var(--pad) + 22px) var(--pad) var(--pad);
+    padding: var(--pad-label) var(--pad) var(--pad);
     overflow: auto;
     overscroll-behavior: contain;
   }

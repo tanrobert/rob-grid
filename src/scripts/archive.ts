@@ -2,15 +2,21 @@
  * Filtri dell'archivio: un tag alla volta, stato nell'URL (?tag=…).
  * I progetti che non corrispondono vengono nascosti, la griglia si ricompone
  * con una View Transition (ogni casella scivola al suo nuovo posto) e i buchi
- * rimasti vengono riempiti con carta millimetrata, ricalcolata nel browser.
+ * rimasti vengono riempiti con caselle vuote a quadretti, ricalcolate nel browser.
  */
-import { COLS, findVoids } from '../lib/grid';
-import { paperSVG } from '../lib/paper';
+import { BREAKPOINTS, COLS, findVoids } from '../lib/grid';
+import { pad2 } from '../lib/format';
 
 type Bp = keyof typeof COLS;
 
+// stesse soglie delle media query di global.css
+const MQ = {
+  sm: `(max-width: ${BREAKPOINTS.md - 1}px)`,
+  md: `(max-width: ${BREAKPOINTS.lg - 1}px)`,
+};
+
 const breakpoint = (): Bp =>
-  matchMedia('(max-width: 599px)').matches ? 'sm' : matchMedia('(max-width: 1023px)').matches ? 'md' : 'lg';
+  matchMedia(MQ.sm).matches ? 'sm' : matchMedia(MQ.md).matches ? 'md' : 'lg';
 
 /** Stesso calcolo del build, sulle caselle visibili adesso */
 function layoutVoids(grid: HTMLElement) {
@@ -28,7 +34,6 @@ function layoutVoids(grid: HTMLElement) {
     el.className = 'void void--live';
     el.setAttribute('aria-hidden', 'true');
     el.style.gridArea = `${v.row} / ${v.col} / span ${v.h} / span ${v.w}`;
-    el.innerHTML = paperSVG(v.w, v.h);
     grid.append(el);
   }
 }
@@ -54,7 +59,7 @@ export function initArchive(signal: AbortSignal) {
     }
     layoutVoids(grid);
     for (const b of buttons) b.setAttribute('aria-pressed', String(b.dataset.tag === tag));
-    if (count) count.textContent = String(n).padStart(2, '0');
+    if (count) count.textContent = pad2(n);
     if (current) current.textContent = tag ? buttons.find(b => b.dataset.tag === tag)?.dataset.label ?? tag : 'tutti';
   };
 
@@ -102,7 +107,7 @@ export function initArchive(signal: AbortSignal) {
   }, { signal });
 
   // cambio di breakpoint: colonne diverse, vuoti diversi
-  for (const q of ['(max-width: 599px)', '(max-width: 1023px)']) {
+  for (const q of Object.values(MQ)) {
     matchMedia(q).addEventListener('change', () => layoutVoids(grid), { signal });
   }
 }

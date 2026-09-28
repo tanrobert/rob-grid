@@ -1,23 +1,107 @@
 ---
+// Casella di chiusura: sempre l'ultima, larga quanto il foglio.
+// Dentro: logo largo due colonne della griglia, poi tre zone distribuite in base al testo.
+import SvgAsset from './SvgAsset.astro';
+
+// Segnaposto da confermare: partita IVA
+const EMAIL = 'info@robertotanasi.it';
+const PIVA = '03362040598';
+const PLACE = 'Itri (LT), Italia';
+
+const pages = [
+  { label: 'Indice', href: '/' },
+  { label: 'Archivio', href: '/archivio' },
+  { label: 'Info', href: '/info' },
+];
 const year = new Date().getFullYear();
 ---
 
-<footer class="foot mono">
-  <span>© {year} Roberto</span>
-  <span>Griglia v0.1 — modulo 10 px</span>
-  <a href="/info">Info ↗</a>
+<footer class="foot cell--red">
+  <span class="cell__label mono" aria-hidden="true"><span>Footer</span></span>
+
+  <div class="foot__cols">
+    <a href="/" class="foot__logo" aria-label="Roberto — Homepage">
+      <SvgAsset name="logo-completo-orizzontale" />
+    </a>
+
+    <div class="foot__zones">
+      <nav class="foot__zone" aria-label="Pagine">
+        <ul>
+          {pages.map(p => <li><a href={p.href}>{p.label}</a></li>)}
+        </ul>
+      </nav>
+
+      <div class="foot__zone">
+        <ul>
+          <li><a href={`mailto:${EMAIL}`}>{EMAIL}</a></li>
+          <li>{PLACE}</li>
+        </ul>
+      </div>
+
+      <div class="foot__zone">
+        <p>Informativa Privacy</p>
+        <p class="mono">P.IVA {PIVA}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot__bar mono">
+    <span>© {year} Roberto</span>
+    <span>Griglia v0.1 — modulo 10 px</span>
+  </div>
 </footer>
 
 <style>
   .foot {
-    display: flex; justify-content: space-between; gap: var(--pad);
+    --soft: color-mix(in srgb, var(--paper) 45%, transparent);
+    position: relative;
+    display: flex; flex-direction: column; gap: calc(var(--pad) * 2);
     margin-top: var(--gap);
-    padding: 12px 0 calc(2px + env(safe-area-inset-bottom));
-    border-top: var(--line) solid var(--red);
+    padding: var(--pad-label) 0 calc(var(--pad) + env(safe-area-inset-bottom));
   }
-  @media (max-width: 599px) { .foot span:nth-child(2) { display: none; } }
+
+  /* logo largo due colonne della griglia; le tre zone prendono la larghezza del loro testo
+     e lo spazio libero si divide in parti uguali tra logo, zone e bordo destro */
+  .foot__cols {
+    --u: calc((100cqw - (var(--cols) - 1) * var(--gap)) / var(--cols));
+    display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start;
+    gap: calc(var(--pad) * 2);
+    padding-inline: var(--pad);
+  }
+  .foot__logo { flex: none; width: calc(2 * var(--u) + var(--gap) - 2 * var(--pad)); }
+  .foot__logo :global(svg) { width: 100%; height: auto; }
+
+  /* desktop: le zone sono fratelli diretti del logo nella stessa riga */
+  .foot__zones { display: contents; }
+  .foot__zone { flex: none; }
+  /* tablet: riga propria sotto il logo, stessa distribuzione */
+  @media (max-width: 1023px) {
+    .foot__zones { display: flex; flex-basis: 100%; justify-content: space-between; gap: calc(var(--pad) * 2); }
+  }
+  /* mobile: una sotto l'altra */
+  @media (max-width: 599px) { .foot__zones { flex-direction: column; } }
+
+  .foot__zone { display: flex; flex-direction: column; gap: var(--m); }
+  .foot__zone ul { list-style: none; display: flex; flex-direction: column; gap: 4px; }
+  .foot__zone li, .foot__zone p:not(.mono) {
+    font-size: clamp(14px, 1.2vw, 18px);
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+  }
+
+  .foot__bar {
+    display: flex; justify-content: space-between; gap: var(--pad);
+    margin-inline: var(--pad);
+    padding-top: 12px;
+    border-top: var(--line) solid var(--soft);
+  }
+  /* su schermi stretti il testo di destra va a capo restando allineato a destra */
+  .foot__bar span:last-child { text-align: right; }
+
   @media (hover: hover) and (pointer: fine) {
     .foot a { transition: opacity 200ms ease; }
-    .foot a:hover { opacity: 0.6; }
+    .foot__zone a:hover, .foot__logo:hover { opacity: 0.6; }
   }
 </style>

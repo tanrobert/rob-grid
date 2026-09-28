@@ -1,6 +1,6 @@
 import type { Project } from './types';
 import purplePiperImg from '../assets/purple-piper.png';
-import giardiniDelledenImg from "../assets/giardini_dell'eden.png";
+import giardiniDelledenImg from '../assets/giardini-dell-eden.png';
 import dummyImg from '../assets/dummy.png';
 import eurofishImg from '../assets/eurofish-napoli.png';
 import kialeImg from '../assets/kiale.png';
@@ -77,7 +77,6 @@ export const projects: Project[] = [
     period: 'dal 2024',
     description: 'Campagna stagionale e sistema di comunicazione per un teatro storico.',
     image: dummyImg,
-    
   },
 
   // ── SALUTE & BENESSERE ────────────────────────────────────────────────
@@ -155,7 +154,7 @@ export const projects: Project[] = [
     title: 'Spazioquadro',
     tags: ['Imprese', 'Prodotto', 'Logo', 'Web', 'Print'],
     period: 'dal 2026',
-    description: 'Brand e sito per un\'azienda di infissi e serramenti su misura.',
+    description: 'Brand e sito per la linea di G&A dedicata a finestre e serramenti su misura.',
     image: dummyImg,
   },
   {
@@ -163,7 +162,7 @@ export const projects: Project[] = [
     title: 'G&A',
     tags: ['Imprese', 'Prodotto', 'Logo', 'Web', 'Print'],
     period: 'dal 2026',
-    description: 'Brand e sito per un\'azienda di infissi e serramenti su misura.',
+    description: 'Brand e sito per un\'azienda che produce porte su misura, casa madre di Spazioquadro.',
     image: dummyImg,
   },
   {

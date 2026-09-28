@@ -1,6 +1,8 @@
 import type { Cell } from './grid-types';
 import { projects } from './projects';
 import { allTags } from '../lib/tags';
+import { firstYear } from '../lib/projects';
+import { pad2 } from '../lib/format';
 
 /*
  * ─────────────────────────────────────────────────────────────────────
@@ -23,7 +25,6 @@ import { allTags } from '../lib/tags';
 // i 9 tag più usati, ognuno apre l'archivio già filtrato
 const topTags = [...allTags].sort((a, b) => b.count - a.count).slice(0, 9)
   .map(t => ({ label: t.tag, href: `/archivio?tag=${t.slug}` }));
-const firstYear = Math.min(...projects.map(p => Number(p.period.match(/\d{4}/)?.[0] ?? 9999)));
 
 export const grid: Cell[] = [
   // ── riga 1 ────────────────────────────────────────────
@@ -46,7 +47,7 @@ export const grid: Cell[] = [
   { id: 'kiale',   type: 'project', w: 2, h: 2, slug: 'kiale' },
   { id: 'purple',  type: 'project', w: 1, h: 2, slug: 'purple-piper' },
   { id: 'tag',     type: 'list',    w: 2, h: 1, title: 'Tag', items: topTags },
-  { id: 'archivio', type: 'stat',   w: 1, h: 1, href: '/archivio', value: String(projects.length).padStart(2, '0'), caption: 'Progetti in archivio' },
+  { id: 'archivio', type: 'stat',   w: 1, h: 1, href: '/archivio', value: pad2(projects.length), caption: 'Progetti in archivio' },
   {
     id: 'metodo', type: 'text', w: 2, h: 1, size: 's',
     eyebrow: 'Metodo',
@@ -57,11 +58,10 @@ export const grid: Cell[] = [
   { id: 'occhio',   type: 'eye',  w: 1, h: 1 },
 
   // ── righe 6–7 ─────────────────────────────────────────
-  { id: 'marchio', type: 'svg',     w: 2, h: 2, svg: 'logo-completo' },
+  { id: 'marchio', type: 'marquee', w: 1, h: 2, svg: 'logo-completo-verticale', speed: 9, vertical: true },
   { id: 'giardini', type: 'project', w: 2, h: 1, slug: 'giardini-dell-eden', sm: { h: 2 } },
   {
     id: 'contatti', type: 'text', w: 2, h: 1, size: 'm', href: '/info',
     eyebrow: 'Nuovi progetti', title: 'Scrivimi_',
   },
-  { id: 'nome-2', type: 'marquee', w: 4, h: 1, svg: 'roberto', speed: 60, reverse: true, tone: 'red' },
 ];

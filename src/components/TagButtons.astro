@@ -1,19 +1,21 @@
 ---
 // Pulsanti filtro: usati sia nella casella "tags" sia nella barra mobile.
+import type { TagCount } from '../lib/tags';
+import { pad2 } from '../lib/format';
+
 interface Props {
-  tags: Array<{ tag: string; slug: string; count: number }>;
+  tags: TagCount[];
   total: number;
 }
 const { tags, total } = Astro.props;
-const pad = (n: number) => String(n).padStart(2, '0');
 ---
 
 <button type="button" class="tagbtn" data-tag="" aria-pressed="true">
-  <span>Tutti</span><span class="mono">{pad(total)}</span>
+  <span>Tutti</span><span class="mono">{pad2(total)}</span>
 </button>
 {tags.map(t => (
   <button type="button" class="tagbtn" data-tag={t.slug} data-label={t.tag} aria-pressed="false">
-    <span>{t.tag}</span><span class="mono">{pad(t.count)}</span>
+    <span>{t.tag}</span><span class="mono">{pad2(t.count)}</span>
   </button>
 ))}
 

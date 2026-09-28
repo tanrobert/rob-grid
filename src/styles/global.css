@@ -6,7 +6,7 @@
 
 /* ── Token ────────────────────────────────────────────── */
 :root {
-  --red:   hsl(8 87% 54%);      /* rosso di terminal-astro */
+  --red:   hsl(8 87% 54%);      /* = #f03f24, ripetuto nei crocini SVG di .grid */
   --paper: hsl(0 0% 100%);
 
   --font-mono: 'SohneMono', 'Courier New', monospace;
@@ -16,7 +16,10 @@
   --m:    10px;
   --gap:  var(--m);
   --pad:  calc(var(--m) * 2);
+  /* padding superiore delle celle: lascia spazio alla linguetta (~22px) */
+  --pad-label: calc(var(--pad) + 22px);
   --line: 1px;
+  --dp:   1px;  /* 1 pixel reale dello schermo: aggiornato da Layout.astro */
 
   --cols: 6;
 
@@ -95,7 +98,8 @@ p { text-wrap: pretty; }
   gap: var(--gap);
 
   /* crocini di registro agli incroci, visibili solo nei gap.
-     SVG senza viewBox: le coordinate restano in px qualunque sia la dimensione della cella. */
+     SVG senza viewBox: le coordinate restano in px qualunque sia la dimensione della cella.
+     Spessore 1px scritto nell'SVG: un'immagine di sfondo non legge var(--line), aggiornarlo a mano. */
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23f03f24'%3E%3Crect width='5' height='1'/%3E%3Crect width='1' height='5'/%3E%3Crect x='100%25' width='4' height='1' transform='translate(-4 0)'/%3E%3Crect y='100%25' width='1' height='4' transform='translate(0 -4)'/%3E%3C/g%3E%3C/svg%3E");
   background-repeat: repeat;
   background-size: var(--step) var(--step);
@@ -104,20 +108,26 @@ p { text-wrap: pretty; }
 
 /* ── Vuoti: riempiono i buchi dell'incastro, uno per breakpoint ── */
 .void {
+  /* carta a quadretti fissi, ancorata in alto a sinistra */
+  --paper-step: 50px;
+  --paper-line: var(--line);
+  --paper-ink: color-mix(in srgb, var(--red) 22%, transparent);
   display: none;
-  position: relative;
-  background: var(--paper);
+  background:
+    linear-gradient(to right, var(--paper-ink) var(--paper-line), transparent var(--paper-line)),
+    linear-gradient(to bottom, var(--paper-ink) var(--paper-line), transparent var(--paper-line)),
+    var(--paper);
+  background-size: var(--paper-step) var(--paper-step);
   box-shadow: inset 0 0 0 var(--line) var(--red);
 }
-.paper { position: absolute; inset: 0; width: 100%; height: 100%; }
-.paper line {
-  stroke: var(--red);
-  stroke-width: 1px;
-  vector-effect: non-scaling-stroke;
-  shape-rendering: crispEdges;
-  opacity: 0.22;
+/* linee e quadretti agganciati ai pixel reali (--dp, da Layout.astro):
+   ogni linea resta netta come i bordi, anche con lo schermo scalato */
+@supports (width: round(down, 1px, 1px)) {
+  .void {
+    --paper-step: round(50px, var(--dp));
+    --paper-line: max(var(--dp), round(down, var(--line), var(--dp)));
+  }
 }
-.paper line.half { opacity: 0.5; }
 
 /* vuoti ricalcolati nel browser (archivio filtrato): valgono per il breakpoint corrente */
 .void--live { display: block; }
@@ -141,7 +151,7 @@ p { text-wrap: pretty; }
 @media (min-width: 600px) and (max-width: 1023px) { .cell.hide-md { display: none; } }
 @media (max-width: 599px) { .cell.hide-sm { display: none; } }
 
-/* filo 1px sopra al contenuto (anche sui media) */
+/* filo (--line) sopra al contenuto, anche sui media */
 .cell::after {
   content: '';
   position: absolute; inset: 0; z-index: 3;
@@ -171,15 +181,15 @@ p { text-wrap: pretty; }
   display: grid; place-items: center;
   width: 30px; height: 30px;
   background: var(--paper);
-  box-shadow: inset var(--line) calc(var(--line) * -1) 0 0 var(--red);
-  font-family: var(--font-mono); font-size: 13px;
+  border-left: var(--line) solid var(--red);
+  border-bottom: var(--line) solid var(--red);
   transition: background-color 200ms ease, color 200ms ease;
 }
 .cell__go span { display: block; transition: transform 300ms var(--ease-out); }
 /* freccia (src/assets/arrow.svg): il colore segue il testo, così si inverte in hover */
 .cell__go svg { width: 11px; height: 11px; }
 .cell__go svg * { fill: currentColor; }
-.cell--red .cell__go { background: var(--red); box-shadow: inset var(--line) calc(var(--line) * -1) 0 0 color-mix(in srgb, var(--paper) 45%, transparent); }
+.cell--red .cell__go { background: var(--red); border-color: color-mix(in srgb, var(--paper) 45%, transparent); }
 
 @media (hover: hover) and (pointer: fine) {
   .cell--link:hover .cell__go { background: var(--red); color: var(--paper); }

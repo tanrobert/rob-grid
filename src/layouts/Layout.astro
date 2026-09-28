@@ -33,6 +33,20 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <!-- Intro solo al caricamento "vero": il ClientRouter non riesegue questo script nelle navigazioni -->
     <script is:inline>
       if (!matchMedia('(prefers-reduced-motion: reduce)').matches) document.documentElement.classList.add('is-intro');
+
+      // --dp = 1 pixel reale dello schermo in px CSS (Windows al 125% → 0.8px).
+      // Serve alle linee disegnate con i gradienti, che il browser non aggancia ai pixel.
+      // Si aggiorna con lo zoom e dopo ogni navigazione (lo swap riscrive gli attributi di <html>).
+      (function () {
+        var root = document.documentElement;
+        function setDp() { root.style.setProperty('--dp', 1 / devicePixelRatio + 'px'); }
+        function watch() {
+          setDp();
+          matchMedia('(resolution: ' + devicePixelRatio + 'dppx)').addEventListener('change', watch, { once: true });
+        }
+        watch();
+        document.addEventListener('astro:after-swap', setDp);
+      })();
     </script>
     <ClientRouter />
   </head>
