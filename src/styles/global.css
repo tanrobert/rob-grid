@@ -1,16 +1,12 @@
-/* ── Font ─────────────────────────────────────────────── */
-@font-face { font-family: 'SohneMono'; src: url('/fonts/SohneMono-Buch.otf') format('opentype'); font-weight: 400; font-style: normal; font-display: swap; }
-@font-face { font-family: 'SohneMono'; src: url('/fonts/SohneMono-Kraftig.otf') format('opentype'); font-weight: 500; font-style: normal; font-display: swap; }
-@font-face { font-family: 'UntitledSans'; src: url('/fonts/UntitledSans-Regular.otf') format('opentype'); font-weight: 400; font-style: normal; font-display: swap; }
-@font-face { font-family: 'UntitledSans'; src: url('/fonts/UntitledSans-Medium.otf') format('opentype'); font-weight: 500; font-style: normal; font-display: swap; }
+@import './fonts.css';
 
 /* ── Token ────────────────────────────────────────────── */
 :root {
   --red:   hsl(8 87% 54%);      /* = #f03f24, ripetuto nei crocini SVG di .grid */
   --paper: hsl(0 0% 100%);
 
-  --font-mono: 'SohneMono', 'Courier New', monospace;
-  --font-sans: 'UntitledSans', 'Helvetica Neue', sans-serif;
+  --font-testo:  'Testo', 'Helvetica Neue', sans-serif;
+  --font-numeri: 'Numeri', 'Courier New', monospace;
 
   /* modulo: tutto è multiplo di 10px */
   --m:    10px;
@@ -39,7 +35,7 @@
 html {
   background: var(--paper);
   color: var(--red);
-  font-family: var(--font-sans);
+  font-family: var(--font-testo);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   -webkit-text-size-adjust: 100%;
@@ -59,7 +55,7 @@ p { text-wrap: pretty; }
 :focus-visible { outline: 2px solid var(--red); outline-offset: 3px; }
 
 .mono {
-  font-family: var(--font-mono);
+  font-family: var(--font-numeri);
   font-size: 10px;
   line-height: 1.2;
   letter-spacing: 0.08em;
@@ -75,7 +71,7 @@ p { text-wrap: pretty; }
 .skip-link {
   position: absolute; top: -100%; left: var(--gap); z-index: 9999;
   padding: 8px 20px; background: var(--red); color: var(--paper);
-  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+  font-family: var(--font-numeri); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
   transition: top 0.2s;
 }
 .skip-link:focus { top: var(--gap); }

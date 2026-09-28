@@ -28,8 +28,8 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <link rel="icon" href="/favicon.ico" sizes="48x48" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    <link rel="preload" href="/fonts/UntitledSans-Medium.otf" as="font" type="font/otf" crossorigin />
-    <link rel="preload" href="/fonts/SohneMono-Buch.otf" as="font" type="font/otf" crossorigin />
+    <link rel="preload" href="/fonts/testo-500.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/numeri-400.woff2" as="font" type="font/woff2" crossorigin />
     <!-- Intro solo al caricamento "vero": il ClientRouter non riesegue questo script nelle navigazioni -->
     <script is:inline>
       if (!matchMedia('(prefers-reduced-motion: reduce)').matches) document.documentElement.classList.add('is-intro');

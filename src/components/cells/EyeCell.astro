@@ -12,7 +12,7 @@ const clipId = `eye-clip-${Math.random().toString(36).slice(2, 8)}`;
       <clipPath id={clipId}><path d={almond} /></clipPath>
     </defs>
     <circle cx="50" cy="50" r="46" />
-    <g class="lid loop">
+    <g class="lid loop" data-lid>
       <path d={almond} />
       <g clip-path={`url(#${clipId})`}>
         <g data-iris>
@@ -40,12 +40,24 @@ const clipId = `eye-clip-${Math.random().toString(36).slice(2, 8)}`;
 
   /* battito di palpebra: breve, ogni ~6 secondi */
   .lid {
+    /* palpebra chiusa = una linea. Non 0: con scala nulla il browser non disegna nulla */
+    --lid-shut: 0.001;
     transform-box: fill-box;
     transform-origin: center;
     animation: eye-blink 6.4s var(--ease-out) infinite;
   }
   @keyframes eye-blink {
     0%, 94%, 100% { transform: scaleY(1); }
-    96.5%         { transform: scaleY(0.06); }
+    96.5%         { transform: scaleY(var(--lid-shut)); }
+  }
+
+  /* al clic (scripts/cells.ts): stesso battito di eye-blink (chiusura 160ms, riapertura 224ms,
+     --ease-out), ma l'occhio resta chiuso 3s. Totale 160 + 3000 + 224 = 3384ms */
+  .lid.is-shut { animation: eye-shut 3.384s var(--ease-out) both; }
+  @keyframes eye-shut {
+    0%      { transform: scaleY(1); }
+    4.73%   { transform: scaleY(var(--lid-shut)); }   /* chiuso a 160ms */
+    93.38%  { transform: scaleY(var(--lid-shut)); }   /* resta chiuso fino a 3160ms */
+    100%    { transform: scaleY(1); }      /* riaperto a 3384ms */
   }
 </style>

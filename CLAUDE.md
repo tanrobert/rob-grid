@@ -1,0 +1,86 @@
+# rob-astro — portfolio di Roberto Tanasi
+
+Portfolio da graphic designer costruito come **griglia modulare di caselle** in bicromia rosso/bianco.
+Astro 6 statico, nessun framework UI, TypeScript. Dominio `https://roberto.design`, progetto Vercel `rob-grid`.
+Lingua del sito e dei commenti nel codice: **italiano**.
+
+## Comandi
+- `npm run dev` · `npx astro build` (deve chiudere con `Complete!`, zero errori) · `npx astro preview`
+- `astro check` non è installato (conflitto di dipendenze): non aggiungerlo senza chiedere.
+
+## Struttura
+```
+src/
+  layouts/Layout.astro      <head>, ClientRouter, script inline (intro + --dp), import di morph.ts e cells.ts
+  pages/                    index · archivio (filtri per tag) · info · progetti/[slug]
+  components/
+    Grid.astro              rende le celle + calcola i "vuoti" per ogni breakpoint
+    Cell.astro              guscio di ogni casella: <a> se cliccabile, <div> altrimenti; linguetta + freccia/✕
+    PageHero.astro          casella d'arrivo dell'espansione (pagine info/progetto)
+    SiteFooter.astro        footer = casella rossa sempre ultima, fuori dalla griglia
+    SvgAsset.astro          rende un SVG dal registro
+    TagButtons.astro        pulsanti filtro (casella tags + barra mobile dell'archivio)
+    cells/*Cell.astro       un componente per ogni tipo di cella
+  data/
+    grid.ts                 GRIGLIA HOME: l'ordine e le misure delle celle si modificano qui
+    grid-types.ts           tipo `Cell` (unione di tutti i tipi di cella)
+    projects.ts, types.ts   progetti (period = "dal 2024"/"nel 2016")
+    svgs.ts                 registro unico degli SVG: componente + label per screen reader
+  lib/
+    grid.ts                 COLS, BREAKPOINTS, resolveSpans, findVoids (replica di grid-auto-flow: row dense)
+    projects.ts             projectYear, firstYear, projectsByYear
+    tags.ts                 TagCount, tagSlug, allTags
+    format.ts               pad2 ("03")
+  scripts/
+    cells.ts                comportamenti vivi (orologio, meteo Open-Meteo, occhio, cursore, misure, pausa offscreen); reinit su astro:page-load, cleanup su before-swap
+    archive.ts              filtri archivio (?tag=), View Transition delle caselle, vuoti ricalcolati nel browser
+    morph.ts                espansione cella → pagina e ritorno (view-transition-name assegnato solo alla cella cliccata)
+  styles/global.css         token, griglia, cella, media bicromia, intro, view transitions, reduced motion
+  styles/fonts.css          tutte le @font-face (importato da global.css)
+```
+
+## Sistema a griglia
+- Colonne: **6** desktop (≥1024) · **4** tablet (600–1023) · **2** mobile (<600). `COLS`/`BREAKPOINTS` in `lib/grid.ts` vanno tenuti allineati a `--cols` e alle media query di `global.css`.
+- Unità `--u` = lato della cella quadrata, calcolata su `.grid` con `100cqw` (`.sheet` è il container).
+- Ogni cella: `w`/`h` in unità, override `md`/`sm`, `tone: 'red'`, `href`, `label`, `heroOf`, `hideOn`.
+- L'ordine in `data/grid.ts` conta: la griglia è `row dense`. I buchi rimasti diventano `.void` (carta a quadretti fissi da 50px), calcolati al build per breakpoint e ricalcolati nel browser dopo i filtri.
+- Tipi di cella: svg, marquee (anche `vertical`), text, list, stat, media, project, clock, cursor, meter, mark, eye, archive-head, tags.
+
+## Font
+- Due ruoli, file in `public/fonts/` come `ruolo-peso[-italic].woff2`:
+  - **testo** = Untitled Sans (Klim), `var(--font-testo)`, pesi 300 400 500 700 900 + corsivi. Font di base; titoli e testi in 500.
+  - **numeri** = Söhne Mono (Klim), `var(--font-numeri)`, pesi 200–900 + corsivi. Usato dalla classe `.mono` (10px, maiuscolo, cifre tabellari) per linguette, eyebrow, didascalie, orologio.
+- Preload in Layout.astro: `testo-500` e `numeri-400`. Sorgenti originali in `D:\ROBERTO\Roberto file grafiche progetti\` (Untitled Sans, "Sohne OTF - fixed…"); conversione con fontTools (`pip install --user fonttools brotli`).
+- Licenza web Klim da verificare per metterli online.
+
+## Convenzioni
+- **Linee**: sempre `var(--line)` (1px). Per i nuovi fili usare `border`, non `box-shadow` (preferenza di Roberto; alcuni fili esistenti usano ancora box-shadow inset). Linee secondarie: rosso al 22–35% o bianco al 45% sulle celle rosse.
+- Token in `:root` (`--red`, `--paper`, `--m`=10px, `--gap`, `--pad`, `--pad-label` = padding sotto la linguetta, `--line`, `--dp`, font). Niente valori magici ripetuti: se un valore compare 2+ volte diventa un token o un helper.
+- SVG nuovi: aggiungerli a `data/svgs.ts`; i file devono usare `fill: currentColor` (così si invertono sulle celle rosse). Nomi file in kebab-case, niente apostrofi.
+- Stagger max 50ms, mai `transition: all`, `…` unicode, `prefers-reduced-motion` rispettato anche nei loop JS.
+- Layout "content aware" quando i contenuti sono di lunghezza diversa (es. zone del footer distribuite con `space-between`), allineando comunque gli elementi principali alle colonne della griglia.
+
+## Trappole note
+- `@keyframes` **non sono scoped** in Astro: nomi unici (`eye-blink`, `caret-blink`…), altrimenti si sovrascrivono.
+- I commenti HTML `<!-- -->` nei componenti finiscono nell'HTML pubblicato: commentare nel frontmatter.
+- Il ClientRouter riscrive gli attributi di `<html>` a ogni navigazione: variabili inline su `<html>` (es. `--dp`) vanno riapplicate su `astro:after-swap`. Gli script `is:inline` in `<head>` girano solo al primo caricamento.
+- Linee disegnate con gradienti non vengono agganciate ai pixel: con Windows al 125% escono sfocate/1-2px. Usare `--dp` (1 pixel reale) + `round()` come in `.void`.
+- I crocini di registro sono in un SVG data-URI su `.grid`: colore `#f03f24` e spessore 1px scritti a mano.
+
+## Verifica (prima di dire "fatto")
+1. `npx astro build` senza errori.
+2. Per modifiche visive: `npx astro preview --port 4399` e screenshot con Chrome headless
+   (`chrome.exe --headless=new --force-prefers-reduced-motion --window-size=W,H --screenshot=...`) a 1440 / 800 / 500 px.
+   Chrome headless non scende sotto ~500px di larghezza. Per scale Windows usare `--force-device-scale-factor=1.25`. L'hover non è simulabile.
+3. Per refactor: confrontare l'HTML generato prima/dopo.
+
+## Git
+Roberto fa commit e push da solo: committare solo se lo chiede. Versioni: 1.0 → 1.1 → 1.2 (refactor, footer, marchio verticale, quadretti 50px).
+
+## Aperti / idee
+- Video Eurofish da 8.6 MB da comprimere.
+- Tag sempre in coppia (Ristorazione+Ospitalità…): da ripensare. Molti progetti con `dummy.png` e testi segnaposto.
+- Ultima riga della home: vuoti accanto a `marchio` (tolta `nome-2`).
+- `logo-completo.svg` (quadrato) non più usato ma ancora nel registro.
+- SEO (Open Graph, Schema.org, sitemap): da fare con la procedura "Review SEO Astro Rob".
+- Scartato: cubo 3D sul logo della casella 1 (provato e annullato).

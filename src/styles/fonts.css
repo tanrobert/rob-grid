@@ -1,0 +1,33 @@
+/* ── Font ─────────────────────────────────────────────────
+   testo  = Untitled Sans (Klim) · 300 400 500 700 900 + corsivi
+   numeri = Söhne Mono (Klim)    · 200 → 900 + corsivi
+   Il browser scarica solo gli stili che la pagina usa davvero.
+   ───────────────────────────────────────────────────────── */
+
+@font-face { font-family: 'Testo'; src: url('/fonts/testo-300.woff2') format('woff2'); font-weight: 300; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Testo'; src: url('/fonts/testo-300-italic.woff2') format('woff2'); font-weight: 300; font-style: italic; font-display: swap; }
+@font-face { font-family: 'Testo'; src: url('/fonts/testo-400.woff2') format('woff2'); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Testo'; src: url('/fonts/testo-400-italic.woff2') format('woff2'); font-weight: 400; font-style: italic; font-display: swap; }
+@font-face { font-family: 'Testo'; src: url('/fonts/testo-500.woff2') format('woff2'); font-weight: 500; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Testo'; src: url('/fonts/testo-500-italic.woff2') format('woff2'); font-weight: 500; font-style: italic; font-display: swap; }
+@font-face { font-family: 'Testo'; src: url('/fonts/testo-700.woff2') format('woff2'); font-weight: 700; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Testo'; src: url('/fonts/testo-700-italic.woff2') format('woff2'); font-weight: 700; font-style: italic; font-display: swap; }
+@font-face { font-family: 'Testo'; src: url('/fonts/testo-900.woff2') format('woff2'); font-weight: 900; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Testo'; src: url('/fonts/testo-900-italic.woff2') format('woff2'); font-weight: 900; font-style: italic; font-display: swap; }
+
+@font-face { font-family: 'Numeri'; src: url('/fonts/numeri-200.woff2') format('woff2'); font-weight: 200; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Numeri'; src: url('/fonts/numeri-200-italic.woff2') format('woff2'); font-weight: 200; font-style: italic; font-display: swap; }
+@font-face { font-family: 'Numeri'; src: url('/fonts/numeri-300.woff2') format('woff2'); font-weight: 300; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Numeri'; src: url('/fonts/numeri-300-italic.woff2') format('woff2'); font-weight: 300; font-style: italic; font-display: swap; }
+@font-face { font-family: 'Numeri'; src: url('/fonts/numeri-400.woff2') format('woff2'); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Numeri'; src: url('/fonts/numeri-400-italic.woff2') format('woff2'); font-weight: 400; font-style: italic; font-display: swap; }
+@font-face { font-family: 'Numeri'; src: url('/fonts/numeri-500.woff2') format('woff2'); font-weight: 500; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Numeri'; src: url('/fonts/numeri-500-italic.woff2') format('woff2'); font-weight: 500; font-style: italic; font-display: swap; }
+@font-face { font-family: 'Numeri'; src: url('/fonts/numeri-600.woff2') format('woff2'); font-weight: 600; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Numeri'; src: url('/fonts/numeri-600-italic.woff2') format('woff2'); font-weight: 600; font-style: italic; font-display: swap; }
+@font-face { font-family: 'Numeri'; src: url('/fonts/numeri-700.woff2') format('woff2'); font-weight: 700; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Numeri'; src: url('/fonts/numeri-700-italic.woff2') format('woff2'); font-weight: 700; font-style: italic; font-display: swap; }
+@font-face { font-family: 'Numeri'; src: url('/fonts/numeri-800.woff2') format('woff2'); font-weight: 800; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Numeri'; src: url('/fonts/numeri-800-italic.woff2') format('woff2'); font-weight: 800; font-style: italic; font-display: swap; }
+@font-face { font-family: 'Numeri'; src: url('/fonts/numeri-900.woff2') format('woff2'); font-weight: 900; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Numeri'; src: url('/fonts/numeri-900-italic.woff2') format('woff2'); font-weight: 900; font-style: italic; font-display: swap; }

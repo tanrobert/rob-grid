@@ -86,6 +86,16 @@ export function initCells() {
     const pupil = svg.querySelector<SVGGElement>('[data-pupil]')!;
     // escursione massima (unità del viewBox 100×100): la mandorla è più larga che alta
     const IRIS = { x: 14, y: 6 }, PUPIL = { x: 4, y: 3 };
+
+    // clic sulla casella: l'occhio si chiude e si riapre lentamente, poi torna al battito normale
+    const lid = svg.querySelector<SVGGElement>('[data-lid]')!;
+    svg.closest('.cell')?.addEventListener('click', () => {
+      // già chiuso: resta chiuso, l'animazione non riparte
+      lid.classList.add('is-shut');
+    }, { signal });
+    lid.addEventListener('animationend', e => {
+      if (e.animationName.includes('eye-shut')) lid.classList.remove('is-shut');
+    }, { signal });
     let tx = 0, ty = 0, x = 0, y = 0, raf = 0;
 
     const frame = () => {

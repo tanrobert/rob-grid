@@ -37,6 +37,10 @@ const copies = vertical ? [0] : [0, 1, 2];
     animation: marquee var(--speed) linear infinite;
   }
   .track--reverse { animation-direction: reverse; }
+  /* con il mouse sopra la casella lo scorrimento si ferma e riparte da lì all'uscita */
+  @media (hover: hover) and (pointer: fine) {
+    :global(.cell:hover) .track { animation-play-state: paused; }
+  }
   .half { display: flex; }
   .half :global(.item) {
     /* stessa altezza del logo-r nella cella 1×1: lato cella meno il padding */
