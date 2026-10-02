@@ -35,13 +35,14 @@ src/
     cells.ts                comportamenti vivi (orologio, meteo Open-Meteo, occhio, cursore, misure, pausa offscreen); reinit su astro:page-load, cleanup su before-swap
     archive.ts              filtri archivio (?tag=), View Transition delle caselle, vuoti ricalcolati nel browser
     morph.ts                espansione cella → pagina e ritorno (view-transition-name assegnato solo alla cella cliccata)
+    ruler.ts                righello al posto della scrollbar: indicatore + percentuale, trascinamento e click
   styles/global.css         token, griglia, cella, media bicromia, intro, view transitions, reduced motion
   styles/fonts.css          tutte le @font-face (importato da global.css)
 ```
 
 ## Sistema a griglia
 - Colonne: **6** desktop (≥1024) · **4** tablet (600–1023) · **2** mobile (<600). `COLS`/`BREAKPOINTS` in `lib/grid.ts` vanno tenuti allineati a `--cols` e alle media query di `global.css`.
-- Unità `--u` = lato della cella quadrata, calcolata su `.grid` con `100cqw` (`.sheet` è il container).
+- Unità `--u` = lato della cella quadrata, calcolata su `.grid` con `100cqw` (`.sheet` è il container). Tetto `--u-max` (300px): `.sheet` ha `max-width` di conseguenza e si centra, quindi la cella si ferma lì (da ~1870px con 6 colonne).
 - Ogni cella: `w`/`h` in unità, override `md`/`sm`, `tone: 'red'`, `href`, `label`, `heroOf`, `hideOn`.
 - L'ordine in `data/grid.ts` conta: la griglia è `row dense`. I buchi rimasti diventano `.void` (carta a quadretti fissi da 50px), calcolati al build per breakpoint e ricalcolati nel browser dopo i filtri.
 - Tipi di cella: svg, marquee (anche `vertical`), text, list, stat, media, project, clock, cursor, meter, mark, eye, archive-head, tags.
@@ -54,18 +55,23 @@ src/
 - Licenza web Klim da verificare per metterli online.
 
 ## Convenzioni
-- **Linee**: sempre `var(--line)` (1px). Per i nuovi fili usare `border`, non `box-shadow` (preferenza di Roberto; alcuni fili esistenti usano ancora box-shadow inset). Linee secondarie: rosso al 22–35% o bianco al 45% sulle celle rosse.
-- Token in `:root` (`--red`, `--paper`, `--m`=10px, `--gap`, `--pad`, `--pad-label` = padding sotto la linguetta, `--line`, `--dp`, font). Niente valori magici ripetuti: se un valore compare 2+ volte diventa un token o un helper.
+- **Filo delle celle** (`.cell::after`): quattro lati disegnati con gradienti, spessore `--line-dp` (= `--line` agganciato ai pixel reali). Nell'intro `--draw` (0→1, `@property`) fa crescere il filo dal vertice `data-from` (scelto a caso in Layout.astro) lungo il perimetro; poi entrano fondo e contenuto. Durata in `--t-draw`, da tenere allineata al timeout di `cells.ts`.
+- **Righello** (al posto della scrollbar nativa, nascosta): tacche come sfondo di `<body>` nel margine destro (ogni 25px da 5px, ogni 100px larghe quanto il margine), scorrono con la pagina; indicatore fisso = rettangolo rosso con percentuale verticale bianca (`.ruler`, persistente tra le pagine). Posizioni e spessori agganciati a `--dp`. Su touch è solo indicatore. La scrollbar nativa si nasconde solo con `html.has-ruler` (messa da ruler.ts, riapplicata dopo ogni swap): senza JS resta la scrollbar normale.
+- **Linee**: sempre `var(--line)` (1px). Per i fili usare `border`, mai `box-shadow`: i bordi vengono agganciati ai pixel reali, le ombre no (al 125% escono da 2px sfumati, più spessi del filo della casella). Se il filo deve stare dentro la misura, togliere `--line` dal padding. Linee secondarie: rosso al 22–35% o bianco al 45% sulle celle rosse.
+- Colori: solo la palette, usata direttamente (niente alias di ruolo). Il sito usa `--rosso` e `--bianco` (`#e8e0e0`, unico bianco: fondo di pagina e caselle, e scritte/fili/loghi sulle caselle rosse). In palette anche `--nero`, `--giallo`, `--verde` (da terminal-astro). Le caselle hanno fondo `--bianco` = colore della pagina (non trasparenti: coprono i crocini della griglia).
+- Token in `:root` (`--m`=10px, `--gap`, `--pad`, `--pad-label` = padding sotto la linguetta, `--line`, `--dp`, font). Niente valori magici ripetuti: se un valore compare 2+ volte diventa un token o un helper.
 - SVG nuovi: aggiungerli a `data/svgs.ts`; i file devono usare `fill: currentColor` (così si invertono sulle celle rosse). Nomi file in kebab-case, niente apostrofi.
 - Stagger max 50ms, mai `transition: all`, `…` unicode, `prefers-reduced-motion` rispettato anche nei loop JS.
 - Layout "content aware" quando i contenuti sono di lunghezza diversa (es. zone del footer distribuite con `space-between`), allineando comunque gli elementi principali alle colonne della griglia.
 
 ## Trappole note
+- Aree con scroll interno (es. casella tags): niente `overscroll-behavior: contain`, Firefox blocca la rotella sulla casella anche quando non c'è nulla da scorrere.
 - `@keyframes` **non sono scoped** in Astro: nomi unici (`eye-blink`, `caret-blink`…), altrimenti si sovrascrivono.
 - I commenti HTML `<!-- -->` nei componenti finiscono nell'HTML pubblicato: commentare nel frontmatter.
 - Il ClientRouter riscrive gli attributi di `<html>` a ogni navigazione: variabili inline su `<html>` (es. `--dp`) vanno riapplicate su `astro:after-swap`. Gli script `is:inline` in `<head>` girano solo al primo caricamento.
 - Linee disegnate con gradienti non vengono agganciate ai pixel: con Windows al 125% escono sfocate/1-2px. Usare `--dp` (1 pixel reale) + `round()` come in `.void`.
-- I crocini di registro sono in un SVG data-URI su `.grid`: colore `#f03f24` e spessore 1px scritti a mano.
+- I crocini di registro sono un SVG data-URI nel token `--crocini` (`:root`): colore `#f03f24` e spessore 1px scritti a mano. Usati da `.grid` (nei gap) e da `.sheet::before/::after` (margini laterali quando scatta il tetto `--u-max`, allineati al passo delle colonne).
+- `--u`/`--step` sono token in `:root` con `100cqw`: si risolvono dove vengono usati, quindi valgono solo in elementi il cui container è `.sheet` (non dentro le celle).
 
 ## Verifica (prima di dire "fatto")
 1. `npx astro build` senza errori.
@@ -75,7 +81,7 @@ src/
 3. Per refactor: confrontare l'HTML generato prima/dopo.
 
 ## Git
-Roberto fa commit e push da solo: committare solo se lo chiede. Versioni: 1.0 → 1.1 → 1.2 (refactor, footer, marchio verticale, quadretti 50px).
+Roberto fa commit e push da solo: committare solo se lo chiede. La versione nel footer ("Portfolio modulare v.X") si legge al build dal messaggio dell'ultimo commit (`lib/version.ts`, come in terminal-astro): il messaggio deve iniziare col numero, es. `1.0.1 footer`. Versioni: 1.0 → 1.1 → 1.2 (refactor, footer, marchio verticale, quadretti 50px).
 
 ## Aperti / idee
 - Video Eurofish da 8.6 MB da comprimere.

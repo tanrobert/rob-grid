@@ -2,6 +2,7 @@
 // Casella di chiusura: sempre l'ultima, larga quanto il foglio.
 // Dentro: logo largo due colonne della griglia, poi tre zone distribuite in base al testo.
 import SvgAsset from './SvgAsset.astro';
+import { siteVersion } from '../lib/version';
 
 const EMAIL = 'info@robertotanasi.it';
 const PIVA = '03362040598';
@@ -46,13 +47,13 @@ const year = new Date().getFullYear();
 
   <div class="foot__bar mono">
     <span>© {year} Roberto</span>
-    <span>Griglia v0.1 — modulo 10 px</span>
+    <span>Portfolio modulare v.{siteVersion}</span>
   </div>
 </footer>
 
 <style>
   .foot {
-    --soft: color-mix(in srgb, var(--paper) 45%, transparent);
+    --soft: color-mix(in srgb, var(--bianco) 45%, transparent);
     position: relative;
     display: flex; flex-direction: column; gap: calc(var(--pad) * 2);
     margin-top: var(--gap);
@@ -62,7 +63,6 @@ const year = new Date().getFullYear();
   /* logo largo due colonne della griglia; le tre zone prendono la larghezza del loro testo
      e lo spazio libero si divide in parti uguali tra logo, zone e bordo destro */
   .foot__cols {
-    --u: calc((100cqw - (var(--cols) - 1) * var(--gap)) / var(--cols));
     display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start;
     gap: calc(var(--pad) * 2);
     padding-inline: var(--pad);

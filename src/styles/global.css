@@ -2,8 +2,13 @@
 
 /* ── Token ────────────────────────────────────────────── */
 :root {
-  --red:   hsl(8 87% 54%);      /* = #f03f24, ripetuto nei crocini SVG di .grid */
-  --paper: hsl(0 0% 100%);
+  /* palette (da terminal-astro). Il sito usa rosso e bianco:
+     bianco = fondo di pagina e caselle, e scritte/fili/loghi sulle caselle rosse */
+  --rosso:  hsl(8 87% 54%);     /* = #f03f24, ripetuto nei crocini SVG di .grid */
+  --bianco: #e8e0e0;            /* bianco caldo, unico bianco del sito */
+  --nero:   hsl(0 12% 13%);
+  --giallo: hsl(55 89% 53%);
+  --verde:  hsl(143 88% 54%);
 
   --font-testo:  'Testo', 'Helvetica Neue', sans-serif;
   --font-numeri: 'Numeri', 'Courier New', monospace;
@@ -16,14 +21,30 @@
   --pad-label: calc(var(--pad) + 22px);
   --line: 1px;
   --dp:   1px;  /* 1 pixel reale dello schermo: aggiornato da Layout.astro */
+  /* --line agganciato ai pixel reali, per le linee disegnate con i gradienti (vedi @supports sotto) */
+  --line-dp: var(--line);
 
   --cols: 6;
+  /* lato massimo della cella: oltre, il foglio smette di crescere e si centra (da ~1870px con 6 colonne) */
+  --u-max: 300px;
+  /* unità = lato della cella quadrata. 100cqw si risolve dove il token viene usato:
+     usarlo solo in elementi il cui container è .sheet (non dentro le celle, che sono container a loro volta) */
+  --u: calc((100cqw - (var(--cols) - 1) * var(--gap)) / var(--cols));
+  --step: calc(var(--u) + var(--gap));
+  /* crocini di registro: uno per tile, all'angolo in alto a sinistra (i bracci escono dai bordi e rientrano dal lato opposto).
+     SVG senza viewBox: le coordinate restano in px qualunque sia la dimensione del tile.
+     Spessore 1px scritto nell'SVG: un'immagine di sfondo non legge var(--line), aggiornarlo a mano. */
+  --crocini: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23f03f24'%3E%3Crect width='5' height='1'/%3E%3Crect width='1' height='5'/%3E%3Crect x='100%25' width='4' height='1' transform='translate(-4 0)'/%3E%3Crect y='100%25' width='1' height='4' transform='translate(0 -4)'/%3E%3C/g%3E%3C/svg%3E");
 
   --ease-out:   cubic-bezier(0.22, 1, 0.36, 1);
   --ease-morph: cubic-bezier(0.72, 0, 0.18, 1);
   --t-morph:    720ms;
+  --t-draw:     800ms;  /* intro: il filo fa il giro della casella (cells.ts conta questa durata) */
 
   color-scheme: light;
+}
+@supports (width: round(down, 1px, 1px)) {
+  :root { --line-dp: max(var(--dp), round(down, var(--line), var(--dp))); }
 }
 
 @media (max-width: 1023px) { :root { --cols: 4; } }
@@ -33,8 +54,9 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html {
-  background: var(--paper);
-  color: var(--red);
+  overflow-x: clip;  /* i crocini ai lati del foglio non devono creare scroll orizzontale */
+  background: var(--bianco);
+  color: var(--rosso);
   font-family: var(--font-testo);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
@@ -43,7 +65,77 @@ html {
 
 body { min-height: 100svh; }
 
-::selection { background: var(--red); color: var(--paper); }
+::selection { background: var(--rosso); color: var(--bianco); }
+
+/* ── Righello al posto della scrollbar (scripts/ruler.ts) ── */
+/* scrollbar nativa nascosta solo a righello attivo (.has-ruler, da ruler.ts):
+   se il JavaScript non parte resta la scrollbar normale */
+html.has-ruler { scrollbar-width: none; }
+html.has-ruler::-webkit-scrollbar { display: none; }
+html:not(.has-ruler) .ruler { display: none; }
+
+/* tacche nel margine destro, sfondo di <body>: scorrono con la pagina e la misurano dall'alto.
+   Ogni 25px una tacca da 5px, ogni 100px un "checkpoint" largo quanto il margine. */
+body {
+  --tick-100: 100px;
+  --tick-short: 5px;
+  --tick-25: 25px; --tick-50: 50px; --tick-75: 75px;
+  background-image:
+    linear-gradient(var(--rosso) var(--line-dp), transparent var(--line-dp)),
+    linear-gradient(transparent var(--tick-25),
+      var(--rosso) var(--tick-25) calc(var(--tick-25) + var(--line-dp)), transparent calc(var(--tick-25) + var(--line-dp)) var(--tick-50),
+      var(--rosso) var(--tick-50) calc(var(--tick-50) + var(--line-dp)), transparent calc(var(--tick-50) + var(--line-dp)) var(--tick-75),
+      var(--rosso) var(--tick-75) calc(var(--tick-75) + var(--line-dp)), transparent calc(var(--tick-75) + var(--line-dp)));
+  background-size: var(--gap) var(--tick-100), var(--tick-short) var(--tick-100);
+  background-position: right top;
+  background-repeat: repeat-y;
+}
+/* tacche agganciate ai pixel reali: passo e posizioni multipli di --dp, i 25px restano un quarto dei 100 */
+@supports (width: round(down, 1px, 1px)) {
+  body {
+    --tick-100: round(100px, var(--dp));
+    --tick-short: round(5px, var(--dp));
+    --tick-25: round(25px, var(--dp)); --tick-50: round(50px, var(--dp)); --tick-75: round(75px, var(--dp));
+  }
+}
+
+/* indicatore: rettangolo rosso con la percentuale, fisso nella finestra */
+.ruler {
+  position: fixed; top: 0; right: 0; bottom: 0; z-index: 50;
+  width: var(--gap);
+  cursor: pointer;
+}
+.ruler__thumb {
+  --thumb-h: 32px;
+  position: absolute; top: 0; left: 0; right: 0;
+  height: var(--thumb-h);
+  display: flex; align-items: center; justify-content: center;
+  /* rettangolo rosso con la percentuale bianca; la posizione è agganciata ai pixel da ruler.ts */
+  background: var(--rosso);
+  color: var(--bianco);
+  cursor: grab;
+  touch-action: none;
+  view-transition-name: ruler-thumb;  /* tra una pagina e l'altra scivola alla nuova posizione */
+}
+/* area di presa più grande della linea: sopra, sotto e verso le caselle */
+.ruler__thumb::before { content: ''; position: absolute; inset: -12px 0 -12px -12px; }
+/* altezza in pixel reali: il bordo inferiore resta netto come quello superiore */
+@supports (width: round(down, 1px, 1px)) {
+  .ruler__thumb { --thumb-h: round(32px, var(--dp)); }
+}
+/* percentuale in verticale, larga quanto il margine */
+.ruler__pct {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);  /* si legge dal basso verso l'alto */
+  font-family: var(--font-numeri);
+  font-size: 9px; line-height: var(--gap);
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+html.is-ruling, html.is-ruling * { cursor: grabbing !important; user-select: none; }
+/* su touch è solo un indicatore: si scorre col dito */
+@media (pointer: coarse) { .ruler { pointer-events: none; } }
 
 a { color: inherit; text-decoration: none; }
 a, button, [role="button"] { touch-action: manipulation; }
@@ -52,7 +144,7 @@ img, video, svg { display: block; max-width: 100%; }
 h1, h2, h3, h4 { font-weight: 500; text-wrap: balance; }
 p { text-wrap: pretty; }
 
-:focus-visible { outline: 2px solid var(--red); outline-offset: 3px; }
+:focus-visible { outline: 2px solid var(--rosso); outline-offset: 3px; }
 
 .mono {
   font-family: var(--font-numeri);
@@ -70,7 +162,7 @@ p { text-wrap: pretty; }
 
 .skip-link {
   position: absolute; top: -100%; left: var(--gap); z-index: 9999;
-  padding: 8px 20px; background: var(--red); color: var(--paper);
+  padding: 8px 20px; background: var(--rosso); color: var(--bianco);
   font-family: var(--font-numeri); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
   transition: top 0.2s;
 }
@@ -79,24 +171,38 @@ p { text-wrap: pretty; }
 /* ── Foglio + griglia ─────────────────────────────────── */
 .sheet {
   container-type: inline-size;
+  /* larghezza massima = colonne da --u-max + gap tra loro + margini: la cella non supera --u-max */
+  max-width: calc(var(--u-max) * var(--cols) + var(--gap) * (var(--cols) + 1));
+  margin-inline: auto;
   padding: var(--gap);
+  position: relative;
 }
+/* crocini anche ai lati quando il foglio è più stretto della finestra: stessa trama della griglia,
+   allineata alle sue colonne e righe. Le fasce entrano di un gap nel foglio, così coprono anche
+   la colonna di incroci sul bordo esterno della griglia (a mezzo gap dall'ultima casella). */
+.sheet::before, .sheet::after {
+  --side: calc((100vw - 100%) / 2);                          /* margine fuori dal foglio */
+  --side-in: clamp(0px, var(--side) * 1000, var(--gap));     /* = --gap se c'è margine, 0 se no */
+  content: '';
+  position: absolute; top: 0; bottom: 0;
+  width: calc(var(--side) + var(--side-in));
+  background: var(--crocini) repeat;
+  background-size: var(--step) var(--step);
+  pointer-events: none;
+}
+/* incroci a mezzo gap dal bordo del foglio, poi ogni --step (-0.5px: centro del filo da 1px) */
+.sheet::before { right: calc(100% - var(--side-in)); background-position: right calc(var(--gap) / 2 + 0.5px) top calc(var(--gap) / 2 - 0.5px); }
+.sheet::after  { left: calc(100% - var(--side-in));  background-position: left calc(var(--gap) / 2 - 0.5px) top calc(var(--gap) / 2 - 0.5px); }
 
 .grid {
-  /* unità = lato della cella quadrata */
-  --u: calc((100cqw - (var(--cols) - 1) * var(--gap)) / var(--cols));
-  --step: calc(var(--u) + var(--gap));
-
   display: grid;
   grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
   grid-auto-rows: var(--u);
   grid-auto-flow: row dense;
   gap: var(--gap);
 
-  /* crocini di registro agli incroci, visibili solo nei gap.
-     SVG senza viewBox: le coordinate restano in px qualunque sia la dimensione della cella.
-     Spessore 1px scritto nell'SVG: un'immagine di sfondo non legge var(--line), aggiornarlo a mano. */
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23f03f24'%3E%3Crect width='5' height='1'/%3E%3Crect width='1' height='5'/%3E%3Crect x='100%25' width='4' height='1' transform='translate(-4 0)'/%3E%3Crect y='100%25' width='1' height='4' transform='translate(0 -4)'/%3E%3C/g%3E%3C/svg%3E");
+  /* crocini agli incroci, visibili solo nei gap */
+  background-image: var(--crocini);
   background-repeat: repeat;
   background-size: var(--step) var(--step);
   background-position: calc(var(--u) + var(--gap) / 2 - 0.5px) calc(var(--u) + var(--gap) / 2 - 0.5px);
@@ -105,23 +211,25 @@ p { text-wrap: pretty; }
 /* ── Vuoti: riempiono i buchi dell'incastro, uno per breakpoint ── */
 .void {
   /* carta a quadretti fissi, ancorata in alto a sinistra */
-  --paper-step: 50px;
-  --paper-line: var(--line);
-  --paper-ink: color-mix(in srgb, var(--red) 22%, transparent);
+  --carta-step: 50px;
+  --carta-line: var(--line);
+  --carta-ink: color-mix(in srgb, var(--rosso) 22%, transparent);
   display: none;
   background:
-    linear-gradient(to right, var(--paper-ink) var(--paper-line), transparent var(--paper-line)),
-    linear-gradient(to bottom, var(--paper-ink) var(--paper-line), transparent var(--paper-line)),
-    var(--paper);
-  background-size: var(--paper-step) var(--paper-step);
-  box-shadow: inset 0 0 0 var(--line) var(--red);
+    linear-gradient(to right, var(--carta-ink) var(--carta-line), transparent var(--carta-line)),
+    linear-gradient(to bottom, var(--carta-ink) var(--carta-line), transparent var(--carta-line)),
+    var(--bianco);
+  background-size: var(--carta-step) var(--carta-step);
+  /* quadretti ancorati sotto il bordo: la prima riga coincide col filo, come prima */
+  background-origin: border-box;
+  border: var(--line) solid var(--rosso);
 }
 /* linee e quadretti agganciati ai pixel reali (--dp, da Layout.astro):
    ogni linea resta netta come i bordi, anche con lo schermo scalato */
 @supports (width: round(down, 1px, 1px)) {
   .void {
-    --paper-step: round(50px, var(--dp));
-    --paper-line: max(var(--dp), round(down, var(--line), var(--dp)));
+    --carta-step: round(50px, var(--dp));
+    --carta-line: var(--line-dp);
   }
 }
 
@@ -138,37 +246,54 @@ p { text-wrap: pretty; }
   grid-row: span var(--h);
   container-type: size;
   overflow: clip;
-  background: var(--paper);
-  color: var(--red);
+  /* stesso colore della pagina: la casella non ha un fondo suo, ma copre i crocini della griglia */
+  background: var(--bianco);
+  color: var(--rosso);
+  /* lati in unità al breakpoint corrente: servono al disegno del filo nell'intro */
+  --cw: var(--w, 1);
+  --ch: var(--h, 1);
 }
-@media (max-width: 1023px) { .cell { grid-column: span var(--w-md); grid-row: span var(--h-md); } }
-@media (max-width: 599px)  { .cell { grid-column: span var(--w-sm); grid-row: span var(--h-sm); } }
+@media (max-width: 1023px) { .cell { grid-column: span var(--w-md); grid-row: span var(--h-md); --cw: var(--w-md, 1); --ch: var(--h-md, 1); } }
+@media (max-width: 599px)  { .cell { grid-column: span var(--w-sm); grid-row: span var(--h-sm); --cw: var(--w-sm, 1); --ch: var(--h-sm, 1); } }
 @media (min-width: 1024px) { .cell.hide-lg { display: none; } }
 @media (min-width: 600px) and (max-width: 1023px) { .cell.hide-md { display: none; } }
 @media (max-width: 599px) { .cell.hide-sm { display: none; } }
 
-/* filo (--line) sopra al contenuto, anche sui media */
+/* filo sopra al contenuto, anche sui media: quattro lati disegnati con gradienti,
+   agganciati ai pixel reali. --l0…--l3 = quanto è lungo ogni lato (0–1),
+   in senso orario da in alto: alto, destra, basso, sinistra. Pieni fuori dall'intro. */
 .cell::after {
   content: '';
   position: absolute; inset: 0; z-index: 3;
-  box-shadow: inset 0 0 0 var(--line) var(--red);
+  --l0: 1; --l1: 1; --l2: 1; --l3: 1;
+  --ink: linear-gradient(var(--rosso), var(--rosso));
+  background-image: var(--ink), var(--ink), var(--ink), var(--ink);
+  background-repeat: no-repeat;
+  background-position: left top, right top, right bottom, left bottom;
+  background-size:
+    calc(var(--l0) * 100%) var(--line-dp),
+    var(--line-dp) calc(var(--l1) * 100%),
+    calc(var(--l2) * 100%) var(--line-dp),
+    var(--line-dp) calc(var(--l3) * 100%);
   pointer-events: none;
 }
 
-.cell--red { background: var(--red); color: var(--paper); }
+.cell--red { background: var(--rosso); color: var(--bianco); }
 
 /* linguetta tecnica: indice · nome */
 .cell__label {
   position: absolute; top: 0; left: 0; z-index: 2;
   display: flex; gap: 8px;
-  padding: 6px 8px 5px;
-  background: var(--paper);
-  box-shadow: inset calc(var(--line) * -1) calc(var(--line) * -1) 0 0 var(--red);
+  /* il filo sta dentro la misura: padding destro e inferiore ridotti di --line */
+  padding: 6px calc(8px - var(--line)) calc(5px - var(--line)) 8px;
+  background: var(--bianco);
+  border-right: var(--line) solid var(--rosso);
+  border-bottom: var(--line) solid var(--rosso);
   white-space: nowrap;
 }
 .cell--red .cell__label {
-  background: var(--red);
-  box-shadow: inset calc(var(--line) * -1) calc(var(--line) * -1) 0 0 color-mix(in srgb, var(--paper) 45%, transparent);
+  background: var(--rosso);
+  border-color: color-mix(in srgb, var(--bianco) 45%, transparent);
 }
 
 /* freccia delle celle cliccabili */
@@ -176,66 +301,88 @@ p { text-wrap: pretty; }
   position: absolute; top: 0; right: 0; z-index: 2;
   display: grid; place-items: center;
   width: 30px; height: 30px;
-  background: var(--paper);
-  border-left: var(--line) solid var(--red);
-  border-bottom: var(--line) solid var(--red);
+  background: var(--bianco);
+  border-left: var(--line) solid var(--rosso);
+  border-bottom: var(--line) solid var(--rosso);
   transition: background-color 200ms ease, color 200ms ease;
 }
 .cell__go span { display: block; transition: transform 300ms var(--ease-out); }
 /* freccia (src/assets/arrow.svg): il colore segue il testo, così si inverte in hover */
 .cell__go svg { width: 11px; height: 11px; }
 .cell__go svg * { fill: currentColor; }
-.cell--red .cell__go { background: var(--red); border-color: color-mix(in srgb, var(--paper) 45%, transparent); }
+.cell--red .cell__go { background: var(--rosso); border-color: color-mix(in srgb, var(--bianco) 45%, transparent); }
 
 @media (hover: hover) and (pointer: fine) {
-  .cell--link:hover .cell__go { background: var(--red); color: var(--paper); }
-  .cell--red.cell--link:hover .cell__go { background: var(--paper); color: var(--red); }
+  .cell--link:hover .cell__go { background: var(--rosso); color: var(--bianco); }
+  .cell--red.cell--link:hover .cell__go { background: var(--bianco); color: var(--rosso); }
   .cell--link:hover .cell__go span { transform: translate(2px, -2px); }
   /* ✕ di chiusura nelle celle "hero" (es. contatore dell'archivio) */
-  .cell[data-hero] .cell__go:hover { background: var(--red); color: var(--paper); }
+  .cell[data-hero] .cell__go:hover { background: var(--rosso); color: var(--bianco); }
 }
 
 /* ── Media in bicromia rosso/bianco ───────────────────── */
-.duo { position: absolute; inset: 0; background: var(--paper); }
+.duo { position: absolute; inset: 0; background: var(--bianco); }
 .duo img, .duo video {
   width: 100%; height: 100%; object-fit: cover;
   filter: grayscale(1) contrast(1.2) brightness(1.08);
   transform: scale(1.001);
   transition: filter 400ms ease, transform 900ms var(--ease-out);
 }
-.duo::after {
+/* due livelli sopra la foto in grigio:
+   ::after  rosso in "screen"   → i neri diventano rosso, i bianchi restano bianchi
+   ::before bianco in "multiply" → i bianchi diventano --bianco (il rosso scurisce ~9%) */
+.duo::before, .duo::after {
   content: '';
   position: absolute; inset: 0;
-  background: var(--red);
-  mix-blend-mode: screen;
   transition: opacity 400ms ease;
   pointer-events: none;
 }
+.duo::after  { z-index: 1; background: var(--rosso);  mix-blend-mode: screen; }
+.duo::before { z-index: 2; background: var(--bianco); mix-blend-mode: multiply; }
 @media (hover: hover) and (pointer: fine) {
   .cell--link:hover .duo img, .cell--link:hover .duo video { filter: none; transform: scale(1.03); }
-  .cell--link:hover .duo::after { opacity: 0; }
+  .cell--link:hover .duo::before, .cell--link:hover .duo::after { opacity: 0; }
 }
 
 /* Hero delle pagine progetto: colore originale, come la cella in hover.
    Così l'espansione parte e arriva sullo stesso stato, senza stacco. */
 .hero .duo img, .hero .duo video { filter: none; }
-.hero .duo::after { opacity: 0; }
+.hero .duo::before, .hero .duo::after { opacity: 0; }
 
 /* ── Intro (solo al primo caricamento) ────────────────── */
-@keyframes cell-in {
-  from { clip-path: inset(0 0 100% 0); }
-  to   { clip-path: inset(0 0 0 0); }
-}
+/* 1. il filo parte da un vertice (data-from, scelto a caso da Layout.astro) e fa il giro;
+   2. finito il giro entrano fondo e contenuto. */
+@property --draw { syntax: '<number>'; inherits: false; initial-value: 1; }
+@keyframes frame-draw { from { --draw: 0; } }
+@keyframes fill-in { from { background-color: transparent; } }
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
 
-.is-intro .cell {
-  animation: cell-in 800ms var(--ease-morph) both;
+/* posizione del vertice di partenza sul perimetro (in unità, in senso orario dall'alto a sinistra) */
+.cell { --from: 0; }
+.cell[data-from="1"] { --from: var(--cw); }
+.cell[data-from="2"] { --from: calc(var(--cw) + var(--ch)); }
+.cell[data-from="3"] { --from: calc(var(--cw) * 2 + var(--ch)); }
+
+.is-intro .cell::after {
+  --per: calc((var(--cw) + var(--ch)) * 2);
+  --run: calc(var(--draw) * var(--per));  /* tratto già disegnato */
+  /* ogni lato parte quando il tratto arriva al suo inizio: inizio = distanza dal vertice di partenza */
+  --l0: clamp(0, (var(--run) - mod(0 - var(--from), var(--per))) / var(--cw), 1);
+  --l1: clamp(0, (var(--run) - mod(var(--cw) - var(--from), var(--per))) / var(--ch), 1);
+  --l2: clamp(0, (var(--run) - mod(var(--cw) + var(--ch) - var(--from), var(--per))) / var(--cw), 1);
+  --l3: clamp(0, (var(--run) - mod(var(--cw) * 2 + var(--ch) - var(--from), var(--per))) / var(--ch), 1);
+  animation: frame-draw var(--t-draw) var(--ease-morph) both;
   animation-delay: calc(var(--i) * 30ms);
+}
+.is-intro .cell {
+  /* il fondo (rosso o bianco che copre i crocini) entra col contenuto */
+  animation: fill-in 500ms ease backwards;
+  animation-delay: calc(var(--i) * 30ms + var(--t-draw));
 }
 .is-intro .cell > * {
   /* backwards, non both: a fine animazione l'opacità torna libera (serve ai filtri) */
   animation: fade-in 500ms ease backwards;
-  animation-delay: calc(var(--i) * 30ms + 400ms);
+  animation-delay: calc(var(--i) * 30ms + var(--t-draw));
 }
 
 /* animazioni infinite in pausa fuori schermo */
@@ -293,7 +440,7 @@ html.vt-filter::view-transition-new(root) { animation-duration: 280ms; animation
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
-  .is-intro .cell, .is-intro .cell > * { animation: none !important; }
+  .is-intro .cell, .is-intro .cell::after, .is-intro .cell > * { animation: none !important; }
   .loop { animation: none !important; }
   ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
 }

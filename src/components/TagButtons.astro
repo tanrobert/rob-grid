@@ -24,9 +24,9 @@ const { tags, total } = Astro.props;
     display: flex; align-items: baseline; justify-content: space-between; gap: 8px;
     padding: 6px 8px 5px;
     border: 0;
-    border-bottom: var(--line) solid var(--red);
-    background: var(--paper);
-    color: var(--red);
+    border-bottom: var(--line) solid var(--rosso);
+    background: transparent;
+    color: var(--rosso);
     font: 500 clamp(13px, 1.1vw, 16px) / 1.2 var(--font-testo);
     letter-spacing: -0.01em;
     text-align: left;
@@ -35,8 +35,8 @@ const { tags, total } = Astro.props;
     transition: background-color 200ms ease, color 200ms ease;
   }
   .tagbtn .mono { flex-shrink: 0; }
-  .tagbtn[aria-pressed="true"] { background: var(--red); color: var(--paper); }
+  .tagbtn[aria-pressed="true"] { background: var(--rosso); color: var(--bianco); }
   @media (hover: hover) and (pointer: fine) {
-    .tagbtn[aria-pressed="false"]:hover { background: color-mix(in srgb, var(--red) 10%, var(--paper)); }
+    .tagbtn[aria-pressed="false"]:hover { background: color-mix(in srgb, var(--rosso) 10%, transparent); }
   }
 </style>

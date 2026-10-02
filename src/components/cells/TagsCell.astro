@@ -21,7 +21,8 @@ const { tags, total } = Astro.props;
     align-content: end;
     column-gap: var(--pad);
     padding: var(--pad-label) var(--pad) var(--pad);
+    /* scroll interno solo se i tag non ci stanno; niente overscroll-behavior: contain,
+       altrimenti Firefox blocca la rotella sulla casella anche quando non c'è nulla da scorrere */
     overflow: auto;
-    overscroll-behavior: contain;
   }
 </style>

@@ -21,7 +21,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="color-scheme" content="light" />
-    <meta name="theme-color" content="#ffffff" />
+    <meta name="theme-color" content="#e8e0e0" />
     <title>{titolo}</title>
     <meta name="description" content={descrizione} />
     <link rel="canonical" href={canonical} />
@@ -52,12 +52,22 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
   </head>
   <body>
     <a href="#main" class="skip-link">Salta al contenuto principale</a>
+    <div class="ruler" data-ruler aria-hidden="true" transition:persist="ruler">
+      <div class="ruler__thumb" data-ruler-thumb><span class="ruler__pct" data-ruler-pct>000%</span></div>
+    </div>
     <slot />
+    <script is:inline>
+      // intro: ogni casella inizia a disegnare il filo da un vertice a caso (0–3, orario dall'alto a sinistra)
+      if (document.documentElement.classList.contains('is-intro')) {
+        document.querySelectorAll('.cell').forEach(function (c) { c.dataset.from = Math.floor(Math.random() * 4); });
+      }
+    </script>
   </body>
 </html>
 
 <script>
   import '../scripts/morph';
+  import '../scripts/ruler';
   import { initCells } from '../scripts/cells';
   document.addEventListener('astro:page-load', initCells);
 </script>

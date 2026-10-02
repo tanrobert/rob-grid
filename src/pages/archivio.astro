@@ -48,13 +48,14 @@ const cells: Cell[] = [
       margin: calc(var(--gap) * -1) calc(var(--gap) * -1) var(--gap);
       padding: var(--gap);
       padding-top: max(var(--gap), env(safe-area-inset-top));
-      background: var(--paper);
-      box-shadow: inset 0 calc(var(--line) * -1) 0 var(--red);
+      padding-bottom: calc(var(--gap) - var(--line));
+      background: var(--bianco);
+      border-bottom: var(--line) solid var(--rosso);
       overflow-x: auto;
       overscroll-behavior-x: contain;
       scrollbar-width: none;
     }
     .tagbar::-webkit-scrollbar { display: none; }
-    .tagbar :global(.tagbtn) { flex-shrink: 0; border: var(--line) solid var(--red); }
+    .tagbar :global(.tagbtn) { flex-shrink: 0; border: var(--line) solid var(--rosso); }
   }
 </style>

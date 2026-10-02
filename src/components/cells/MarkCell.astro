@@ -1,8 +1,10 @@
 ---
-// Segno di registro con ghiera graduata che ruota lentamente.
+// Segno di registro con ghiera graduata collegata al righello (scripts/ruler.ts):
+// è lo stesso righello avvolto in cerchio. Una tacca ogni 5° = 25px di scroll,
+// tacca lunga ogni 4 (= checkpoint dei 100px). La rotazione la scrive cells.ts.
 const ticks = Array.from({ length: 72 }, (_, i) => {
   const a = (i * 5 * Math.PI) / 180;
-  const long = i % 6 === 0;
+  const long = i % 4 === 0;
   const r1 = 46, r2 = long ? 38 : 42;
   const f = (n: number) => n.toFixed(2);
   return { x1: f(50 + r1 * Math.sin(a)), y1: f(50 - r1 * Math.cos(a)), x2: f(50 + r2 * Math.sin(a)), y2: f(50 - r2 * Math.cos(a)) };
@@ -11,7 +13,7 @@ const ticks = Array.from({ length: 72 }, (_, i) => {
 
 <div class="mark" aria-hidden="true">
   <svg viewBox="0 0 100 100" fill="none" stroke="currentColor">
-    <g class="ring loop">
+    <g class="ring" data-ring>
       {ticks.map(t => <line x1={t.x1} y1={t.y1} x2={t.x2} y2={t.y2} vector-effect="non-scaling-stroke" />)}
     </g>
     <circle cx="50" cy="50" r="22" vector-effect="non-scaling-stroke" />
@@ -30,7 +32,5 @@ const ticks = Array.from({ length: 72 }, (_, i) => {
   .ring {
     transform-box: fill-box;
     transform-origin: center;
-    animation: spin 48s linear infinite;
   }
-  @keyframes spin { to { transform: rotate(360deg); } }
 </style>

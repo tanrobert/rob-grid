@@ -7,6 +7,8 @@ import { initArchive } from './archive';
 import { pad2 } from '../lib/format';
 
 let cleanup: (() => void) | null = null;
+// contatori già animati (per data-id della cella): il modulo sopravvive alle navigazioni del ClientRouter
+const counted = new Set<string>();
 
 export function initCells() {
   cleanup?.();
@@ -25,7 +27,8 @@ export function initCells() {
   const html = document.documentElement;
   if (html.classList.contains('is-intro')) {
     const cellsN = document.querySelectorAll('.cell').length;
-    const id = setTimeout(() => html.classList.remove('is-intro'), cellsN * 30 + 1000);
+    // stagger 30ms + filo (--t-draw, 800ms) + entrata del contenuto (500ms), con margine
+    const id = setTimeout(() => html.classList.remove('is-intro'), cellsN * 30 + 1400);
     teardown.push(() => clearTimeout(id));
   }
 
@@ -78,6 +81,54 @@ export function initCells() {
       const temp = clock?.querySelector('[data-temp]');
       if (temp) temp.textContent = `${w.temp}°`;
     });
+  });
+
+  // ── Registro: la ghiera gira con lo scroll, in sincrono col righello ─
+  // 25px di pagina = una tacca (5°). Scorrendo in giù le tacche a destra salgono, come quelle del righello.
+  const rings = [...document.querySelectorAll<SVGGElement>('[data-ring]')];
+  if (rings.length && !reduced) {
+    let frame = 0;
+    const turn = () => {
+      frame = 0;
+      const deg = (-scrollY / 25) * 5;
+      for (const r of rings) {
+        if (r.closest('[data-offscreen]')) continue;
+        r.style.transform = `rotate(${deg}deg)`;
+      }
+    };
+    addEventListener('scroll', () => { frame ||= requestAnimationFrame(turn); }, { passive: true, signal });
+    teardown.push(() => cancelAnimationFrame(frame));
+    turn();
+  }
+
+  // ── Contatore: sale da 0 al valore quando la cella entra in vista ─
+  // Nell'HTML c'è già il numero finale (crawler, niente JS, riduci movimento).
+  // Una volta sola per visita: tornando sulla pagina il numero resta quello finale.
+  if (!reduced) document.querySelectorAll<HTMLElement>('[data-countup]').forEach(el => {
+    const text = el.textContent?.trim() ?? '';
+    const target = Number(text);
+    if (!text || !Number.isFinite(target)) return;
+    const key = el.closest<HTMLElement>('[data-id]')?.dataset.id ?? text;
+    if (counted.has(key)) return;
+    const show = (n: number) => { el.textContent = String(n).padStart(text.length, '0'); };
+    const DURATION = 1200;
+    let raf = 0;
+    show(0);
+    const io = new IntersectionObserver(([e]) => {
+      if (!e.isIntersecting) return;
+      io.disconnect();
+      counted.add(key);
+      let t0 = 0;
+      const step = (t: number) => {
+        t0 ||= t; // il cronometro parte dal primo fotogramma
+        const k = Math.min(1, (t - t0) / DURATION);
+        show(Math.round(target * (1 - (1 - k) ** 3))); // rallenta verso la fine
+        if (k < 1) raf = requestAnimationFrame(step);
+      };
+      raf = requestAnimationFrame(step);
+    });
+    io.observe(el);
+    teardown.push(() => { io.disconnect(); cancelAnimationFrame(raf); });
   });
 
   // ── Occhio: iride e pupilla seguono il puntatore ───────

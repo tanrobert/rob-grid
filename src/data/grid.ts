@@ -35,9 +35,9 @@ export const grid: Cell[] = [
 
   // ── righe 2–3 ─────────────────────────────────────────
   {
-    id: 'intro', type: 'text', w: 2, h: 2, as: 'h1', size: 'l',
+    id: 'intro', type: 'text', w: 2, h: 1, as: 'h1', size: 'l',
     eyebrow: `Graphic designer — dal ${firstYear}`,
-    title: 'Identità visive, packaging e siti web per attività che vogliono farsi ricordare.',
+    title: 'Progetto identità visive e punti di contatto fisici e digitali.',
   },
   { id: 'eurofish', type: 'project', w: 3, h: 2, slug: 'eurofish', sm: { h: 1 } },
   { id: 'info',     type: 'text',    w: 1, h: 1, tone: 'red', href: '/info', title: 'Info', as: 'p', size: 'm', eyebrow: 'Chi sono' },
@@ -45,14 +45,13 @@ export const grid: Cell[] = [
 
   // ── righe 4–5 ─────────────────────────────────────────
   { id: 'kiale',   type: 'project', w: 2, h: 2, slug: 'kiale' },
-  { id: 'purple',  type: 'project', w: 1, h: 2, slug: 'purple-piper' },
+  { id: 'purple',  type: 'project', w: 2, h: 1, slug: 'purple-piper', label: 'Purple Piper' },
   { id: 'tag',     type: 'list',    w: 2, h: 1, title: 'Tag', items: topTags },
-  { id: 'archivio', type: 'stat',   w: 1, h: 1, href: '/archivio', value: pad2(projects.length), caption: 'Progetti in archivio' },
+  { id: 'archivio', type: 'stat',   w: 1, h: 1, href: '/archivio', value: pad2(projects.length), caption: 'Progetti in archivio', countUp: true },
   {
     id: 'metodo', type: 'text', w: 2, h: 1, size: 's',
-    eyebrow: 'Metodo',
-    title: 'Griglia, misura, ripetizione.',
-    body: 'Ogni progetto parte da un sistema: poche regole, applicate con rigore.',
+    title: 'Essenziale, accessibile, chiara.',
+    body: ['Grafica essenziale e funzionale.', 'Design accessibile e immediato.', 'Comunicazione chiara ed efficace.'],
   },
   { id: 'registro', type: 'mark', w: 1, h: 1 },
   { id: 'occhio',   type: 'eye',  w: 1, h: 1 },

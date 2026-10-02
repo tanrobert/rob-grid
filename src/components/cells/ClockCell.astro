@@ -51,7 +51,7 @@ const rays = Array.from({ length: 8 }, (_, i) => {
     stroke-linejoin: miter;
   }
   .sky path, .sky circle { vector-effect: non-scaling-stroke; }
-  .sky .mask { fill: var(--paper); }
+  .sky .mask { fill: var(--bianco); }   /* ritaglia il sole dietro la nuvola: colore del fondo */
   .sky [data-w] { display: none; }
   .sky [data-w].on { display: inline; }
   .time {

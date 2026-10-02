@@ -2,12 +2,13 @@
 interface Props {
   value: string;
   caption: string;
+  countUp?: boolean;
 }
-const { value, caption } = Astro.props;
+const { value, caption, countUp = false } = Astro.props;
 ---
 
 <div class="stat">
-  <p class="value" style={`--len:${Math.max(2, value.length)}`}>{value}</p>
+  <p class="value" style={`--len:${Math.max(2, value.length)}`} data-countup={countUp ? '' : undefined}>{value}</p>
   <p class="mono">{caption}</p>
 </div>
 

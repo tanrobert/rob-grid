@@ -4,7 +4,7 @@ import { morphName } from '../../lib/grid';
 interface Props {
   eyebrow?: string;
   title: string;
-  body?: string;
+  body?: string | string[];
   as?: 'h1' | 'h2' | 'p';
   size?: 's' | 'm' | 'l';
   titleOf?: string;
@@ -24,7 +24,8 @@ const text = caret ? title.slice(0, -1) : title;
     style={titleName ? `view-transition-name:${titleName};view-transition-class:title` : undefined}
     data-title-hero={titleName}
   >{text}{caret && <span class="caret loop" aria-hidden="true">_</span>}</Tag>
-  {body && <p class="body">{body}</p>}
+  {typeof body === 'string' && <p class="body">{body}</p>}
+  {Array.isArray(body) && <ul class="body body--list">{body.map(line => <li>{line}</li>)}</ul>}
 </div>
 
 <style>
@@ -53,6 +54,9 @@ const text = caret ? title.slice(0, -1) : title;
     max-width: 44ch;
     font-size: 14px; line-height: 1.35;
   }
+  .body--list { list-style: none; }
+  /* casella bassa (es. 2×1 a 1024 o su tablet stretto): il testo sotto si stringe */
+  @container (max-height: 180px) { .body { font-size: 12px; line-height: 1.25; } }
 
   .caret { animation: caret-blink 1.1s steps(1) infinite; }
   @keyframes caret-blink { 50% { opacity: 0; } }
