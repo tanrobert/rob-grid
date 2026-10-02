@@ -2,7 +2,7 @@ import { execSync } from 'node:child_process';
 
 /**
  * Versione del sito, letta al build dal messaggio dell'ultimo commit (stesso sistema di terminal-astro):
- * un commit "1.0.1 footer" → "1.0.1". Per aggiornarla basta iniziare il messaggio di commit col numero.
+ * un commit "1.4.1 footer" → "1.4.1" (quanti livelli si vuole: 1.4, 1.4.1, 1.4.1.2…). Per aggiornarla basta iniziare il messaggio di commit col numero.
  * Su Vercel il messaggio arriva anche come variabile d'ambiente, se git non fosse disponibile.
  */
 function lastCommitMessage(): string {
@@ -13,4 +13,4 @@ function lastCommitMessage(): string {
   }
 }
 
-export const siteVersion = lastCommitMessage().match(/^(\d+\.\d+(?:\.\d+)?)/)?.[1] ?? '?.?';
+export const siteVersion = lastCommitMessage().match(/^\d+(?:\.\d+)+/)?.[0] ?? '?.?';

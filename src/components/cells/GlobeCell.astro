@@ -1,0 +1,58 @@
+---
+// Globo wireframe orientato come la Terra adesso (lib/globe.ts).
+// Primo disegno al build, poi scripts/globe.ts lo tiene aggiornato, lo fa girare
+// all'ingresso e lo lascia trascinare: lasciato andare, torna all'orientamento reale.
+// Terre piene rosse; il reticolo è rosso sul mare e bianco sulle terre.
+// Reticolo e terre sono disegnati una volta (defs) e riusati con <use>.
+// Sotto, le coordinate dello studio (stessa riga della casella Ora).
+import { drawGlobe, realSpin } from '../../lib/globe';
+import { PLACE } from '../../data/place';
+import land from '../../data/land-110m.json';
+
+const g = drawGlobe(land as never, realSpin());
+const coord = (n: number, pos: string, neg: string) => `${Math.abs(n).toFixed(2)}${n >= 0 ? pos : neg}`;
+---
+
+<div class="globe">
+  <div class="sphere" data-globe role="img" aria-label="Globo terrestre orientato come la Terra in questo momento">
+    <svg viewBox="0 0 100 100" fill="none">
+      <defs>
+        <path id="globe-grid" d={g.grid} data-globe-grid />
+        <path id="globe-land" d={g.land} data-globe-land />
+        <clipPath id="globe-land-clip"><use href="#globe-land" /></clipPath>
+      </defs>
+      <use href="#globe-grid" class="grid" />
+      <use href="#globe-land" class="land" />
+      <use href="#globe-grid" class="grid grid--land" clip-path="url(#globe-land-clip)" />
+      <path class="rim" d={g.rim} />
+    </svg>
+  </div>
+  <p class="meta mono"><span>{PLACE.name}</span><span>{coord(PLACE.lat, 'N', 'S')} {coord(PLACE.lon, 'E', 'W')}</span></p>
+</div>
+
+<style>
+  .globe { position: absolute; inset: 0; }
+  /* stesso riquadro dell'occhio (EyeCell): il globo ha la sua stessa misura */
+  .sphere {
+    position: absolute; inset: 0;
+    padding: calc(var(--pad) + 12px);
+    cursor: grab;
+    /* col dito si gira solo in orizzontale: il gesto verticale resta allo scroll della pagina */
+    touch-action: pan-y;
+    user-select: none;
+  }
+  .sphere:active { cursor: grabbing; }
+  svg { width: 100%; height: 100%; overflow: visible; }
+  path { vector-effect: non-scaling-stroke; stroke-width: var(--line); }
+  /* stroke e fill si ereditano dentro <use>: i path in defs non ne hanno di propri */
+  .grid { stroke: var(--rosso); }
+  .grid--land { stroke: var(--bianco); }
+  .land { fill: var(--rosso); }
+  .rim { stroke: var(--rosso); }
+  /* coordinate nel margine in basso, come la riga della casella Ora: non tolgono spazio al globo */
+  .meta {
+    position: absolute; left: var(--pad); right: var(--pad); bottom: var(--pad);
+    display: flex; justify-content: space-between;
+    pointer-events: none;
+  }
+</style>

@@ -55,6 +55,7 @@ export const grid: Cell[] = [
   },
   { id: 'registro', type: 'mark', w: 1, h: 1 },
   { id: 'occhio',   type: 'eye',  w: 1, h: 1 },
+  { id: 'terra',    type: 'globe', w: 1, h: 1 },
 
   // ── righe 6–7 ─────────────────────────────────────────
   { id: 'marchio', type: 'marquee', w: 1, h: 2, svg: 'logo-completo-verticale', speed: 9, vertical: true },

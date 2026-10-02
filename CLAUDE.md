@@ -1,7 +1,7 @@
 # rob-astro — portfolio di Roberto Tanasi
 
 Portfolio da graphic designer costruito come **griglia modulare di caselle** in bicromia rosso/bianco.
-Astro 6 statico, nessun framework UI, TypeScript. Dominio `https://roberto.design`, progetto Vercel `rob-grid`.
+Astro 6 statico, nessun framework UI, TypeScript. Unica libreria runtime: d3-geo (solo per il globo, caricata su richiesta). Dominio `https://roberto.design`, progetto Vercel `rob-grid`.
 Lingua del sito e dei commenti nel codice: **italiano**.
 
 ## Comandi
@@ -31,11 +31,14 @@ src/
     projects.ts             projectYear, firstYear, projectsByYear
     tags.ts                 TagCount, tagSlug, allTags
     format.ts               pad2 ("03")
+    globe.ts                proiezione del globo (d3-geo), orientamento siderale reale; usato al build e nel browser
+    version.ts              versione del footer dal messaggio dell'ultimo commit
   scripts/
     cells.ts                comportamenti vivi (orologio, meteo Open-Meteo, occhio, cursore, misure, pausa offscreen); reinit su astro:page-load, cleanup su before-swap
     archive.ts              filtri archivio (?tag=), View Transition delle caselle, vuoti ricalcolati nel browser
     morph.ts                espansione cella → pagina e ritorno (view-transition-name assegnato solo alla cella cliccata)
     ruler.ts                righello al posto della scrollbar: indicatore + percentuale, trascinamento e click
+    globe.ts                casella terra: giro d'ingresso, tempo reale, trascinamento e ritorno (import dinamico da cells.ts)
   styles/global.css         token, griglia, cella, media bicromia, intro, view transitions, reduced motion
   styles/fonts.css          tutte le @font-face (importato da global.css)
 ```
@@ -45,7 +48,8 @@ src/
 - Unità `--u` = lato della cella quadrata, calcolata su `.grid` con `100cqw` (`.sheet` è il container). Tetto `--u-max` (300px): `.sheet` ha `max-width` di conseguenza e si centra, quindi la cella si ferma lì (da ~1870px con 6 colonne).
 - Ogni cella: `w`/`h` in unità, override `md`/`sm`, `tone: 'red'`, `href`, `label`, `heroOf`, `hideOn`.
 - L'ordine in `data/grid.ts` conta: la griglia è `row dense`. I buchi rimasti diventano `.void` (carta a quadretti fissi da 50px), calcolati al build per breakpoint e ricalcolati nel browser dopo i filtri.
-- Tipi di cella: svg, marquee (anche `vertical`), text, list, stat, media, project, clock, cursor, meter, mark, eye, archive-head, tags.
+- Tipi di cella: svg, marquee (anche `vertical`), text, list, stat, media, project, clock, cursor, meter, mark, eye, globe, archive-head, tags.
+- Globo (`terra`): terre da `data/land-110m.json` (Natural Earth 1:110m via world-atlas, generato una volta, coordinate a 0,1°). Orientamento = rotazione siderale (meridiano rivolto all'equinozio), asse inclinato 23,44° verso destra.
 
 ## Font
 - Due ruoli, file in `public/fonts/` come `ruolo-peso[-italic].woff2`:
@@ -58,7 +62,7 @@ src/
 - **Filo delle celle** (`.cell::after`): quattro lati disegnati con gradienti, spessore `--line-dp` (= `--line` agganciato ai pixel reali). Nell'intro `--draw` (0→1, `@property`) fa crescere il filo dal vertice `data-from` (scelto a caso in Layout.astro) lungo il perimetro; poi entrano fondo e contenuto. Durata in `--t-draw`, da tenere allineata al timeout di `cells.ts`.
 - **Righello** (al posto della scrollbar nativa, nascosta): tacche come sfondo di `<body>` nel margine destro (ogni 25px da 5px, ogni 100px larghe quanto il margine), scorrono con la pagina; indicatore fisso = rettangolo rosso con percentuale verticale bianca (`.ruler`, persistente tra le pagine). Posizioni e spessori agganciati a `--dp`. Su touch è solo indicatore. La scrollbar nativa si nasconde solo con `html.has-ruler` (messa da ruler.ts, riapplicata dopo ogni swap): senza JS resta la scrollbar normale.
 - **Linee**: sempre `var(--line)` (1px). Per i fili usare `border`, mai `box-shadow`: i bordi vengono agganciati ai pixel reali, le ombre no (al 125% escono da 2px sfumati, più spessi del filo della casella). Se il filo deve stare dentro la misura, togliere `--line` dal padding. Linee secondarie: rosso al 22–35% o bianco al 45% sulle celle rosse.
-- Colori: solo la palette, usata direttamente (niente alias di ruolo). Il sito usa `--rosso` e `--bianco` (`#e8e0e0`, unico bianco: fondo di pagina e caselle, e scritte/fili/loghi sulle caselle rosse). In palette anche `--nero`, `--giallo`, `--verde` (da terminal-astro). Le caselle hanno fondo `--bianco` = colore della pagina (non trasparenti: coprono i crocini della griglia).
+- Colori: solo la palette, usata direttamente (niente alias di ruolo). Il sito usa `--rosso` e `--bianco` (`hsl(0 15% 89%)` ≈ `#e7dfdf`, unico bianco: fondo di pagina e caselle, e scritte/fili/loghi sulle caselle rosse). `--bianco-puro` (#fff) solo per l'hover di logo e link del footer. In palette anche `--nero`, `--giallo`, `--verde` (da terminal-astro). Niente hover con `opacity` su rosso/bianco: crea rosa fuori palette. Le caselle hanno fondo `--bianco` = colore della pagina (non trasparenti: coprono i crocini della griglia).
 - Token in `:root` (`--m`=10px, `--gap`, `--pad`, `--pad-label` = padding sotto la linguetta, `--line`, `--dp`, font). Niente valori magici ripetuti: se un valore compare 2+ volte diventa un token o un helper.
 - SVG nuovi: aggiungerli a `data/svgs.ts`; i file devono usare `fill: currentColor` (così si invertono sulle celle rosse). Nomi file in kebab-case, niente apostrofi.
 - Stagger max 50ms, mai `transition: all`, `…` unicode, `prefers-reduced-motion` rispettato anche nei loop JS.
@@ -66,6 +70,7 @@ src/
 
 ## Trappole note
 - Aree con scroll interno (es. casella tags): niente `overscroll-behavior: contain`, Firefox blocca la rotella sulla casella anche quando non c'è nulla da scorrere.
+- `.duo` (bicromia) ha `isolation: isolate`: senza, i veli in multiply/screen finiscono sopra linguetta e freccia della cella e le scuriscono.
 - `@keyframes` **non sono scoped** in Astro: nomi unici (`eye-blink`, `caret-blink`…), altrimenti si sovrascrivono.
 - I commenti HTML `<!-- -->` nei componenti finiscono nell'HTML pubblicato: commentare nel frontmatter.
 - Il ClientRouter riscrive gli attributi di `<html>` a ogni navigazione: variabili inline su `<html>` (es. `--dp`) vanno riapplicate su `astro:after-swap`. Gli script `is:inline` in `<head>` girano solo al primo caricamento.

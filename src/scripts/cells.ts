@@ -21,6 +21,8 @@ export function initCells() {
   const { signal } = ac;
 
   initArchive(signal);
+  // globo: d3-geo e le terre si caricano solo se la casella c'è
+  if (document.querySelector('[data-globe]')) import('./globe').then(m => m.initGlobe(signal, reduced));
 
   // Intro finita: tolgo la classe, così nessuna casella che ricompare
   // (filtri, cambio di breakpoint) rifà l'animazione d'ingresso

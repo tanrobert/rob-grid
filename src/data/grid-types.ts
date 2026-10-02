@@ -52,6 +52,8 @@ export type Cell = CellBase & (
   | { type: 'meter' }
   | { type: 'mark' }
   | { type: 'eye' }
+  /** globo orientato come la Terra adesso, trascinabile */
+  | { type: 'globe' }
   // solo archivio
   | { type: 'archive-head'; total: number }
   | { type: 'tags'; tags: TagCount[] }

@@ -100,7 +100,8 @@ const year = new Date().getFullYear();
   .foot__bar span:last-child { text-align: right; }
 
   @media (hover: hover) and (pointer: fine) {
-    .foot a { transition: opacity 200ms ease; }
-    .foot__zone a:hover, .foot__logo:hover { opacity: 0.6; }
+    /* hover in bianco puro: resta nella bicromia, niente rosa da trasparenza */
+    .foot a { transition: color 200ms ease; }
+    .foot__zone a:hover, .foot__logo:hover { color: var(--bianco-puro); }
   }
 </style>
