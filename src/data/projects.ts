@@ -181,7 +181,8 @@ export const projects: Project[] = [
     description: 'Identità visiva completa per una società di distribuzione di prodotti ittici.',
     featured: true,
     image: eurofishImg,
-    video: '/media/eurofish-video.mp4',
+    // in panchina: il video (8.6 MB, 1080p) appesantiva lo scroll. Da ricomprimere (prova 1280 crf31 ≈ 3.1 MB)
+    // video: '/media/eurofish-video.mp4',
   },
 ];
 

@@ -89,7 +89,7 @@ src/
 Roberto fa commit e push da solo: committare solo se lo chiede. La versione nel footer ("Portfolio modulare v.X") si legge al build dal messaggio dell'ultimo commit (`lib/version.ts`, come in terminal-astro): il messaggio deve iniziare col numero, es. `1.0.1 footer`. Versioni: 1.0 → 1.1 → 1.2 (refactor, footer, marchio verticale, quadretti 50px).
 
 ## Aperti / idee
-- Video Eurofish da 8.6 MB da comprimere.
+- Video Eurofish in panchina (commentato in `projects.ts`, al suo posto il png): 8.6 MB 1080p, appesantiva lo scroll. Prova: 1280×720 H.264 crf31 ≈ 3.1 MB senza perdita visibile; se scatta ancora, bicromia "cotta" nel video.
 - Tag sempre in coppia (Ristorazione+Ospitalità…): da ripensare. Molti progetti con `dummy.png` e testi segnaposto.
 - Ultima riga della home: vuoti accanto a `marchio` (tolta `nome-2`).
 - `logo-completo.svg` (quadrato) non più usato ma ancora nel registro.
