@@ -10,8 +10,10 @@ interface Props {
   /** Titolo e meta mostrati nella barra in basso */
   title?: string;
   meta?: string;
+  /** Hero della pagina: caricata subito, deve esserci già quando la cella si espande */
+  priority?: boolean;
 }
-const { image, video, alt, sizes, title, meta } = Astro.props;
+const { image, video, alt, sizes, title, meta, priority = false } = Astro.props;
 const poster = image && video ? await getImage({ src: image, width: 1280, format: 'webp' }) : undefined;
 ---
 
@@ -21,7 +23,7 @@ const poster = image && video ? await getImage({ src: image, width: 1280, format
       <source src={video} type="video/mp4" />
     </video>
   ) : image && (
-    <Image src={image} alt={alt} widths={[400, 800, 1200, 1600]} sizes={sizes} loading="lazy" decoding="async" />
+    <Image src={image} alt={alt} widths={[400, 800, 1200, 1600, 2400]} sizes={sizes} loading={priority ? 'eager' : 'lazy'} fetchpriority={priority ? 'high' : undefined} decoding="async" />
   )}
 </div>
 

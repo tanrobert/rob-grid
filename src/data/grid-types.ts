@@ -2,7 +2,7 @@ import type { ImageMetadata } from 'astro';
 import type { SvgName } from './svgs';
 import type { TagCount } from '../lib/tags';
 
-/** Unità occupate da una cella: w = colonne, h = righe (1 unità = 1 quadrato della griglia). */
+/** Unità occupate da una cella: w = colonne, h = righe (unità piccola: la casella quadrata base è 2×2). */
 export interface Span {
   w: number;
   h: number;
@@ -14,9 +14,9 @@ export type Tone = 'paper' | 'red';
 interface CellBase extends Span {
   /** Identificativo unico: usato per le transizioni e il debug. */
   id: string;
-  /** Override opzionale su tablet (4 colonne). Default: w ridotto a max 4. */
+  /** Override opzionale su tablet (8 colonne). Default: w ridotto a max 8. */
   md?: Partial<Span>;
-  /** Override opzionale su mobile (2 colonne). Default: w ridotto a max 2. */
+  /** Override opzionale su mobile (4 colonne). Default: w ridotto a max 4. */
   sm?: Partial<Span>;
   tone?: Tone;
   /** Se presente, la cella è cliccabile e si espande nella pagina di destinazione. */

@@ -1,0 +1,30 @@
+---
+import type { Cell } from '../data/grid-types';
+import Layout from '../layouts/Layout.astro';
+import Grid from '../components/Grid.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+import { extraCells } from '../data/extra';
+import { pad2 } from '../lib/format';
+
+// in testa l'arrivo dell'espansione della cella "extra" della home, in fondo il ritorno all'indice
+const cells: Cell[] = [
+  {
+    id: 'extra', type: 'text', w: 4, h: 4, sm: { h: 2 }, heroOf: '/extra', as: 'h1', size: 'l',
+    eyebrow: `${pad2(extraCells.length)} celle`,
+    title: 'Celle extra',
+    body: 'Non servono a niente, ma ci sono.',
+  },
+  ...extraCells,
+  { id: 'indietro', type: 'text', w: 4, h: 2, tone: 'red', href: '/', as: 'p', size: 'm', eyebrow: 'Torna a', title: 'Indice' },
+];
+---
+
+<Layout
+  titolo="Celle extra — Roberto"
+  descrizione="Le celle extra del portfolio di Roberto, graphic designer: orologio, misure della griglia, cursore, registro, occhio e globo terrestre in tempo reale."
+>
+  <main id="main" class="sheet">
+    <Grid cells={cells} />
+    <SiteFooter />
+  </main>
+</Layout>

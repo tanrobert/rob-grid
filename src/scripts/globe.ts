@@ -2,7 +2,8 @@
  * Casella "terra": il globo segue l'orientamento reale (lib/globe.ts).
  * - all'ingresso fa un giro veloce e frena fino all'orientamento reale (una volta per visita);
  * - si trascina col mouse in tutte le direzioni, col dito solo in orizzontale;
- * - lasciato andare, dopo una breve pausa torna all'orientamento reale, che intanto si aggiorna.
+ * - lasciato andare con slancio continua a girare e frena (free-spin); fermo, dopo una breve pausa
+ *   torna all'orientamento reale, che intanto si aggiorna.
  * Le terre (data/land-110m.json, ~20 KB) si caricano solo se la casella c'è.
  */
 
@@ -13,6 +14,10 @@ let introDone = false;  // il modulo sopravvive alle navigazioni del ClientRoute
 const INTRO_MS = 2400;
 const RETURN_DELAY_MS = 500;
 const RETURN_MS = 900;
+const FRICTION_MS = 700;   // free-spin: la velocità si riduce a ~1/3 ogni 700 ms
+const MAX_SPEED = 3;       // °/ms, tetto allo slancio
+const MIN_SPEED = 0.01;    // °/ms, sotto questa il globo è fermo
+const RELEASE_IDLE_MS = 80; // se il dito era fermo da più di così, niente slancio
 const easeOut = (k: number) => 1 - (1 - k) ** 3;
 const easeInOut = (k: number) => (k < 0.5 ? 4 * k ** 3 : 1 - (-2 * k + 2) ** 3 / 2);
 /** differenza angolare più breve, in (-180, 180] */
@@ -86,8 +91,33 @@ export async function initGlobe(signal: AbortSignal, reduced: boolean) {
   }, 20_000);
   signal.addEventListener('abort', () => { clearInterval(tick); clearTimeout(returnTimer); });
 
+  const scheduleReturn = () => {
+    returnTimer = window.setTimeout(() => { returnTimer = 0; tweenToReal(spin, RETURN_MS, easeInOut); }, RETURN_DELAY_MS);
+  };
+
+  /** free-spin: prosegue con la velocità del rilascio (°/ms) e frena in modo esponenziale */
+  const coast = (v: [number, number]) => {
+    stop();
+    let tPrev = 0;
+    const step = (t: number) => {
+      const dt = tPrev ? Math.min(t - tPrev, 50) : 16;  // dopo una scheda in background non salta avanti
+      tPrev = t;
+      const f = Math.exp(-dt / FRICTION_MS);
+      const travel = FRICTION_MS * (1 - f);  // integrale esatto della velocità che decade nel fotogramma
+      const φ = spin[1] + v[1] * travel;
+      spin = [spin[0] + v[0] * travel, Math.max(-90, Math.min(90, φ))];
+      v = [v[0] * f, φ === spin[1] ? v[1] * f : 0];  // al polo l'asse verticale si ferma
+      paint();
+      if (Math.hypot(v[0], v[1]) > MIN_SPEED) raf = requestAnimationFrame(step);
+      else { raf = 0; scheduleReturn(); }
+    };
+    raf = requestAnimationFrame(step);
+  };
+
   // ── trascinamento ─────────────────────────────────────
   let last: [number, number] = [0, 0];
+  let lastT = 0;
+  let vel: [number, number] = [0, 0];
   let degPerPx = 1;
   root.addEventListener('pointerdown', e => {
     if (e.button !== 0) return;
@@ -95,6 +125,8 @@ export async function initGlobe(signal: AbortSignal, reduced: boolean) {
     clearTimeout(returnTimer); returnTimer = 0;
     dragging = true;
     last = [e.clientX, e.clientY];
+    lastT = e.timeStamp;
+    vel = [0, 0];
     degPerPx = 180 / root.querySelector('svg')!.getBoundingClientRect().width;  // tutta la larghezza = mezzo giro
     root.setPointerCapture(e.pointerId);
   }, { signal });
@@ -104,14 +136,25 @@ export async function initGlobe(signal: AbortSignal, reduced: boolean) {
     const dx = e.clientX - last[0], dy = e.clientY - last[1];
     last = [e.clientX, e.clientY];
     const vertical = e.pointerType === 'touch' ? 0 : dy;  // col dito solo in orizzontale
+    const prev = spin;
     spin = [spin[0] + dx * degPerPx, Math.max(-90, Math.min(90, spin[1] - vertical * degPerPx))];
+    // velocità media mobile: smussa gli scatti dei singoli eventi
+    const dt = e.timeStamp - lastT;
+    lastT = e.timeStamp;
+    if (dt > 0) vel = [vel[0] * 0.5 + (spin[0] - prev[0]) / dt * 0.5, vel[1] * 0.5 + (spin[1] - prev[1]) / dt * 0.5];
     if (!raf) raf = requestAnimationFrame(() => { raf = 0; paint(); });
   }, { signal });
 
-  const release = () => {
+  const release = (e: PointerEvent) => {
     if (!dragging) return;
     dragging = false;
-    returnTimer = window.setTimeout(() => { returnTimer = 0; tweenToReal(spin, RETURN_MS, easeInOut); }, RETURN_DELAY_MS);
+    const speed = Math.hypot(vel[0], vel[1]);
+    if (reduced || e.type === 'pointercancel' || e.timeStamp - lastT > RELEASE_IDLE_MS || speed < MIN_SPEED * 5) {
+      scheduleReturn();
+      return;
+    }
+    const k = Math.min(1, MAX_SPEED / speed);
+    coast([vel[0] * k, vel[1] * k]);
   };
   root.addEventListener('pointerup', release, { signal });
   root.addEventListener('pointercancel', release, { signal });

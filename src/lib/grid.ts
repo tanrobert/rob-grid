@@ -1,10 +1,11 @@
 import type { Cell, Span } from '../data/grid-types';
 
-/** Colonne e soglie per breakpoint — tenere allineati con --cols e le media query di global.css. */
-export const COLS = { lg: 6, md: 4, sm: 2 } as const;
+/** Colonne e soglie per breakpoint — tenere allineati con --cols e le media query di global.css.
+    Unità piccola: la "casella base" quadrata è 2×2, le unità singole danno le forme intermedie. */
+export const COLS = { lg: 12, md: 8, sm: 4 } as const;
 export const BREAKPOINTS = { md: 600, lg: 1024 } as const;
 /** Altezza massima di una cella, in unità */
-const MAX_H = 12;
+const MAX_H = 24;
 
 const clamp = (n: number, max: number) => Math.max(1, Math.min(Math.round(n), max));
 
@@ -13,6 +14,16 @@ export function resolveSpans(cell: Cell): Record<keyof typeof COLS, Span> {
   const md = { w: clamp(cell.md?.w ?? lg.w, COLS.md), h: clamp(cell.md?.h ?? lg.h, MAX_H) };
   const sm = { w: clamp(cell.sm?.w ?? md.w, COLS.sm), h: clamp(cell.sm?.h ?? md.h, MAX_H) };
   return { lg, md, sm };
+}
+
+/** Forma di un progetto scalata per ogni breakpoint (×1 in home e archivio, ×2 nella hero).
+    Se non ci sta nelle colonne va a tutta larghezza con lo stesso rapporto: l'immagine non si deforma. */
+export function scaleShape(shape: Span, factor: number): Span & { md: Span; sm: Span } {
+  const fit = (cols: number): Span => {
+    const w = shape.w * factor, h = shape.h * factor;
+    return w <= cols ? { w, h } : { w: cols, h: Math.round((h * cols) / w) };
+  };
+  return { ...fit(COLS.lg), md: fit(COLS.md), sm: fit(COLS.sm) };
 }
 
 /** Custom properties lette da .cell in global.css. */

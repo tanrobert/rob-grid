@@ -39,6 +39,9 @@ if (ruler && thumb && pct) {
   addEventListener('resize', schedule);
   new ResizeObserver(schedule).observe(document.body);  // altezza della pagina (filtri, immagini, navigazione)
   document.addEventListener('astro:page-load', schedule);
+  // subito dopo lo swap, prima che la View Transition fotografi la pagina nuova: se il righello
+  // sparisse a transizione avviata (pagina che non scorre), Firefox annullerebbe tutta l'animazione
+  document.addEventListener('astro:after-swap', update);
   update();
 
   // ── Trascinamento dell'indicatore ─────────────────────

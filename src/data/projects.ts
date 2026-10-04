@@ -4,6 +4,7 @@ import giardiniDelledenImg from '../assets/giardini-dell-eden.png';
 import dummyImg from '../assets/dummy.png';
 import eurofishImg from '../assets/eurofish-napoli.png';
 import kialeImg from '../assets/kiale.png';
+import geaImg from '../assets/gea.png';
 
 export const projects: Project[] = [
 
@@ -31,6 +32,7 @@ export const projects: Project[] = [
     period: 'dal 2024',
     description: 'Sistema di brand per un format di ristorazione veloce con ingredienti locali.',
     featured: true,
+    shape: { w: 4, h: 3 },
     image: kialeImg,
   },
   {
@@ -40,6 +42,7 @@ export const projects: Project[] = [
     period: 'dal 2026',
     description: 'Identità botanica per un ristorante dal carattere verde e naturale — logo e menu in equilibrio tra eleganza e freschezza.',
     featured: true,
+    shape: { w: 4, h: 3 },
     image: giardiniDelledenImg,
   },
 
@@ -129,6 +132,7 @@ export const projects: Project[] = [
     period: 'dal 2018',
     description: 'Brand e sito per una web radio indipendente — un\'identità che suona forte.',
     featured: true,
+    shape: { w: 4, h: 3 },
     image: purplePiperImg,
   },
 
@@ -163,7 +167,9 @@ export const projects: Project[] = [
     tags: ['Imprese', 'Prodotto', 'Logo', 'Web', 'Print'],
     period: 'dal 2026',
     description: 'Brand e sito per un\'azienda che produce porte su misura, casa madre di Spazioquadro.',
-    image: dummyImg,
+    featured: true,
+    shape: { w: 4, h: 4 },
+    image: geaImg,
   },
   {
     slug: 'dea-cosmesi',
@@ -180,6 +186,7 @@ export const projects: Project[] = [
     period: 'dal 2025',
     description: 'Identità visiva completa per una società di distribuzione di prodotti ittici.',
     featured: true,
+    shape: { w: 6, h: 4 },
     image: eurofishImg,
     // in panchina: il video (8.6 MB, 1080p) appesantiva lo scroll. Da ricomprimere (prova 1280 crf31 ≈ 3.1 MB)
     // video: '/media/eurofish-video.mp4',

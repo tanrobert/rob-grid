@@ -6,20 +6,21 @@ import TagButtons from '../components/TagButtons.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import { allTags } from '../lib/tags';
 import { projectsByYear } from '../lib/projects';
+import { scaleShape } from '../lib/grid';
 
-// Misure nell'archivio: featured 2×2, gli altri 1×1
-const FEATURED = { w: 2, h: 2 };
-const REGULAR = { w: 1, h: 1 };
+// Misure nell'archivio: la forma del progetto; senza forma, featured 4×4 e gli altri 2×2
+const FEATURED = { w: 4, h: 4 };
+const REGULAR = { w: 2, h: 2 };
 
 const cells: Cell[] = [
-  { id: 'archivio', type: 'archive-head', w: 2, h: 2, sm: { h: 1 }, heroOf: '/archivio', total: projectsByYear.length },
-  { id: 'tag', type: 'tags', w: 4, h: 2, md: { w: 2 }, hideOn: ['sm'], tags: allTags },
+  { id: 'archivio', type: 'archive-head', w: 4, h: 4, sm: { h: 2 }, heroOf: '/archivio', total: projectsByYear.length },
+  { id: 'tag', type: 'tags', w: 8, h: 4, md: { w: 4 }, hideOn: ['sm'], tags: allTags },
   ...projectsByYear.map((p): Cell => ({
     id: `p-${p.slug}`,
     label: p.slug,
     type: 'project',
     slug: p.slug,
-    ...(p.featured ? FEATURED : REGULAR),
+    ...(p.shape ? scaleShape(p.shape, 1) : p.featured ? FEATURED : REGULAR),
   })),
 ];
 ---
