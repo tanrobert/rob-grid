@@ -1,5 +1,4 @@
 ---
-import { morphName } from '../lib/grid';
 import type { Tone } from '../data/grid-types';
 import Close from '../assets/close.svg';
 
@@ -14,11 +13,10 @@ const { from, label, tone = 'paper' } = Astro.props;
 
 <header
   class:list={['cell', 'hero', tone === 'red' && 'cell--red']}
-  style={`view-transition-name:${morphName(from)};view-transition-class:morph`}
-  data-hero={morphName(from)}
+  data-hero={from}
 >
   <span class="cell__label mono" aria-hidden="true"><span>00</span><span>{label}</span></span>
-  <a href="/" class="cell__go hero__back" aria-label="Chiudi e torna alla griglia" data-close><span><Close /></span></a>
+  <a href="/" class="cell__go hero__back" aria-label="Chiudi e torna alla griglia" data-close data-part="go"><span><Close /></span></a>
   <slot />
 </header>
 

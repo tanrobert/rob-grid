@@ -7,6 +7,14 @@ import { initArchive } from './archive';
 import { pad2 } from '../lib/format';
 
 let cleanup: (() => void) | null = null;
+
+// animazioni d'ingresso (global.css): finite quando il filo ha chiuso il giro e il contenuto è entrato
+const INTRO = ['frame-draw', 'fill-in', 'fade-in'];
+function introDone(cell?: Element) {
+  const anims = (cell ? cell.getAnimations({ subtree: true }) : document.getAnimations())
+    .filter(a => a instanceof CSSAnimation && INTRO.includes(a.animationName));
+  return Promise.allSettled(anims.map(a => a.finished));
+}
 // contatori già animati (per data-id della cella): il modulo sopravvive alle navigazioni del ClientRouter
 const counted = new Set<string>();
 
@@ -28,10 +36,10 @@ export function initCells() {
   // (filtri, cambio di breakpoint) rifà l'animazione d'ingresso
   const html = document.documentElement;
   if (html.classList.contains('is-intro')) {
-    const cellsN = document.querySelectorAll('.cell').length;
-    // stagger 30ms + filo (--t-draw, 800ms) + entrata del contenuto (500ms), con margine
-    const id = setTimeout(() => html.classList.remove('is-intro'), cellsN * 30 + 1400);
-    teardown.push(() => clearTimeout(id));
+    // la durata del filo dipende dal perimetro di ogni cella: aspetto la fine delle animazioni vere
+    let live = true;
+    introDone().then(() => { if (live) html.classList.remove('is-intro'); });
+    teardown.push(() => { live = false; });
   }
 
   // ── Pausa fuori schermo (loop CSS + video) ─────────────
@@ -103,7 +111,7 @@ export function initCells() {
     turn();
   }
 
-  // ── Contatore: sale da 0 al valore quando la cella entra in vista ─
+  // ── Contatore: sale da 0 al valore quando la cella è entrata in vista ─
   // Nell'HTML c'è già il numero finale (crawler, niente JS, riduci movimento).
   // Una volta sola per visita: tornando sulla pagina il numero resta quello finale.
   if (!reduced) document.querySelectorAll<HTMLElement>('[data-countup]').forEach(el => {
@@ -113,7 +121,8 @@ export function initCells() {
     const key = el.closest<HTMLElement>('[data-id]')?.dataset.id ?? text;
     if (counted.has(key)) return;
     const show = (n: number) => { el.textContent = String(n).padStart(text.length, '0'); };
-    const DURATION = 1200;
+    // stessa curva per tutti, durata proporzionale al valore (come il filo dell'intro): i numeri piccoli finiscono prima
+    const DURATION = target * 90;
     let raf = 0;
     show(0);
     const io = new IntersectionObserver(([e]) => {
@@ -124,10 +133,13 @@ export function initCells() {
       const step = (t: number) => {
         t0 ||= t; // il cronometro parte dal primo fotogramma
         const k = Math.min(1, (t - t0) / DURATION);
-        show(Math.round(target * (1 - (1 - k) ** 3))); // rallenta verso la fine
+        // il numero n arriva al tempo (n/target)³: ogni scatto dura più del precedente, il valore finale
+        // solo alla fine (con round + ease-out i numeri piccoli arrivavano a metà e poi restavano fermi)
+        show(Math.floor(target * Math.cbrt(k)));
         if (k < 1) raf = requestAnimationFrame(step);
       };
-      raf = requestAnimationFrame(step);
+      // parte quando la cella ha finito di entrare (nell'intro, dopo filo e contenuto)
+      introDone(el.closest('.cell') ?? el).then(() => { if (!signal.aborted) raf = requestAnimationFrame(step); });
     });
     io.observe(el);
     teardown.push(() => { io.disconnect(); cancelAnimationFrame(raf); });

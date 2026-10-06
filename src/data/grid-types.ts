@@ -44,7 +44,7 @@ export type Cell = CellBase & (
       titleOf?: string;
     }
   | { type: 'list'; title: string; items: Array<string | { label: string; href: string }> }
-  | { type: 'stat'; value: string; caption: string; /** il numero sale da 0 quando la cella entra in vista */ countUp?: boolean }
+  | { type: 'stat'; value: string; caption: string; /** il numero sale da 0 quando la cella entra in vista */ countUp?: boolean; /** h1 nascosto: la cella fa da hero di una pagina */ heading?: string }
   | { type: 'media'; image?: ImageMetadata; video?: string; alt: string; caption?: string }
   | { type: 'project'; slug: string }
   | { type: 'clock' }

@@ -17,7 +17,7 @@ const { image, video, alt, sizes, title, meta, priority = false } = Astro.props;
 const poster = image && video ? await getImage({ src: image, width: 1280, format: 'webp' }) : undefined;
 ---
 
-<div class="duo">
+<div class="duo" data-part="media">
   {video ? (
     <video data-autoplay muted loop playsinline preload="none" poster={poster?.src} aria-label={alt}>
       <source src={video} type="video/mp4" />
@@ -28,8 +28,8 @@ const poster = image && video ? await getImage({ src: image, width: 1280, format
 </div>
 
 {title && (
-  <div class="caption">
-    <span class="caption__title" data-morph-title>{title}</span>
+  <div class="caption" data-part="caption">
+    <span class="caption__title" data-part="title">{title}</span>
     {meta && <span class="mono">{meta}</span>}
   </div>
 )}

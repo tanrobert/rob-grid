@@ -41,7 +41,8 @@
   --ease-out:   cubic-bezier(0.22, 1, 0.36, 1);
   --ease-morph: cubic-bezier(0.72, 0, 0.18, 1);
   --t-morph:    720ms;
-  --t-draw:     800ms;  /* intro: il filo fa il giro della casella (cells.ts conta questa durata) */
+  --t-swap:     220ms;  /* scambio dei contenuti nelle finestre dell'espansione */
+  --t-draw-u:   70ms;   /* intro: tempo del filo per ogni unità di perimetro (2×2 → 560ms, 6×4 → 1400ms) */
 
   color-scheme: light;
 }
@@ -328,6 +329,9 @@ p { text-wrap: pretty; }
 .duo {
   --velo: 0.35;  /* opacità del velo rosso */
   position: absolute; inset: 0; background: var(--bianco);
+  /* lo zoom dell'hover resta dentro: senza, l'istantanea della View Transition prende anche
+     la parte che sborda e la foto esce dal filo durante l'espansione */
+  overflow: clip;
 }
 .duo img, .duo video { width: 100%; height: 100%; object-fit: cover; }
 .duo::after {
@@ -356,14 +360,18 @@ p { text-wrap: pretty; }
 @keyframes fill-in { from { background-color: transparent; } }
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
 
-/* posizione del vertice di partenza sul perimetro (in unità, in senso orario dall'alto a sinistra) */
-.cell { --from: 0; }
+/* posizione del vertice di partenza sul perimetro (in unità, in senso orario dall'alto a sinistra).
+   Il filo va a velocità costante: la durata cresce col perimetro, le celle piccole compaiono prima. */
+.cell {
+  --from: 0;
+  --per: calc((var(--cw) + var(--ch)) * 2);
+  --t-draw: calc(var(--per) * var(--t-draw-u));
+}
 .cell[data-from="1"] { --from: var(--cw); }
 .cell[data-from="2"] { --from: calc(var(--cw) + var(--ch)); }
 .cell[data-from="3"] { --from: calc(var(--cw) * 2 + var(--ch)); }
 
 .is-intro .cell::after {
-  --per: calc((var(--cw) + var(--ch)) * 2);
   --run: calc(var(--draw) * var(--per));  /* tratto già disegnato */
   /* ogni lato parte quando il tratto arriva al suo inizio: inizio = distanza dal vertice di partenza */
   --l0: clamp(0, (var(--run) - mod(0 - var(--from), var(--per))) / var(--cw), 1);
@@ -388,48 +396,98 @@ p { text-wrap: pretty; }
 [data-offscreen] .loop { animation-play-state: paused !important; }
 
 /* ── View Transitions: la cella si espande nella pagina ─ */
+/* morph.ts dà un nome ai pezzi presenti da tutti e due i lati, solo durante la transizione:
+   morph-window   la cella ↔ la hero: una finestra che si allarga e rivela la pagina
+   morph-caption  la barra della didascalia ↔ la cella del titolo (un'altra finestra)
+   morph-media    la foto, che cresce sotto la finestra
+   morph-go       la freccia ↔ la ✕, nell'angolo in alto a destra
+   morph-title    il titolo della didascalia ↔ il titolo della pagina
+   morph-num      il numero (Extra, Archivio) ↔ quello della hero
+   Viaggiano tutti con la stessa curva; la chiusura è l'apertura al contrario (html.morph-close). */
 ::view-transition-group(*.morph) {
   animation-duration: var(--t-morph);
   animation-timing-function: var(--ease-morph);
 }
-/* niente scaling: il riquadro si allarga come una finestra e rivela la pagina,
-   ancorata in alto a sinistra (dove sta la linguetta in entrambi gli stati) */
-::view-transition-image-pair(*.morph) { overflow: clip; }
-::view-transition-old(*.morph),
-::view-transition-new(*.morph) {
-  width: auto; height: auto;
-  inset: 0 auto auto 0;
+/* dal basso: la foto, la finestra, didascalia e freccia, titolo/numero e righello */
+::view-transition-group(morph-media) { z-index: 1; }
+::view-transition-group(morph-window) { z-index: 2; }
+::view-transition-group(morph-caption), ::view-transition-group(morph-go) { z-index: 3; }
+::view-transition-group(morph-title), ::view-transition-group(morph-num), ::view-transition-group(ruler-thumb) { z-index: 4; }
+
+/* Finestre. Niente scaling: il riquadro si allarga e taglia, i contenuti restano fermi in alto a
+   sinistra (dove sta la linguetta in entrambi gli stati) e si scambiano in dissolvenza.
+   Il filo lo disegna l'outline della finestra, sopra l'istantanea: quello vero delle celle resta
+   fuori dalle istantanee, che non si deformano (se no il filo d'arrivo comparirebbe già alla misura
+   finale dentro una finestra che cambia ancora forma). */
+.cell[data-morphing]::after { opacity: 0; }
+/* la finestra di una cella con foto è trasparente: dentro deve vedersi la foto che cresce sotto
+   (fuori dalle transizioni la foto copre comunque i crocini) */
+.cell:has(> .duo) { background: transparent; }
+/* la didascalia e la cella del titolo hanno forme diverse: il fondo sul gruppo tiene piena la
+   finestra mentre cambia forma */
+::view-transition-group(morph-caption) { background: var(--bianco); }
+::view-transition-image-pair(morph-window),
+::view-transition-image-pair(morph-caption),
+::view-transition-image-pair(morph-media) { overflow: clip; }  /* Firefox non taglia da solo ciò che sborda */
+::view-transition-old(morph-window), ::view-transition-new(morph-window),
+::view-transition-old(morph-caption), ::view-transition-new(morph-caption) {
+  width: 100%; height: 100%;
   object-fit: none;
+  object-position: left top;
+  mix-blend-mode: normal;
+  outline: var(--line-dp) solid var(--rosso);
+  outline-offset: calc(var(--line-dp) * -1);
+}
+::view-transition-old(morph-window), ::view-transition-old(morph-caption) { animation: var(--t-swap) ease both vt-out; }
+::view-transition-new(morph-window), ::view-transition-new(morph-caption) { animation: var(--t-swap) ease both vt-in; }
+
+/* Foto: sotto, piena, quella grande (la hero); sopra quella della cella, che esce all'apertura ed
+   entra alla fine della chiusura. Al click via lo zoom dell'hover, di colpo: le due devono combaciare */
+.cell--link .duo[data-morphing] > :is(img, video) { transform: none; transition: none; }
+::view-transition-old(morph-media), ::view-transition-new(morph-media) {
+  width: 100%; height: 100%;
+  object-fit: cover;
   mix-blend-mode: normal;
 }
-::view-transition-old(*.morph) { animation: 220ms ease both vt-out; }
-::view-transition-new(*.morph) { animation: 220ms ease both vt-in; }
+/* cella e hero con ritagli diversi: ognuna sta nel riquadro della foto intera, animato da morph.ts */
+html.morph-photo::view-transition-old(morph-media),
+html.morph-photo::view-transition-new(morph-media) {
+  object-fit: contain;
+  left: 50%; top: 50%; translate: -50% -50%;
+}
+::view-transition-old(morph-media) { z-index: 1; animation: var(--t-swap) ease both vt-out; }
+::view-transition-new(morph-media) { animation: none; }
+html.morph-close::view-transition-old(morph-media) { z-index: auto; animation: none; }
+html.morph-close::view-transition-new(morph-media) { z-index: 1; animation: var(--t-swap) ease both vt-in; }
 
-/* il titolo scivola dalla didascalia al titolo della pagina, insieme alla finestra.
-   Riquadri con le stesse proporzioni: le due foto si scalano senza deformarsi. */
-::view-transition-group(*.title) {
-  animation-duration: var(--t-morph);
-  animation-timing-function: var(--ease-morph);
-}
-::view-transition-old(*.title),
-::view-transition-new(*.title) {
+/* Chiusura: lo scambio dei contenuti avviene alla fine invece che all'inizio. La cella grande resta
+   visibile (tagliata dalla finestra) mentre si stringe; la piccola entra quando la finestra è arrivata */
+html.morph-close::view-transition-old(morph-window), html.morph-close::view-transition-new(morph-window),
+html.morph-close::view-transition-old(morph-caption), html.morph-close::view-transition-new(morph-caption),
+html.morph-close::view-transition-new(morph-media) { animation-delay: calc(var(--t-morph) - var(--t-swap)); }
+
+/* Freccia ↔ ✕, titolo e numero: si scalano (riquadri con le stesse proporzioni) e si scambiano
+   lungo tutta la corsa */
+::view-transition-old(morph-go), ::view-transition-new(morph-go),
+::view-transition-old(morph-title), ::view-transition-new(morph-title),
+::view-transition-old(morph-num), ::view-transition-new(morph-num) {
   width: 100%; height: 100%;
-  animation-duration: var(--t-morph);
   animation-timing-function: var(--ease-morph);
 }
+
+/* Pagina intera: dissolvenza vera, la vecchia resta piena sotto e la nuova la copre entrando.
+   Se sfumassero tutte e due, nel mezzo resterebbe il foglio vuoto: un lampo chiaro a ogni click */
+::view-transition-old(root) { animation: none; }
+::view-transition-new(root) { animation: 360ms ease calc(var(--t-morph) * 0.55) both vt-in; }
+@keyframes vt-out { to { opacity: 0; } }
+@keyframes vt-in  { from { opacity: 0; } }
 
 /* ── View Transition del filtro archivio: le caselle scivolano al nuovo posto ── */
 ::view-transition-group(*.tile) {
   animation-duration: 560ms;
   animation-timing-function: var(--ease-morph);
 }
-html.vt-filter::view-transition-old(root),
 html.vt-filter::view-transition-new(root) { animation-duration: 280ms; animation-delay: 0s; }
-
-::view-transition-old(root) { animation: 260ms ease both vt-out; }
-::view-transition-new(root) { animation: 360ms ease calc(var(--t-morph) * 0.55) both vt-in; }
-@keyframes vt-out { to { opacity: 0; } }
-@keyframes vt-in  { from { opacity: 0; } }
 
 /* ── Riduzione del movimento ──────────────────────────── */
 @media (prefers-reduced-motion: reduce) {

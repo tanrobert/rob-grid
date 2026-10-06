@@ -43,9 +43,6 @@ export function mediaSizes(cell: Cell): string {
   ].join(', ');
 }
 
-/** Nome condiviso tra cella e pagina di destinazione per la View Transition. */
-export const morphName = (href: string) => `morph-${href.replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '')}`;
-
 export interface Rect { col: number; row: number; w: number; h: number }
 
 /**

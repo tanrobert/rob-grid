@@ -1,6 +1,6 @@
 ---
 import type { Cell } from '../data/grid-types';
-import { spanStyle, morphName } from '../lib/grid';
+import { spanStyle } from '../lib/grid';
 import { pad2 } from '../lib/format';
 import Arrow from '../assets/arrow.svg';
 import Close from '../assets/close.svg';
@@ -22,20 +22,21 @@ const classes = ['cell', `cell--${cell.type}`, cell.tone === 'red' && 'cell--red
 const isHome = href === '/';
 const label = cell.label === false ? null : (cell.label ?? cell.id);
 
-// cella "hero": è il punto d'arrivo dell'espansione da un'altra pagina
-const hero = cell.heroOf ? morphName(cell.heroOf) : undefined;
-const style = `${spanStyle(cell)};--i:${index}${hero ? `;view-transition-name:${hero};view-transition-class:morph` : ''}`;
+// Espansione (scripts/morph.ts): la cella cliccabile si apre nella hero della pagina (data-hero = suo href);
+// nella pagina d'arrivo la cella del titolo (data-title-of) accoglie la barra della didascalia
+const hero = cell.heroOf;
+const titleOf = 'titleOf' in cell ? cell.titleOf : undefined;
 
 // cella cliccabile → <a> (il link a "/" chiude la pagina corrente); altrimenti <div>
 const Tag = href ? 'a' : 'div';
 const linkAttrs = href
-  ? { href, 'data-morph': isHome ? undefined : morphName(href), 'data-close': isHome ? '' : undefined }
-  : { 'data-hero': hero };
+  ? { href, 'data-morph': isHome ? undefined : href, 'data-close': isHome ? '' : undefined }
+  : { 'data-hero': hero, 'data-title-of': titleOf };
 ---
 
 <Tag
   class:list={classes}
-  style={style}
+  style={`${spanStyle(cell)};--i:${index}`}
   data-cell={cell.type}
   data-id={cell.id}
   {...linkAttrs}
@@ -46,7 +47,7 @@ const linkAttrs = href
       <span>{n}</span><span>{label}</span>
     </span>
   )}
-  {href && <span class="cell__go" aria-hidden="true"><span><Arrow /></span></span>}
-  {!href && hero && <a href="/" class="cell__go" aria-label="Chiudi e torna alla griglia" data-close><span><Close /></span></a>}
+  {href && <span class="cell__go" aria-hidden="true" data-part="go"><span><Arrow /></span></span>}
+  {!href && hero && <a href="/" class="cell__go" aria-label="Chiudi e torna alla griglia" data-close data-part="go"><span><Close /></span></a>}
   <slot />
 </Tag>

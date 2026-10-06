@@ -1,6 +1,4 @@
 ---
-import { morphName } from '../../lib/grid';
-
 interface Props {
   eyebrow?: string;
   title: string;
@@ -10,8 +8,7 @@ interface Props {
   titleOf?: string;
 }
 const { eyebrow, title, body, as: Tag = 'h2', size = 'm', titleOf } = Astro.props;
-// arrivo del titolo che scivola dalla didascalia della cella d'origine
-const titleName = titleOf ? `title-${morphName(titleOf)}` : undefined;
+// con titleOf è il titolo d'arrivo: ci scivola quello della didascalia della cella d'origine (morph.ts)
 // un "_" finale diventa un cursore lampeggiante
 const caret = title.endsWith('_');
 const text = caret ? title.slice(0, -1) : title;
@@ -19,11 +16,7 @@ const text = caret ? title.slice(0, -1) : title;
 
 <div class:list={['text', `text--${size}`]}>
   {eyebrow && <p class="eyebrow mono">{eyebrow}</p>}
-  <Tag
-    class:list={['title', titleName && 'title--fit']}
-    style={titleName ? `view-transition-name:${titleName};view-transition-class:title` : undefined}
-    data-title-hero={titleName}
-  >{text}{caret && <span class="caret loop" aria-hidden="true">_</span>}</Tag>
+  <Tag class:list={['title', titleOf && 'title--fit']} data-part={titleOf ? 'title' : undefined}>{text}{caret && <span class="caret loop" aria-hidden="true">_</span>}</Tag>
   {typeof body === 'string' && <p class="body">{body}</p>}
   {Array.isArray(body) && <ul class="body body--list">{body.map(line => <li>{line}</li>)}</ul>}
 </div>

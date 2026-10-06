@@ -40,13 +40,13 @@ function projectCell(id: string, slug: string, label?: string): Cell {
 export const grid: Cell[] = [
   // ── riga 1 ────────────────────────────────────────────
   { id: 'logo',    type: 'svg',     w: 2, h: 2, svg: 'logo-r', label: false },
-  { id: 'nome',    type: 'marquee', w: 6, h: 2, svg: 'roberto', speed: 40, md: { w: 6 } },
-  { id: 'extra',   type: 'stat',    w: 2, h: 2, href: '/extra', value: pad2(extraCells.length), caption: 'Celle extra' },
+  { id: 'nome',    type: 'marquee', w: 6, h: 1, svg: 'roberto', speed: 40, md: { w: 6 } },
+  { id: 'extra',   type: 'stat',    w: 2, h: 2, href: '/extra', value: pad2(extraCells.length), caption: 'Celle extra', countUp: true },
   { id: 'archivio', type: 'stat',   w: 2, h: 2, href: '/archivio', value: pad2(projects.length), caption: 'Progetti in archivio', countUp: true },
 
   // ── righe 2–3 ─────────────────────────────────────────
   {
-    id: 'intro', type: 'text', w: 4, h: 2, as: 'h1', size: 'l',
+    id: 'intro', type: 'text', w: 5, h: 2, md: { w: 4, h: 2 }, as: 'h1', size: 'l',
     eyebrow: `Graphic designer — dal ${firstYear}`,
     title: 'Progetto identità visive e punti di contatto fisici e digitali.',
   },

@@ -3,12 +3,14 @@ interface Props {
   value: string;
   caption: string;
   countUp?: boolean;
+  heading?: string;
 }
-const { value, caption, countUp = false } = Astro.props;
+const { value, caption, countUp = false, heading } = Astro.props;
 ---
 
 <div class="stat">
-  <p class="value" style={`--len:${Math.max(2, value.length)}`} data-countup={countUp ? '' : undefined}>{value}</p>
+  {heading && <h1 class="sr-only">{heading}</h1>}
+  <p class="value" style={`--len:${Math.max(2, value.length)}`} data-part="num" data-countup={countUp ? '' : undefined}>{value}</p>
   <p class="mono">{caption}</p>
 </div>
 
@@ -19,6 +21,8 @@ const { value, caption, countUp = false } = Astro.props;
     padding: var(--pad);
   }
   .value {
+    /* largo quanto il testo: nell'espansione il numero cresce senza deformarsi (morph.ts) */
+    align-self: flex-start;
     font-weight: 500;
     font-size: min(58cqb, calc(124cqi / var(--len)));
     line-height: 0.78;

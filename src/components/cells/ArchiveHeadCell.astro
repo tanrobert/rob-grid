@@ -9,7 +9,7 @@ const { total } = Astro.props;
 
 <div class="head">
   <h1 class="sr-only">Archivio progetti</h1>
-  <p class="value" data-count>{pad2(total)}</p>
+  <p class="value" data-count data-part="num">{pad2(total)}</p>
   <p class="mono caption" aria-live="polite">
     <span>Progetti</span><span>Tag: <b data-current>tutti</b></span>
   </p>
@@ -22,6 +22,8 @@ const { total } = Astro.props;
     padding: var(--pad-label) var(--pad) var(--pad);
   }
   .value {
+    /* largo quanto il testo: nell'espansione il numero cresce senza deformarsi (morph.ts) */
+    align-self: flex-start;
     font-weight: 500;
     font-size: min(58cqb, 62cqi);
     line-height: 0.78;
