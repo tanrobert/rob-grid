@@ -5,18 +5,17 @@ interface Props {
   body?: string | string[];
   as?: 'h1' | 'h2' | 'p';
   size?: 's' | 'm' | 'l';
-  titleOf?: string;
 }
-const { eyebrow, title, body, as: Tag = 'h2', size = 'm', titleOf } = Astro.props;
-// con titleOf è il titolo d'arrivo: ci scivola quello della didascalia della cella d'origine (morph.ts)
+const { eyebrow, title, body, as: Tag = 'h2', size = 'm' } = Astro.props;
+// occhiello e titolo viaggiano nell'espansione della cella (morph.ts)
 // un "_" finale diventa un cursore lampeggiante
 const caret = title.endsWith('_');
 const text = caret ? title.slice(0, -1) : title;
 ---
 
 <div class:list={['text', `text--${size}`]}>
-  {eyebrow && <p class="eyebrow mono">{eyebrow}</p>}
-  <Tag class:list={['title', titleOf && 'title--fit']} data-part={titleOf ? 'title' : undefined}>{text}{caret && <span class="caret loop" aria-hidden="true">_</span>}</Tag>
+  {eyebrow && <p class="eyebrow mono" data-part="eyebrow">{eyebrow}</p>}
+  <Tag class="title" data-part="title">{text}{caret && <span class="caret loop" aria-hidden="true">_</span>}</Tag>
   {typeof body === 'string' && <p class="body">{body}</p>}
   {Array.isArray(body) && <ul class="body body--list">{body.map(line => <li>{line}</li>)}</ul>}
 </div>
@@ -35,13 +34,13 @@ const text = caret ? title.slice(0, -1) : title;
     font-weight: 500;
     line-height: 1;
     letter-spacing: -0.025em;
+    /* riquadro stretto sul testo: nell'espansione si scala senza deformarsi (morph.ts) */
+    align-self: flex-start;
+    max-width: 100%;
   }
   .text--l .title { font-size: clamp(24px, min(8.4cqi, 13cqb), 72px); line-height: 1.02; }
   .text--m .title { font-size: clamp(28px, min(22cqi, 34cqb), 128px); letter-spacing: -0.04em; }
   .text--s .title { font-size: clamp(18px, min(6.4cqi, 13cqb), 40px); }
-
-  /* riquadro stretto sul testo: stesse proporzioni della didascalia di partenza */
-  .title--fit { align-self: flex-start; max-width: 100%; }
 
   .body {
     max-width: 44ch;

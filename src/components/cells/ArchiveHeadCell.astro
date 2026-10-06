@@ -10,7 +10,7 @@ const { total } = Astro.props;
 <div class="head">
   <h1 class="sr-only">Archivio progetti</h1>
   <p class="value" data-count data-part="num">{pad2(total)}</p>
-  <p class="mono caption" aria-live="polite">
+  <p class="mono caption" aria-live="polite" data-part="note">
     <span>Progetti</span><span>Tag: <b data-current>tutti</b></span>
   </p>
 </div>

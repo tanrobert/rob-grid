@@ -58,7 +58,7 @@ const voids = (Object.keys(COLS) as (keyof typeof COLS)[]).flatMap(bp =>
       <Cell cell={cell} index={i}>
         {cell.type === 'svg' && <SvgCell svg={cell.svg} fit={cell.fit} />}
         {cell.type === 'marquee' && <MarqueeCell svg={cell.svg} speed={cell.speed} reverse={cell.reverse} vertical={cell.vertical} />}
-        {cell.type === 'text' && <TextCell eyebrow={cell.eyebrow} title={cell.title} body={cell.body} as={cell.as} size={cell.size} titleOf={cell.titleOf} />}
+        {cell.type === 'text' && <TextCell eyebrow={cell.eyebrow} title={cell.title} body={cell.body} as={cell.as} size={cell.size} />}
         {cell.type === 'list' && <ListCell title={cell.title} items={cell.items} />}
         {cell.type === 'stat' && <StatCell value={cell.value} caption={cell.caption} countUp={cell.countUp} heading={cell.heading} />}
         {cell.type === 'media' && <MediaCell image={cell.image} video={cell.video} alt={cell.alt} sizes={mediaSizes(cell)} title={cell.caption} priority={!!cell.heroOf} />}

@@ -24,8 +24,8 @@ const cells: Cell[] = [
   <main id="main" class="sheet">
     <PageHero from="/info" label="info" tone="red">
       <div class="info-hero">
-        <p class="mono">Chi sono</p>
-        <h1>Info</h1>
+        <p class="mono" data-part="eyebrow">Chi sono</p>
+        <h1 data-part="title">Info</h1>
         <SvgAsset name="roberto" class="info-hero__name" />
       </div>
     </PageHero>
@@ -42,6 +42,7 @@ const cells: Cell[] = [
   }
   .info-hero .mono { margin-bottom: auto; }
   h1 {
+    align-self: flex-start;  /* stretto sul testo: nell'espansione si scala senza deformarsi */
     font-size: min(26cqi, 44cqb);
     line-height: 0.76;
     letter-spacing: -0.06em;

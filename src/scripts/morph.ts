@@ -4,7 +4,8 @@
  * Una cella cliccabile (data-morph = il suo href) si apre nella hero della pagina d'arrivo
  * (data-hero = lo stesso href) e alla chiusura ci rientra. I pezzi che viaggiano sono marcati
  * nell'HTML col loro ruolo (data-part): foto, freccia ↔ ✕, barra della didascalia ↔ cella del
- * titolo (data-title-of, fuori dalla hero), titolo, numero.
+ * titolo (data-title-of, fuori dalla hero), titolo, numero, didascalie e occhielli. Viaggia ogni
+ * ruolo presente da tutti e due i lati (uno per cella); il resto della cella resta nella finestra.
  *
  * Nell'HTML non c'è nessun view-transition-name: più celle portano alla stessa pagina e i nomi
  * doppi annullerebbero la transizione. Li assegna questo modulo, solo per una transizione e ai due
@@ -13,13 +14,21 @@
  */
 import { navigate } from 'astro:transitions/client';
 
-type Role = 'window' | 'media' | 'go' | 'caption' | 'title' | 'num';
-type Parts = Map<Role, HTMLElement>;
+/** Ruolo di un pezzo: 'window' (la cella o la hero) o il valore di data-part */
+type Parts = Map<string, HTMLElement>;
 type Box = { width: string; height: string };
 interface Couple { from: Parts; to: Parts; closing: boolean }
 
 /** Transizione in preparazione: la foto si anima quando la pagina nuova è al suo posto */
 interface Pending { photo?: { from: Box; to: HTMLElement; ratio: number } }
+
+/**
+ * Come viaggia ogni pezzo (classe della View Transition, comportamento in global.css):
+ * frame = finestra che si allarga e rivela il contenuto · photo = foto che cresce sotto la finestra ·
+ * scale = cambia misura e si scala (riquadro stretto sul contenuto, stesse proporzioni ai due lati).
+ * Qualsiasi altro data-part è 'text': si sposta restando della sua misura (didascalie, occhielli…).
+ */
+const KIND: Record<string, string> = { window: 'frame', caption: 'frame', media: 'photo', title: 'scale', num: 'scale', go: 'scale' };
 
 const NAMED = 'data-morphing';
 const KEY = 'morph-origin';
@@ -34,7 +43,7 @@ function parts(win: HTMLElement): Parts {
   const titleCell = key ? win.ownerDocument.querySelector<HTMLElement>(`[data-title-of="${CSS.escape(key)}"]`) : null;
   if (titleCell) map.set('caption', titleCell);
   for (const root of [win, titleCell]) {
-    root?.querySelectorAll<HTMLElement>('[data-part]').forEach(el => map.set(el.dataset.part as Role, el));
+    root?.querySelectorAll<HTMLElement>('[data-part]').forEach(el => map.set(el.dataset.part!, el));
   }
   return map;
 }
@@ -82,9 +91,9 @@ function pair(oldDoc: Document, newDoc: Document, source?: Element): Couple | nu
 
 // ── Nomi, solo per la durata di una transizione ───────────
 
-function name(el: HTMLElement, role: Role) {
+function name(el: HTMLElement, role: string) {
   el.style.setProperty('view-transition-name', `morph-${role}`);
-  el.style.setProperty('view-transition-class', 'morph');
+  el.style.setProperty('view-transition-class', `morph ${KIND[role] ?? 'text'}`);
   el.setAttribute(NAMED, '');
 }
 
@@ -133,6 +142,9 @@ function coverBox(media: HTMLElement, r: number): Box {
   return w / h > r ? { width: `${w}px`, height: `${w / r}px` } : { width: `${h * r}px`, height: `${h}px` };
 }
 
+/** Un tempo CSS in ms. La build comprime il CSS e riscrive i tempi (720ms → .72s): mai parseFloat da solo */
+const toMs = (t: string) => parseFloat(t) * (t.trim().endsWith('ms') ? 1 : 1000);
+
 /**
  * Cella e hero possono ritagliare la foto in modo diverso (tablet: eurofish 6×4 → 8×5). Le due
  * istantanee stanno nel riquadro della foto intera (global.css), che qui cresce dalla foto di
@@ -142,7 +154,7 @@ function coverBox(media: HTMLElement, r: number): Box {
 function growPhoto({ from, to, ratio }: NonNullable<Pending['photo']>) {
   const end = coverBox(to, ratio);
   const css = getComputedStyle(document.documentElement);
-  const timing = { duration: parseFloat(css.getPropertyValue('--t-morph')), easing: css.getPropertyValue('--ease-morph').trim(), fill: 'both' as const };
+  const timing = { duration: toMs(css.getPropertyValue('--t-morph')), easing: css.getPropertyValue('--ease-morph').trim(), fill: 'both' as const };
   for (const side of ['old', 'new']) {
     document.documentElement.animate(
       { width: [from.width, end.width], height: [from.height, end.height] },
