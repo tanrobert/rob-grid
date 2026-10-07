@@ -463,8 +463,9 @@ html.morph-close::view-transition-new(*.photo) { animation-delay: calc(var(--t-m
 /* Pezzi piccoli: si scambiano in dissolvenza lungo tutta la corsa. Quelli .scale seguono la larghezza
    del gruppo (riquadri stretti sul contenuto: si scalano senza deformarsi), centrati in verticale:
    l'interlinea aggiunge spazio uguale sopra e sotto, quindi i centri combaciano anche con interlinee
-   diverse (Info: 1 nella cella, 0.76 nella hero). Quelli .text restano della loro misura, fermi in
-   alto a sinistra */
+   diverse. Le lettere combaciano solo se il testo ha le stesse proporzioni ai due lati (spaziatura in
+   em uguale: con -0.04em nella cella e -0.06em nella hero "Info" si sdoppiava): la hero usa lo stesso
+   componente della cella. Quelli .text restano della loro misura, fermi in alto a sinistra */
 ::view-transition-old(*.scale), ::view-transition-new(*.scale) {
   top: 50%; translate: 0 -50%;
   animation-timing-function: var(--ease-morph);

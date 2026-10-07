@@ -1,13 +1,14 @@
 ---
 import type { Cell } from '../data/grid-types';
 import Layout from '../layouts/Layout.astro';
-import PageHero from '../components/PageHero.astro';
 import Grid from '../components/Grid.astro';
 import SiteFooter from '../components/SiteFooter.astro';
-import SvgAsset from '../components/SvgAsset.astro';
 
+// In testa l'arrivo dell'espansione della cella "info" della home: stessa cella (testo rosso,
+// occhiello e titolo della stessa misura relativa) al doppio, come Extra e Archivio.
 // Testi segnaposto: da sostituire con la bio vera.
 const cells: Cell[] = [
+  { id: 'info', type: 'text', w: 4, h: 4, sm: { h: 2 }, tone: 'red', heroOf: '/info', as: 'h1', size: 'm', eyebrow: 'Chi sono', title: 'Info' },
   {
     id: 'bio', type: 'text', w: 8, h: 4, as: 'p', size: 'l',
     eyebrow: 'Bio',
@@ -16,37 +17,13 @@ const cells: Cell[] = [
   { id: 'logo', type: 'svg', w: 4, h: 4, svg: 'logo-r' },
   { id: 'settori', type: 'list', w: 6, h: 2, title: 'Settori', items: ['Ristorazione', 'Ospitalità', 'Cultura', 'Salute', 'Consulenza', 'Imprese'] },
   { id: 'ora', type: 'clock', w: 2, h: 2 },
-  { id: 'indietro', type: 'text', w: 4, h: 2, tone: 'red', href: '/', as: 'p', size: 'm', eyebrow: 'Torna a', title: 'Indice' },
+  { id: 'indietro', type: 'text', w: 8, h: 2, tone: 'red', href: '/', as: 'p', size: 'm', eyebrow: 'Torna a', title: 'Indice' },
 ];
 ---
 
 <Layout titolo="Info — Roberto" descrizione="Chi sono: Roberto, graphic designer. Identità visive, packaging e siti web per ristorazione, ospitalità, cultura e imprese.">
   <main id="main" class="sheet">
-    <PageHero from="/info" label="info" tone="red">
-      <div class="info-hero">
-        <p class="mono" data-part="eyebrow">Chi sono</p>
-        <h1 data-part="title">Info</h1>
-        <SvgAsset name="roberto" class="info-hero__name" />
-      </div>
-    </PageHero>
     <Grid cells={cells} />
     <SiteFooter />
   </main>
 </Layout>
-
-<style>
-  .info-hero {
-    position: absolute; inset: 0;
-    display: flex; flex-direction: column; justify-content: flex-end; gap: var(--pad);
-    padding: var(--pad-label) var(--pad) var(--pad);
-  }
-  .info-hero .mono { margin-bottom: auto; }
-  h1 {
-    align-self: flex-start;  /* stretto sul testo: nell'espansione si scala senza deformarsi */
-    font-size: min(26cqi, 44cqb);
-    line-height: 0.76;
-    letter-spacing: -0.06em;
-    margin-left: -0.05em;
-  }
-  .info-hero :global(.info-hero__name) { width: 100%; height: auto; }
-</style>

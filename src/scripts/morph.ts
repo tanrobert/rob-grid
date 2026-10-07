@@ -19,8 +19,11 @@ type Parts = Map<string, HTMLElement>;
 type Box = { width: string; height: string };
 interface Couple { from: Parts; to: Parts; closing: boolean }
 
-/** Transizione in preparazione: la foto si anima quando la pagina nuova è al suo posto */
-interface Pending { photo?: { from: Box; to: HTMLElement; ratio: number } }
+/**
+ * Transizione in preparazione: fondo della finestra di partenza e foto. Si animano quando la
+ * pagina nuova è al suo posto (lì si legge il fondo d'arrivo e si misura la foto d'arrivo)
+ */
+interface Pending { fill: { from: string; to: HTMLElement }; photo?: { from: Box; to: HTMLElement; ratio: number } }
 
 /**
  * Come viaggia ogni pezzo (classe della View Transition, comportamento in global.css):
@@ -145,6 +148,17 @@ function coverBox(media: HTMLElement, r: number): Box {
 /** Un tempo CSS in ms. La build comprime il CSS e riscrive i tempi (720ms → .72s): mai parseFloat da solo */
 const toMs = (t: string) => parseFloat(t) * (t.trim().endsWith('ms') ? 1 : 1000);
 
+/** Anima uno pseudo della View Transition con la durata e la curva della finestra (--t-morph, --ease-morph) */
+function travel(pseudoElement: string, keyframes: PropertyIndexedKeyframes) {
+  const css = getComputedStyle(document.documentElement);
+  document.documentElement.animate(keyframes, {
+    duration: toMs(css.getPropertyValue('--t-morph')),
+    easing: css.getPropertyValue('--ease-morph').trim(),
+    fill: 'both',
+    pseudoElement,
+  });
+}
+
 /**
  * Cella e hero possono ritagliare la foto in modo diverso (tablet: eurofish 6×4 → 8×5). Le due
  * istantanee stanno nel riquadro della foto intera (global.css), che qui cresce dalla foto di
@@ -153,20 +167,25 @@ const toMs = (t: string) => parseFloat(t) * (t.trim().endsWith('ms') ? 1 : 1000)
  */
 function growPhoto({ from, to, ratio }: NonNullable<Pending['photo']>) {
   const end = coverBox(to, ratio);
-  const css = getComputedStyle(document.documentElement);
-  const timing = { duration: toMs(css.getPropertyValue('--t-morph')), easing: css.getPropertyValue('--ease-morph').trim(), fill: 'both' as const };
   for (const side of ['old', 'new']) {
-    document.documentElement.animate(
-      { width: [from.width, end.width], height: [from.height, end.height] },
-      { ...timing, pseudoElement: `::view-transition-${side}(morph-media)` },
-    );
+    travel(`::view-transition-${side}(morph-media)`, { width: [from.width, end.width], height: [from.height, end.height] });
   }
+}
+
+/**
+ * La finestra ha il fondo della cella (bianco, rosso; trasparente con la foto, che cresce sotto) e
+ * passa a quello della hero. Le istantanee da sole non la riempiono: la cella piccola resta in alto
+ * a sinistra mentre la finestra si allarga, e a metà dissolvenza sono tutte e due semitrasparenti.
+ * Senza fondo lì si vedeva la pagina sotto (la "R" del logo dentro Extra, Info che diventava rosa).
+ */
+function fillWindow({ from, to }: Pending['fill']) {
+  travel('::view-transition-group(morph-window)', { backgroundColor: [from, getComputedStyle(to).backgroundColor] });
 }
 
 // ── Navigazione ───────────────────────────────────────────
 
 // Dopo il caricamento della pagina nuova e prima che la transizione catturi la vecchia: si sceglie
-// la coppia, si danno i nomi ai pezzi presenti da entrambi i lati e si prepara la foto
+// la coppia, si danno i nomi ai pezzi presenti da entrambi i lati e si preparano fondo e foto
 document.addEventListener('astro:before-preparation', e => {
   const load = e.loader;
   e.loader = async () => {
@@ -186,7 +205,7 @@ document.addEventListener('astro:before-preparation', e => {
     // la classe va sul documento nuovo: lo swap riscrive gli attributi di <html>
     newDoc.documentElement.classList.toggle('morph-close', closing);
 
-    pending = {};
+    pending = { fill: { from: getComputedStyle(from.get('window')!).backgroundColor, to: to.get('window')! } };
     const fromMedia = from.get('media'), toMedia = to.get('media');
     if (!fromMedia || !toMedia) return;
     const ratio = mediaRatio(fromMedia);
@@ -202,7 +221,10 @@ document.addEventListener('astro:before-swap', e => {
   const morph = pending;
   pending = null;
   if (!morph) return;
-  e.viewTransition.ready.then(() => morph.photo && growPhoto(morph.photo)).catch(() => {
+  e.viewTransition.ready.then(() => {
+    fillWindow(morph.fill);
+    if (morph.photo) growPhoto(morph.photo);
+  }).catch(() => {
     document.documentElement.classList.remove('morph-photo');
   });
   e.viewTransition.finished.finally(() => {
