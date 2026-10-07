@@ -319,8 +319,9 @@ p { text-wrap: pretty; }
   .cell--link:hover .cell__go { background: var(--rosso); color: var(--bianco); }
   .cell--red.cell--link:hover .cell__go { background: var(--bianco); color: var(--rosso); }
   .cell--link:hover .cell__go span { transform: translate(2px, -2px); }
-  /* ✕ di chiusura nelle celle "hero" (es. contatore dell'archivio) */
+  /* ✕ di chiusura delle hero (progetti, archivio, extra, info): stesso hover della freccia */
   .cell[data-hero] .cell__go:hover { background: var(--rosso); color: var(--bianco); }
+  .cell--red[data-hero] .cell__go:hover { background: var(--bianco); color: var(--rosso); }
 }
 
 /* ── Media: foto con velo rosso ───────────────────────── */

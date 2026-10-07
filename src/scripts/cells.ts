@@ -18,6 +18,11 @@ function introDone(cell?: Element) {
 // contatori già animati (per data-id della cella): il modulo sopravvive alle navigazioni del ClientRouter
 const counted = new Set<string>();
 
+// View Transition tra le pagine in corso: i lavori pesanti aspettano che finisca, se no la prima
+// apertura di una pagina (es. Extra col globo) perde fotogrammi e l'espansione salta
+let transition: Promise<unknown> = Promise.resolve();
+document.addEventListener('astro:before-swap', e => { transition = e.viewTransition.finished.catch(() => {}); });
+
 export function initCells() {
   cleanup?.();
   const ac = new AbortController();
@@ -29,8 +34,10 @@ export function initCells() {
   const { signal } = ac;
 
   initArchive(signal);
-  // globo: d3-geo e le terre si caricano solo se la casella c'è
-  if (document.querySelector('[data-globe]')) import('./globe').then(m => m.initGlobe(signal, reduced));
+  // globo: d3-geo e le terre si caricano solo se la casella c'è, a transizione finita
+  if (document.querySelector('[data-globe]')) {
+    transition.then(() => signal.aborted || import('./globe').then(m => m.initGlobe(signal, reduced)));
+  }
 
   // Intro finita: tolgo la classe, così nessuna casella che ricompare
   // (filtri, cambio di breakpoint) rifà l'animazione d'ingresso
