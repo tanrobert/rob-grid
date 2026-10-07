@@ -40,7 +40,8 @@ function projectCell(id: string, slug: string, label?: string): Cell {
 export const grid: Cell[] = [
   // ── riga 1 ────────────────────────────────────────────
   { id: 'logo',    type: 'svg',     w: 2, h: 2, svg: 'logo-r', label: false },
-  { id: 'nome',    type: 'marquee', w: 6, h: 1, svg: 'roberto', speed: 40, md: { w: 6 } },
+  // speed = secondi per giro: il logo lungo è ~2,8 volte il "roberto", 112s = stessa velocità dei 40s di prima
+  { id: 'nome',    type: 'marquee', w: 6, h: 1, svg: 'logo-completo-orizzontale-lungo', speed: 112, md: { w: 6 } },
   { id: 'archivio', type: 'stat',   w: 2, h: 2, href: '/archivio', value: pad2(projects.length), caption: 'Progetti in archivio', countUp: true },
 
   // ── righe 2–3 ─────────────────────────────────────────

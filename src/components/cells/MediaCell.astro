@@ -7,7 +7,7 @@ interface Props {
   video?: string;
   alt: string;
   sizes: string;
-  /** Titolo e meta mostrati nella barra in basso */
+  /** Titolo e meta mostrati in basso, sulla foto */
   title?: string;
   meta?: string;
   /** Hero della pagina: caricata subito, deve esserci già quando la cella si espande */
@@ -28,7 +28,7 @@ const poster = image && video ? await getImage({ src: image, width: 1280, format
 </div>
 
 {title && (
-  <div class="caption" data-part="caption">
+  <div class="caption">
     <span class="caption__title" data-part="title">{title}</span>
     {meta && <span class="mono">{meta}</span>}
   </div>
@@ -38,9 +38,7 @@ const poster = image && video ? await getImage({ src: image, width: 1280, format
   .caption {
     position: absolute; left: 0; right: 0; bottom: 0; z-index: 2;
     display: flex; justify-content: space-between; align-items: baseline; gap: var(--m);
-    padding: calc(8px - var(--line)) 12px 7px;
-    background: var(--bianco);
-    border-top: var(--line) solid var(--rosso);
+    padding: 8px 12px 7px;
   }
   .caption__title {
     font-weight: 500;

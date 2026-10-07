@@ -23,14 +23,14 @@ const isHome = href === '/';
 const label = cell.label === false ? null : (cell.label ?? cell.id);
 
 // Espansione (scripts/morph.ts): la cella cliccabile si apre nella hero della pagina (data-hero = suo href);
-// nella pagina d'arrivo la cella del titolo (data-title-of) accoglie la barra della didascalia
+// nella pagina d'arrivo la cella del titolo (data-title-of) accoglie il titolo della didascalia
 const hero = cell.heroOf;
 const titleOf = 'titleOf' in cell ? cell.titleOf : undefined;
 
 // cella cliccabile → <a> (il link a "/" chiude la pagina corrente); altrimenti <div>
 const Tag = href ? 'a' : 'div';
 const linkAttrs = href
-  ? { href, 'data-morph': isHome ? undefined : href, 'data-close': isHome ? '' : undefined }
+  ? { href, 'data-morph': isHome ? undefined : href, 'data-close': isHome ? '' : undefined, 'data-astro-history': cell.replace ? 'replace' : undefined }
   : { 'data-hero': hero, 'data-title-of': titleOf };
 ---
 

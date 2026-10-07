@@ -21,6 +21,9 @@ interface CellBase extends Span {
   tone?: Tone;
   /** Se presente, la cella è cliccabile e si espande nella pagina di destinazione. */
   href?: string;
+  /** Il link sostituisce la pagina corrente nella history invece di aggiungerne una (progetto
+      precedente/successivo: sfogliando, la ✕ torna comunque alla griglia di partenza). */
+  replace?: boolean;
   /** Etichetta tecnica in alto a sinistra. `false` per nasconderla. */
   label?: string | false;
   /** La cella è l'arrivo dell'espansione della cella con questo href (es. '/archivio'). */

@@ -13,10 +13,12 @@ const { svg, speed = 40, reverse = false, vertical = false } = Astro.props;
 // due metà identiche: la traccia scorre del 50% e riparte senza stacco.
 // Orizzontale: tre copie per metà. Verticale: il logo è già più alto della cella, ne basta una.
 const copies = vertical ? [0] : [0, 1, 2];
+// spazio tra una copia e l'altra, proprio di ogni logo (data/svgs.ts)
+const gap = svgs[svg].gap ?? 0;
 ---
 
 <div class:list={['marquee', vertical && 'marquee--y']} aria-hidden="true">
-  <div class:list={['track', 'loop', reverse && 'track--reverse']} style={`--speed:${speed}s`}>
+  <div class:list={['track', 'loop', reverse && 'track--reverse']} style={`--speed:${speed}s;--gap:${gap}`}>
     {[0, 1].map(() => (
       <div class="half">
         {copies.map(() => <SvgAsset name={svg} class="item" />)}
@@ -46,9 +48,7 @@ const copies = vertical ? [0] : [0, 1, 2];
     /* stessa altezza del logo-r nella cella 1×1: lato cella meno il padding */
     --h: calc(100cqb - 2 * var(--pad));
     height: var(--h); width: auto; max-width: none;
-    /* spazio tra una copia e l'altra = spazio O→B nel lettering (29.1 su 123.6 di altezza),
-       perché tra la O finale e la R iniziale si forma la stessa coppia tonda→asta */
-    margin-right: calc(var(--h) * 29.1 / 123.6);
+    margin-right: calc(var(--h) * var(--gap));
   }
   @keyframes marquee {
     from { transform: translate3d(0, 0, 0); }
@@ -67,8 +67,7 @@ const copies = vertical ? [0] : [0, 1, 2];
     --w: calc(100cqi - 2 * var(--pad));
     width: var(--w); height: auto; max-height: none;
     margin-right: 0;
-    /* spazio tra una copia e l'altra = stacco tra lettering e R grande nel logo (82.94 su 247.21 di larghezza) */
-    margin-bottom: calc(var(--w) * 82.94 / 247.21);
+    margin-bottom: calc(var(--w) * var(--gap));
   }
   @keyframes marquee-y {
     from { transform: translate3d(0, -50%, 0); }

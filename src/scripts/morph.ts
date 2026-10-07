@@ -3,8 +3,8 @@
  *
  * Una cella cliccabile (data-morph = il suo href) si apre nella hero della pagina d'arrivo
  * (data-hero = lo stesso href) e alla chiusura ci rientra. I pezzi che viaggiano sono marcati
- * nell'HTML col loro ruolo (data-part): foto, freccia ↔ ✕, barra della didascalia ↔ cella del
- * titolo (data-title-of, fuori dalla hero), titolo, numero, didascalie e occhielli. Viaggia ogni
+ * nell'HTML col loro ruolo (data-part): foto, freccia ↔ ✕, titolo (dei progetti: arriva nella cella
+ * del titolo, data-title-of, fuori dalla hero), numero, didascalie e occhielli. Viaggia ogni
  * ruolo presente da tutti e due i lati (uno per cella); il resto della cella resta nella finestra.
  *
  * Nell'HTML non c'è nessun view-transition-name: più celle portano alla stessa pagina e i nomi
@@ -33,7 +33,7 @@ interface Pending { fill: { from: string; to: HTMLElement }; photo?: { from: Box
  * segnala la console): se serve un altro comportamento va aggiunto qui.
  */
 const KIND: Record<string, 'frame' | 'photo' | 'scale' | 'text'> = {
-  window: 'frame', caption: 'frame', media: 'photo',
+  window: 'frame', media: 'photo',
   title: 'scale', num: 'scale', go: 'scale',
   eyebrow: 'text', note: 'text',
 };
@@ -60,7 +60,6 @@ function parts(win: HTMLElement): Parts {
   const map: Parts = new Map([['window', win]]);
   const key = win.dataset.hero;
   const titleCell = key ? win.ownerDocument.querySelector<HTMLElement>(`[data-title-of="${CSS.escape(key)}"]`) : null;
-  if (titleCell) map.set('caption', titleCell);
   for (const root of [win, titleCell]) {
     root?.querySelectorAll<HTMLElement>('[data-part]').forEach(el => {
       const role = el.dataset.part!;

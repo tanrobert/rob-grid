@@ -6,7 +6,7 @@ import Grid from '../../components/Grid.astro';
 import SiteFooter from '../../components/SiteFooter.astro';
 import { projects } from '../../data/projects';
 import { tagSlug } from '../../lib/tags';
-import { projectYear } from '../../lib/projects';
+import { projectYear, projectsByYear } from '../../lib/projects';
 import { scaleShape } from '../../lib/grid';
 
 export const getStaticPaths = (() =>
@@ -20,6 +20,14 @@ const year = String(projectYear(p) || '—');
 // Celle informative in moduli da 2 e 4 colonne: si incastrano accanto a qualsiasi hero.
 const heroSpan = p.shape ? scaleShape(p.shape, 2) : { w: 6, h: 6, md: { w: 8, h: 8 }, sm: { w: 4, h: 4 } };
 
+// progetto precedente e successivo nell'ordine dell'archivio (dal più recente), in giro: dopo l'ultimo il primo
+const at = projectsByYear.findIndex(x => x.slug === p.slug);
+const sibling = (step: number) => projectsByYear[(at + step + projectsByYear.length) % projectsByYear.length];
+const siblingCell = (id: string, label: string, step: number): Cell => {
+  const s = sibling(step);
+  return { id, label, type: 'text', w: 4, h: 1, size: 's', as: 'p', href: `/progetti/${s.slug}`, replace: true, eyebrow: `Progetto ${label}`, title: s.title };
+};
+
 const cells: Cell[] = [
   { id: 'hero', type: 'media', ...heroSpan, label: p.slug, heroOf: `/progetti/${p.slug}`, image: p.image, video: p.video, alt: `${p.title} — ${p.description}` },
   { id: 'progetto', type: 'text', w: 4, h: 2, as: 'h1', size: 's', eyebrow: 'Progetto', title: p.title, body: p.description, titleOf: `/progetti/${p.slug}` },
@@ -28,6 +36,8 @@ const cells: Cell[] = [
   { id: 'indietro', type: 'text', w: 2, h: 2, tone: 'red', href: '/', as: 'p', size: 'm', eyebrow: 'Torna a', title: 'Indice' },
   { id: 'registro', type: 'mark', w: 2, h: 2 },
   { id: 'nota', type: 'text', w: 4, h: 2, size: 's', eyebrow: 'Nota', title: 'Contenuto segnaposto: qui andranno immagini, processo e risultati.' },
+  siblingCell('prec', 'precedente', -1),
+  siblingCell('succ', 'successivo', 1),
 ];
 ---
 

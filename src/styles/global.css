@@ -286,20 +286,13 @@ p { text-wrap: pretty; }
 
 .cell--red { background: var(--rosso); color: var(--bianco); }
 
-/* linguetta tecnica: indice · nome */
+/* Linguetta (indice · nome), freccia/✕ e didascalia dei progetti: solo testo, senza fondo né filo.
+   Sulle foto in bianco (il velo rosso le scurisce abbastanza) */
 .cell__label {
   position: absolute; top: 0; left: 0; z-index: 2;
   display: flex; gap: 8px;
-  /* il filo sta dentro la misura: padding destro e inferiore ridotti di --line */
-  padding: 6px calc(8px - var(--line)) calc(5px - var(--line)) 8px;
-  background: var(--bianco);
-  border-right: var(--line) solid var(--rosso);
-  border-bottom: var(--line) solid var(--rosso);
+  padding: 6px 8px 5px;
   white-space: nowrap;
-}
-.cell--red .cell__label {
-  background: var(--rosso);
-  border-color: color-mix(in srgb, var(--bianco) 45%, transparent);
 }
 
 /* freccia delle celle cliccabili */
@@ -307,25 +300,19 @@ p { text-wrap: pretty; }
   position: absolute; top: 0; right: 0; z-index: 2;
   display: grid; place-items: center;
   width: 30px; height: 30px;
-  background: var(--bianco);
-  border-left: var(--line) solid var(--rosso);
-  border-bottom: var(--line) solid var(--rosso);
-  transition: background-color 200ms ease, color 200ms ease;
 }
 .cell__go span { display: block; transition: transform 300ms var(--ease-out); }
-/* freccia (src/assets/arrow.svg): il colore segue il testo, così si inverte in hover */
+/* freccia (src/assets/arrow.svg): il colore segue il testo */
 .cell__go svg { width: 11px; height: 11px; }
 .cell__go svg * { fill: currentColor; }
-.cell--red .cell__go { background: var(--rosso); border-color: color-mix(in srgb, var(--bianco) 45%, transparent); }
 
 @media (hover: hover) and (pointer: fine) {
-  .cell--link:hover .cell__go { background: var(--rosso); color: var(--bianco); }
-  .cell--red.cell--link:hover .cell__go { background: var(--bianco); color: var(--rosso); }
-  .cell--link:hover .cell__go span { transform: translate(2px, -2px); }
-  /* ✕ di chiusura delle hero (progetti, archivio, extra, info): stesso hover della freccia */
-  .cell[data-hero] .cell__go:hover { background: var(--rosso); color: var(--bianco); }
-  .cell--red[data-hero] .cell__go:hover { background: var(--bianco); color: var(--rosso); }
+  .cell--link:hover .cell__go span { transform: translate(3px, -3px); }
+  /* ✕ di chiusura delle hero (progetti, archivio, extra, info) */
+  .cell[data-hero] .cell__go:hover span { transform: scale(1.25); }
 }
+
+.cell:has(> .duo) > :is(.cell__label, .cell__go, .caption) { color: var(--bianco); }
 
 /* ── Media: foto con velo rosso ───────────────────────── */
 /* Un solo velo semitrasparente, niente filtri né blend mode: su mobile filtro + due veli in
@@ -397,8 +384,7 @@ p { text-wrap: pretty; }
 /* ── View Transitions: la cella si espande nella pagina ─ */
 /* morph.ts dà un nome (morph-<ruolo>) ai pezzi presenti da tutti e due i lati, solo durante la
    transizione, e una classe per come viaggiano:
-   .frame  la cella ↔ la hero (morph-window), la barra della didascalia ↔ la cella del titolo
-           (morph-caption): finestre che si allargano e rivelano il contenuto
+   .frame  la cella ↔ la hero (morph-window): finestra che si allarga e rivela il contenuto
    .photo  la foto (morph-media), che cresce sotto la finestra
    .scale  freccia ↔ ✕, titolo, numero: cambiano misura e si scalano
    .text   tutto il resto (didascalie, occhielli…): si sposta restando della sua misura
@@ -407,11 +393,10 @@ p { text-wrap: pretty; }
   animation-duration: var(--t-morph);
   animation-timing-function: var(--ease-morph);
 }
-/* dal basso: la foto, la finestra, la didascalia, i pezzi piccoli e il righello */
+/* dal basso: la foto, la finestra, i pezzi piccoli e il righello */
 ::view-transition-group(*.photo) { z-index: 1; }
 ::view-transition-group(morph-window) { z-index: 2; }
-::view-transition-group(morph-caption) { z-index: 3; }
-::view-transition-group(*.scale), ::view-transition-group(*.text), ::view-transition-group(ruler-thumb) { z-index: 4; }
+::view-transition-group(*.scale), ::view-transition-group(*.text), ::view-transition-group(ruler-thumb) { z-index: 3; }
 
 /* Finestre. Niente scaling: il riquadro si allarga e taglia, i contenuti restano fermi in alto a
    sinistra (dove sta la linguetta in entrambi gli stati) e si scambiano in dissolvenza. Quello che
@@ -424,9 +409,6 @@ p { text-wrap: pretty; }
 /* la finestra di una cella con foto è trasparente: dentro deve vedersi la foto che cresce sotto
    (fuori dalle transizioni la foto copre comunque i crocini) */
 .cell:has(> .duo) { background: transparent; }
-/* la didascalia e la cella del titolo hanno forme diverse: il fondo sul gruppo tiene piena la
-   finestra mentre cambia forma */
-::view-transition-group(morph-caption) { background: var(--bianco); }
 /* Firefox non taglia da solo ciò che sborda */
 ::view-transition-image-pair(*.frame), ::view-transition-image-pair(*.photo) { overflow: clip; }
 ::view-transition-old(*.frame), ::view-transition-new(*.frame) {
@@ -473,9 +455,6 @@ html.morph-close::view-transition-new(*.photo) { animation-delay: calc(var(--t-m
   top: 50%; translate: 0 -50%;
   animation-timing-function: var(--ease-morph);
 }
-/* la freccia sta nell'angolo: i suoi lati alto e destro sono il filo della cella, che qui disegna la
-   finestra (sotto). Tagliati, se no il fondo della casella lo coprirebbe */
-::view-transition-image-pair(morph-go) { clip-path: inset(var(--line-dp) var(--line-dp) 0 0); }
 ::view-transition-old(*.text), ::view-transition-new(*.text) {
   width: 100%; height: 100%;
   object-fit: none;

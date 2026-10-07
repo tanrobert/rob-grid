@@ -56,7 +56,7 @@ const marks = await p.evaluate(async () => {
 });
 console.log(marks.problems.length ? `✗ marcature: ${marks.problems.join(' · ')}` : `✓ marcature a posto (${marks.pages} pagine)`);
 let failures = marks.problems.length ? 1 : 0;
-async function step(label, act, { expectMorph = true, interrupts = 0 } = {}) {
+async function step(label, act, { expectMorph = true, interrupts = 0, to } = {}) {
   const n = await p.evaluate(() => window.__log.length);
   await act();
   await sleep(1600);
@@ -73,6 +73,7 @@ async function step(label, act, { expectMorph = true, interrupts = 0 } = {}) {
   if (e.old !== e.neu) problems.push('pezzi diversi ai due lati');
   if (expectMorph !== 'any' && expectMorph !== morph) problems.push(morph ? 'espansione inattesa' : 'nessuna espansione');
   if (e.photo === 'NON pronta') problems.push('foto d\'arrivo non pronta');
+  if (to && e.to !== to) problems.push(`arrivo atteso ${to}`);
   failures += problems.length ? 1 : 0;
   console.log(`${problems.length ? '✗' : '✓'} ${label.padEnd(34)} ${String(e.ms).padStart(4)}ms  ${e.from} → ${e.to}  [${e.old || '—'}]${e.photo ? ' foto ' + e.photo : ''}${problems.length ? '  ← ' + problems.join(', ') : ''}`);
 }
@@ -87,6 +88,11 @@ await step('home → kiale', click('a[data-morph="/progetti/kiale"]'), cell);
 await step('indietro (browser)', () => p.goBack(), cell);
 await step('avanti (browser)', () => p.goForward(), cell);
 await step('Esc → home', () => p.keyboard.press('Escape'), cell);
+// progetto successivo: sostituisce la pagina nella history, la ✕ torna alla griglia (non a kiale).
+// Si espande solo se il successivo ha una cella in home, se no c'è la sola dissolvenza
+await step('home → kiale', click('a[data-morph="/progetti/kiale"]'), cell);
+await step('kiale → successivo', click('a[data-id="succ"]'), cell);
+await step('✕ → home (salta kiale)', click(CLOSE), { expectMorph: opt.android ? false : 'any', to: '/' });
 await step('home → extra', click('a[data-morph="/extra"]'), cell);
 await step('✕ → home', click(CLOSE), cell);
 await step('home → info', click('a[data-id="info"]'), cell);
