@@ -127,6 +127,9 @@ export function initCells() {
     if (!text || !Number.isFinite(target)) return;
     const key = el.closest<HTMLElement>('[data-id]')?.dataset.id ?? text;
     if (counted.has(key)) return;
+    // arriva da un'espansione (morph.ts, es. chiusura di Extra entrando dal link diretto): il numero
+    // che viaggia è già quello finale, ripartire da zero lo cambierebbe a metà transizione
+    if (el.hasAttribute('data-morphing')) { counted.add(key); return; }
     const show = (n: number) => { el.textContent = String(n).padStart(text.length, '0'); };
     // stessa curva per tutti, durata proporzionale al valore (come il filo dell'intro): i numeri piccoli finiscono prima
     const DURATION = target * 90;

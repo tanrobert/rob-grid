@@ -9,13 +9,18 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "vt:tour": "node tools/vt-tour.mjs",
+    "vt:film": "node tools/vt-film.mjs",
+    "vt:frames": "node tools/video-frames.mjs",
+    "vt:serve": "node tools/serve.mjs"
   },
   "dependencies": {
     "astro": "^6.1.2",
     "d3-geo": "^3.1.1"
   },
   "devDependencies": {
-    "@types/d3-geo": "^3.1.1"
+    "@types/d3-geo": "^3.1.1",
+    "puppeteer-core": "^25.12.0"
   }
 }

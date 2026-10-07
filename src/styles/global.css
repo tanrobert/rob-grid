@@ -42,6 +42,9 @@
   --ease-morph: cubic-bezier(0.72, 0, 0.18, 1);
   --t-morph:    720ms;
   --t-swap:     220ms;  /* scambio dei contenuti nelle finestre dell'espansione */
+  --t-page:     360ms;  /* dissolvenza della pagina intera nell'espansione… */
+  --t-page-delay: calc(var(--t-morph) * 0.55);  /* …che parte oltre metà corsa della cella */
+  --t-tile:     560ms;  /* filtro dell'archivio: le celle scivolano al nuovo posto */
   --t-draw-u:   70ms;   /* intro: tempo del filo per ogni unità di perimetro (2×2 → 560ms, 6×4 → 1400ms) */
 
   color-scheme: light;
@@ -482,16 +485,18 @@ html.morph-close::view-transition-new(*.photo) { animation-delay: calc(var(--t-m
 /* Pagina intera: dissolvenza vera, la vecchia resta piena sotto e la nuova la copre entrando.
    Se sfumassero tutte e due, nel mezzo resterebbe il foglio vuoto: un lampo chiaro a ogni click */
 ::view-transition-old(root) { animation: none; }
-::view-transition-new(root) { animation: 360ms ease calc(var(--t-morph) * 0.55) both vt-in; }
+::view-transition-new(root) { animation: var(--t-page) ease var(--t-page-delay) both vt-in; }
+/* senza espansione (Firefox per Android, morph.ts): la pagina nuova entra subito, senza aspettare la cella */
+html.morph-plain::view-transition-new(root) { animation-delay: 0s; }
 @keyframes vt-out { to { opacity: 0; } }
 @keyframes vt-in  { from { opacity: 0; } }
 
 /* ── View Transition del filtro archivio: le caselle scivolano al nuovo posto ── */
 ::view-transition-group(*.tile) {
-  animation-duration: 560ms;
+  animation-duration: var(--t-tile);
   animation-timing-function: var(--ease-morph);
 }
-html.vt-filter::view-transition-new(root) { animation-duration: 280ms; animation-delay: 0s; }
+html.vt-filter::view-transition-new(root) { animation-duration: calc(var(--t-tile) / 2); animation-delay: 0s; }
 
 /* ── Riduzione del movimento ──────────────────────────── */
 @media (prefers-reduced-motion: reduce) {

@@ -6,3 +6,6 @@ dist
 
 # screenshot di lavoro
 firefox_*.png
+
+# risultati degli strumenti di verifica (tools/)
+tools/out/

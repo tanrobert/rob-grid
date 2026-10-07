@@ -11,8 +11,8 @@
  * doppi annullerebbero la transizione. Li assegna questo modulo, solo per una transizione e ai due
  * lati insieme, nel loader di Astro: lì ci sono entrambi i documenti e la pagina vecchia non è
  * ancora stata catturata. Alla fine della transizione i nomi si tolgono.
+ * La chiusura con ✕ ed Esc (navigazione, non transizione) sta in close.ts.
  */
-import { navigate } from 'astro:transitions/client';
 
 /** Ruolo di un pezzo: 'window' (la cella o la hero) o il valore di data-part */
 type Parts = Map<string, HTMLElement>;
@@ -26,16 +26,32 @@ interface Couple { from: Parts; to: Parts; closing: boolean }
 interface Pending { fill: { from: string; to: HTMLElement }; photo?: { from: Box; to: HTMLElement; ratio: number } }
 
 /**
- * Come viaggia ogni pezzo (classe della View Transition, comportamento in global.css):
+ * Ruoli dei pezzi e come viaggiano (classe della View Transition, comportamento in global.css):
  * frame = finestra che si allarga e rivela il contenuto · photo = foto che cresce sotto la finestra ·
- * scale = cambia misura e si scala (riquadro stretto sul contenuto, stesse proporzioni ai due lati).
- * Qualsiasi altro data-part è 'text': si sposta restando della sua misura (didascalie, occhielli…).
+ * scale = cambia misura e si scala (riquadro stretto sul contenuto, stesse proporzioni ai due lati) ·
+ * text = si sposta restando della sua misura. Un ruolo nuovo viaggia come 'text' (in sviluppo lo
+ * segnala la console): se serve un altro comportamento va aggiunto qui.
  */
-const KIND: Record<string, string> = { window: 'frame', caption: 'frame', media: 'photo', title: 'scale', num: 'scale', go: 'scale' };
+const KIND: Record<string, 'frame' | 'photo' | 'scale' | 'text'> = {
+  window: 'frame', caption: 'frame', media: 'photo',
+  title: 'scale', num: 'scale', go: 'scale',
+  eyebrow: 'text', note: 'text',
+};
 
 const NAMED = 'data-morphing';
 const KEY = 'morph-origin';
+
+/**
+ * Firefox per Android: le View Transitions che cambiano misura scattano (anche con un riquadro solo,
+ * vedi CLAUDE.md). Lì niente espansione: solo la dissolvenza della pagina, che non cambia misura.
+ * Riconosciuto dallo user agent: la funzione c'è, è l'esecuzione a non reggere.
+ */
+const PLAIN = /Android.+Firefox\//.test(navigator.userAgent);
+
 let pending: Pending | null = null;
+
+/** Solo in sviluppo: un errore di marcatura non rompe niente, il pezzo semplicemente non viaggia */
+const warn = (...msg: unknown[]) => { if (import.meta.env.DEV) console.warn('[morph]', ...msg); };
 
 // ── Coppia origine → arrivo ───────────────────────────────
 
@@ -46,10 +62,22 @@ function parts(win: HTMLElement): Parts {
   const titleCell = key ? win.ownerDocument.querySelector<HTMLElement>(`[data-title-of="${CSS.escape(key)}"]`) : null;
   if (titleCell) map.set('caption', titleCell);
   for (const root of [win, titleCell]) {
-    root?.querySelectorAll<HTMLElement>('[data-part]').forEach(el => map.set(el.dataset.part!, el));
+    root?.querySelectorAll<HTMLElement>('[data-part]').forEach(el => {
+      const role = el.dataset.part!;
+      if (map.has(role)) warn(`due pezzi "${role}" nella stessa cella: viaggia l'ultimo`, el);
+      if (!(role in KIND)) warn(`ruolo "${role}" non in KIND: viaggia come text`, el);
+      map.set(role, el);
+    });
   }
   return map;
 }
+
+/**
+ * Un pezzo che si scala viaggia solo se dice la stessa cosa ai due lati: due parole diverse scalate
+ * una sull'altra si sovrappongono (Contatti "Scrivimi" → Info). Altrimenti resta nella finestra.
+ */
+const words = (el: HTMLElement) => (el.textContent ?? '').replace(/\s+/g, ' ').trim();
+const travels = (role: string, a: HTMLElement, b: HTMLElement) => KIND[role] !== 'scale' || words(a) === words(b);
 
 function remember(id?: string) {
   try { if (id) sessionStorage.setItem(KEY, id); } catch {}
@@ -77,12 +105,15 @@ function cellOf(doc: Document, key: string): HTMLElement | null {
 function pair(oldDoc: Document, newDoc: Document, source?: Element): Couple | null {
   const target = newDoc.querySelector<HTMLElement>('[data-hero]');
   const hero = oldDoc.querySelector<HTMLElement>('[data-hero]');
+  if (newDoc.querySelectorAll('[data-hero]').length > 1) warn('più di una hero nella pagina: vale la prima');
   const open = (cell: HTMLElement): Couple => {
     remember(cell.dataset.id);
     return { from: parts(cell), to: parts(target!), closing: false };
   };
 
-  const clicked = target && source?.closest<HTMLElement>(cellTo(target.dataset.hero!));
+  // la cella cliccata deve essere ancora nella pagina: con due click rapidi la prima navigazione può
+  // aver già cambiato pagina, e la seconda partirebbe da una cella che non c'è più (mezza transizione)
+  const clicked = target && source?.isConnected && source.closest<HTMLElement>(cellTo(target.dataset.hero!));
   if (clicked) return open(clicked);
   if (hero) {
     const origin = cellOf(newDoc, hero.dataset.hero!);
@@ -190,19 +221,23 @@ document.addEventListener('astro:before-preparation', e => {
   const load = e.loader;
   e.loader = async () => {
     await load();
+    // superata da una navigazione più recente (doppio click): non tocca niente, nomi e stato sono suoi
+    if (e.signal.aborted) return;
     pending = null;
     unname(document);  // nomi rimasti da una navigazione interrotta
     const newDoc = e.newDocument;
-    if (!newDoc || e.signal.aborted || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (!newDoc || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    // le classi vanno sul documento nuovo: lo swap riscrive gli attributi di <html>
+    newDoc.documentElement.classList.toggle('morph-plain', PLAIN);
+    if (PLAIN) return;
     const couple = pair(document, newDoc, e.sourceElement);
     if (!couple) return;
 
     const { from, to, closing } = couple;
     for (const [role, el] of from) {
       const twin = to.get(role);
-      if (twin) { name(el, role); name(twin, role); }
+      if (twin && travels(role, el, twin)) { name(el, role); name(twin, role); }
     }
-    // la classe va sul documento nuovo: lo swap riscrive gli attributi di <html>
     newDoc.documentElement.classList.toggle('morph-close', closing);
 
     pending = { fill: { from: getComputedStyle(from.get('window')!).backgroundColor, to: to.get('window')! } };
@@ -231,29 +266,4 @@ document.addEventListener('astro:before-swap', e => {
     unname(document);
     document.documentElement.classList.remove('morph-close', 'morph-photo');
   });
-});
-
-// ── Chiusura (✕ o Esc) ────────────────────────────────────
-// Se siamo arrivati navigando nel sito torniamo indietro nella history, così la griglia ritrova
-// lo scroll e la cella d'origine è dove l'avevamo lasciata.
-let inSite = false;
-document.addEventListener('astro:after-swap', () => { inSite = true; });
-
-function close() {
-  if (inSite) history.back();
-  else navigate('/');
-}
-
-/** Click sinistro senza modificatori: gli altri (nuova scheda, ecc.) restano al browser */
-const isPlainClick = (e: MouseEvent) => e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey;
-
-document.addEventListener('click', e => {
-  const back = (e.target as Element).closest('a[data-close]');
-  if (!back || !isPlainClick(e)) return;
-  e.preventDefault();
-  close();
-});
-
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape' && document.querySelector('[data-hero]')) close();
 });

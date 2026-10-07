@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Prova View Transitions</title>
+<!--
+  Prova minima, senza il codice del sito (ottobre 2026): ha mostrato che in Firefox per Android
+  le View Transitions che cambiano misura scattano (1), mentre spostamenti (2), animazioni CSS di
+  misura (3) e transform (4) sono fluidi. Da riprovare quando Firefox si aggiorna: se la 1 è fluida
+  si può togliere PLAIN da morph.ts. Servita da tools/serve.mjs su /_vt/vt-test.html.
+-->
+<style>
+  :root { --rosso: hsl(8 87% 54%); --bianco: hsl(0 15% 89%); --t: 720ms; --ease: cubic-bezier(0.72, 0, 0.18, 1); }
+  * { box-sizing: border-box; margin: 0; }
+  body { background: var(--bianco); color: var(--rosso); font: 15px/1.3 system-ui, sans-serif; padding: 10px; }
+  p { margin: 8px 0; font-size: 13px; }
+  .row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+  button { font: inherit; padding: 10px 12px; border: 1px solid var(--rosso); background: var(--bianco); color: var(--rosso); }
+  .stage { position: relative; height: 70vh; border: 1px dashed color-mix(in srgb, var(--rosso) 35%, transparent); }
+  .box { position: absolute; left: 55%; top: 40%; width: 40%; aspect-ratio: 1; background: var(--rosso); color: var(--bianco); padding: 10px; overflow: clip; }
+  .box b { font-size: 34px; position: absolute; left: 10px; bottom: 6px; }
+  .box small { font: 10px monospace; letter-spacing: .08em; }
+  .box.big { left: 0; top: 0; width: 100%; aspect-ratio: auto; height: 45%; }
+  .box.moved { left: 0; top: 0; }
+  .box.css { transition: left var(--t) var(--ease), top var(--t) var(--ease), width var(--t) var(--ease), height var(--t) var(--ease); }
+  .box.tf { transition: transform var(--t) var(--ease); transform-origin: 0 0; }
+  ::view-transition-group(*) { animation-duration: var(--t); animation-timing-function: var(--ease); }
+</style>
+</head>
+<body>
+<p>Premi ogni pulsante più volte e guarda se il riquadro rosso trema. Sotto: fotogrammi disegnati durante l'ultima prova.</p>
+<div class="row">
+  <button data-t="1">1 · VT cambia misura</button>
+  <button data-t="2">2 · VT stessa misura</button>
+  <button data-t="3">3 · CSS cambia misura</button>
+  <button data-t="4">4 · CSS solo transform</button>
+</div>
+<div class="stage"><div class="box" id="box" style="view-transition-name: box"><small>01 INFO</small><b>Info</b></div></div>
+<p id="out"></p>
+<script>
+  const box = document.getElementById('box'), out = document.getElementById('out');
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+
+  /** fotogrammi disegnati mentre la prova gira, e il più lungo */
+  function measure(label, done) {
+    let frames = 0, max = 0, slow = 0, last = performance.now(), raf;
+    const t0 = last;
+    const tick = t => { frames++; const d = t - last; max = Math.max(max, d); if (d > 25) slow++; last = t; raf = requestAnimationFrame(tick); };
+    raf = requestAnimationFrame(tick);
+    done.then(() => {
+      cancelAnimationFrame(raf);
+      out.textContent = `${label}: ${Math.round(performance.now() - t0)}ms, ${frames} fotogrammi, il più lungo ${Math.round(max)}ms, lenti ${slow}`;
+    });
+  }
+
+  let last = null, open = false;
+  // cambiando prova si riparte dal riquadro piccolo, senza animazione
+  const reset = () => { box.className = 'box'; box.style.transform = ''; box.offsetWidth; open = false; };
+
+  document.querySelectorAll('[data-t]').forEach(b => b.onclick = () => {
+    const t = b.dataset.t;
+    if (last !== t) reset();
+    last = t; open = !open;
+    if (t === '1' || t === '2') {
+      if (!document.startViewTransition) { out.textContent = 'View Transitions non supportate'; return; }
+      const vt = document.startViewTransition(() => box.classList.toggle(t === '1' ? 'big' : 'moved', open));
+      measure(b.textContent, vt.finished);
+    } else if (t === '3') {
+      box.classList.add('css');
+      box.classList.toggle('big', open);
+      measure(b.textContent, wait(760));
+    } else {
+      box.classList.add('tf');
+      const r = box.parentElement.getBoundingClientRect(), w = box.offsetWidth, h = box.offsetHeight;
+      box.style.transform = open ? `translate(${-box.offsetLeft}px, ${-box.offsetTop}px) scale(${r.width / w}, ${r.height * 0.45 / h})` : '';
+      measure(b.textContent, wait(760));
+    }
+  });
+</script>
+</body>
+</html>
