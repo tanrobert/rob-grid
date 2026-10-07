@@ -41,7 +41,6 @@ export const grid: Cell[] = [
   // ── riga 1 ────────────────────────────────────────────
   { id: 'logo',    type: 'svg',     w: 2, h: 2, svg: 'logo-r', label: false },
   { id: 'nome',    type: 'marquee', w: 6, h: 1, svg: 'roberto', speed: 40, md: { w: 6 } },
-  { id: 'extra',   type: 'stat',    w: 2, h: 2, href: '/extra', value: pad2(extraCells.length), caption: 'Celle extra', countUp: true },
   { id: 'archivio', type: 'stat',   w: 2, h: 2, href: '/archivio', value: pad2(projects.length), caption: 'Progetti in archivio', countUp: true },
 
   // ── righe 2–3 ─────────────────────────────────────────
@@ -67,6 +66,9 @@ export const grid: Cell[] = [
   { id: 'marchio', type: 'marquee', w: 2, h: 4, svg: 'logo-completo-verticale', speed: 9, vertical: true },
   projectCell('giardini', 'giardini-dell-eden'),
   projectCell('gea', 'gea', 'G&A'),
+  projectCell('spazioquadro', 'spazioquadro'),
+  projectCell('torre', 'la-torre-rossa', 'La Torre Rossa'),
+  { id: 'extra',   type: 'stat',    w: 2, h: 2, href: '/extra', value: pad2(extraCells.length), caption: 'Celle extra', countUp: true },
   {
     id: 'contatti', type: 'text', w: 4, h: 2, size: 'm', href: '/info',
     eyebrow: 'Nuovi progetti', title: 'Scrivimi_',

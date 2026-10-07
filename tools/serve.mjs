@@ -6,7 +6,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { args } from './lib.mjs';
+import { args, OUT } from './lib.mjs';
 
 const { opt } = args();
 const port = +(opt.port ?? 4400);
@@ -18,10 +18,10 @@ const TYPES = {
   '.ico': 'image/x-icon', '.mp4': 'video/mp4', '.xml': 'application/xml', '.txt': 'text/plain',
 };
 
-/** /percorso → file: cartelle con index.html, /_vt/… dalle pagine di prova */
+/** /percorso → file: cartelle con index.html, /_vt/… dalle pagine di prova, /_out/… dai risultati (es. velo-lab) */
 function resolve(url) {
   const p = decodeURIComponent(url.split('?')[0]);
-  const [root, rel] = p.startsWith('/_vt/') ? [PAGES, p.slice(5)] : [DIST, p];
+  const [root, rel] = p.startsWith('/_vt/') ? [PAGES, p.slice(5)] : p.startsWith('/_out/') ? [OUT, p.slice(6)] : [DIST, p];
   let f = path.join(root, rel);
   if (!f.startsWith(root)) return null;
   if (fs.existsSync(f) && fs.statSync(f).isDirectory()) f = path.join(f, 'index.html');
@@ -40,6 +40,6 @@ http.createServer((req, res) => {
 }).listen(port, '0.0.0.0', () => {
   const ips = Object.values(os.networkInterfaces()).flat().filter(i => i?.family === 'IPv4' && !i.internal).map(i => i.address);
   console.log('Sul telefono (stesso Wi-Fi):');
-  for (const ip of ips) console.log(`  sito:            http://${ip}:${port}/\n  pagina di prova: http://${ip}:${port}/_vt/vt-test.html`);
+  for (const ip of ips) console.log(`  sito:            http://${ip}:${port}/\n  pagina di prova: http://${ip}:${port}/_vt/vt-test.html\n  velo lab:        http://${ip}:${port}/_out/velo/`);
   console.log('Ctrl+C per spegnere.');
 });

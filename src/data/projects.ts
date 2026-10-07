@@ -5,6 +5,8 @@ import dummyImg from '../assets/dummy.png';
 import eurofishImg from '../assets/eurofish-napoli.png';
 import kialeImg from '../assets/kiale.png';
 import geaImg from '../assets/gea.png';
+import spazioquadroImg from '../assets/spazioquadro.png';
+import torreRossaImg from '../assets/latorrerossa.png';
 
 export const projects: Project[] = [
 
@@ -53,7 +55,9 @@ export const projects: Project[] = [
     tags: ['Ristorazione', 'Ospitalità', 'Logo', 'Web', 'Print'],
     period: 'dal 2026',
     description: 'Brand e sito per un agriturismo in collina. Identità che valorizza il paesaggio.',
-    image: dummyImg,
+    featured: true,
+    shape: { w: 3, h: 2 },
+    image: torreRossaImg,
   },
   {
     slug: 'kelle-terre',
@@ -132,7 +136,7 @@ export const projects: Project[] = [
     period: 'dal 2018',
     description: 'Brand e sito per una web radio indipendente — un\'identità che suona forte.',
     featured: true,
-    shape: { w: 4, h: 3 },
+    shape: { w: 3, h: 2 },
     image: purplePiperImg,
   },
 
@@ -159,7 +163,9 @@ export const projects: Project[] = [
     tags: ['Imprese', 'Prodotto', 'Logo', 'Web', 'Print'],
     period: 'dal 2026',
     description: 'Brand e sito per la linea di G&A dedicata a finestre e serramenti su misura.',
-    image: dummyImg,
+    featured: true,
+    shape: { w: 4, h: 3 },
+    image: spazioquadroImg,
   },
   {
     slug: 'gea',

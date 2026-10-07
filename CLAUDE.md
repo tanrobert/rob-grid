@@ -1,7 +1,7 @@
 # rob-astro — portfolio di Roberto Tanasi
 
 Portfolio da graphic designer costruito come **griglia modulare di caselle** in bicromia rosso/bianco.
-Astro 6 statico, nessun framework UI, TypeScript. Unica libreria runtime: d3-geo (solo per il globo, caricata su richiesta). Dominio `https://roberto.design`, progetto Vercel `rob-grid`.
+Astro 7 statico (Vite 8, compilatore Rust), nessun framework UI, TypeScript. Unica libreria runtime: d3-geo (solo per il globo, caricata su richiesta). Dominio `https://roberto.design`, progetto Vercel `rob-grid`.
 Lingua del sito e dei commenti nel codice: **italiano**.
 
 ## Comandi
@@ -78,6 +78,7 @@ tools/                      verifica delle View Transitions, solo sviluppo (vedi
 - Media (`.duo`): solo un velo rosso semitrasparente (`--velo`), niente `filter` né `mix-blend-mode` sulle foto: su mobile rendevano lo scroll scattoso (soprattutto in archivio, 20 foto). Gli effetti grafici vanno cotti nelle immagini.
 - `@keyframes` **non sono scoped** in Astro: nomi unici (`eye-blink`, `caret-blink`…), altrimenti si sovrascrivono.
 - I commenti HTML `<!-- -->` nei componenti finiscono nell'HTML pubblicato: commentare nel frontmatter.
+- Spazi nell'HTML (Astro 7, `compressHTML: 'jsx'` di default): gli a capo tra due tag spariscono, anche tra elementi inline. Oggi nessun effetto (i contenitori con più pezzi sono flex), ma uno spazio visibile tra due tag va scritto `{" "}`. Il compilatore Rust dà errore sui tag non chiusi e non corregge più l'HTML non valido.
 - Il ClientRouter riscrive gli attributi di `<html>` a ogni navigazione: variabili inline su `<html>` (es. `--dp`) vanno riapplicate su `astro:after-swap`. Gli script `is:inline` in `<head>` girano solo al primo caricamento.
 - Linee disegnate con gradienti non vengono agganciate ai pixel: con Windows al 125% escono sfocate/1-2px. Usare `--dp` (1 pixel reale) + `round()` come in `.void`.
 - I crocini di registro sono un SVG data-URI nel token `--crocini` (`:root`): colore `#f03f24` e spessore 1px scritti a mano. Usati da `.grid` (nei gap) e da `.sheet::before/::after` (margini laterali quando scatta il tetto `--u-max`, allineati al passo delle colonne).
@@ -99,7 +100,7 @@ tools/                      verifica delle View Transitions, solo sviluppo (vedi
 - Nomi delle View Transitions mai nell'HTML: più celle portano alla stessa pagina e due nomi uguali annullano la transizione. Un click su una cella vince sulla chiusura: dall'archivio (che ha la sua hero) una cella si apre nel progetto; un link qualsiasi (es. un tag) verso una pagina con hero non apre niente.
 - Celle che si aprono con il contenuto in basso (Extra, Archivio, Info): la finestra tiene fermo il contenuto in alto a sinistra (la linguetta), quindi quello che sta in basso sparirebbe all'inizio e ricomparirebbe di colpo alla fine. Tutto ciò che deve restare in vista va marcato con `data-part` ai due lati. I pezzi `scale` sono centrati in verticale: con interlinee diverse (Info: 1 nella cella, 0.76 nella hero) i centri delle lettere combaciano comunque, allineati in alto si sdoppiano.
 - Casella freccia/✕ nella transizione: viaggia sopra la finestra e il suo fondo copriva il filo in alto e a destra (a riposo quei lati sono il filo della cella, disegnato sopra). Il suo `image-pair` è tagliato di `--line-dp` in alto e a destra: si vede il filo della finestra sotto.
-- **Tempi CSS letti da JavaScript**: la build comprime il CSS e riscrive `720ms` come `.72s`. Con `parseFloat` la foto dell'espansione durava 0,72ms (saltava subito alla misura finale) solo sul sito pubblicato, non in dev. Usare `toMs` (morph.ts). Nei test non sovrascrivere i token con valori scritti a mano senza provare anche quelli veri della build: lo nascondevano.
+- **Tempi CSS letti da JavaScript**: la build comprime il CSS e riscrive `720ms` come `.72s` (e i colori `hsl()` in esadecimale). Con `parseFloat` la foto dell'espansione durava 0,72ms (saltava subito alla misura finale) solo sul sito pubblicato, non in dev. Usare `toMs` (morph.ts). Nei test non sovrascrivere i token con valori scritti a mano senza provare anche quelli veri della build: lo nascondevano.
 - **Lavori pesanti durante la View Transition**: `astro:page-load` scatta a transizione appena partita. Il globo (d3-geo + terre) avviato lì faceva saltare la prima apertura di Extra (82 fotogrammi contro 131 della seconda, col modulo già in cache). In `cells.ts` gli avvii pesanti aspettano `transition` (= `viewTransition.finished`). Per misurare: contare i fotogrammi con `requestAnimationFrame` durante la transizione, prima e seconda volta, anche con `emulateCPUThrottling(4)`.
 - Tasto ✕ delle hero: uno solo per tutte (30px, `.cell__go` + `data-close`), uguale alla freccia della cella. Niente misure o hover propri nelle singole hero (Info ne aveva uno da 44px).
 - `--u`/`--step` sono token in `:root` con `100cqw`: si risolvono dove vengono usati, quindi valgono solo in elementi il cui container è `.sheet` (non dentro le celle).
