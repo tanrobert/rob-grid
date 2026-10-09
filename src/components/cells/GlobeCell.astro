@@ -45,10 +45,10 @@ const coord = (n: number, pos: string, neg: string) => `${Math.abs(n).toFixed(2)
   svg { width: 100%; height: 100%; overflow: visible; }
   path { vector-effect: non-scaling-stroke; stroke-width: var(--line); }
   /* stroke e fill si ereditano dentro <use>: i path in defs non ne hanno di propri */
-  .grid { stroke: var(--rosso); }
+  .grid { stroke: var(--inchiostro); }
   .grid--land { stroke: var(--bianco); }
-  .land { fill: var(--rosso); }
-  .rim { stroke: var(--rosso); }
+  .land { fill: var(--inchiostro); }
+  .rim { stroke: var(--inchiostro); }
   /* coordinate nel margine in basso, come la riga della casella Ora: non tolgono spazio al globo */
   .meta {
     position: absolute; left: var(--pad); right: var(--pad); bottom: var(--pad);

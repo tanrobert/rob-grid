@@ -74,4 +74,7 @@ export const grid: Cell[] = [
     id: 'contatti', type: 'text', w: 4, h: 2, size: 'm', href: '/info',
     eyebrow: 'Nuovi progetti', title: 'Scrivimi_',
   },
+
+  // ── Luce (interruttore): ultima, così riempie il primo buco 1×1 rimasto senza spostare le altre (row dense) ─
+  { id: 'luce', type: 'ink', w: 1, h: 1 },
 ];

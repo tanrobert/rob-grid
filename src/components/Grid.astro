@@ -15,6 +15,7 @@ import CursorCell from './cells/CursorCell.astro';
 import MarkCell from './cells/MarkCell.astro';
 import EyeCell from './cells/EyeCell.astro';
 import GlobeCell from './cells/GlobeCell.astro';
+import InkCell from './cells/InkCell.astro';
 import ArchiveHeadCell from './cells/ArchiveHeadCell.astro';
 import TagsCell from './cells/TagsCell.astro';
 import { tagSlug } from '../lib/tags';
@@ -68,6 +69,7 @@ const voids = (Object.keys(COLS) as (keyof typeof COLS)[]).flatMap(bp =>
         {cell.type === 'mark' && <MarkCell />}
         {cell.type === 'eye' && <EyeCell />}
         {cell.type === 'globe' && <GlobeCell />}
+        {cell.type === 'ink' && <InkCell />}
         {cell.type === 'archive-head' && <ArchiveHeadCell total={cell.total} />}
         {cell.type === 'tags' && <TagsCell tags={cell.tags} total={cells.filter(c => c.type === 'project').length} />}
       </Cell>
@@ -76,7 +78,7 @@ const voids = (Object.keys(COLS) as (keyof typeof COLS)[]).flatMap(bp =>
   {voids.map(v => (
     <div
       class:list={['void', `void--${v.bp}`]}
-      style={`grid-column:${v.col} / span ${v.w};grid-row:${v.row} / span ${v.h}`}
+      style={`grid-column:${v.col} / span ${v.w};grid-row:${v.row} / span ${v.h};--cw:${v.w};--ch:${v.h};--i:${v.i}`}
       aria-hidden="true"
     ></div>
   ))}

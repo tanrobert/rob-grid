@@ -57,6 +57,8 @@ export type Cell = CellBase & (
   | { type: 'eye' }
   /** globo orientato come la Terra adesso, trascinabile */
   | { type: 'globe' }
+  /** interruttore della luce: alterna l'inchiostro del sito, rosso (on) ↔ nero (off) (scripts/ink.ts) */
+  | { type: 'ink' }
   // solo archivio
   | { type: 'archive-head'; total: number }
   | { type: 'tags'; tags: TagCount[] }

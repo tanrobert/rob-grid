@@ -1,0 +1,60 @@
+---
+// Interruttore dell'inchiostro: una levetta da pannello, vista di fronte (dado, perno, leva col pomello),
+// con "Rosso" sopra e "Nero" sotto. Si tocca o si trascina (su = rosso, giù = nero): scripts/ink.ts.
+// Colore in global.css (--inchiostro). Geometria in un quadrato 100×100 centrato su (50,50).
+---
+
+<button class="switch" type="button" role="switch" aria-checked="true" aria-label="Inchiostro rosso" title="Passa al nero" data-ink>
+  <span class="mark mono" aria-hidden="true">Rosso</span>
+  <svg viewBox="0 0 100 100" data-lens aria-hidden="true">
+    <circle cx="50" cy="50" r="17" />
+    <circle cx="50" cy="50" r="10" />
+    <g class="lever" data-lever>
+      <line x1="50" y1="50" x2="50" y2="15" />
+      <circle class="knob" cx="50" cy="15" r="8" />
+    </g>
+    <circle class="pivot" cx="50" cy="50" r="4" />
+  </svg>
+  <span class="mark mono" aria-hidden="true">Nero</span>
+</button>
+
+<style>
+  /* cella bianca come le altre: la levetta è dell'inchiostro, rossa o nera.
+     La linguetta non deve rubare il clic all'interruttore */
+  :global(.cell--ink .cell__label) { pointer-events: none; }
+
+  .switch {
+    all: unset;
+    box-sizing: border-box;
+    position: absolute; inset: 0;
+    /* sotto la linguetta (alta 23px): scritta, levetta, scritta. Nella cella da 88px ci stanno giuste */
+    padding: 24px 0 6px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+    cursor: pointer;
+    /* la leva si trascina (ink.ts): dentro questa cella il dito muove la leva, non la pagina */
+    touch-action: none;
+    user-select: none;
+  }
+  .switch:focus-visible { outline: 2px solid var(--inchiostro); outline-offset: -8px; }
+
+  .mark { font-size: 9px; line-height: 1; }
+  svg { display: block; width: 40cqmin; height: 40cqmin; overflow: visible; }
+  circle, line { fill: none; stroke: currentColor; stroke-width: var(--line); vector-effect: non-scaling-stroke; }
+  .knob, .pivot { fill: currentColor; }
+
+  /* leva: ribalta passando dal perno (il pomello si schiaccia come in prospettiva) e arriva con un
+     rimbalzo a molla. Col mouse sopra accenna lo scatto, premuta si piega ancora di più.
+     Trascinata, la segue ink.ts con uno stile in linea */
+  .lever {
+    transform-box: view-box;
+    transform-origin: 50% 50%;
+    transition: transform 560ms cubic-bezier(0.3, 1.7, 0.5, 1);
+  }
+  :global(:root[data-inchiostro="nero"]) .lever { transform: scaleY(-1); }
+  @media (hover: hover) and (pointer: fine) {
+    .switch:hover .lever { transform: scaleY(0.8); }
+    :global(:root[data-inchiostro="nero"]) .switch:hover .lever { transform: scaleY(-0.8); }
+  }
+  .switch:active .lever { transform: scaleY(0.55); }
+  :global(:root[data-inchiostro="nero"]) .switch:active .lever { transform: scaleY(-0.55); }
+</style>

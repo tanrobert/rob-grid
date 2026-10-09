@@ -44,14 +44,17 @@ export function mediaSizes(cell: Cell): string {
 }
 
 export interface Rect { col: number; row: number; w: number; h: number }
+/** Vuoto: `i` = celle che lo precedono nella lettura della griglia (ritardo dell'intro, come l'indice delle celle) */
+export interface Void extends Rect { i: number }
 
 /**
  * Replica l'auto-placement CSS `grid-auto-flow: row dense` e restituisce
  * i buchi rimasti, raggruppati in rettangoli. Serve a riempirli con celle
  * "vuote" esplicite senza spostare nessun'altra cella.
  */
-export function findVoids(spans: Span[], cols: number): Rect[] {
+export function findVoids(spans: Span[], cols: number): Void[] {
   const taken: boolean[][] = [];
+  const starts: number[] = [];  // posizione di partenza di ogni cella, in ordine di lettura (riga × colonne + colonna)
   const isFree = (r: number, c: number) => !taken[r]?.[c];
   const fits = (r: number, c: number, s: Span) => {
     if (c + s.w > cols) return false;
@@ -64,13 +67,14 @@ export function findVoids(spans: Span[], cols: number): Rect[] {
       for (let c = 0; c < cols && !placed; c++) {
         if (!fits(r, c, s)) continue;
         for (let y = r; y < r + s.h; y++) for (let x = c; x < c + s.w; x++) (taken[y] ??= [])[x] = true;
+        starts.push(r * cols + c);
         placed = true;
       }
     }
   }
 
   // raggruppa: prima run orizzontali per riga, poi unisce run identiche in verticale
-  const voids: Rect[] = [];
+  const voids: Void[] = [];
   for (let r = 0; r < taken.length; r++) {
     for (let c = 0; c < cols; ) {
       if (!isFree(r, c)) { c++; continue; }
@@ -78,7 +82,7 @@ export function findVoids(spans: Span[], cols: number): Rect[] {
       while (c + w < cols && isFree(r, c + w)) w++;
       const above = voids.find(v => v.col === c + 1 && v.w === w && v.row + v.h === r + 1);
       if (above) above.h++;
-      else voids.push({ col: c + 1, row: r + 1, w, h: 1 });
+      else voids.push({ col: c + 1, row: r + 1, w, h: 1, i: starts.filter(s => s < r * cols + c).length });
       c += w;
     }
   }

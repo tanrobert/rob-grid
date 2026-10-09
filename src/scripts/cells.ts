@@ -4,6 +4,7 @@
  */
 
 import { initArchive } from './archive';
+import { initInk } from './ink';
 import { pad2 } from '../lib/format';
 
 let cleanup: (() => void) | null = null;
@@ -34,6 +35,7 @@ export function initCells() {
   const { signal } = ac;
 
   initArchive(signal);
+  initInk(signal, reduced);
   // globo: d3-geo e le terre si caricano solo se la casella c'è, a transizione finita
   if (document.querySelector('[data-globe]')) {
     transition.then(() => signal.aborted || import('./globe').then(m => m.initGlobe(signal, reduced)));

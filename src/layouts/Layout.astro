@@ -46,6 +46,15 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
         }
         watch();
         document.addEventListener('astro:after-swap', setDp);
+
+        // inchiostro scelto con l'interruttore della luce (scripts/ink.ts): prima del primo disegno, niente lampo rosso
+        function setInk() {
+          var nero = false;
+          try { nero = localStorage.getItem('inchiostro') === 'nero'; } catch (e) {}
+          if (nero) root.dataset.inchiostro = 'nero';
+        }
+        setInk();
+        document.addEventListener('astro:after-swap', setInk);
       })();
     </script>
     <ClientRouter />
@@ -57,9 +66,9 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     </div>
     <slot />
     <script is:inline>
-      // intro: ogni casella inizia a disegnare il filo da un vertice a caso (0–3, orario dall'alto a sinistra)
+      // intro: ogni casella (anche i vuoti) inizia a disegnare il filo da un vertice a caso (0–3, orario dall'alto a sinistra)
       if (document.documentElement.classList.contains('is-intro')) {
-        document.querySelectorAll('.cell').forEach(function (c) { c.dataset.from = Math.floor(Math.random() * 4); });
+        document.querySelectorAll('.cell, .void').forEach(function (c) { c.dataset.from = Math.floor(Math.random() * 4); });
       }
     </script>
   </body>
