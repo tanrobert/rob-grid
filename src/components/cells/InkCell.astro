@@ -1,60 +1,75 @@
 ---
-// Interruttore dell'inchiostro: una levetta da pannello, vista di fronte (dado, perno, leva col pomello),
-// con "Rosso" sopra e "Nero" sotto. Si tocca o si trascina (su = rosso, giù = nero): scripts/ink.ts.
-// Colore in global.css (--inchiostro). Geometria in un quadrato 100×100 centrato su (50,50).
+// Interruttore della luce: sole = luce accesa (inchiostro rosso), luna = spenta (nero). Si alternano con un'eclisse:
+// i raggi girano e rientrano, un secondo cerchio ("morso") scivola sul disco e lascia la falce. Il disco è lo stesso
+// per sole e luna e non si muove mai: sempre al centro della cella. Contorni da 1px come i fili del sito. Le due maschere fanno la falce solo a contorno: il disco si
+// vede fuori dal morso, il bordo del morso si vede solo dentro il disco. Lontano dal disco (sole) il morso sparisce.
+// Al clic: scripts/ink.ts. Colore in global.css (--inchiostro). Geometria in un quadrato 100×100 centrato su (50,50).
+const rays = Array.from({ length: 8 }, (_, i) => {
+  const a = (i * Math.PI) / 4;
+  const f = (n: number) => n.toFixed(2);
+  return { x1: f(50 + 30 * Math.sin(a)), y1: f(50 - 30 * Math.cos(a)), x2: f(50 + 40 * Math.sin(a)), y2: f(50 - 40 * Math.cos(a)), i };
+});
 ---
 
-<button class="switch" type="button" role="switch" aria-checked="true" aria-label="Inchiostro rosso" title="Passa al nero" data-ink>
-  <span class="mark mono" aria-hidden="true">Rosso</span>
+<button class="switch" type="button" role="switch" aria-checked="true" aria-label="Luce" title="Spegni la luce" data-ink>
   <svg viewBox="0 0 100 100" data-lens aria-hidden="true">
-    <circle cx="50" cy="50" r="17" />
-    <circle cx="50" cy="50" r="10" />
-    <g class="lever" data-lever>
-      <line x1="50" y1="50" x2="50" y2="15" />
-      <circle class="knob" cx="50" cy="15" r="8" />
+    <defs>
+      <mask id="luce-fuori" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100">
+        <rect width="100" height="100" fill="#fff" />
+        <circle class="bite" cx="50" cy="50" r="18" fill="#000" />
+      </mask>
+      <mask id="luce-dentro" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100">
+        <circle cx="50" cy="50" r="22" fill="#fff" />
+      </mask>
+    </defs>
+    <g class="rays">
+      {rays.map(r => <line x1={r.x1} y1={r.y1} x2={r.x2} y2={r.y2} pathLength="1" style={`--i:${r.i}`} />)}
     </g>
-    <circle class="pivot" cx="50" cy="50" r="4" />
+    <g mask="url(#luce-fuori)"><circle cx="50" cy="50" r="22" /></g>
+    <g mask="url(#luce-dentro)"><circle class="bite" cx="50" cy="50" r="18" /></g>
   </svg>
-  <span class="mark mono" aria-hidden="true">Nero</span>
 </button>
 
 <style>
-  /* cella bianca come le altre: la levetta è dell'inchiostro, rossa o nera.
-     La linguetta non deve rubare il clic all'interruttore */
-  :global(.cell--ink .cell__label) { pointer-events: none; }
-
+  /* cella bianca come le altre, senza linguetta (label: false in data/grid.ts): l'icona è dell'inchiostro, rossa o nera */
+  /* reset del bottone uno per uno: `all: unset` toglierebbe anche l'animazione d'ingresso (.is-intro .cell > *) */
   .switch {
-    all: unset;
+    appearance: none; background: none; border: 0; margin: 0;
+    color: inherit; font: inherit; letter-spacing: inherit; text-transform: inherit;
     box-sizing: border-box;
     position: absolute; inset: 0;
-    /* sotto la linguetta (alta 23px): scritta, levetta, scritta. Nella cella da 88px ci stanno giuste */
-    padding: 24px 0 6px;
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+    display: grid; place-items: center;
     cursor: pointer;
-    /* la leva si trascina (ink.ts): dentro questa cella il dito muove la leva, non la pagina */
-    touch-action: none;
-    user-select: none;
   }
   .switch:focus-visible { outline: 2px solid var(--inchiostro); outline-offset: -8px; }
 
-  .mark { font-size: 9px; line-height: 1; }
-  svg { display: block; width: 40cqmin; height: 40cqmin; overflow: visible; }
+  svg { display: block; width: 80cqmin; height: 80cqmin; overflow: visible; }
   circle, line { fill: none; stroke: currentColor; stroke-width: var(--line); vector-effect: non-scaling-stroke; }
-  .knob, .pivot { fill: currentColor; }
+  mask circle, mask rect { stroke: none; }
+  mask circle { fill: #fff; }
+  mask .bite { fill: #000; }
 
-  /* leva: ribalta passando dal perno (il pomello si schiaccia come in prospettiva) e arriva con un
-     rimbalzo a molla. Col mouse sopra accenna lo scatto, premuta si piega ancora di più.
-     Trascinata, la segue ink.ts con uno stile in linea */
-  .lever {
-    transform-box: view-box;
-    transform-origin: 50% 50%;
-    transition: transform 560ms cubic-bezier(0.3, 1.7, 0.5, 1);
+  /* sole (stato di base). Tempi: --t-sole, l'eclisse dura quanto il cerchio del colore (--t-ink) */
+  .switch { --t-sole: 720ms; --molla: cubic-bezier(0.3, 1.4, 0.5, 1); }
+  .rays, .bite { transform-box: view-box; transform-origin: 50% 50%; }
+  .rays { transition: transform var(--t-sole) var(--ease-out); }
+  /* raggi: pathLength 1, il tratto scivola verso il centro e rientra nel disco */
+  .rays line {
+    stroke-dasharray: 1 1; stroke-dashoffset: 0;
+    transition: stroke-dashoffset 360ms var(--ease-out);
+    transition-delay: calc(240ms + var(--i) * 20ms);
   }
-  :global(:root[data-inchiostro="nero"]) .lever { transform: scaleY(-1); }
+  /* morso fuori dal disco, in alto a destra (a 42 dal centro: oltre 22 + 18, non tocca il disco) */
+  .bite { transform: translate(30px, -30px); transition: transform var(--t-sole) var(--molla); }
+
+  /* luna: i raggi girano e rientrano (uno dopo l'altro), poi il morso scivola sul disco */
+  :global(:root[data-inchiostro="nero"]) .rays { transform: rotate(90deg); }
+  :global(:root[data-inchiostro="nero"]) .rays line { stroke-dashoffset: 1; transition-delay: calc(var(--i) * 20ms); }
+  :global(:root[data-inchiostro="nero"]) .bite { transform: translate(11px, -9px); transition-delay: 160ms; }
+
   @media (hover: hover) and (pointer: fine) {
-    .switch:hover .lever { transform: scaleY(0.8); }
-    :global(:root[data-inchiostro="nero"]) .switch:hover .lever { transform: scaleY(-0.8); }
+    /* col mouse sopra il sole gira di un ottavo di raggio, la luna si assottiglia */
+    .switch:hover .rays { transform: rotate(22.5deg); }
+    :global(:root[data-inchiostro="nero"]) .switch:hover .bite { transform: translate(8.5px, -7px); }
   }
-  .switch:active .lever { transform: scaleY(0.55); }
-  :global(:root[data-inchiostro="nero"]) .switch:active .lever { transform: scaleY(-0.55); }
 </style>

@@ -1,7 +1,7 @@
 ---
 // Segno di registro con ghiera graduata collegata al righello (scripts/ruler.ts):
-// è lo stesso righello avvolto in cerchio. Una tacca ogni 5° = 25px di scroll,
-// tacca lunga ogni 4 (= checkpoint dei 100px). La rotazione la scrive cells.ts.
+// è lo stesso righello avvolto in cerchio. Una tacca ogni 5° = un quarto di riga della griglia di scroll,
+// tacca lunga ogni 4 (= checkpoint di ogni riga). La rotazione la scrive cells.ts.
 const ticks = Array.from({ length: 72 }, (_, i) => {
   const a = (i * 5 * Math.PI) / 180;
   const long = i % 4 === 0;

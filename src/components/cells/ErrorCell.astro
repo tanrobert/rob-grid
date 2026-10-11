@@ -1,0 +1,70 @@
+---
+// Pagina d'errore (404): il codice grande in Söhne Mono con un glitch in bicromia, sotto titolo e link all'indice.
+// Il fondo a quadretti è quello dei vuoti (.cell--error in global.css).
+// Glitch: due copie del codice sopra quella vera, nascoste; a intervalli mostrano solo una fascia (clip-path)
+// spostata di lato, una nell'inchiostro e una nel bianco che "taglia" le cifre. Fuori schermo in pausa (.loop),
+// con riduci movimento ferme e nascoste.
+interface Props {
+  code: string;
+  title: string;
+}
+const { code, title } = Astro.props;
+---
+
+<div class="err">
+  <div class="err__code" aria-hidden="true">
+    <span>{code}</span>
+    <span class="err__slice loop">{code}</span>
+    <span class="err__slice err__slice--cut loop">{code}</span>
+  </div>
+  <h1 class="err__title">{title}<span class="sr-only"> (errore {code})</span></h1>
+  <a href="/" class="err__back mono">Torna all'indice</a>
+</div>
+
+<style>
+  .err {
+    position: absolute; inset: 0;
+    padding: var(--pad-label) var(--pad) var(--pad);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: var(--pad);
+    text-align: center;
+  }
+
+  .err__code {
+    position: relative;
+    font-family: var(--font-numeri);
+    font-weight: 500;
+    font-size: min(42cqh, 48cqw);
+    line-height: 0.8;
+    letter-spacing: -0.04em;
+    font-variant-numeric: tabular-nums;
+  }
+  .err__slice {
+    position: absolute; inset: 0;
+    clip-path: inset(100% 0 0 0);
+    animation: err-glitch 2600ms steps(1, end) infinite;
+  }
+  .err__slice--cut { color: var(--bianco); animation-name: err-cut; animation-delay: 80ms; }
+
+  /* fasce: inset(alto 0 basso 0), spostamento in % della larghezza del numero. Quiete per l'80% del giro */
+  @keyframes err-glitch {
+    0%, 16%, 100% { clip-path: inset(100% 0 0 0); transform: none; }
+    2%  { clip-path: inset(8% 0 70% 0);  transform: translateX(-3%); }
+    4%  { clip-path: inset(56% 0 22% 0); transform: translateX(4%); }
+    6%  { clip-path: inset(30% 0 52% 0); transform: translateX(-2%); }
+    8%  { clip-path: inset(74% 0 6% 0);  transform: translateX(5%); }
+    10% { clip-path: inset(14% 0 78% 0); transform: translateX(-4%); }
+    12% { clip-path: inset(44% 0 40% 0); transform: translateX(2%); }
+    14% { clip-path: inset(62% 0 30% 0); transform: translateX(-5%); }
+  }
+  @keyframes err-cut {
+    0%, 16%, 100% { clip-path: inset(100% 0 0 0); transform: none; }
+    3%  { clip-path: inset(40% 0 54% 0); transform: translateX(2%); }
+    7%  { clip-path: inset(18% 0 76% 0); transform: translateX(-3%); }
+    11% { clip-path: inset(66% 0 26% 0); transform: translateX(3%); }
+    13% { clip-path: inset(84% 0 10% 0); transform: translateX(-2%); }
+  }
+
+  .err__title { font-size: clamp(20px, 6cqh, 32px); font-weight: 500; line-height: 1.1; letter-spacing: -0.02em; text-wrap: balance; }
+  .err__back { text-decoration: underline; text-underline-offset: 3px; }
+</style>

@@ -1,5 +1,5 @@
 /**
- * Chiusura della pagina aperta da una cella: ✕ (a[data-close]) o Esc.
+ * Chiusura della pagina aperta da una cella: ✕ (a[data-close]), click sulla cella aperta (la hero) o Esc.
  * La transizione di ritorno (la hero che rientra nella sua cella) la fa morph.ts.
  */
 import { navigate } from 'astro:transitions/client';
@@ -17,9 +17,15 @@ function close() {
 /** Click sinistro senza modificatori: gli altri (nuova scheda, ecc.) restano al browser */
 const isPlainClick = (e: MouseEvent) => e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey;
 
+/** Click sulla hero, fuori da link e comandi e senza testo appena selezionato: come la ✕ */
+const onHero = (t: Element) =>
+  !!t.closest('.cell[data-hero]') && !t.closest('a, button, input, select, textarea, label, [role="switch"]')
+  && !!getSelection()?.isCollapsed;
+
 document.addEventListener('click', e => {
-  const back = (e.target as Element).closest('a[data-close]');
-  if (!back || !isPlainClick(e)) return;
+  if (!isPlainClick(e)) return;
+  const t = e.target as Element;
+  if (!t.closest('a[data-close]') && !onHero(t)) return;
   e.preventDefault();
   close();
 });

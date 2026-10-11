@@ -66,9 +66,16 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     </div>
     <slot />
     <script is:inline>
-      // intro: ogni casella (anche i vuoti) inizia a disegnare il filo da un vertice a caso (0–3, orario dall'alto a sinistra)
+      // intro: ogni casella (anche i vuoti e il footer) inizia a disegnare il filo da un vertice a caso (0–3, orario dall'alto a sinistra)
       if (document.documentElement.classList.contains('is-intro')) {
-        document.querySelectorAll('.cell, .void').forEach(function (c) { c.dataset.from = Math.floor(Math.random() * 4); });
+        document.querySelectorAll('.cell, .void, .foot').forEach(function (c) { c.dataset.from = Math.floor(Math.random() * 4); });
+        // footer: altezza in unità (passo della griglia = --ruler-step) e turno dopo l'ultima cella
+        var foot = document.querySelector('.foot');
+        var step = parseFloat(getComputedStyle(document.body).getPropertyValue('--ruler-step'));
+        if (foot && step) {
+          foot.style.setProperty('--ch', String(Math.max(1, Math.round(foot.offsetHeight / step))));
+          foot.style.setProperty('--i', String(document.querySelectorAll('.grid > .cell').length));
+        }
       }
     </script>
   </body>

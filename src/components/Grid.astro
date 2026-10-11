@@ -18,6 +18,7 @@ import GlobeCell from './cells/GlobeCell.astro';
 import InkCell from './cells/InkCell.astro';
 import ArchiveHeadCell from './cells/ArchiveHeadCell.astro';
 import TagsCell from './cells/TagsCell.astro';
+import ErrorCell from './cells/ErrorCell.astro';
 import { tagSlug } from '../lib/tags';
 
 interface Props {
@@ -70,6 +71,7 @@ const voids = (Object.keys(COLS) as (keyof typeof COLS)[]).flatMap(bp =>
         {cell.type === 'eye' && <EyeCell />}
         {cell.type === 'globe' && <GlobeCell />}
         {cell.type === 'ink' && <InkCell />}
+        {cell.type === 'error' && <ErrorCell code={cell.code} title={cell.title} />}
         {cell.type === 'archive-head' && <ArchiveHeadCell total={cell.total} />}
         {cell.type === 'tags' && <TagsCell tags={cell.tags} total={cells.filter(c => c.type === 'project').length} />}
       </Cell>

@@ -18,7 +18,7 @@ const { cell, index, attrs = {} } = Astro.props;
 const href = Astro.props.href ?? cell.href;
 const n = pad2(index + 1);
 
-const classes = ['cell', `cell--${cell.type}`, cell.tone === 'red' && 'cell--red', href && 'cell--link', ...(cell.hideOn ?? []).map(bp => `hide-${bp}`)];
+const classes = ['cell', `cell--${cell.type}`, cell.tone === 'red' && 'cell--red', cell.frame === false && 'cell--bare', href && 'cell--link', ...(cell.hideOn ?? []).map(bp => `hide-${bp}`)];
 const isHome = href === '/';
 const label = cell.label === false ? null : (cell.label ?? cell.id);
 

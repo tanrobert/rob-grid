@@ -12,11 +12,12 @@ export const projects: Project[] = [
 
   // ── RISTORAZIONE ──────────────────────────────────────────────────────
   {
-    slug: 'recco',
-    title: 'Recco Gastronomia',
-    tags: ['Ristorazione', 'Ospitalità', 'Logo', 'Packaging', 'Print'],
-    period: 'nel 2016',
-    description: 'Identità visiva per una gastronomia artigianale con radici nella tradizione ligure.',
+    // segnaposto: anno, tag e descrizione da confermare
+    slug: 'easy-pizzeria',
+    title: 'Easy Pizzeria',
+    tags: ['Ristorazione', 'Ospitalità', 'Logo', 'Menu'],
+    period: 'dal 2025',
+    description: 'Identità visiva per una pizzeria.',
     image: dummyImg,
   },
   {
@@ -68,24 +69,6 @@ export const projects: Project[] = [
     image: dummyImg,
   },
 
-  // ── CULTURA & EVENTI ──────────────────────────────────────────────────
-  {
-    slug: 'koine',
-    title: 'Koinè',
-    tags: ['Cultura', 'Eventi', 'Branding', 'Print', 'Web'],
-    period: 'nel 2015',
-    description: 'Identità visiva per un centro culturale polifunzionale — teatro, musica, mostre, formazione.',
-    image: dummyImg,
-  },
-  {
-    slug: 'teatro-ariston',
-    title: 'Teatro Ariston',
-    tags: ['Cultura', 'Eventi', 'Print', 'Web'],
-    period: 'dal 2024',
-    description: 'Campagna stagionale e sistema di comunicazione per un teatro storico.',
-    image: dummyImg,
-  },
-
   // ── SALUTE & BENESSERE ────────────────────────────────────────────────
   {
     slug: 'cardogna',
@@ -103,24 +86,8 @@ export const projects: Project[] = [
     description: 'Brand personale e sito per un medico estetico — autorevolezza scientifica e sensibilità estetica.',
     image: dummyImg,
   },
-  {
-    slug: 'ausonia-padel',
-    title: 'Ausonia Padel & Tennis',
-    tags: ['Salute', 'Benessere', 'Logo', 'Branding', 'Web'],
-    period: 'nel 2021',
-    description: 'Identità e sito per un centro sportivo con campi da padel e tennis.',
-    image: dummyImg,
-  },
 
   // ── CONSULENZA & MEDIA ─────────────────────────────────────────────────
-  {
-    slug: 'uau',
-    title: 'UAU! Marketing',
-    tags: ['Consulenza', 'Media', 'Logo', 'Branding', 'Web'],
-    period: 'nel 2020',
-    description: 'Identità e sito per un\'agenzia di marketing locale — audace, provocatorio, efficace.',
-    image: dummyImg,
-  },
   {
     slug: 'ornella',
     title: 'Ornella',

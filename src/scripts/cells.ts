@@ -9,8 +9,8 @@ import { pad2 } from '../lib/format';
 
 let cleanup: (() => void) | null = null;
 
-// animazioni d'ingresso (global.css): finite quando il filo ha chiuso il giro e il contenuto è entrato
-const INTRO = ['frame-draw', 'fill-in', 'fade-in'];
+// animazioni d'ingresso (global.css): finite quando il filo ha chiuso il giro, il contenuto è entrato e i crocini sono comparsi
+const INTRO = ['frame-draw', 'fill-in', 'fade-in', 'crocini-in'];
 function introDone(cell?: Element) {
   const anims = (cell ? cell.getAnimations({ subtree: true }) : document.getAnimations())
     .filter(a => a instanceof CSSAnimation && INTRO.includes(a.animationName));
@@ -103,20 +103,25 @@ export function initCells() {
   });
 
   // ── Registro: la ghiera gira con lo scroll, in sincrono col righello ─
-  // 25px di pagina = una tacca (5°). Scorrendo in giù le tacche a destra salgono, come quelle del righello.
+  // un quarto di riga della griglia = una tacca (5°), come il righello (--ruler-step in global.css).
+  // Scorrendo in giù le tacche a destra salgono, come quelle del righello.
   const rings = [...document.querySelectorAll<SVGGElement>('[data-ring]')];
   if (rings.length && !reduced) {
     let frame = 0;
+    let tick = 25;
+    const measure = () => { tick = (parseFloat(getComputedStyle(document.body).getPropertyValue('--ruler-step')) || 100) / 4; };
     const turn = () => {
       frame = 0;
-      const deg = (-scrollY / 25) * 5;
+      const deg = (-scrollY / tick) * 5;
       for (const r of rings) {
         if (r.closest('[data-offscreen]')) continue;
         r.style.transform = `rotate(${deg}deg)`;
       }
     };
     addEventListener('scroll', () => { frame ||= requestAnimationFrame(turn); }, { passive: true, signal });
+    addEventListener('resize', () => { measure(); frame ||= requestAnimationFrame(turn); }, { passive: true, signal });
     teardown.push(() => cancelAnimationFrame(frame));
+    measure();
     turn();
   }
 

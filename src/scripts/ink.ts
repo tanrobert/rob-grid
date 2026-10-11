@@ -18,19 +18,20 @@ function apply(nero: boolean) {
 export function initInk(signal: AbortSignal, reduced: boolean) {
   document.querySelectorAll<HTMLButtonElement>('[data-ink]').forEach(btn => {
     const lens = btn.querySelector('[data-lens]')!;
-    const lever = btn.querySelector<SVGGElement>('[data-lever]')!;
+    // role=switch "Luce": accesa (sole) = inchiostro rosso
     const sync = () => {
       btn.setAttribute('aria-checked', String(!isNero()));
-      btn.title = isNero() ? 'Passa al rosso' : 'Passa al nero';
+      btn.title = isNero() ? 'Accendi la luce' : 'Spegni la luce';
     };
     sync();
 
-    const toggle = () => {
+    btn.addEventListener('click', () => {
       const nero = !isNero();
       const swap = () => { apply(nero); sync(); };
       if (reduced || !document.startViewTransition) return swap();
 
-      // il colore nuovo si allarga a cerchio dall'interruttore fino all'angolo più lontano della finestra
+      // il colore nuovo si allarga a cerchio dall'interruttore fino all'angolo più lontano della finestra;
+      // sole e luna si scambiano (InkCell.astro) dentro la pagina nuova, che resta viva durante la transizione
       const r = lens.getBoundingClientRect();
       const x = r.left + r.width / 2, y = r.top + r.height / 2;
       const radius = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
@@ -42,45 +43,6 @@ export function initInk(signal: AbortSignal, reduced: boolean) {
         root.classList.remove('vt-ink');
         for (const p of ['--macchia-x', '--macchia-y', '--macchia-r']) root.style.removeProperty(p);
       });
-    };
-
-    // Trascinamento (dito o mouse): la leva segue il gesto, su verso il rosso e giù verso il nero.
-    // Al rilascio scatta dalla parte in cui è stata lasciata (col rimbalzo del CSS); se è rimasta dalla
-    // sua parte torna al posto. Sotto DEAD px è un tocco: resta il clic.
-    const DEAD = 6;
-    let drag: { y: number; from: number; travel: number } | null = null;
-    let scale = 1, dragged = false;
-    btn.addEventListener('pointerdown', e => {
-      if (e.button !== 0) return;
-      // corsa completa (da su a giù) = 70% dell'altezza della levetta: col dito basta poco
-      drag = { y: e.clientY, from: isNero() ? -1 : 1, travel: lens.getBoundingClientRect().height * 0.35 };
-      dragged = false;
-      btn.setPointerCapture(e.pointerId);
-    }, { signal });
-    btn.addEventListener('pointermove', e => {
-      if (!drag) return;
-      const dy = e.clientY - drag.y;
-      if (!dragged && Math.abs(dy) < DEAD) return;
-      dragged = true;
-      scale = Math.max(-1.1, Math.min(1.1, drag.from - dy / drag.travel));
-      lever.style.transition = 'none';
-      lever.style.transform = `scaleY(${scale})`;
-    }, { signal });
-    const release = (commit: boolean) => {
-      if (!drag) return;
-      drag = null;
-      // senza stile in linea la leva torna allo stato del CSS con la sua transizione a molla
-      lever.style.removeProperty('transition');
-      lever.style.removeProperty('transform');
-      if (commit && dragged && (scale < 0) !== isNero()) toggle();
-    };
-    btn.addEventListener('pointerup', () => release(true), { signal });
-    btn.addEventListener('pointercancel', () => release(false), { signal });
-
-    // il clic che segue un trascinamento è già stato deciso al rilascio
-    btn.addEventListener('click', () => {
-      if (dragged) { dragged = false; return; }
-      toggle();
     }, { signal });
   });
 }

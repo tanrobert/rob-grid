@@ -26,6 +26,8 @@ interface CellBase extends Span {
   replace?: boolean;
   /** Etichetta tecnica in alto a sinistra. `false` per nasconderla. */
   label?: string | false;
+  /** `false` = cella senza filo (es. il logo a tutta cella). */
+  frame?: false;
   /** La cella è l'arrivo dell'espansione della cella con questo href (es. '/archivio'). */
   heroOf?: string;
   /** Nasconde la cella su questi breakpoint (il calcolo dei vuoti ne tiene conto). */
@@ -59,6 +61,8 @@ export type Cell = CellBase & (
   | { type: 'globe' }
   /** interruttore della luce: alterna l'inchiostro del sito, rosso (on) ↔ nero (off) (scripts/ink.ts) */
   | { type: 'ink' }
+  /** pagina d'errore: codice grande con glitch, titolo (h1) e link all'indice, su carta a quadretti */
+  | { type: 'error'; code: string; title: string }
   // solo archivio
   | { type: 'archive-head'; total: number }
   | { type: 'tags'; tags: TagCount[] }

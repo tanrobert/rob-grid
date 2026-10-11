@@ -1,0 +1,18 @@
+---
+import type { Cell } from '../data/grid-types';
+import Layout from '../layouts/Layout.astro';
+import Grid from '../components/Grid.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+
+// Una sola cella, a tutta larghezza, con la carta a quadretti dei vuoti. Vercel serve dist/404.html da solo.
+const cells: Cell[] = [
+  { id: 'errore', type: 'error', w: 12, h: 4, sm: { h: 5 }, label: 'Errore', code: '404', title: 'Pagina non trovata' },
+];
+---
+
+<Layout titolo="Pagina non trovata — Roberto" descrizione="La pagina che cercavi non esiste o è stata spostata. Torna all'indice del portfolio di Roberto, graphic designer.">
+  <main id="main" class="sheet">
+    <Grid cells={cells} />
+    <SiteFooter />
+  </main>
+</Layout>
