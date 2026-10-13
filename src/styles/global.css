@@ -191,7 +191,12 @@ p { text-wrap: pretty; }
   margin-inline: auto;
   padding: var(--gap);
   position: relative;
+  /* alto almeno quanto la finestra: il footer tocca sempre il fondo (scripts/fill.ts) */
+  display: flex; flex-direction: column;
+  min-height: 100svh;
 }
+/* pagina corta: il footer si allunga del resto di riga sotto il vuoto di riempimento */
+.sheet.is-corta > .foot { flex-grow: 1; }
 /* crocini anche ai lati quando il foglio è più stretto della finestra: stessa trama della griglia,
    allineata alle sue colonne e righe. Le fasce entrano di un gap nel foglio, così coprono anche
    la colonna di incroci sul bordo esterno della griglia (a mezzo gap dall'ultima casella). */
@@ -250,6 +255,10 @@ p { text-wrap: pretty; }
 @media (min-width: 1024px) { .void--lg { display: block; } }
 @media (min-width: 600px) and (max-width: 1023px) { .void--md { display: block; } }
 @media (max-width: 599px) { .void--sm { display: block; } }
+/* riempimento sotto la griglia nelle pagine corte (scripts/fill.ts): largo quanto la griglia, righe intere (--ch).
+   Senza grid-row esplicita: con row dense finisce dopo tutte le celle, nelle prime righe tutte libere */
+.void--fill { display: block; grid-column: 1 / -1; grid-row: span var(--ch); --cw: var(--cols); }
+.void--fill[hidden] { display: none; }
 
 /* ── Cella ────────────────────────────────────────────── */
 .cell {
@@ -350,26 +359,69 @@ p { text-wrap: pretty; }
 /* ── Media: foto con velo rosso ───────────────────────── */
 /* Un solo velo semitrasparente, niente filtri né blend mode: su mobile filtro + due veli in
    multiply/screen per ogni foto rendevano lo scroll scattoso. Gli effetti vanno nelle immagini. */
+/* Velo a quadretti: il velo rosso tagliato da una maschera a quadretti di mezzo passo, in fase con la carta dei
+   vuoti e coi crocini, attaccati l'uno all'altro (senza linee in mezzo). In hover i quadretti
+   spariscono a giri dal centro della cella, che cade sempre su un incrocio della carta, ma "in disordine":
+   ogni quadretto sta in uno di 4 gruppi (motivo casuale di 7×5 quadretti che si ripete, data URI sotto) e
+   i gruppi partono a mezzo giro l'uno dall'altro, in un ordine (--turno-0…3) che MediaCell.astro rimescola a
+   ogni ingresso del mouse nella cella: 24 combinazioni. Un gruppo = uno strato (.velo--0…3 in MediaCell.astro):
+   i quadretti dei gruppi non si sovrappongono, quindi gli strati insieme fanno un velo solo.
+   Per ogni strato, --scopri = giri scoperti (0 → oltre i bordi). Maschera (strati dall'alto, composti dal
+   basso): gruppo ∩ NON(giri scoperti); giri scoperti = quadrato dei giri
+   finiti (pieno) sopra il quadrato col giro in corso (alfa = quanto ne è passato).
+   A riposo il velo è intero (.duo::after): appena --scopri parte da 0 lascia il posto ai quadretti (stesso colore
+   e opacità, a vista non cambia nulla) e torna quando --scopri è di nuovo 0. Così fermo non mostra mai le giunture
+   tra i 4 strati (a zoom non interi i bordi dei quadretti sfumano). --rotto = 0 intero, 1 a quadretti. --scopri sta su .duo ed è ereditata: la leggono il velo intero e i 4 strati. */
+@property --scopri { syntax: '<number>'; inherits: true; initial-value: 0; }
 .duo {
   --velo: 0.35;  /* opacità del velo rosso */
   position: absolute; inset: 0; background: var(--bianco);
+  --rotto: clamp(0, var(--scopri) * 1e6, 1);
+  /* giri per arrivare ai bordi: il lato lungo in unità (= mezzi lati in quadretti) + 1, più i ritardi dei
+     gruppi. Velocità costante: la durata cresce coi giri */
+  --giri: calc(max(var(--cw), var(--ch)) + 1 + 3 * 0.5);
+  transition: --scopri calc(var(--giri) * 80ms) cubic-bezier(0.4, 0, 0.2, 1);
 }
 .duo img, .duo video { width: 100%; height: 100%; object-fit: cover; }
-.duo::after {
+.duo::after, .velo {
   content: '';
   position: absolute; inset: 0;
   background: var(--inchiostro);
-  opacity: var(--velo);
-  transition: opacity 400ms ease;
   pointer-events: none;
 }
+.duo::after { opacity: calc(var(--velo) * (1 - var(--rotto))); }
+.velo {
+  opacity: calc(var(--velo) * var(--rotto));
+  /* quadretto = mezzo passo, ricavato dalla cella (qui --step non vale: la cella è un container) */
+  --t: calc((100cqw + var(--gap)) / (2 * var(--cw)));
+  --s: max(0, var(--scopri) - var(--ritardo));     /* giri scoperti di questo gruppo (mai sotto 0) */
+  --f: round(down, var(--s), 1);                   /* giri finiti */
+  --p: calc(var(--s) - var(--f));                  /* giro in corso, 0–1 */
+  --pieno: linear-gradient(#000, #000);
+  mask-image:
+    var(--gruppo),
+    var(--pieno),
+    var(--pieno),
+    linear-gradient(rgb(0 0 0 / var(--p)), rgb(0 0 0 / var(--p)));
+  mask-size:
+    calc(7 * var(--t)) calc(5 * var(--t)), 100% 100%,
+    calc(var(--f) * 2 * var(--t)) calc(var(--f) * 2 * var(--t)),
+    calc((var(--f) + 1) * 2 * var(--t)) calc((var(--f) + 1) * 2 * var(--t));
+  mask-position: calc((var(--gap) / -2)) calc((var(--gap) / -2)), 0 0, center, center;
+  mask-repeat: repeat, no-repeat, no-repeat, no-repeat;
+  mask-composite: intersect, exclude, add, add;
+}
+.velo--0 { --ritardo: calc(var(--turno-0, 0) * 0.5); --gruppo: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 7 5' preserveAspectRatio='none' shape-rendering='crispEdges'%3E%3Crect x='3' y='0' width='1' height='1'/%3E%3Crect x='5' y='0' width='1' height='1'/%3E%3Crect x='1' y='1' width='1' height='1'/%3E%3Crect x='6' y='1' width='1' height='1'/%3E%3Crect x='1' y='2' width='1' height='1'/%3E%3Crect x='3' y='2' width='1' height='1'/%3E%3Crect x='3' y='3' width='1' height='1'/%3E%3Crect x='1' y='4' width='1' height='1'/%3E%3Crect x='5' y='4' width='1' height='1'/%3E%3C/svg%3E"); }
+.velo--1 { --ritardo: calc(var(--turno-1, 1) * 0.5); --gruppo: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 7 5' preserveAspectRatio='none' shape-rendering='crispEdges'%3E%3Crect x='0' y='0' width='1' height='1'/%3E%3Crect x='1' y='0' width='1' height='1'/%3E%3Crect x='3' y='1' width='1' height='1'/%3E%3Crect x='5' y='1' width='1' height='1'/%3E%3Crect x='0' y='2' width='1' height='1'/%3E%3Crect x='5' y='2' width='1' height='1'/%3E%3Crect x='1' y='3' width='1' height='1'/%3E%3Crect x='4' y='3' width='1' height='1'/%3E%3Crect x='2' y='4' width='1' height='1'/%3E%3C/svg%3E"); }
+.velo--2 { --ritardo: calc(var(--turno-2, 2) * 0.5); --gruppo: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 7 5' preserveAspectRatio='none' shape-rendering='crispEdges'%3E%3Crect x='6' y='0' width='1' height='1'/%3E%3Crect x='0' y='1' width='1' height='1'/%3E%3Crect x='2' y='1' width='1' height='1'/%3E%3Crect x='4' y='1' width='1' height='1'/%3E%3Crect x='2' y='3' width='1' height='1'/%3E%3Crect x='5' y='3' width='1' height='1'/%3E%3Crect x='6' y='3' width='1' height='1'/%3E%3Crect x='0' y='4' width='1' height='1'/%3E%3Crect x='3' y='4' width='1' height='1'/%3E%3C/svg%3E"); }
+.velo--3 { --ritardo: calc(var(--turno-3, 3) * 0.5); --gruppo: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 7 5' preserveAspectRatio='none' shape-rendering='crispEdges'%3E%3Crect x='2' y='0' width='1' height='1'/%3E%3Crect x='4' y='0' width='1' height='1'/%3E%3Crect x='2' y='2' width='1' height='1'/%3E%3Crect x='4' y='2' width='1' height='1'/%3E%3Crect x='6' y='2' width='1' height='1'/%3E%3Crect x='0' y='3' width='1' height='1'/%3E%3Crect x='4' y='4' width='1' height='1'/%3E%3Crect x='6' y='4' width='1' height='1'/%3E%3C/svg%3E"); }
 @media (hover: hover) and (pointer: fine) {
-  .cell--link:hover .duo::after { opacity: 0; }
+  .cell--link:hover .duo { --scopri: var(--giri); }
 }
 
 /* Hero delle pagine progetto: senza velo, come la cella in hover.
    Così l'espansione parte e arriva sullo stesso stato, senza stacco. */
-.cell[data-hero] .duo::after { opacity: 0; }
+.cell[data-hero] .duo::after, .cell[data-hero] .velo { display: none; }
 
 /* ── Intro (solo al primo caricamento) ────────────────── */
 /* 1. il filo parte da un vertice (data-from, scelto a caso da Layout.astro) e fa il giro;

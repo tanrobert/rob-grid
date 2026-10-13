@@ -214,6 +214,11 @@ function fillWindow({ from, to }: Pending['fill']) {
 
 // ── Navigazione ───────────────────────────────────────────
 
+// Navigazioni arrivate in fondo al caricamento, in ordine. A fine transizione pulisce solo l'ultima:
+// con due navigazioni ravvicinate (click sulla pagina appena arrivata, es. "successivo") la seconda
+// interrompe la prima, e la pulizia della prima toglierebbe i nomi appena dati dalla seconda
+let navigation = 0;
+
 // Dopo il caricamento della pagina nuova e prima che la transizione catturi la vecchia: si sceglie
 // la coppia, si danno i nomi ai pezzi presenti da entrambi i lati e si preparano fondo e foto
 document.addEventListener('astro:before-preparation', e => {
@@ -222,6 +227,7 @@ document.addEventListener('astro:before-preparation', e => {
     await load();
     // superata da una navigazione più recente (doppio click): non tocca niente, nomi e stato sono suoi
     if (e.signal.aborted) return;
+    navigation++;
     pending = null;
     unname(document);  // nomi rimasti da una navigazione interrotta
     const newDoc = e.newDocument;
@@ -254,15 +260,18 @@ document.addEventListener('astro:before-preparation', e => {
 document.addEventListener('astro:before-swap', e => {
   const morph = pending;
   pending = null;
+  // anche senza espansione: toglie i nomi rimasti da una transizione interrotta da questa
+  const mine = navigation;
+  e.viewTransition.finished.finally(() => {
+    if (mine !== navigation) return;  // ne è partita un'altra: pulisce lei alla sua fine
+    unname(document);
+    document.documentElement.classList.remove('morph-close', 'morph-photo');
+  });
   if (!morph) return;
   e.viewTransition.ready.then(() => {
     fillWindow(morph.fill);
     if (morph.photo) growPhoto(morph.photo);
   }).catch(() => {
     document.documentElement.classList.remove('morph-photo');
-  });
-  e.viewTransition.finished.finally(() => {
-    unname(document);
-    document.documentElement.classList.remove('morph-close', 'morph-photo');
   });
 });

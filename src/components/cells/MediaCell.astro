@@ -25,6 +25,7 @@ const poster = image && video ? await getImage({ src: image, width: 1280, format
   ) : image && (
     <Image src={image} alt={alt} widths={[400, 800, 1200, 1600, 2400]} sizes={sizes} loading={priority ? 'eager' : 'lazy'} fetchpriority={priority ? 'high' : undefined} decoding="async" />
   )}
+  {[0, 1, 2, 3].map(g => <span class={`velo velo--${g}`} aria-hidden="true" />)}
 </div>
 
 {title && (
@@ -33,6 +34,23 @@ const poster = image && video ? await getImage({ src: image, width: 1280, format
     {meta && <span class="mono">{meta}</span>}
   </div>
 )}
+
+<script>
+  // velo a quadretti (global.css): a ogni ingresso del mouse in una cella con foto, i 4 gruppi di quadretti
+  // partono in un ordine nuovo (--turno-0…3 = posizione di ogni gruppo nella fila). Delegato al documento:
+  // vale anche per le pagine caricate dal ClientRouter
+  document.addEventListener('pointerover', e => {
+    if (e.pointerType !== 'mouse') return;
+    const cell = (e.target as Element).closest<HTMLElement>('.cell--link');
+    if (!cell?.querySelector('.velo') || cell.contains(e.relatedTarget as Node | null)) return;
+    const turni = [0, 1, 2, 3];
+    for (let i = turni.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [turni[i], turni[j]] = [turni[j], turni[i]];
+    }
+    turni.forEach((t, g) => cell.style.setProperty(`--turno-${g}`, String(t)));
+  });
+</script>
 
 <style>
   .caption {

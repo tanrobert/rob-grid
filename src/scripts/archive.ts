@@ -6,6 +6,7 @@
  */
 import { BREAKPOINTS, COLS, findVoids } from '../lib/grid';
 import { pad2 } from '../lib/format';
+import { fillSheet } from './fill';
 
 type Bp = keyof typeof COLS;
 
@@ -20,7 +21,7 @@ const breakpoint = (): Bp =>
 
 /** Stesso calcolo del build, sulle caselle visibili adesso */
 function layoutVoids(grid: HTMLElement) {
-  grid.querySelectorAll(':scope > .void').forEach(v => v.remove());
+  grid.querySelectorAll(':scope > .void:not(.void--fill)').forEach(v => v.remove());
   const bp = breakpoint();
   const suffix = bp === 'lg' ? '' : `-${bp}`;
   const spans = [...grid.querySelectorAll<HTMLElement>(':scope > .cell')]
@@ -36,6 +37,7 @@ function layoutVoids(grid: HTMLElement) {
     el.style.gridArea = `${v.row} / ${v.col} / span ${v.h} / span ${v.w}`;
     grid.append(el);
   }
+  fillSheet();  // la griglia ha cambiato altezza
 }
 
 export function initArchive(signal: AbortSignal) {

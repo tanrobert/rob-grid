@@ -92,6 +92,7 @@ const year = new Date().getFullYear();
   .foot__bar {
     display: flex; justify-content: space-between; gap: var(--pad);
     margin-inline: var(--pad);
+    margin-top: auto;  /* footer allungato sul fondo della finestra (scripts/fill.ts): la barra resta in basso */
   }
   /* su schermi stretti il testo di destra va a capo restando allineato a destra */
   .foot__bar span:last-child { text-align: right; }
