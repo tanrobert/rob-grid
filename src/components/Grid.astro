@@ -15,11 +15,11 @@ import CursorCell from './cells/CursorCell.astro';
 import MarkCell from './cells/MarkCell.astro';
 import EyeCell from './cells/EyeCell.astro';
 import GlobeCell from './cells/GlobeCell.astro';
-import InkCell from './cells/InkCell.astro';
 import ArchiveHeadCell from './cells/ArchiveHeadCell.astro';
 import TagsCell from './cells/TagsCell.astro';
 import ErrorCell from './cells/ErrorCell.astro';
 import { tagSlug } from '../lib/tags';
+import { greyOf } from '../lib/grigio';
 
 interface Props {
   cells: CellData[];
@@ -35,6 +35,9 @@ for (const c of cells) {
 }
 
 // buchi lasciati dall'incastro automatico, per ogni breakpoint
+// la prima foto della griglia è quasi sempre l'elemento più grande in vista (LCP): caricata subito
+const firstProject = cells.findIndex(c => c.type === 'project');
+
 const voids = (Object.keys(COLS) as (keyof typeof COLS)[]).flatMap(bp =>
   findVoids(cells.filter(c => !c.hideOn?.includes(bp)).map(c => resolveSpans(c)[bp]), COLS[bp]).map(v => ({ ...v, bp })),
 );
@@ -52,14 +55,15 @@ const voids = (Object.keys(COLS) as (keyof typeof COLS)[]).flatMap(bp =>
           href={cell.href ?? `/progetti/${p.slug}`}
           attrs={filterable ? { 'data-tags': p.tags.map(tagSlug).join(' ') } : undefined}
         >
-          <MediaCell image={p.image} video={p.video} alt={`${p.title} — ${p.description}`} sizes={mediaSizes(cell)} title={p.title} meta={p.period} />
+          {/* alt vuoto: la cella è un link e la didascalia lo nomina già (titolo e anno) */}
+          <MediaCell image={p.image} grey={greyOf(p.image)} video={p.video} alt="" sizes={mediaSizes(cell)} title={p.title} meta={p.period} priority={i === firstProject} />
         </Cell>
       );
     }
     return (
       <Cell cell={cell} index={i}>
-        {cell.type === 'svg' && <SvgCell svg={cell.svg} fit={cell.fit} />}
-        {cell.type === 'marquee' && <MarqueeCell svg={cell.svg} speed={cell.speed} reverse={cell.reverse} vertical={cell.vertical} />}
+        {cell.type === 'svg' && <SvgCell svg={cell.svg} fit={cell.fit} ink={cell.ink} />}
+        {cell.type === 'marquee' && <MarqueeCell svg={cell.svg} speed={cell.speed} reverse={cell.reverse} vertical={cell.vertical} ruotato={cell.ruotato} />}
         {cell.type === 'text' && <TextCell eyebrow={cell.eyebrow} title={cell.title} body={cell.body} as={cell.as} size={cell.size} />}
         {cell.type === 'list' && <ListCell title={cell.title} items={cell.items} />}
         {cell.type === 'stat' && <StatCell value={cell.value} caption={cell.caption} countUp={cell.countUp} heading={cell.heading} />}
@@ -70,7 +74,6 @@ const voids = (Object.keys(COLS) as (keyof typeof COLS)[]).flatMap(bp =>
         {cell.type === 'mark' && <MarkCell />}
         {cell.type === 'eye' && <EyeCell />}
         {cell.type === 'globe' && <GlobeCell />}
-        {cell.type === 'ink' && <InkCell />}
         {cell.type === 'error' && <ErrorCell code={cell.code} title={cell.title} />}
         {cell.type === 'archive-head' && <ArchiveHeadCell total={cell.total} />}
         {cell.type === 'tags' && <TagsCell tags={cell.tags} total={cells.filter(c => c.type === 'project').length} />}

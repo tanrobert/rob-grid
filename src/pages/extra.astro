@@ -5,6 +5,7 @@ import Grid from '../components/Grid.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import { extraCells } from '../data/extra';
 import { pad2 } from '../lib/format';
+import { site, pageTitle } from '../data/site';
 
 // in testa l'arrivo dell'espansione della cella "extra" della home (stesso numero e didascalia:
 // nell'espansione il numero resta fermo, come nell'archivio), in fondo il ritorno all'indice
@@ -14,13 +15,13 @@ const cells: Cell[] = [
     value: pad2(extraCells.length), caption: 'Celle extra', heading: 'Celle extra',
   },
   ...extraCells,
-  { id: 'indietro', type: 'text', w: 4, h: 2, tone: 'red', href: '/', as: 'p', size: 'm', eyebrow: 'Torna a', title: 'Indice' },
+  { id: 'indietro', type: 'text', w: 4, h: 2, tone: 'red', href: '/', as: 'p', size: 'm', eyebrow: 'Chiudi', title: 'Indice' },
 ];
 ---
 
 <Layout
-  titolo="Celle extra — Roberto"
-  descrizione="Le celle extra del portfolio di Roberto, graphic designer: orologio, misure della griglia, cursore, registro, occhio e globo terrestre in tempo reale."
+  titolo={pageTitle('Celle extra')}
+  descrizione={`Le celle extra del portfolio di ${site.name}, graphic designer: orologio, misure della griglia, cursore, registro, occhio e globo terrestre in tempo reale.`}
 >
   <main id="main" class="sheet">
     <Grid cells={cells} />

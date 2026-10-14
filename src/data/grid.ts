@@ -31,17 +31,17 @@ const topTags = [...allTags].sort((a, b) => b.count - a.count).slice(0, 9)
   .map(t => ({ label: t.tag, href: `/archivio?tag=${t.slug}` }));
 
 // cella progetto: la misura è la forma del progetto (projects.ts), uguale in archivio e ×2 nella hero
-function projectCell(id: string, slug: string, label?: string): Cell {
+function projectCell(id: string, slug: string): Cell {
   const shape = getProject(slug)?.shape;
   if (!shape) throw new Error(`[grid] il progetto "${slug}" non ha una forma (shape in projects.ts)`);
-  return { id, type: 'project', slug, label, ...scaleShape(shape, 1) };
+  return { id, type: 'project', slug, ...scaleShape(shape, 1) };
 }
 
 export const grid: Cell[] = [
   // ── riga 1 ────────────────────────────────────────────
-  { id: 'logo',    type: 'svg',     w: 1, h: 1, svg: 'logo-r', fit: 'bleed', label: false, frame: false },
-  // speed = secondi per giro: il logo lungo è ~2,8 volte il "roberto", 112s = stessa velocità dei 40s di prima
-  { id: 'nome',    type: 'marquee', w: 6, h: 1, svg: 'logo-completo-orizzontale-lungo', speed: 112, md: { w: 6 } },
+  // la R è l'interruttore della luce: premuta, rosso e bianco del sito si scambiano
+  { id: 'logo',    type: 'svg',     w: 1, h: 1, svg: 'logo-r', fit: 'bleed', label: false, frame: false, ink: true },
+  { id: 'nome',    type: 'svg',     w: 4, h: 1, sm: { w: 3 }, svg: 'roberto' },
   { id: 'archivio', type: 'stat',   w: 2, h: 2, href: '/archivio', value: pad2(projects.length), caption: 'Progetti in archivio', countUp: true },
 
   // ── righe 2–3 ─────────────────────────────────────────
@@ -51,11 +51,14 @@ export const grid: Cell[] = [
     title: 'Progetto identità visive e punti di contatto fisici e digitali.',
   },
   projectCell('eurofish', 'eurofish'),
-  { id: 'info',     type: 'text',    w: 2, h: 2, tone: 'red', href: '/info', title: 'Info', as: 'p', size: 'm', eyebrow: 'Chi sono' },
+  // il nastro "Roberto · grafica, web" girato in verticale. speed = secondi per giro: il logo lungo è
+  // ~2,8 volte il "roberto", 112s = stessa velocità dei 40s di prima
+  { id: 'nastro',  type: 'marquee', w: 1, h: 6, svg: 'logo-completo-orizzontale-lungo', speed: 112, ruotato: true },
+  { id: 'info',     type: 'text',    w: 2, h: 2, tone: 'red', href: '/info', title: 'Bio', as: 'p', size: 'm', eyebrow: 'Chi sono' },
 
   // ── righe 4–5 ─────────────────────────────────────────
   projectCell('kiale', 'kiale'),
-  projectCell('purple', 'purple-piper', 'Purple Piper'),
+  projectCell('purple', 'purple-piper'),
   { id: 'tag',     type: 'list',    w: 4, h: 2, title: 'Tag', items: topTags },
   {
     id: 'metodo', type: 'text', w: 4, h: 2, size: 's',
@@ -64,17 +67,13 @@ export const grid: Cell[] = [
   },
 
   // ── righe 6–7 ─────────────────────────────────────────
-  { id: 'marchio', type: 'marquee', w: 2, h: 4, svg: 'logo-completo-verticale', speed: 9, vertical: true },
   projectCell('giardini', 'giardini-dell-eden'),
-  projectCell('gea', 'gea', 'G&A'),
+  projectCell('gea', 'gea'),
   projectCell('spazioquadro', 'spazioquadro'),
-  projectCell('torre', 'la-torre-rossa', 'La Torre Rossa'),
+  projectCell('torre', 'la-torre-rossa'),
   { id: 'extra',   type: 'stat',    w: 2, h: 2, href: '/extra', value: pad2(extraCells.length), caption: 'Celle extra', countUp: true },
   {
     id: 'contatti', type: 'text', w: 4, h: 2, size: 'm', href: '/info',
     eyebrow: 'Nuovi progetti', title: 'Scrivimi_',
   },
-
-  // ── Luce (interruttore): ultima, così riempie il primo buco 1×1 rimasto senza spostare le altre (row dense) ─
-  { id: 'luce', type: 'ink', w: 1, h: 1, label: false },
 ];

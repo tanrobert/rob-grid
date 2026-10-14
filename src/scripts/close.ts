@@ -22,13 +22,16 @@ const onHero = (t: Element) =>
   !!t.closest('.cell[data-hero]') && !t.closest('a, button, input, select, textarea, label, [role="switch"]')
   && !!getSelection()?.isCollapsed;
 
+// in cattura: prima del ClientRouter, che ascolta i click sul documento e salta quelli con preventDefault.
+// In bolla il suo listener partiva per primo e avviava una navigazione push dalla ✕ in gara con
+// history.back(): a volte arrivavano due transizioni, la seconda senza espansione
 document.addEventListener('click', e => {
   if (!isPlainClick(e)) return;
   const t = e.target as Element;
   if (!t.closest('a[data-close]') && !onHero(t)) return;
   e.preventDefault();
   close();
-});
+}, { capture: true });
 
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && document.querySelector('[data-hero]')) close();

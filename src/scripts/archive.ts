@@ -47,10 +47,13 @@ export function initArchive(signal: AbortSignal) {
   const cells = [...grid.querySelectorAll<HTMLElement>('.cell[data-tags]')];
   const buttons = [...document.querySelectorAll<HTMLButtonElement>('button[data-tag]')];
   const count = document.querySelector('[data-count]');
+  const noun = document.querySelector('[data-count-noun]');
   const current = document.querySelector('[data-current]');
   const known = new Set(buttons.map(b => b.dataset.tag).filter(Boolean));
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   let active = '';
+  // ultima transizione partita: con due click rapidi la prima, saltata, non deve togliere i nomi della seconda
+  let latest: ViewTransition | undefined;
 
   const render = (tag: string) => {
     let n = 0;
@@ -62,6 +65,7 @@ export function initArchive(signal: AbortSignal) {
     layoutVoids(grid);
     for (const b of buttons) b.setAttribute('aria-pressed', String(b.dataset.tag === tag));
     if (count) count.textContent = pad2(n);
+    if (noun) noun.textContent = n === 1 ? 'Progetto' : 'Progetti';
     if (current) current.textContent = tag ? buttons.find(b => b.dataset.tag === tag)?.dataset.label ?? tag : 'tutti';
   };
 
@@ -85,8 +89,9 @@ export function initArchive(signal: AbortSignal) {
       c.style.setProperty('view-transition-class', 'tile');
     });
     html.classList.add('vt-filter');
-    const vt = document.startViewTransition(() => render(tag));
+    const vt = latest = document.startViewTransition(() => render(tag));
     vt.finished.finally(() => {
+      if (vt !== latest) return;
       html.classList.remove('vt-filter');
       cells.forEach(c => {
         c.style.removeProperty('view-transition-name');
@@ -99,6 +104,11 @@ export function initArchive(signal: AbortSignal) {
   const initial = new URLSearchParams(location.search).get('tag') ?? '';
   active = known.has(initial) ? initial : '';
   render(active);
+  // striscia dei tag su mobile: il tag dell'URL può stare fuori a destra, lo si porta al centro.
+  // scrollLeft e non scrollIntoView, che farebbe scorrere anche la pagina
+  const bar = document.querySelector<HTMLElement>('.tagbar');
+  const pressed = bar?.querySelector<HTMLElement>('[aria-pressed="true"]');
+  if (bar && pressed) bar.scrollLeft = pressed.offsetLeft - (bar.clientWidth - pressed.offsetWidth) / 2;
 
   document.addEventListener('click', e => {
     const b = (e.target as Element).closest<HTMLButtonElement>('button[data-tag]');

@@ -3,25 +3,27 @@ import type { Cell } from '../data/grid-types';
 import Layout from '../layouts/Layout.astro';
 import Grid from '../components/Grid.astro';
 import SiteFooter from '../components/SiteFooter.astro';
+import { site, pageTitle } from '../data/site';
 
 // In testa l'arrivo dell'espansione della cella "info" della home: stessa cella (testo rosso,
 // occhiello e titolo della stessa misura relativa) al doppio, come Extra e Archivio.
 // Testi segnaposto: da sostituire con la bio vera.
 const cells: Cell[] = [
-  { id: 'info', type: 'text', w: 4, h: 4, sm: { h: 2 }, tone: 'red', heroOf: '/info', as: 'h1', size: 'm', eyebrow: 'Chi sono', title: 'Info' },
+  { id: 'info', type: 'text', w: 4, h: 4, sm: { h: 2 }, tone: 'red', heroOf: '/info', as: 'h1', size: 'm', eyebrow: 'Chi sono', title: 'Bio' },
   {
     id: 'bio', type: 'text', w: 8, h: 4, as: 'p', size: 'l',
-    eyebrow: 'Bio',
     title: 'Disegno sistemi visivi: marchi, confezioni, siti. Parto da una griglia e da poche regole, poi le applico con rigore.',
   },
   { id: 'logo', type: 'svg', w: 4, h: 4, svg: 'logo-r', fit: 'bleed', label: false, frame: false },
   { id: 'settori', type: 'list', w: 6, h: 2, title: 'Settori', items: ['Ristorazione', 'Ospitalità', 'Cultura', 'Salute', 'Consulenza', 'Imprese'] },
   { id: 'ora', type: 'clock', w: 2, h: 2 },
-  { id: 'indietro', type: 'text', w: 8, h: 2, tone: 'red', href: '/', as: 'p', size: 'm', eyebrow: 'Torna a', title: 'Indice' },
+  // arrivo di "Scrivimi_" della home: qui l'indirizzo, cliccabile
+  { id: 'email', type: 'text', w: 4, h: 2, href: `mailto:${site.email}`, as: 'p', size: 's', eyebrow: 'Scrivimi', title: site.email },
+  { id: 'indietro', type: 'text', w: 4, h: 2, tone: 'red', href: '/', as: 'p', size: 'm', eyebrow: 'Chiudi', title: 'Indice' },
 ];
 ---
 
-<Layout titolo="Info — Roberto" descrizione="Chi sono: Roberto, graphic designer. Identità visive, packaging e siti web per ristorazione, ospitalità, cultura e imprese.">
+<Layout titolo={pageTitle('Bio')} descrizione={`Chi sono: ${site.name}, graphic designer. Identità visive, packaging e siti web per ristorazione, ospitalità, cultura e imprese.`}>
   <main id="main" class="sheet">
     <Grid cells={cells} />
     <SiteFooter />

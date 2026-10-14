@@ -24,8 +24,8 @@ interface CellBase extends Span {
   /** Il link sostituisce la pagina corrente nella history invece di aggiungerne una (progetto
       precedente/successivo: sfogliando, la ✕ torna comunque alla griglia di partenza). */
   replace?: boolean;
-  /** Etichetta tecnica in alto a sinistra. `false` per nasconderla. */
-  label?: string | false;
+  /** Linguetta in alto a sinistra: solo il numero della cella. `false` per nasconderla. */
+  label?: false;
   /** `false` = cella senza filo (es. il logo a tutta cella). */
   frame?: false;
   /** La cella è l'arrivo dell'espansione della cella con questo href (es. '/archivio'). */
@@ -35,11 +35,14 @@ interface CellBase extends Span {
 }
 
 export type Cell = CellBase & (
-  | { type: 'svg'; svg: SvgName; fit?: 'contain' | 'bleed' }
+  /** ink: la cella è l'interruttore della luce, premuta scambia rosso e bianco del sito (scripts/ink.ts) */
+  | { type: 'svg'; svg: SvgName; fit?: 'contain' | 'bleed'; ink?: boolean }
   | {
       type: 'marquee'; svg: SvgName; /** secondi per un giro completo */ speed?: number; reverse?: boolean;
       /** Scorre dall'alto in basso invece che da destra a sinistra */
       vertical?: boolean;
+      /** Logo orizzontale girato di 90° in una cella verticale: si legge dal basso, scorre verso il basso */
+      ruotato?: boolean;
     }
   | {
       type: 'text'; eyebrow?: string; title: string;
@@ -59,8 +62,6 @@ export type Cell = CellBase & (
   | { type: 'eye' }
   /** globo orientato come la Terra adesso, trascinabile */
   | { type: 'globe' }
-  /** interruttore della luce: alterna l'inchiostro del sito, rosso (on) ↔ nero (off) (scripts/ink.ts) */
-  | { type: 'ink' }
   /** pagina d'errore: codice grande con glitch, titolo (h1) e link all'indice, su carta a quadretti */
   | { type: 'error'; code: string; title: string }
   // solo archivio

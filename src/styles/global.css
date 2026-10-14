@@ -5,11 +5,13 @@
   /* palette (da terminal-astro). Il sito usa rosso e bianco:
      bianco = fondo di pagina e caselle, e scritte/fili/loghi sulle caselle rosse */
   --rosso:  hsl(8 87% 54%);     /* = #f03f24, ripetuto nei crocini SVG di .grid */
-  --bianco: hsl(0, 15%, 89%);            /* bianco caldo, unico bianco del sito */
+  --chiaro: hsl(0, 15%, 89%);   /* = #e7dfdf, bianco caldo, unico bianco del sito */
+  /* carta del sito (fondo di pagina e celle, scritte sulle celle piene): il chiaro, o il rosso a luce spenta */
+  --bianco: var(--chiaro);
   --nero:   hsl(0 12% 13%);
   --giallo: hsl(55 89% 53%);
   --verde:  hsl(143 88% 54%);
-  /* inchiostro del sito: rosso, o nero a luce spenta (cella "luce", scripts/ink.ts).
+  /* inchiostro del sito: rosso, o il chiaro a luce spenta (cella "luce", scripts/ink.ts).
      Unico colore di ruolo: tutto ciò che è "rosso" nel sito usa questo, non --rosso */
   --inchiostro: var(--rosso);
 
@@ -47,19 +49,29 @@
   --t-swap:     220ms;  /* scambio dei contenuti nelle finestre dell'espansione */
   --t-page:     360ms;  /* dissolvenza della pagina intera nell'espansione… */
   --t-page-delay: calc(var(--t-morph) * 0.55);  /* …che parte oltre metà corsa della cella */
-  --t-tile:     560ms;  /* filtro dell'archivio: le celle scivolano al nuovo posto */
-  --t-draw-u:   70ms;   /* intro: tempo del filo per ogni unità di perimetro (2×2 → 560ms, 6×4 → 1400ms) */
+  --t-tile:     420ms;  /* filtro dell'archivio: le celle scivolano al nuovo posto */
+  --t-draw-u:   70ms;   /* intro: tempo del filo per ogni unità di perimetro (2×2 → 560ms, 4×2 → 840ms)… */
+  --t-draw-max: 900ms;  /* …fino a questo tetto: le celle più grandi disegnano il filo più veloci */
+  --t-fill:     400ms;  /* intro: fondo e contenuto entrano a filo finito */
 
   --t-ink:      960ms;  /* cambio d'inchiostro: il nuovo colore si allarga dall'interruttore */
 
   color-scheme: light;
 }
-/* inchiostro nero: data-inchiostro su <html> (Layout.astro lo rimette dopo ogni swap).
-   I crocini sono un'immagine e non leggono le variabili: stessa trama col colore di --nero (#251d1d) */
-:root[data-inchiostro="nero"] {
+/* luce spenta: rosso e bianco si scambiano, inchiostro chiaro su carta rossa. data-inchiostro su <html>
+   (Layout.astro lo rimette dopo ogni swap). I crocini sono un'immagine e non leggono le variabili:
+   stessa trama col colore di --chiaro (#e7dfdf) */
+:root[data-inchiostro="bianco"] {
+  --inchiostro: var(--chiaro);
+  --bianco: var(--rosso);
+  --crocini: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23e7dfdf'%3E%3Crect width='5' height='1'/%3E%3Crect width='1' height='5'/%3E%3Crect x='100%25' width='4' height='1' transform='translate(-4 0)'/%3E%3Crect y='100%25' width='1' height='4' transform='translate(0 -4)'/%3E%3C/g%3E%3C/svg%3E");
+}
+/* chi chiede più contrasto al sistema, a luce accesa: inchiostro nero (rosso su bianco è 2,9:1, nero ~13:1).
+   Crocini col colore di --nero (#251d1d) */
+@media (prefers-contrast: more) { :root:not([data-inchiostro]) {
   --inchiostro: var(--nero);
   --crocini: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23251d1d'%3E%3Crect width='5' height='1'/%3E%3Crect width='1' height='5'/%3E%3Crect x='100%25' width='4' height='1' transform='translate(-4 0)'/%3E%3Crect y='100%25' width='1' height='4' transform='translate(0 -4)'/%3E%3C/g%3E%3C/svg%3E");
-}
+} }
 @supports (width: round(down, 1px, 1px)) {
   :root { --line-dp: max(var(--dp), round(down, var(--line), var(--dp))); }
 }
@@ -78,6 +90,8 @@ html {
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   -webkit-text-size-adjust: 100%;
+  /* niente riquadro grigio al tocco su Android e iOS: la risposta la dà la freccia (:active, sotto) */
+  -webkit-tap-highlight-color: transparent;
 }
 
 body { min-height: 100svh; }
@@ -160,10 +174,12 @@ h1, h2, h3, h4 { font-weight: 500; text-wrap: balance; }
 p { text-wrap: pretty; }
 
 :focus-visible { outline: 2px solid var(--inchiostro); outline-offset: 3px; }
+/* dentro le celle rosse (footer compreso) un contorno rosso non si vedrebbe */
+.cell--red :focus-visible { outline-color: var(--bianco); }
 
 .mono {
   font-family: var(--font-numeri);
-  font-size: 10px;
+  font-size: 11px;
   line-height: 1.2;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -328,7 +344,7 @@ p { text-wrap: pretty; }
 .cell--red { background: var(--inchiostro); color: var(--bianco); }
 
 /* Linguetta (indice · nome), freccia/✕ e didascalia dei progetti: solo testo, senza fondo né filo.
-   Sulle foto in bianco (il velo rosso le scurisce abbastanza) */
+   Sulle foto in bianco */
 .cell__label {
   position: absolute; top: 0; left: 0; z-index: 2;
   display: flex; gap: 8px;
@@ -343,6 +359,8 @@ p { text-wrap: pretty; }
   width: 30px; height: 30px;
 }
 .cell__go span { display: block; transition: transform 300ms var(--ease-out); }
+/* al tocco (su touch non c'è hover) la freccia scatta come in hover: la cella risponde subito */
+.cell--link:active .cell__go span { transform: translate(3px, -3px); }
 /* freccia (src/assets/arrow.svg): il colore segue il testo */
 .cell__go svg { width: 11px; height: 11px; }
 .cell__go svg * { fill: currentColor; }
@@ -355,73 +373,33 @@ p { text-wrap: pretty; }
 }
 
 .cell:has(> .duo) > :is(.cell__label, .cell__go, .caption) { color: var(--bianco); }
+/* luce spenta: le scritte sulle foto restano chiare (rosse sulle foto non si leggevano) */
+:root[data-inchiostro="bianco"] .cell:has(> .duo) > :is(.cell__label, .cell__go, .caption) { color: var(--chiaro); }
 
-/* ── Media: foto con velo rosso ───────────────────────── */
-/* Un solo velo semitrasparente, niente filtri né blend mode: su mobile filtro + due veli in
-   multiply/screen per ogni foto rendevano lo scroll scattoso. Gli effetti vanno nelle immagini. */
-/* Velo a quadretti: il velo rosso tagliato da una maschera a quadretti di mezzo passo, in fase con la carta dei
-   vuoti e coi crocini, attaccati l'uno all'altro (senza linee in mezzo). In hover i quadretti
-   spariscono a giri dal centro della cella, che cade sempre su un incrocio della carta, ma "in disordine":
-   ogni quadretto sta in uno di 4 gruppi (motivo casuale di 7×5 quadretti che si ripete, data URI sotto) e
-   i gruppi partono a mezzo giro l'uno dall'altro, in un ordine (--turno-0…3) che MediaCell.astro rimescola a
-   ogni ingresso del mouse nella cella: 24 combinazioni. Un gruppo = uno strato (.velo--0…3 in MediaCell.astro):
-   i quadretti dei gruppi non si sovrappongono, quindi gli strati insieme fanno un velo solo.
-   Per ogni strato, --scopri = giri scoperti (0 → oltre i bordi). Maschera (strati dall'alto, composti dal
-   basso): gruppo ∩ NON(giri scoperti); giri scoperti = quadrato dei giri
-   finiti (pieno) sopra il quadrato col giro in corso (alfa = quanto ne è passato).
-   A riposo il velo è intero (.duo::after): appena --scopri parte da 0 lascia il posto ai quadretti (stesso colore
-   e opacità, a vista non cambia nulla) e torna quando --scopri è di nuovo 0. Così fermo non mostra mai le giunture
-   tra i 4 strati (a zoom non interi i bordi dei quadretti sfumano). --rotto = 0 intero, 1 a quadretti. --scopri sta su .duo ed è ereditata: la leggono il velo intero e i 4 strati. */
-@property --scopri { syntax: '<number>'; inherits: true; initial-value: 0; }
-.duo {
-  --velo: 0.35;  /* opacità del velo rosso */
-  position: absolute; inset: 0; background: var(--bianco);
-  --rotto: clamp(0, var(--scopri) * 1e6, 1);
-  /* giri per arrivare ai bordi: il lato lungo in unità (= mezzi lati in quadretti) + 1, più i ritardi dei
-     gruppi. Velocità costante: la durata cresce coi giri */
-  --giri: calc(max(var(--cw), var(--ch)) + 1 + 3 * 0.5);
-  transition: --scopri calc(var(--giri) * 80ms) cubic-bezier(0.4, 0, 0.2, 1);
-}
+/* ── Media: foto piena ───────────────────────────────── */
+/* Niente filtri né blend mode sulle foto: su mobile rendevano lo scroll scattoso (soprattutto in archivio,
+   20 foto). Gli effetti vanno cotti nelle immagini. Il velo a quadretti in hover (fino alla 1.4.95) è
+   salvato in tools/effetti/velo-quadretti.md */
+.duo { position: absolute; inset: 0; background: var(--bianco); }
 .duo img, .duo video { width: 100%; height: 100%; object-fit: cover; }
-.duo::after, .velo {
-  content: '';
-  position: absolute; inset: 0;
-  background: var(--inchiostro);
-  pointer-events: none;
-}
-.duo::after { opacity: calc(var(--velo) * (1 - var(--rotto))); }
-.velo {
-  opacity: calc(var(--velo) * var(--rotto));
-  /* quadretto = mezzo passo, ricavato dalla cella (qui --step non vale: la cella è un container) */
-  --t: calc((100cqw + var(--gap)) / (2 * var(--cw)));
-  --s: max(0, var(--scopri) - var(--ritardo));     /* giri scoperti di questo gruppo (mai sotto 0) */
-  --f: round(down, var(--s), 1);                   /* giri finiti */
-  --p: calc(var(--s) - var(--f));                  /* giro in corso, 0–1 */
-  --pieno: linear-gradient(#000, #000);
-  mask-image:
-    var(--gruppo),
-    var(--pieno),
-    var(--pieno),
-    linear-gradient(rgb(0 0 0 / var(--p)), rgb(0 0 0 / var(--p)));
-  mask-size:
-    calc(7 * var(--t)) calc(5 * var(--t)), 100% 100%,
-    calc(var(--f) * 2 * var(--t)) calc(var(--f) * 2 * var(--t)),
-    calc((var(--f) + 1) * 2 * var(--t)) calc((var(--f) + 1) * 2 * var(--t));
-  mask-position: calc((var(--gap) / -2)) calc((var(--gap) / -2)), 0 0, center, center;
-  mask-repeat: repeat, no-repeat, no-repeat, no-repeat;
-  mask-composite: intersect, exclude, add, add;
-}
-.velo--0 { --ritardo: calc(var(--turno-0, 0) * 0.5); --gruppo: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 7 5' preserveAspectRatio='none' shape-rendering='crispEdges'%3E%3Crect x='3' y='0' width='1' height='1'/%3E%3Crect x='5' y='0' width='1' height='1'/%3E%3Crect x='1' y='1' width='1' height='1'/%3E%3Crect x='6' y='1' width='1' height='1'/%3E%3Crect x='1' y='2' width='1' height='1'/%3E%3Crect x='3' y='2' width='1' height='1'/%3E%3Crect x='3' y='3' width='1' height='1'/%3E%3Crect x='1' y='4' width='1' height='1'/%3E%3Crect x='5' y='4' width='1' height='1'/%3E%3C/svg%3E"); }
-.velo--1 { --ritardo: calc(var(--turno-1, 1) * 0.5); --gruppo: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 7 5' preserveAspectRatio='none' shape-rendering='crispEdges'%3E%3Crect x='0' y='0' width='1' height='1'/%3E%3Crect x='1' y='0' width='1' height='1'/%3E%3Crect x='3' y='1' width='1' height='1'/%3E%3Crect x='5' y='1' width='1' height='1'/%3E%3Crect x='0' y='2' width='1' height='1'/%3E%3Crect x='5' y='2' width='1' height='1'/%3E%3Crect x='1' y='3' width='1' height='1'/%3E%3Crect x='4' y='3' width='1' height='1'/%3E%3Crect x='2' y='4' width='1' height='1'/%3E%3C/svg%3E"); }
-.velo--2 { --ritardo: calc(var(--turno-2, 2) * 0.5); --gruppo: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 7 5' preserveAspectRatio='none' shape-rendering='crispEdges'%3E%3Crect x='6' y='0' width='1' height='1'/%3E%3Crect x='0' y='1' width='1' height='1'/%3E%3Crect x='2' y='1' width='1' height='1'/%3E%3Crect x='4' y='1' width='1' height='1'/%3E%3Crect x='2' y='3' width='1' height='1'/%3E%3Crect x='5' y='3' width='1' height='1'/%3E%3Crect x='6' y='3' width='1' height='1'/%3E%3Crect x='0' y='4' width='1' height='1'/%3E%3Crect x='3' y='4' width='1' height='1'/%3E%3C/svg%3E"); }
-.velo--3 { --ritardo: calc(var(--turno-3, 3) * 0.5); --gruppo: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 7 5' preserveAspectRatio='none' shape-rendering='crispEdges'%3E%3Crect x='2' y='0' width='1' height='1'/%3E%3Crect x='4' y='0' width='1' height='1'/%3E%3Crect x='2' y='2' width='1' height='1'/%3E%3Crect x='4' y='2' width='1' height='1'/%3E%3Crect x='6' y='2' width='1' height='1'/%3E%3Crect x='0' y='3' width='1' height='1'/%3E%3Crect x='4' y='4' width='1' height='1'/%3E%3Crect x='6' y='4' width='1' height='1'/%3E%3C/svg%3E"); }
-@media (hover: hover) and (pointer: fine) {
-  .cell--link:hover .duo { --scopri: var(--giri); }
-}
 
-/* Hero delle pagine progetto: senza velo, come la cella in hover.
-   Così l'espansione parte e arriva sullo stesso stato, senza stacco. */
-.cell[data-hero] .duo::after, .cell[data-hero] .velo { display: none; }
+/* Celle progetto: la foto in bianco e nero (cotta, tools/grigio.mjs) sopra quella a colori, sotto un rosso
+   semitrasparente che la colora; in hover si vede la foto a colori. Il rosso è --rosso, non --inchiostro:
+   a luce spenta resta rosso. Hero e foto senza versione grigia: piene */
+.duo__grigio { position: absolute; inset: 0; transition: opacity 300ms ease; }
+.duo:has(> .duo__grigio)::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: var(--rosso); opacity: 0.45;
+  transition: opacity 300ms ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .cell--link:hover .duo__grigio,
+  .cell--link:hover .duo::after { opacity: 0; }
+}
+/* senza hover (touch) la foto a colori nella cella non si vede mai: display none, così (lazy) non si scarica */
+@media not ((hover: hover) and (pointer: fine)) {
+  .duo:has(> .duo__grigio) > img:not(.duo__grigio) { display: none; }
+}
 
 /* ── Intro (solo al primo caricamento) ────────────────── */
 /* 1. il filo parte da un vertice (data-from, scelto a caso da Layout.astro) e fa il giro;
@@ -442,7 +420,8 @@ p { text-wrap: pretty; }
 .cell, .void, .foot {
   --from: 0;
   --per: calc((var(--cw) + var(--ch)) * 2);
-  --t-draw: calc(var(--per) * var(--t-draw-u));
+  /* tetto: sulle celle grandi (hero, footer) il contenuto non aspetta più di --t-draw-max */
+  --t-draw: min(calc(var(--per) * var(--t-draw-u)), var(--t-draw-max));
 }
 :is(.cell, .void, .foot)[data-from="1"] { --from: var(--cw); }
 :is(.cell, .void, .foot)[data-from="2"] { --from: calc(var(--cw) + var(--ch)); }
@@ -460,14 +439,27 @@ p { text-wrap: pretty; }
 }
 .is-intro :is(.cell, .void, .foot) {
   /* il fondo (rosso o bianco che copre i crocini) entra col contenuto */
-  animation: fill-in 500ms ease backwards;
+  animation: fill-in var(--t-fill) var(--ease-out) backwards;
   animation-delay: calc(var(--i) * 30ms + var(--t-draw));
 }
 .is-intro :is(.cell, .foot) > * {
   /* backwards, non both: a fine animazione l'opacità torna libera (serve ai filtri) */
-  animation: fade-in 500ms ease backwards;
+  animation: fade-in var(--t-fill) var(--ease-out) backwards;
   animation-delay: calc(var(--i) * 30ms + var(--t-draw));
 }
+/* titoli delle celle di testo: non sfumano, entrano a righe dal filo (scripts/righe.ts). Occhiello e testo
+   sotto sfumano come il resto; il titolo resta nascosto finché le righe non sono pronte (font caricato) */
+.is-intro .cell > .text { animation: none; }
+.is-intro .cell > .text > :not(.title) {
+  animation: fade-in var(--t-fill) var(--ease-out) backwards;
+  animation-delay: calc(var(--i) * 30ms + var(--t-draw));
+}
+.is-intro .cell > .text > .title:not([data-righe]) { visibility: hidden; }
+/* una riga = un riquadro che taglia: il testo sale da sotto il suo bordo, dove si disegna il filo.
+   Il padding lascia spazio alle discendenti, il margine negativo tiene l'interlinea */
+.riga { display: block; position: relative; overflow: clip; padding-bottom: 0.2em; margin-bottom: -0.2em; }
+.riga__in { display: inline-block; }
+.riga__filo { position: absolute; left: 0; right: 0; bottom: 0; border-top: var(--line) solid currentColor; transform: scaleX(0); }
 /* vuoti: il filo animato sta sopra il bordo, trasparente fino a fine intro (poi torna il bordo vero) */
 .is-intro .void { border-color: transparent; }
 .is-intro .void::after { inset: calc(var(--line-dp) * -1); }
@@ -507,7 +499,6 @@ p { text-wrap: pretty; }
 ::view-transition-group(*.photo) { z-index: 1; }
 ::view-transition-group(morph-window) { z-index: 2; }
 ::view-transition-group(*.scale), ::view-transition-group(*.text), ::view-transition-group(ruler-thumb) { z-index: 3; }
-
 /* Finestre. Niente scaling: il riquadro si allarga e taglia, i contenuti restano fermi in alto a
    sinistra (dove sta la linguetta in entrambi gli stati) e si scambiano in dissolvenza. Quello che
    deve restare in vista mentre la finestra cambia forma (es. la didascalia in basso) va marcato
@@ -606,4 +597,6 @@ html.vt-filter::view-transition-new(root) { animation-duration: calc(var(--t-til
   .is-intro .grid::before, .is-intro .sheet::before, .is-intro .sheet::after { animation: none !important; }
   .loop { animation: none !important; }
   ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
+  /* meno movimento, non zero: tra una pagina e l'altra resta una dissolvenza breve, senza espansione */
+  ::view-transition-new(root) { animation: vt-in 200ms ease both !important; }
 }

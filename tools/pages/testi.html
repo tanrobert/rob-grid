@@ -1,0 +1,229 @@
+<!doctype html>
+<!--
+  Laboratorio: come entrano i testi grandi. Quattro varianti nel linguaggio del sito (filo, quadretti,
+  registro, cursore), sui testi veri, con i font e la palette di global.css. Solo sviluppo: il sito non cambia.
+    npx astro build && npm run vt:serve  →  http://localhost:4400/_vt/testi.html  (anche dal telefono)
+-->
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Testi · laboratorio</title>
+<style>
+  @font-face { font-family: 'Testo'; src: url('/fonts/testo-500.woff2') format('woff2'); font-weight: 500; font-display: block; }
+  @font-face { font-family: 'Numeri'; src: url('/fonts/numeri-400.woff2') format('woff2'); font-weight: 400; font-display: block; }
+
+  :root {
+    --rosso: hsl(8 87% 54%); --bianco: hsl(0 15% 89%); --inchiostro: var(--rosso);
+    --m: 10px; --gap: var(--m); --pad: 20px; --pad-label: calc(var(--pad) + 22px); --line: 1px;
+    --cols: 12;
+    --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+    --lento: 1;  /* ×4 col pulsante "Lento" */
+  }
+  @media (max-width: 1023px) { :root { --cols: 8; } }
+  @media (max-width: 599px)  { :root { --cols: 4; --pad: 14px; } }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { background: var(--bianco); color: var(--inchiostro); font-family: 'Testo', sans-serif; -webkit-font-smoothing: antialiased; }
+  .mono { font-family: 'Numeri', monospace; font-size: 11px; line-height: 1.2; letter-spacing: .08em; text-transform: uppercase; }
+
+  /* barra dei comandi */
+  .bar { position: sticky; top: 0; z-index: 10; display: flex; flex-wrap: wrap; gap: var(--line); padding: var(--gap); background: var(--bianco); border-bottom: var(--line) solid var(--inchiostro); }
+  .bar button { font: inherit; font-family: 'Numeri', monospace; font-size: 11px; letter-spacing: .08em; text-transform: uppercase;
+    padding: 8px 10px; border: var(--line) solid var(--inchiostro); background: var(--bianco); color: var(--inchiostro); cursor: pointer; }
+  .bar button[aria-pressed="true"] { background: var(--inchiostro); color: var(--bianco); }
+  .bar .sep { flex: 1; }
+  .note { padding: 12px var(--gap) 0; max-width: 80ch; font-size: 15px; line-height: 1.35; }
+
+  /* griglia come nel sito */
+  .sheet { container-type: inline-size; padding: var(--gap); }
+  .grid { display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); grid-auto-rows: calc((100cqw - (var(--cols) - 1) * var(--gap)) / var(--cols)); grid-auto-flow: row dense; gap: var(--gap); }
+  .cell { position: relative; grid-column: span min(var(--w), var(--cols)); grid-row: span var(--h); container-type: size; overflow: clip; border: var(--line) solid var(--inchiostro); background: var(--bianco); --cw: min(var(--w), var(--cols)); }
+  .cell--red { background: var(--inchiostro); color: var(--bianco); }
+  .cell__label { position: absolute; top: 0; left: 0; padding: 6px 8px 5px; }
+
+  /* TextCell */
+  .text { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: flex-end; gap: var(--m); padding: var(--pad-label) var(--pad) var(--pad); }
+  .eyebrow { margin-bottom: auto; }
+  .title { font-weight: 500; line-height: 1; letter-spacing: -0.025em; align-self: flex-start; max-width: 100%; text-wrap: balance; }
+  .text--l .title { font-size: clamp(24px, min(8.4cqi, 13cqb), 72px); line-height: 1.02; }
+  .text--m .title { font-size: clamp(28px, min(22cqi, 34cqb), 128px); letter-spacing: -0.04em; }
+  .text--s .title { font-size: clamp(18px, min(6.4cqi, 13cqb), 40px); }
+  .body { list-style: none; font-size: 14px; line-height: 1.35; }
+  .caret { animation: caret-blink 1.1s steps(1) infinite; }
+  @keyframes caret-blink { 50% { opacity: 0; } }
+
+  /* ── righe (A e C): una riga = un riquadro che taglia, il testo entra da sotto il suo filo ── */
+  .line { display: block; overflow: clip; padding-bottom: .2em; margin-bottom: -.2em; }
+  .line__in { display: inline-block; position: relative; }
+
+  /* A · Righe dal filo: sul bordo basso di ogni riga si disegna un filo da 1px (come quello delle celle),
+     la riga esce da lì salendo e il filo si ritira verso destra */
+  .is-a .line { position: relative; }
+  .is-a .line::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: var(--line); background: currentColor;
+    transform: scaleX(0);
+    animation: a-filo calc(640ms * var(--lento)) var(--ease-out) both; animation-delay: calc(var(--n) * 50ms * var(--lento)); }
+  .is-a .line__in { animation: a-sale calc(720ms * var(--lento)) var(--ease-out) both; animation-delay: calc((var(--n) * 50ms + 160ms) * var(--lento)); }
+  @keyframes a-filo { 0% { transform: scaleX(0); transform-origin: left; } 45% { transform: scaleX(1); transform-origin: left; }
+                      60% { transform: scaleX(1); transform-origin: right; } 100% { transform: scaleX(0); transform-origin: right; } }
+  @keyframes a-sale { from { transform: translateY(110%); } }
+
+  /* C · Messa a registro: la lastra del contorno arriva fuori registro (come i crocini) e si allinea,
+     poi la lastra piena la copre da sinistra. Niente trasparenze: due lastre dello stesso inchiostro */
+  .is-c .line__in { color: transparent; }
+  .is-c .line__in::before, .is-c .line__in::after { content: attr(data-text); position: absolute; inset: 0; white-space: pre; }
+  .is-c .line__in::before { color: transparent; -webkit-text-stroke: var(--line) var(--ink, currentColor);
+    animation: c-registro calc(620ms * var(--lento)) var(--ease-out) both; animation-delay: calc(var(--n) * 40ms * var(--lento)); }
+  .is-c .line__in::after { color: var(--ink); clip-path: inset(0 0 0 0);
+    animation: c-stampa calc(560ms * var(--lento)) cubic-bezier(0.65, 0, 0.35, 1) both; animation-delay: calc((var(--n) * 40ms + 420ms) * var(--lento)); }
+  @keyframes c-registro { from { transform: translate(.07em, -.07em); } }
+  @keyframes c-stampa { from { clip-path: inset(0 100% 0 0); } }
+
+  /* B · Quadretti: il testo compare a quadretti della carta (mezzo passo della griglia), a giri
+     dall'angolo della linguetta, in 4 gruppi sfalsati come il velo delle foto. 4 copie, una per gruppo */
+  @property --giro { syntax: '<number>'; inherits: false; initial-value: 1000; }
+  .quad { display: grid; }
+  .quad > * { grid-area: 1 / 1; }
+  .quad > .q-base { visibility: hidden; }
+  .quad > .q { --t: calc((100cqw + var(--gap)) / (2 * var(--cw)));  /* lato del quadretto */
+    --lato: round(up, calc(var(--giro) * var(--t)), var(--t));
+    mask-image: var(--gruppo), linear-gradient(#000, #000);
+    mask-size: calc(7 * var(--t)) calc(5 * var(--t)), var(--lato) var(--lato);
+    mask-repeat: repeat, no-repeat;
+    mask-position: var(--ox) var(--oy), 0 0;
+    mask-composite: intersect;
+    animation: b-giri calc(700ms * var(--lento)) linear both; animation-delay: calc(var(--k) * 110ms * var(--lento)); }
+  @keyframes b-giri { from { --giro: 0; } to { --giro: 24; } }
+  .q0 { --k: 0; --gruppo: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 7 5' preserveAspectRatio='none' shape-rendering='crispEdges'%3E%3Crect x='3' y='0' width='1' height='1'/%3E%3Crect x='5' y='0' width='1' height='1'/%3E%3Crect x='1' y='1' width='1' height='1'/%3E%3Crect x='6' y='1' width='1' height='1'/%3E%3Crect x='1' y='2' width='1' height='1'/%3E%3Crect x='3' y='2' width='1' height='1'/%3E%3Crect x='3' y='3' width='1' height='1'/%3E%3Crect x='1' y='4' width='1' height='1'/%3E%3Crect x='5' y='4' width='1' height='1'/%3E%3C/svg%3E"); }
+  .q1 { --k: 2; --gruppo: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 7 5' preserveAspectRatio='none' shape-rendering='crispEdges'%3E%3Crect x='0' y='0' width='1' height='1'/%3E%3Crect x='1' y='0' width='1' height='1'/%3E%3Crect x='3' y='1' width='1' height='1'/%3E%3Crect x='5' y='1' width='1' height='1'/%3E%3Crect x='0' y='2' width='1' height='1'/%3E%3Crect x='5' y='2' width='1' height='1'/%3E%3Crect x='1' y='3' width='1' height='1'/%3E%3Crect x='4' y='3' width='1' height='1'/%3E%3Crect x='2' y='4' width='1' height='1'/%3E%3C/svg%3E"); }
+  .q2 { --k: 1; --gruppo: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 7 5' preserveAspectRatio='none' shape-rendering='crispEdges'%3E%3Crect x='6' y='0' width='1' height='1'/%3E%3Crect x='0' y='1' width='1' height='1'/%3E%3Crect x='2' y='1' width='1' height='1'/%3E%3Crect x='4' y='1' width='1' height='1'/%3E%3Crect x='2' y='3' width='1' height='1'/%3E%3Crect x='5' y='3' width='1' height='1'/%3E%3Crect x='6' y='3' width='1' height='1'/%3E%3Crect x='0' y='4' width='1' height='1'/%3E%3Crect x='3' y='4' width='1' height='1'/%3E%3C/svg%3E"); }
+  .q3 { --k: 3; --gruppo: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 7 5' preserveAspectRatio='none' shape-rendering='crispEdges'%3E%3Crect x='2' y='0' width='1' height='1'/%3E%3Crect x='4' y='0' width='1' height='1'/%3E%3Crect x='2' y='2' width='1' height='1'/%3E%3Crect x='4' y='2' width='1' height='1'/%3E%3Crect x='6' y='2' width='1' height='1'/%3E%3Crect x='0' y='3' width='1' height='1'/%3E%3Crect x='4' y='4' width='1' height='1'/%3E%3Crect x='6' y='4' width='1' height='1'/%3E%3C/svg%3E"); }
+
+  /* D · Battitura: lettera dopo lettera col cursore "_" del sito (come in Scrivimi_), che corre
+     davanti al testo e a fine riga lampeggia ancora un po'. Tutte le lettere ci sono già: niente
+     a capo che saltano mentre si scrive */
+  .is-d .c { visibility: hidden; position: relative; animation: d-tipo 1ms steps(1) both; animation-delay: calc(var(--k) * var(--dt) * var(--lento)); }
+  .is-d .c::after { content: '_'; position: absolute; left: 100%; top: 0; visibility: hidden;
+    /* niente riempimento: prima e dopo il suo turno il cursore resta nascosto (stile di base) */
+    animation: d-cursore calc(var(--dt) * var(--lento)) steps(1); animation-delay: calc(var(--k) * var(--dt) * var(--lento)); }
+  .is-d .c:last-child::after { animation: d-cursore-fine calc(1400ms * var(--lento)) steps(1); animation-delay: calc(var(--k) * var(--dt) * var(--lento)); }
+  .is-d .d-fine { visibility: hidden; animation: d-tipo 1ms steps(1) both, caret-blink 1.1s steps(1) infinite;
+    animation-delay: calc(var(--k) * var(--dt) * var(--lento)); }
+  .is-c .caret { color: var(--ink); }
+  @keyframes d-tipo { to { visibility: visible; } }
+  @keyframes d-cursore { 0% { visibility: visible; } 100% { visibility: hidden; } }
+  @keyframes d-cursore-fine { 0%, 50% { visibility: visible; } 25%, 75%, 100% { visibility: hidden; } }
+
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; } .is-c .line__in { color: inherit; } }
+</style>
+</head>
+<body>
+  <div class="bar" role="toolbar" aria-label="Varianti">
+    <button data-v="a" aria-pressed="true">A · Righe dal filo</button>
+    <button data-v="b" aria-pressed="false">B · Quadretti</button>
+    <button data-v="c" aria-pressed="false">C · Messa a registro</button>
+    <button data-v="d" aria-pressed="false">D · Battitura</button>
+    <button data-v="0" aria-pressed="false">Oggi · dissolvenza</button>
+    <span class="sep"></span>
+    <button data-lento aria-pressed="false">Lento ×4</button>
+    <button data-play>Rigioca ↻</button>
+  </div>
+  <p class="note" data-note></p>
+
+  <main class="sheet">
+    <div class="grid">
+      <div class="cell" style="--w:5;--h:2"><span class="cell__label mono">04</span>
+        <div class="text text--l"><p class="eyebrow mono">Graphic designer · dal 2018</p><h1 class="title" data-anim>Progetto identità visive e punti di contatto fisici e digitali.</h1></div></div>
+      <div class="cell cell--red" style="--w:2;--h:2"><span class="cell__label mono">06</span>
+        <div class="text text--m"><p class="eyebrow mono">Chi sono</p><p class="title" data-anim>Info</p></div></div>
+      <div class="cell" style="--w:4;--h:2"><span class="cell__label mono">17</span>
+        <div class="text text--m"><p class="eyebrow mono">Nuovi progetti</p><p class="title" data-anim>Scrivimi<span class="caret">_</span></p></div></div>
+      <div class="cell" style="--w:8;--h:4"><span class="cell__label mono">02</span>
+        <div class="text text--l"><p class="title" data-anim>Disegno sistemi visivi: marchi, confezioni, siti. Parto da una griglia e da poche regole, poi le applico con rigore.</p></div></div>
+      <div class="cell" style="--w:4;--h:2"><span class="cell__label mono">10</span>
+        <div class="text text--s"><p class="title" data-anim>Essenziale, accessibile, chiara.</p>
+          <ul class="body"><li>Grafica essenziale e funzionale.</li><li>Design accessibile e immediato.</li><li>Comunicazione chiara ed efficace.</li></ul></div></div>
+      <div class="cell cell--red" style="--w:4;--h:2"><span class="cell__label mono">07</span>
+        <div class="text text--m"><p class="eyebrow mono">Chiudi</p><p class="title" data-anim>Indice</p></div></div>
+    </div>
+  </main>
+
+<script>
+  const NOTES = {
+    a: 'Sotto ogni riga si disegna un filo da 1px, come quello delle celle nell’intro; la riga sale da lì e il filo si ritira. Righe a 50ms l’una dall’altra. Solo transform: la più leggera delle quattro.',
+    b: 'Il testo compare a quadretti della carta dei vuoti (mezzo passo della griglia), a giri dall’angolo della linguetta, in 4 gruppi sfalsati: lo stesso disegno del velo delle foto in hover e dei crocini nell’intro.',
+    c: 'Stampa in due lastre: il contorno arriva fuori registro di qualche pixel e si allinea (i crocini del sito sono segni di registro), poi la lastra piena lo copre da sinistra. Sempre inchiostro pieno, niente rosa.',
+    d: 'Lettera dopo lettera, col cursore “_” di Scrivimi che corre davanti e a fine testo lampeggia ancora un attimo. Al massimo 0,9s anche per le frasi lunghe; le righe non saltano perché le lettere ci sono già.',
+    0: 'Com’è oggi: il contenuto della cella sfuma dentro a filo finito (400ms).',
+  };
+  const els = [...document.querySelectorAll('[data-anim]')];
+  const originals = els.map(el => el.innerHTML);
+  let variant = 'a';
+
+  /** Righe come le dispone il browser: parole raggruppate per altezza, ogni riga in un riquadro che taglia */
+  function splitLines(el) {
+    const caret = el.querySelector('.caret')?.outerHTML ?? '';
+    const words = el.textContent.replace(/_$/, '').trim().split(/\s+/);
+    el.innerHTML = words.map(w => `<span class="w">${w}</span>`).join(' ');
+    const lines = [];
+    let top = null;
+    for (const w of el.querySelectorAll('.w')) {
+      if (w.offsetTop !== top) { lines.push([]); top = w.offsetTop; }
+      lines.at(-1).push(w.textContent);
+    }
+    el.innerHTML = lines.map((l, n) => {
+      const text = l.join(' ');
+      return `<span class="line" style="--n:${n}"><span class="line__in" data-text="${text}">${text}${n === lines.length - 1 ? caret : ''}</span></span>`;
+    }).join('');
+  }
+
+  /** Quattro copie del testo, ognuna mascherata da un gruppo di quadretti */
+  function squares(el) {
+    const html = el.innerHTML;
+    const r = el.getBoundingClientRect(), c = el.closest('.cell').getBoundingClientRect();
+    // i quadretti partono dall'angolo della cella: la maschera è nel riquadro del testo, la sposto
+    el.style.setProperty('--ox', `${c.left - r.left}px`);
+    el.style.setProperty('--oy', `${c.top - r.top}px`);
+    el.innerHTML = `<span class="quad"><span class="q-base">${html}</span>${[0, 1, 2, 3].map(g => `<span class="q q${g}" aria-hidden="true">${html}</span>`).join('')}</span>`;
+  }
+
+  /** Una lettera per span: lo spazio resta testo, così gli a capo non cambiano */
+  function letters(el) {
+    const caret = el.querySelector('.caret');
+    const text = el.textContent.replace(/_$/, '');
+    const dt = Math.min(22, 900 / text.length);
+    el.style.setProperty('--dt', `${dt}ms`);
+    el.innerHTML = [...text].map((ch, k) => ch === ' ' ? ' ' : `<span class="c" style="--k:${k}">${ch}</span>`).join('')
+      // Scrivimi_: a fine battitura resta il cursore vero, che lampeggia come sempre
+      + (caret ? `<span class="caret d-fine" style="--k:${text.length}">_</span>` : '');
+  }
+
+  function play() {
+    document.body.className = '';
+    els.forEach((el, i) => { el.innerHTML = originals[i]; el.removeAttribute('style'); el.style.setProperty('--ink', getComputedStyle(el).color); });
+    void document.body.offsetWidth;  // riparte da capo
+    if (variant === 'a' || variant === 'c') els.forEach(splitLines);
+    if (variant === 'b') els.forEach(squares);
+    if (variant === 'd') els.forEach(letters);
+    if (variant === '0') els.forEach(el => el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 400 * lento(), easing: 'cubic-bezier(0.22, 1, 0.36, 1)', fill: 'backwards' }));
+    document.body.className = `is-${variant}`;
+    document.querySelector('[data-note]').textContent = NOTES[variant];
+  }
+  const lento = () => +getComputedStyle(document.documentElement).getPropertyValue('--lento');
+
+  document.querySelectorAll('[data-v]').forEach(b => b.addEventListener('click', () => {
+    variant = b.dataset.v;
+    document.querySelectorAll('[data-v]').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+    play();
+  }));
+  document.querySelector('[data-play]').addEventListener('click', play);
+  document.querySelector('[data-lento]').addEventListener('click', e => {
+    const on = e.currentTarget.getAttribute('aria-pressed') !== 'true';
+    e.currentTarget.setAttribute('aria-pressed', String(on));
+    document.documentElement.style.setProperty('--lento', on ? 4 : 1);
+    play();
+  });
+  addEventListener('resize', () => { clearTimeout(window.__r); window.__r = setTimeout(play, 200); });
+  document.fonts.ready.then(play);
+</script>
+</body>
+</html>

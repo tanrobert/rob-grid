@@ -44,9 +44,9 @@ const { title, items } = Astro.props;
   }
   li .mono { font-size: 9px; }
   li a { display: flex; align-items: baseline; gap: 8px; width: 100%; min-width: 0; }
+  /* hover: la voce si sottolinea (niente opacità: sul rosso darebbe un rosa fuori palette) */
   @media (hover: hover) and (pointer: fine) {
-    li a { transition: opacity 200ms ease; }
-    ol:has(a:hover) a:not(:hover) { opacity: 0.35; }
+    li a:hover { text-decoration: underline var(--line) currentColor; text-underline-offset: 0.2em; }
   }
   @container (max-width: 300px) { ol { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 </style>

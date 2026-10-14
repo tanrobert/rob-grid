@@ -8,8 +8,10 @@ interface Props {
   reverse?: boolean;
   /** scorre dall'alto in basso */
   vertical?: boolean;
+  /** logo orizzontale girato di 90° in una cella verticale */
+  ruotato?: boolean;
 }
-const { svg, speed = 40, reverse = false, vertical = false } = Astro.props;
+const { svg, speed = 40, reverse = false, vertical = false, ruotato = false } = Astro.props;
 // due metà identiche: la traccia scorre del 50% e riparte senza stacco.
 // Orizzontale: tre copie per metà. Verticale: il logo è già più alto della cella, ne basta una.
 const copies = vertical ? [0] : [0, 1, 2];
@@ -17,7 +19,7 @@ const copies = vertical ? [0] : [0, 1, 2];
 const gap = svgs[svg].gap ?? 0;
 ---
 
-<div class:list={['marquee', vertical && 'marquee--y']} aria-hidden="true">
+<div class:list={['marquee', vertical && 'marquee--y', ruotato && 'marquee--ruotato']} aria-hidden="true">
   <div class:list={['track', 'loop', reverse && 'track--reverse']} style={`--speed:${speed}s;--gap:${gap}`}>
     {[0, 1].map(() => (
       <div class="half">
@@ -54,6 +56,17 @@ const gap = svgs[svg].gap ?? 0;
     from { transform: translate3d(0, 0, 0); }
     to   { transform: translate3d(-50%, 0, 0); }
   }
+
+  /* ── Ruotato: il nastro orizzontale girato di 90° dentro una cella verticale. Il riquadro ha i lati
+     scambiati (largo quanto la cella è alta) e ruota attorno al centro; il logo è alto quanto la cella
+     è larga, meno il padding (100cqi = larghezza della cella, il container più vicino) ── */
+  .marquee--ruotato {
+    inset: auto; top: 50%; left: 50%;
+    width: 100cqb; height: 100cqi;
+    translate: -50% -50%;
+    rotate: -90deg;
+  }
+  .marquee--ruotato .half :global(.item) { --h: calc(100cqi - 2 * var(--pad)); }
 
   /* ── Verticale: scorre verso il basso ── */
   .marquee--y { flex-direction: column; }

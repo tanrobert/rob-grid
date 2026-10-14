@@ -12,20 +12,22 @@ interface Props {
   meta?: string;
   /** Hero della pagina: caricata subito, deve esserci già quando la cella si espande */
   priority?: boolean;
+  /** Versione in bianco e nero (lib/grigio.ts), sopra quella a colori: celle progetto */
+  grey?: ImageMetadata;
 }
-const { image, video, alt, sizes, title, meta, priority = false } = Astro.props;
+const { image, video, alt, sizes, title, meta, priority = false, grey } = Astro.props;
 const poster = image && video ? await getImage({ src: image, width: 1280, format: 'webp' }) : undefined;
 ---
 
 <div class="duo" data-part="media">
   {video ? (
-    <video data-autoplay muted loop playsinline preload="none" poster={poster?.src} aria-label={alt}>
+    <video data-autoplay muted loop playsinline preload="none" poster={poster?.src} aria-label={alt || undefined}>
       <source src={video} type="video/mp4" />
     </video>
   ) : image && (
     <Image src={image} alt={alt} widths={[400, 800, 1200, 1600, 2400]} sizes={sizes} loading={priority ? 'eager' : 'lazy'} fetchpriority={priority ? 'high' : undefined} decoding="async" />
   )}
-  {[0, 1, 2, 3].map(g => <span class={`velo velo--${g}`} aria-hidden="true" />)}
+  {grey && !video && <Image class="duo__grigio" src={grey} alt="" widths={[400, 800, 1200, 1600, 2400]} sizes={sizes} loading={priority ? 'eager' : 'lazy'} fetchpriority={priority ? 'high' : undefined} decoding="async" aria-hidden="true" />}
 </div>
 
 {title && (
@@ -35,27 +37,12 @@ const poster = image && video ? await getImage({ src: image, width: 1280, format
   </div>
 )}
 
-<script>
-  // velo a quadretti (global.css): a ogni ingresso del mouse in una cella con foto, i 4 gruppi di quadretti
-  // partono in un ordine nuovo (--turno-0…3 = posizione di ogni gruppo nella fila). Delegato al documento:
-  // vale anche per le pagine caricate dal ClientRouter
-  document.addEventListener('pointerover', e => {
-    if (e.pointerType !== 'mouse') return;
-    const cell = (e.target as Element).closest<HTMLElement>('.cell--link');
-    if (!cell?.querySelector('.velo') || cell.contains(e.relatedTarget as Node | null)) return;
-    const turni = [0, 1, 2, 3];
-    for (let i = turni.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [turni[i], turni[j]] = [turni[j], turni[i]];
-    }
-    turni.forEach((t, g) => cell.style.setProperty(`--turno-${g}`, String(t)));
-  });
-</script>
-
 <style>
   .caption {
     position: absolute; left: 0; right: 0; bottom: 0; z-index: 2;
-    display: flex; justify-content: space-between; align-items: baseline; gap: var(--m);
+    display: flex; justify-content: space-between; align-items: baseline; gap: 2px var(--m);
+    /* se titolo e data non stanno su una riga (celle strette, titoli lunghi) la data sale sopra, come un occhiello */
+    flex-wrap: wrap-reverse;
     padding: 8px 12px 7px;
   }
   .caption__title {

@@ -5,6 +5,7 @@
 
 import { initArchive } from './archive';
 import { initInk } from './ink';
+import { initRighe } from './righe';
 import { pad2 } from '../lib/format';
 
 let cleanup: (() => void) | null = null;
@@ -45,6 +46,7 @@ export function initCells() {
   // (filtri, cambio di breakpoint) rifà l'animazione d'ingresso
   const html = document.documentElement;
   if (html.classList.contains('is-intro')) {
+    initRighe(signal);
     // la durata del filo dipende dal perimetro di ogni cella: aspetto la fine delle animazioni vere
     let live = true;
     introDone().then(() => { if (live) html.classList.remove('is-intro'); });
@@ -178,15 +180,19 @@ export function initCells() {
     lid.addEventListener('animationend', e => {
       if (e.animationName.includes('eye-shut')) lid.classList.remove('is-shut');
     }, { signal });
-    let tx = 0, ty = 0, x = 0, y = 0, raf = 0;
+    let tx = 0, ty = 0, x = 0, y = 0, raf = 0, last = 0;
 
-    const frame = () => {
-      // inseguimento morbido; con "riduci movimento" va dritto al bersaglio
-      const k = reduced ? 1 : 0.18;
+    const frame = (now: number) => {
+      // inseguimento morbido, 18% della distanza ogni 60esimo di secondo: a 120Hz due passi più corti,
+      // stessa velocità. Con "riduci movimento" va dritto al bersaglio
+      const dt = last ? Math.min(now - last, 100) : 1000 / 60;
+      last = now;
+      const k = reduced ? 1 : 1 - (1 - 0.18) ** (dt * 60 / 1000);
       x += (tx - x) * k; y += (ty - y) * k;
       iris.setAttribute('transform', `translate(${(x * IRIS.x).toFixed(2)} ${(y * IRIS.y).toFixed(2)})`);
       pupil.setAttribute('transform', `translate(${(x * PUPIL.x).toFixed(2)} ${(y * PUPIL.y).toFixed(2)})`);
       raf = Math.abs(tx - x) + Math.abs(ty - y) > 0.001 ? requestAnimationFrame(frame) : 0;
+      if (!raf) last = 0;
     };
 
     addEventListener('pointermove', e => {

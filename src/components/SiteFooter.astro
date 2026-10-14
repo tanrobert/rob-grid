@@ -3,24 +3,23 @@
 // Dentro: logo largo due colonne della griglia, poi tre zone distribuite in base al testo.
 import SvgAsset from './SvgAsset.astro';
 import { siteVersion } from '../lib/version';
+import { site } from '../data/site';
 
-const EMAIL = 'info@robertotanasi.it';
-const PIVA = '03362040598';
-const PLACE = 'Itri (LT), Italia';
+const { email: EMAIL, piva: PIVA, place: PLACE } = site;
 
 const pages = [
   { label: 'Indice', href: '/' },
   { label: 'Archivio', href: '/archivio' },
-  { label: 'Info', href: '/info' },
+  { label: 'Bio', href: '/info' },
 ];
 const year = new Date().getFullYear();
 ---
 
 <footer class="foot cell--red">
-  <span class="cell__label mono" aria-hidden="true"><span>Footer</span></span>
+  <span class="cell__label mono" aria-hidden="true"><span>Contatti</span></span>
 
   <div class="foot__cols">
-    <a href="/" class="foot__logo" aria-label="Roberto — Homepage">
+    <a href="/" class="foot__logo" aria-label={`${site.name}, homepage`}>
       <SvgAsset name="roberto" />
     </a>
 
@@ -46,7 +45,7 @@ const year = new Date().getFullYear();
   </div>
 
   <div class="foot__bar mono">
-    <span>© {year} Roberto</span>
+    <span>© {year} {site.name}</span>
     <span>Portfolio modulare v.{siteVersion}</span>
   </div>
 </footer>

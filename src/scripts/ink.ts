@@ -1,45 +1,47 @@
 /**
- * Inchiostro del sito, rosso (di base) o nero: lo alterna l'interruttore della luce (cells/InkCell.astro).
- * Lo stato sta in <html data-inchiostro="nero"> (global.css cambia --inchiostro e i crocini) e in
- * localStorage. Layout.astro lo applica prima del primo disegno e dopo ogni swap del ClientRouter,
- * che riscrive gli attributi di <html>.
+ * Luce del sito: accesa = inchiostro rosso su carta chiara (di base), spenta = rosso e bianco scambiati.
+ * La alterna la R in alto a sinistra della home (SvgCell con ink). Lo stato sta in <html data-inchiostro="bianco">
+ * (global.css scambia --inchiostro e --bianco e cambia i crocini) e in localStorage. Layout.astro lo
+ * applica prima del primo disegno e dopo ogni swap del ClientRouter, che riscrive gli attributi di <html>.
  */
 
 const KEY = 'inchiostro';
 const root = document.documentElement;
-const isNero = () => root.dataset.inchiostro === 'nero';
+const isSpenta = () => root.dataset.inchiostro === 'bianco';
+// ultima transizione partita: con due click rapidi la prima, saltata, non deve togliere il cerchio della seconda
+let latest: ViewTransition | undefined;
 
-function apply(nero: boolean) {
-  if (nero) root.dataset.inchiostro = 'nero';
+function apply(spenta: boolean) {
+  if (spenta) root.dataset.inchiostro = 'bianco';
   else delete root.dataset.inchiostro;
-  try { localStorage.setItem(KEY, nero ? 'nero' : 'rosso'); } catch {}
+  try { localStorage.setItem(KEY, spenta ? 'bianco' : 'rosso'); } catch {}
 }
 
 export function initInk(signal: AbortSignal, reduced: boolean) {
   document.querySelectorAll<HTMLButtonElement>('[data-ink]').forEach(btn => {
-    const lens = btn.querySelector('[data-lens]')!;
-    // role=switch "Luce": accesa (sole) = inchiostro rosso
+    // role=switch "Luce": accesa = inchiostro rosso su carta chiara
     const sync = () => {
-      btn.setAttribute('aria-checked', String(!isNero()));
-      btn.title = isNero() ? 'Accendi la luce' : 'Spegni la luce';
+      btn.setAttribute('aria-checked', String(!isSpenta()));
+      btn.title = isSpenta() ? 'Accendi la luce' : 'Spegni la luce';
     };
     sync();
 
     btn.addEventListener('click', () => {
-      const nero = !isNero();
-      const swap = () => { apply(nero); sync(); };
+      const spenta = !isSpenta();
+      const swap = () => { apply(spenta); sync(); };
       if (reduced || !document.startViewTransition) return swap();
 
-      // il colore nuovo si allarga a cerchio dall'interruttore fino all'angolo più lontano della finestra;
-      // sole e luna si scambiano (InkCell.astro) dentro la pagina nuova, che resta viva durante la transizione
-      const r = lens.getBoundingClientRect();
+      // il colore nuovo si allarga a cerchio dal centro della R fino all'angolo più lontano della finestra
+      const r = btn.getBoundingClientRect();
       const x = r.left + r.width / 2, y = r.top + r.height / 2;
       const radius = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
       root.style.setProperty('--macchia-x', `${x}px`);
       root.style.setProperty('--macchia-y', `${y}px`);
       root.style.setProperty('--macchia-r', `${radius}px`);
       root.classList.add('vt-ink');
-      document.startViewTransition(swap).finished.finally(() => {
+      const vt = latest = document.startViewTransition(swap);
+      vt.finished.finally(() => {
+        if (vt !== latest) return;
         root.classList.remove('vt-ink');
         for (const p of ['--macchia-x', '--macchia-y', '--macchia-r']) root.style.removeProperty(p);
       });
