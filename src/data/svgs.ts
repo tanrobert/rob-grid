@@ -1,6 +1,5 @@
 import LogoR from '../assets/logo-r.svg';
 import Roberto from '../assets/roberto.svg';
-import LogoCompleto from '../assets/logo-completo.svg';
 import LogoCompletoVerticale from '../assets/logo-completo-verticale.svg';
 import LogoCompletoOrizzontale from '../assets/logo-completo-orizzontale.svg';
 import LogoCompletoOrizzontaleLungo from '../assets/logo-completo-orizzontale-lungo.svg';
@@ -16,7 +15,6 @@ const entries = {
   'logo-r':                    { component: LogoR,                   label: 'Logo R' },
   // spazio O→B del lettering: tra la O finale e la R iniziale si forma la stessa coppia tonda→asta
   'roberto':                   { component: Roberto,                 label: 'Roberto', gap: 29.1 / 123.6 },
-  'logo-completo':             { component: LogoCompleto,            label: 'Roberto — logo completo' },
   // stacco tra lettering e R grande nel logo
   'logo-completo-verticale':   { component: LogoCompletoVerticale,   label: 'Roberto — logo completo', gap: 82.94 / 247.21 },
   'logo-completo-orizzontale': { component: LogoCompletoOrizzontale, label: 'Roberto — logo completo' },

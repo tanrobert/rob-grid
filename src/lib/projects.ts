@@ -7,7 +7,7 @@ export const projectYear = (p: Project) => Number(p.period.match(/\d{4}/)?.[0] ?
 /** Anno del primo progetto in archivio */
 export const firstYear = Math.min(...projects.map(projectYear).filter(Boolean));
 
-/** Progetti dal più recente al più vecchio (a parità di anno: featured prima) */
+/** Progetti dal più recente al più vecchio (a parità di anno: featured prima, poi per titolo) */
 export const projectsByYear = [...projects].sort(
-  (a, b) => projectYear(b) - projectYear(a) || Number(!!b.featured) - Number(!!a.featured),
+  (a, b) => projectYear(b) - projectYear(a) || Number(!!b.featured) - Number(!!a.featured) || a.title.localeCompare(b.title, 'it'),
 );

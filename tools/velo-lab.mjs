@@ -9,11 +9,11 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { OUT } from './lib.mjs';
 
-const ASSETS = fileURLToPath(new URL('../src/assets/', import.meta.url));
+const PROGETTI = fileURLToPath(new URL('../src/content/progetti/', import.meta.url));
 const DIR = path.join(OUT, 'velo');
 fs.mkdirSync(DIR, { recursive: true });
 
-const PHOTOS = ['eurofish-napoli', 'kiale', 'purple-piper', 'giardini-dell-eden', 'gea', 'spazioquadro', 'latorrerossa'];
+const PHOTOS = ['eurofish', 'kiale', 'purple-piper', 'giardini-dell-eden', 'gea', 'spazioquadro', 'la-torre-rossa'];
 const W = 800;
 // palette di global.css
 const ROSSO = [240, 63, 36], BIANCO = [231, 223, 223], NERO = [37, 29, 29];
@@ -27,7 +27,7 @@ const ramp = stops => t => {
 const RAMPS = { duo: ramp([ROSSO, BIANCO]), tri: ramp([NERO, ROSSO, BIANCO]) };
 
 async function bake(name) {
-  const src = path.join(ASSETS, name + '.png');
+  const src = path.join(PROGETTI, name, 'copertina.png');
   const base = sharp(src).resize(W);
   const { width, height } = await base.clone().webp().toBuffer({ resolveWithObject: true }).then(r => r.info);
   await base.clone().webp({ quality: 76 }).toFile(path.join(DIR, `${name}.webp`));

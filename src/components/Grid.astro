@@ -19,7 +19,6 @@ import ArchiveHeadCell from './cells/ArchiveHeadCell.astro';
 import TagsCell from './cells/TagsCell.astro';
 import ErrorCell from './cells/ErrorCell.astro';
 import { tagSlug } from '../lib/tags';
-import { greyOf } from '../lib/grigio';
 
 interface Props {
   cells: CellData[];
@@ -56,7 +55,7 @@ const voids = (Object.keys(COLS) as (keyof typeof COLS)[]).flatMap(bp =>
           attrs={filterable ? { 'data-tags': p.tags.map(tagSlug).join(' ') } : undefined}
         >
           {/* alt vuoto: la cella è un link e la didascalia lo nomina già (titolo e anno) */}
-          <MediaCell image={p.image} grey={greyOf(p.image)} video={p.video} alt="" sizes={mediaSizes(cell)} title={p.title} meta={p.period} priority={i === firstProject} />
+          <MediaCell image={p.image} grey={p.grey} video={p.video} alt="" sizes={mediaSizes(cell)} title={p.title} meta={p.period} priority={i === firstProject} />
         </Cell>
       );
     }

@@ -36,7 +36,8 @@ const cells: Cell[] = [
   { id: 'anno', type: 'stat', w: 2, h: 2, value: year, caption: p.period },
   { id: 'indietro', type: 'text', w: 2, h: 2, tone: 'red', href: '/', as: 'p', size: 'm', eyebrow: 'Chiudi', title: 'Indice' },
   { id: 'registro', type: 'mark', w: 2, h: 2 },
-  { id: 'nota', type: 'text', w: 4, h: 2, size: 's', title: 'Contenuto segnaposto: qui andranno immagini, processo e risultati.' },
+  // celle proprie del progetto (cells in index.md); finché non ci sono, il segnaposto
+  ...(p.cells ?? [{ id: 'nota', type: 'text', w: 4, h: 2, size: 's', title: 'Contenuto segnaposto: qui andranno immagini, processo e risultati.' }]),
   siblingCell('prec', 'precedente', -1),
   siblingCell('succ', 'successivo', 1),
 ];

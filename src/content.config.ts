@@ -1,0 +1,70 @@
+import { defineCollection } from 'astro:content';
+import { glob } from 'astro/loaders';
+import { z } from 'astro/zod';
+
+/*
+ * Progetti: una cartella per progetto in src/content/progetti/<slug>/
+ *   index.md               dati in alto (frontmatter), testo sotto
+ *   copertina.png|jpg      foto della cella e della hero (la trova data/projects.ts per nome)
+ *   copertina.grigio.webp  versione in bianco e nero (node tools/grigio.mjs)
+ *   altre foto, video…     citati dalle celle con percorsi relativi (./foto.jpg)
+ *
+ * `cells`: le celle proprie della pagina progetto, in ordine, tra le celle fisse (hero, titolo,
+ * tag, anno…) e precedente/successivo. Ogni progetto usa solo i tipi che gli servono.
+ * Un tipo nuovo: componente in components/cells/, voce in grid-types.ts, caso in Grid.astro
+ * e una voce in `cell` qui sotto.
+ */
+
+const unit = z.number().int().positive();
+const span = { w: unit, h: unit };
+
+// campi comuni a tutte le celle (sottoinsieme di CellBase in data/grid-types.ts)
+const base = {
+  /** Facoltativo: senza id la cella prende c1, c2… */
+  id: z.string().optional(),
+  ...span,
+  md: z.strictObject({ w: unit.optional(), h: unit.optional() }).optional(),
+  sm: z.strictObject({ w: unit.optional(), h: unit.optional() }).optional(),
+  tone: z.enum(['paper', 'red']).optional(),
+  label: z.literal(false).optional(),
+  hideOn: z.array(z.enum(['lg', 'md', 'sm'])).optional(),
+};
+
+const progetti = defineCollection({
+  loader: glob({
+    pattern: '*/index.md',
+    base: './src/content/progetti',
+    // id = nome della cartella = slug della pagina (/progetti/kiale)
+    generateId: ({ entry }) => entry.split('/')[0],
+  }),
+  schema: ({ image }) => {
+    const cell = z.discriminatedUnion('type', [
+      z.strictObject({ ...base, type: z.literal('media'), image: image().optional(), video: z.string().optional(), alt: z.string(), caption: z.string().optional() }),
+      z.strictObject({
+        ...base, type: z.literal('text'), eyebrow: z.string().optional(), title: z.string(),
+        body: z.union([z.string(), z.array(z.string())]).optional(),
+        as: z.enum(['h2', 'p']).optional(), size: z.enum(['s', 'm', 'l']).optional(),
+      }),
+      z.strictObject({ ...base, type: z.literal('list'), title: z.string(), items: z.array(z.union([z.string(), z.strictObject({ label: z.string(), href: z.string() })])) }),
+      // value anche numero in YAML (2024 senza virgolette)
+      z.strictObject({ ...base, type: z.literal('stat'), value: z.union([z.string(), z.number()]).transform(String), caption: z.string() }),
+    ]);
+
+    return z.strictObject({
+      title: z.string(),
+      /** Tag dei filtri dell'archivio (temporanei, da definire) */
+      tags: z.array(z.string()).min(1),
+      /** "dal 2024" / "nel 2016": l'anno ordina l'archivio */
+      period: z.string().regex(/\d{4}/, 'period deve contenere un anno, es. "dal 2024"'),
+      description: z.string(),
+      featured: z.boolean().optional(),
+      /** Forma della copertina in unità: cella in home e archivio, ×2 nella hero. Tavola: 600 px per unità */
+      shape: z.strictObject(span).optional(),
+      /** Video in loop (percorso in /public), al posto della copertina, che gli fa da poster */
+      video: z.string().optional(),
+      cells: z.array(cell).optional(),
+    });
+  },
+});
+
+export const collections = { progetti };

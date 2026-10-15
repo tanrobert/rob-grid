@@ -84,7 +84,7 @@ const CLOSE = '[data-hero] a[data-close]';
 // con --android nessuna cella si deve espandere
 const cell = { expectMorph: !opt.android };
 
-await step('home → eurofish', click('a[data-morph="/progetti/eurofish"]'), cell);
+await step('home → kiale', click('a[data-morph="/progetti/kiale"]'), cell);
 await step('✕ → home', click(CLOSE), cell);
 await step('home → kiale', click('a[data-morph="/progetti/kiale"]'), cell);
 await step('indietro (browser)', () => p.goBack(), cell);
@@ -111,8 +111,8 @@ await step('✕ → home', click(CLOSE), cell);
 // seconda parte da lì senza espansione (la cella cliccata non c'è più); se no si espande la seconda.
 // Giusti tutti e due: l'errore è la mezza transizione (pezzi con nome da un lato solo)
 await step('doppio click rapido', () => p.evaluate(() => {
-  document.querySelector('a[data-morph="/progetti/purple-piper"]').click();
-  setTimeout(() => document.querySelector('a[data-morph="/progetti/giardini-dell-eden"]')?.click(), 10);
+  document.querySelector('a[data-morph="/progetti/kiale"]').click();
+  setTimeout(() => document.querySelector('a[data-id="info"]')?.click(), 10);
 }), { expectMorph: opt.android ? false : 'any', interrupts: 1 });
 await b.close();
 console.log(failures ? `\n${failures} passaggi con problemi` : '\ntutto a posto');

@@ -50,15 +50,14 @@ export const grid: Cell[] = [
     eyebrow: `Graphic designer — dal ${firstYear}`,
     title: 'Progetto identità visive e punti di contatto fisici e digitali.',
   },
-  projectCell('eurofish', 'eurofish'),
+  // per ora l'unico progetto in home: è quello su cui si lavora. Gli altri sono in archivio
+  projectCell('kiale', 'kiale'),
   // il nastro "Roberto · grafica, web" girato in verticale. speed = secondi per giro: il logo lungo è
   // ~2,8 volte il "roberto", 112s = stessa velocità dei 40s di prima
   { id: 'nastro',  type: 'marquee', w: 1, h: 6, svg: 'logo-completo-orizzontale-lungo', speed: 112, ruotato: true },
   { id: 'info',     type: 'text',    w: 2, h: 2, tone: 'red', href: '/info', title: 'Bio', as: 'p', size: 'm', eyebrow: 'Chi sono' },
 
   // ── righe 4–5 ─────────────────────────────────────────
-  projectCell('kiale', 'kiale'),
-  projectCell('purple', 'purple-piper'),
   { id: 'tag',     type: 'list',    w: 4, h: 2, title: 'Tag', items: topTags },
   {
     id: 'metodo', type: 'text', w: 4, h: 2, size: 's',
@@ -67,10 +66,6 @@ export const grid: Cell[] = [
   },
 
   // ── righe 6–7 ─────────────────────────────────────────
-  projectCell('giardini', 'giardini-dell-eden'),
-  projectCell('gea', 'gea'),
-  projectCell('spazioquadro', 'spazioquadro'),
-  projectCell('torre', 'la-torre-rossa'),
   { id: 'extra',   type: 'stat',    w: 2, h: 2, href: '/extra', value: pad2(extraCells.length), caption: 'Celle extra', countUp: true },
   {
     id: 'contatti', type: 'text', w: 4, h: 2, size: 'm', href: '/info',

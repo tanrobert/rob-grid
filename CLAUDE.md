@@ -11,6 +11,8 @@ Lingua del sito e dei commenti nel codice: **italiano**.
 ## Struttura
 ```
 src/
+  content.config.ts         schema dei progetti (collection `progetti`), con le celle ammesse nelle pagine progetto
+  content/progetti/<slug>/  un progetto per cartella: index.md (dati + testo), copertina.png|jpg, copertina.grigio.webp, materiali
   layouts/Layout.astro      <head>, ClientRouter, script inline (intro + --dp), import di morph.ts e cells.ts
   pages/                    index · archivio (filtri per tag) · info · extra · progetti/[slug] · 404 (una cella `error` a tutta larghezza)
   components/
@@ -25,7 +27,8 @@ src/
     grid.ts                 GRIGLIA HOME: l'ordine e le misure delle celle si modificano qui
     extra.ts                celle extra (orologio, misure, cursore, registro, occhio, globo): pagina /extra, il numero in home si aggiorna da solo
     grid-types.ts           tipo `Cell` (unione di tutti i tipi di cella)
-    projects.ts, types.ts   progetti (period = "dal 2024"/"nel 2016")
+    projects.ts             adattatore: legge la collection → `Project[]` (copertina e grigio per nome, dummy se mancano; avviso se la copertina non è sul modulo)
+    types.ts                tipo `Project` (period = "dal 2024"/"nel 2016")
     svgs.ts                 registro unico degli SVG: componente + label per screen reader
     site.ts                 dati del sito (nome, email, P.IVA, luogo) e pageTitle ("Pagina · Roberto Tanasi")
   lib/
@@ -51,13 +54,21 @@ vercel.json                 cache dei font (immutable: se un font cambia, cambia
 tools/                      verifica delle View Transitions, solo sviluppo (vedi "Verifica"); risultati in tools/out/ (ignorata da git)
 ```
 
+## Progetti
+- **Nuovo progetto**: cartella `src/content/progetti/<slug>/` (il nome della cartella è l'URL) con `index.md` e `copertina.png` (o jpg/webp: si chiama sempre così), poi `node tools/grigio.mjs`. Senza copertina usa `dummy.png`. Dati: `title`, `tags`, `period`, `description`, `featured?`, `shape?`, `video?`, `cells?`. Chiavi in inglese (sono i campi di `Project`/`Cell`), testi in italiano.
+- **Pagina progetto** (`pages/progetti/[slug].astro`): le celle fisse (hero, titolo, tag, anno, indice, registro, precedente/successivo) le genera il sito; in mezzo vanno le `cells` dell'`index.md`, in ordine (senza `cells` c'è il segnaposto). Ogni progetto usa solo i tipi che gli servono; `id` facoltativo (c1, c2…); foto con percorsi relativi (`image: ./foto.jpg`).
+- **Nuovo tipo di cella**: componente in `components/cells/`, voce in `grid-types.ts`, caso in `Grid.astro`, voce nell'unione `cell` di `content.config.ts` (oggi: media, text, list, stat). Una volta fatto è disponibile per tutti i progetti e per la home.
+- Lo schema è `strictObject`: una chiave sbagliata ferma la build con progetto e cella (`progetti → kiale · cells.0: Unrecognized key`).
+- Ordine dell'archivio (e di precedente/successivo): anno, poi `featured`, poi titolo.
+- Corpo dell'`index.md` (testo sotto il frontmatter): per ora non usato.
+
 ## Sistema a griglia
 - Colonne: **12** desktop (≥1024) · **8** tablet (600–1023) · **4** mobile (<600). `COLS`/`BREAKPOINTS` in `lib/grid.ts` vanno tenuti allineati a `--cols` e alle media query di `global.css`.
 - **Unità piccola**: la cella quadrata "base" è **2×2** unità; le misure dispari danno le forme intermedie (es. 4×3, anche su mobile). Unità `--u` calcolata su `.grid` con `100cqw` (`.sheet` è il container). Tetto `--u-max` (145px = cella 2×2 da 300px): `.sheet` ha `max-width` di conseguenza e si centra (da ~1870px). I crocini stanno a ogni incrocio di unità.
 - Ogni cella: `w`/`h` in unità, override `md`/`sm`, `tone: 'red'`, `href`, `label: false` (niente linguetta; di base la linguetta è il solo numero della cella: i nomi li dicono già titoli, occhielli e didascalie), `heroOf`, `hideOn`, `frame: false` (senza filo). Celle svg: `fit: 'bleed'` (a tutta cella, come il logo R in home e in Info).
 - L'ordine in `data/grid.ts` conta: la griglia è `row dense`. I buchi rimasti diventano `.void` (carta a quadretti di mezzo passo della griglia: scalano con le celle, le linee passano per i crocini e per il centro di ogni unità), calcolati al build per breakpoint e ricalcolati nel browser dopo i filtri.
-- **Forma dei progetti**: `shape` (w×h in unità) in `projects.ts` è l'unica misura del progetto. `scaleShape` (`lib/grid.ts`) la usa ×1 per la cella in home (`projectCell` in `data/grid.ts`) e in archivio, ×2 per la hero della pagina progetto; se non ci sta nelle colonne va a tutta larghezza con lo stesso rapporto (su mobile la hero "si sposta" senza crescere). Niente `md`/`sm` a mano sui progetti: il rapporto deve restare quello dell'immagine. Senza `shape`: archivio 4×4/2×2, hero 6×6.
-- **Tavola Photoshop per progetto**: modulo 600 px per unità (es. 4×3 → 2400×1800), layout guide con canale 0 e margini 300 sopra/sotto · 200 ai lati (½ e ⅓ di unità: liberi da linguetta, freccia e didascalia nella cella più piccola). Forme più larghe di 4 unità si stringono su mobile e tagliano i lati: margini maggiori (eurofish 6×4 → 400 · 500).
+- **Forma dei progetti**: `shape` (w×h in unità) nell'`index.md` del progetto è l'unica misura del progetto. `scaleShape` (`lib/grid.ts`) la usa ×1 per la cella in home (`projectCell` in `data/grid.ts`) e in archivio, ×2 per la hero della pagina progetto; se non ci sta nelle colonne va a tutta larghezza con lo stesso rapporto (su mobile la hero "si sposta" senza crescere). Niente `md`/`sm` a mano sui progetti: il rapporto deve restare quello dell'immagine. Senza `shape`: archivio 4×4/2×2, hero 6×6.
+- **Tavola Photoshop per progetto**: modulo 600 px per unità (es. 4×3 → 2400×1800), layout guide con canale 0 e margini 300 sopra/sotto · 200 ai lati (½ e ⅓ di unità: liberi da linguetta, freccia e didascalia nella cella più piccola). Forme più larghe di 4 unità si stringono su mobile e tagliano i lati: margini maggiori (eurofish 6×4 → 400 · 500). La build avvisa (`[progetti] …`) se la copertina non è w×600 × h×600: a ottobre 2026 è in regola solo Spazioquadro.
 - Tipi di cella: svg, marquee (anche `vertical`, o `ruotato`: logo orizzontale girato di 90° in una striscia verticale, come il nastro 1×6 della home), text, list, stat, media, project, clock, cursor, meter, mark, eye, globe, archive-head, tags, error (404: codice in Söhne Mono con glitch in bicromia, su carta a quadretti come i vuoti).
 - **Luce**: la R in alto a sinistra della home (cella `logo`, svg con `ink: true`) è un `role=switch` ("Luce"). Accesa = inchiostro rosso su carta chiara; spenta = rosso e bianco scambiati (carta rossa, inchiostro chiaro; le foto restano col velo rosso e le scritte chiare). Il colore nuovo si allarga a cerchio dal centro della R (View Transition della stessa pagina, `html.vt-ink`, `--t-ink`). Scelta in `localStorage` (`inchiostro`: `bianco`/`rosso`; il vecchio `nero` vale come spenta), applicata da Layout.astro prima del primo disegno e dopo ogni swap. Fino a ottobre 2026 c'era una cella `luce` a parte (sole/luna con eclisse), tolta.
 - Globo (`terra`): terre da `data/land-110m.json` (Natural Earth 1:110m via world-atlas, generato una volta, coordinate a 0,1°). Orientamento = rotazione siderale (meridiano rivolto all'equinozio), asse inclinato 23,44° verso destra.
@@ -140,13 +151,13 @@ Lezioni: Chrome headless non basta per le View Transitions; provare Firefox, fin
 Roberto fa commit e push da solo: committare solo se lo chiede. La versione nel footer ("Portfolio modulare v.X") si legge al build dal messaggio dell'ultimo commit (`lib/version.ts`, come in terminal-astro): il messaggio deve iniziare col numero, es. `1.0.1 footer`. Versioni: 1.0 → 1.1 → 1.2 (refactor, footer, marchio verticale, quadretti 50px).
 
 ## Aperti / idee
-- Video Eurofish in panchina (commentato in `projects.ts`, al suo posto il png): 8.6 MB 1080p, appesantiva lo scroll. Prova: 1280×720 H.264 crf31 ≈ 3.1 MB senza perdita visibile; se scatta ancora, bicromia "cotta" nel video.
+- Video Eurofish in panchina (commentato in `content/progetti/eurofish/index.md`, al suo posto il png): 8.6 MB 1080p, appesantiva lo scroll. Prova: 1280×720 H.264 crf31 ≈ 3.1 MB senza perdita visibile; se scatta ancora, bicromia "cotta" nel video.
 - Tag sempre in coppia (Ristorazione+Ospitalità…): da ripensare. Molti progetti con `dummy.png` e testi segnaposto.
 - Ultima riga della home: vuoti accanto a `marchio` (tolta `nome-2`).
-- `logo-completo.svg` (quadrato) e `logo-completo-verticale.svg` (era il marchio verticale della home, tolto a ottobre 2026) non più usati ma ancora nel registro.
+- `logo-completo-verticale.svg` (era il marchio verticale della home, tolto a ottobre 2026) non più usato ma ancora nel registro. `logo-completo.svg` (quadrato) tolto il 16/10/2026 (resta nella cronologia di git).
 - SEO (Open Graph, Schema.org, sitemap): da fare con la procedura "Review SEO Astro Rob".
 - Colore delle etichette sulle foto, per ora sempre bianco. Provato e messo da parte (ottobre 2026): sceglierlo al build zona per zona (linguetta, freccia, didascalia) misurando la foto originale con `sharp` (`image.fsPath`, API interna di Astro) e il contrasto WCAG con e senza velo: rosso in `multiply` dove è chiaro, bianco dove è scuro. Funzionava su foto molto chiare o scure, ma il rosso sul velo rosso si legge poco. Scartati: rosso in multiply ovunque (rosso su rosso) e sfumatura rossa in alto e in basso (leggibile ma pesante). Se si riprende: aggiungere la sfumatura solo nelle zone a basso contrasto.
-- **Foto delle celle progetto** (ottobre 2026): bianco e nero cotto (`tools/grigio.mjs` → `src/assets/grigio/`, da rilanciare quando si aggiunge una foto; trovate per nome da `lib/grigio.ts`) sopra la foto a colori, sotto un rosso al 45% (`--rosso`, non si inverte a luce spenta); in hover si vede quella a colori. Hero piene a colori. Su touch la foto a colori delle celle è `display: none` e non si scarica. `photoReady` (morph.ts) e il controllo "foto pronta" di `vt:tour` guardano la foto che si vede (`img.duo__grigio` se c'è).
+- **Foto delle celle progetto** (ottobre 2026): bianco e nero cotto (`tools/grigio.mjs` → `copertina.grigio.webp` nella cartella del progetto, da rilanciare quando si aggiunge una copertina; solo il grigio di `dummy` resta in `src/assets/grigio/`) sopra la foto a colori, sotto un rosso al 45% (`--rosso`, non si inverte a luce spenta); in hover si vede quella a colori. Hero piene a colori. Su touch la foto a colori delle celle è `display: none` e non si scarica. `photoReady` (morph.ts) e il controllo "foto pronta" di `vt:tour` guardano la foto che si vede (`img.duo__grigio` se c'è).
 - Intro dei titoli delle celle di testo: righe dal filo (`scripts/righe.ts`, agganciate al `fill-in` della loro cella). Scelta tra 4 varianti nella pagina di prova `tools/pages/testi.html` (`npm run vt:serve` → `/_vt/testi.html`). Da valutare: farle entrare anche allo scroll, non solo all'intro.
 - Velo delle celle progetto, accantonato: pagina di prova con 9 effetti leggeri (`node tools/velo-lab.mjs` → `tools/out/velo/index.html`, sul telefono `/_out/velo/` con `npm run vt:serve`). Preferito per ora: foto in grigio cotta + velo 0.35. Da decidere l'hover: solo grigio (colore nella hero, una immagine) o colore (due immagini per cella).
 - Scartato: cubo 3D sul logo della casella 1 (provato e annullato).
@@ -154,8 +165,8 @@ Roberto fa commit e push da solo: committare solo se lo chiede. La versione nel 
 - "Flash bianco" in Chrome per Android (video del 10/10/2026, prima apertura di Eurofish): per ~130ms, mentre lo schermo è fermo tra la cattura e lo swap, i pezzi della cella con nome spariscono (l'indicatore del righello, nome fisso, no). Provato `will-change` sui pezzi prima della cattura: non risolve, tolto. Lasciato perdere per ora; se si riprende: prova sul telefono con la callback allungata (1s) per capire se il buco dura quanto il fermo.
 
 ### Struttura per i contenuti (piano, ottobre 2026)
-Obiettivo: una base solida, così che poi resti solo da inserire il contenuto vero. In ordine:
-1. **Progetti come cartelle** (Content Collections): `src/content/progetti/<slug>/index.md` (dati in alto, testo sotto) + copertina e galleria nella stessa cartella. Schema validato alla build con errori chiari, compreso il controllo copertina ↔ `shape` (600 px per unità). Sostituisce `projects.ts`; verifica = HTML generato identico prima/dopo.
+Obiettivo: una base solida, così che poi resti solo da inserire il contenuto vero. Dal 16/10/2026 in home c'è solo Kiale, il primo progetto lavorato sul serio (gli altri restano in archivio). In ordine:
+1. ✅ **Progetti come cartelle** (Content Collections, fatto 16/10/2026, vedi "Progetti"): `src/content/progetti/<slug>/index.md` (dati in alto, testo sotto) + copertina e galleria nella stessa cartella. Schema validato alla build con errori chiari, compreso il controllo copertina ↔ `shape` (600 px per unità: per ora un avviso, diventerà errore quando le tavole saranno rifatte). HTML identico prima/dopo salvo l'ordine a pari anno.
 2. **Tag da una lista unica**, divisi in settore e servizio (risolve i tag in coppia); lo schema accetta solo quelli.
 3. **Dati del sito in un posto solo** (`src/data/site.ts`): fatto per nome, email, P.IVA e luogo (footer, titoli, Info). Mancano i social.
 4. **Parti invisibili** sopra 1 e 3: Open Graph (per i progetti l'anteprima usa la copertina), Schema.org, sitemap, robots.txt, 404 come cella, privacy collegata nel footer.

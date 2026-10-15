@@ -1,170 +1,39 @@
+import type { ImageMetadata } from 'astro';
+import { getCollection } from 'astro:content';
 import type { Project } from './types';
-import purplePiperImg from '../assets/purple-piper.png';
-import giardiniDelledenImg from '../assets/giardini-dell-eden.png';
 import dummyImg from '../assets/dummy.png';
-import eurofishImg from '../assets/eurofish-napoli.png';
-import kialeImg from '../assets/kiale.png';
-import geaImg from '../assets/gea.png';
-import spazioquadroImg from '../assets/spazioquadro.png';
-import torreRossaImg from '../assets/latorrerossa.png';
+import dummyGrey from '../assets/grigio/dummy.webp';
 
-export const projects: Project[] = [
+/*
+ * I progetti stanno in src/content/progetti/<slug>/ (schema in src/content.config.ts).
+ * Qui diventano `Project`, la forma che usa il resto del sito.
+ */
 
-  // ── RISTORAZIONE ──────────────────────────────────────────────────────
-  {
-    // segnaposto: anno, tag e descrizione da confermare
-    slug: 'easy-pizzeria',
-    title: 'Easy Pizzeria',
-    tags: ['Ristorazione', 'Ospitalità', 'Logo', 'Menu'],
-    period: 'dal 2025',
-    description: 'Identità visiva per una pizzeria.',
-    image: dummyImg,
-  },
-  {
-    slug: 'angolo-luna',
-    title: 'L\'Angolo e la Luna',
-    tags: ['Ristorazione', 'Ospitalità', 'Logo', 'Menu', 'Web'],
-    period: 'nel 2025',
-    description: 'Brand e sito web per un ristorante di cucina creativa. Identità che evoca atmosfera serale.',
-    image: dummyImg,
-  },
-  {
-    slug: 'kiale',
-    title: 'Kiale Food Service',
-    tags: ['Ristorazione', 'Ospitalità', 'Branding', 'Print', 'Packaging'],
-    period: 'dal 2024',
-    description: 'Sistema di brand per un format di ristorazione veloce con ingredienti locali.',
-    featured: true,
-    shape: { w: 4, h: 3 },
-    image: kialeImg,
-  },
-  {
-    slug: 'giardini-dell-eden',
-    title: "Giardini dell'Eden",
-    tags: ['Ristorazione', 'Ospitalità', 'Logo', 'Menu'],
-    period: 'dal 2026',
-    description: 'Identità botanica per un ristorante dal carattere verde e naturale — logo e menu in equilibrio tra eleganza e freschezza.',
-    featured: true,
-    shape: { w: 4, h: 3 },
-    image: giardiniDelledenImg,
-  },
+// copertina e versione in grigio, per convenzione nella cartella del progetto
+type Img = { default: ImageMetadata };
+const byFolder = (files: Record<string, Img>) =>
+  new Map(Object.entries(files).map(([p, m]) => [p.split('/').at(-2)!, m.default]));
+const covers = byFolder(import.meta.glob<Img>('../content/progetti/*/copertina.{png,jpg,jpeg,webp}', { eager: true }));
+const greys = byFolder(import.meta.glob<Img>('../content/progetti/*/copertina.grigio.webp', { eager: true }));
 
-  // ── OSPITALITÀ ────────────────────────────────────────────────────────
-  {
-    slug: 'la-torre-rossa',
-    title: 'La Torre Rossa',
-    tags: ['Ristorazione', 'Ospitalità', 'Logo', 'Web', 'Print'],
-    period: 'dal 2026',
-    description: 'Brand e sito per un agriturismo in collina. Identità che valorizza il paesaggio.',
-    featured: true,
-    shape: { w: 3, h: 2 },
-    image: torreRossaImg,
-  },
-  {
-    slug: 'kelle-terre',
-    title: 'Kelle Terre',
-    tags: ['Ristorazione', 'Ospitalità', 'Branding', 'Print', 'Packaging'],
-    period: 'dal 2023',
-    description: 'Identità per un agriturismo con produzione propria di vino e olio.',
-    image: dummyImg,
-  },
+/** Tavola Photoshop: 600 px per unità della forma */
+const UNIT_PX = 600;
 
-  // ── SALUTE & BENESSERE ────────────────────────────────────────────────
-  {
-    slug: 'cardogna',
-    title: 'Cardogna',
-    tags: ['Salute', 'Benessere', 'Logo', 'Branding', 'Print'],
-    period: 'dal 2022',
-    description: 'Identità visiva per uno studio odontoiatrico con focus sulla relazione umana con il paziente.',
-    image: dummyImg,
-  },
-  {
-    slug: 'luca-lebone',
-    title: 'Luca Lebone',
-    tags: ['Salute', 'Benessere', 'Logo', 'Web', 'Branding'],
-    period: 'dal 2023',
-    description: 'Brand personale e sito per un medico estetico — autorevolezza scientifica e sensibilità estetica.',
-    image: dummyImg,
-  },
-
-  // ── CONSULENZA & MEDIA ─────────────────────────────────────────────────
-  {
-    slug: 'ornella',
-    title: 'Ornella',
-    tags: ['Consulenza', 'Media', 'Branding', 'Web', 'Social'],
-    period: 'dal 2020',
-    description: 'Brand personale e presenza digitale per una consulente di digital marketing.',
-    image: dummyImg,
-  },
-  {
-    slug: 'purple-piper',
-    title: 'Purple Piper',
-    tags: ['Consulenza', 'Media', 'Logo', 'Branding', 'Web'],
-    period: 'dal 2018',
-    description: 'Brand e sito per una web radio indipendente — un\'identità che suona forte.',
-    featured: true,
-    shape: { w: 3, h: 2 },
-    image: purplePiperImg,
-  },
-
-  // ── IMPRESE & PRODOTTO ───────────────────────────────────────────────
-  {
-    slug: 'oltre',
-    title: 'Oltre Horeca',
-    tags: ['Imprese', 'Prodotto', 'Logo', 'Branding'],
-    period: 'dal 2022',
-    description: 'Identità per un locale horeca che copre colazione, pranzo e cocktail.',
-    image: dummyImg,
-  },
-  {
-    slug: 'acciai',
-    title: 'SG Acciai',
-    tags: ['Imprese', 'Prodotto', 'Logo', 'Branding', 'Print'],
-    period: 'dal 2024',
-    description: 'Identità per un\'azienda artigianale di arredo su misura in acciaio e metallo.',
-    image: dummyImg,
-  },
-  {
-    slug: 'spazioquadro',
-    title: 'Spazioquadro',
-    tags: ['Imprese', 'Prodotto', 'Logo', 'Web', 'Print'],
-    period: 'dal 2026',
-    description: 'Brand e sito per la linea di G&A dedicata a finestre e serramenti su misura.',
-    featured: true,
-    shape: { w: 4, h: 3 },
-    image: spazioquadroImg,
-  },
-  {
-    slug: 'gea',
-    title: 'G&A',
-    tags: ['Imprese', 'Prodotto', 'Logo', 'Web', 'Print'],
-    period: 'dal 2026',
-    description: 'Brand e sito per un\'azienda che produce porte su misura, casa madre di Spazioquadro.',
-    featured: true,
-    shape: { w: 4, h: 4 },
-    image: geaImg,
-  },
-  {
-    slug: 'dea-cosmesi',
-    title: 'DeaCosmesi',
-    tags: ['Imprese', 'Prodotto', 'Logo', 'Packaging', 'Web'],
-    period: 'dal 2022',
-    description: 'Brand e packaging per una linea di cosmetici artigianali — ogni prodotto racconta l\'ingrediente.',
-    image: dummyImg,
-  },
-  {
-    slug: 'eurofish',
-    title: 'Eurofish',
-    tags: ['Imprese', 'Prodotto', 'Logo', 'Packaging', 'Veicoli'],
-    period: 'dal 2025',
-    description: 'Identità visiva completa per una società di distribuzione di prodotti ittici.',
-    featured: true,
-    shape: { w: 6, h: 4 },
-    image: eurofishImg,
-    // in panchina: il video (8.6 MB, 1080p) appesantiva lo scroll. Da ricomprimere (prova 1280 crf31 ≈ 3.1 MB)
-    // video: '/media/eurofish-video.mp4',
-  },
-];
+export const projects: Project[] = (await getCollection('progetti')).map(({ id: slug, data }) => {
+  const image = covers.get(slug);
+  const { shape } = data;
+  // avviso, non errore: diverse copertine sono ancora da rifare sul modulo
+  if (image && shape && (image.width !== shape.w * UNIT_PX || image.height !== shape.h * UNIT_PX)) {
+    console.warn(`[progetti] ${slug}: copertina ${image.width}×${image.height}, la forma ${shape.w}×${shape.h} vuole ${shape.w * UNIT_PX}×${shape.h * UNIT_PX}`);
+  }
+  return {
+    ...data,
+    slug,
+    image: image ?? dummyImg,
+    grey: image ? greys.get(slug) : dummyGrey,
+    cells: data.cells?.map((c, i) => ({ ...c, id: c.id ?? `c${i + 1}` })),
+  };
+});
 
 export function getProject(slug: string): Project | undefined {
   return projects.find(p => p.slug === slug);
