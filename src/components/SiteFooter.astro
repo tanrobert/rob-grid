@@ -26,13 +26,13 @@ const year = new Date().getFullYear();
     <div class="foot__zones">
       <nav class="foot__zone" aria-label="Pagine">
         <ul>
-          {pages.map(p => <li><a href={p.href} class="foot__link"><span class="foot__run">{p.label}<span class="foot__copy" aria-hidden="true">{p.label}</span></span></a></li>)}
+          {pages.map(p => <li><a href={p.href} class="link-peso">{p.label}</a></li>)}
         </ul>
       </nav>
 
       <div class="foot__zone">
         <ul>
-          <li><a href={`mailto:${EMAIL}`} class="foot__link"><span class="foot__run">{EMAIL}<span class="foot__copy" aria-hidden="true">{EMAIL}</span></span></a></li>
+          <li><a href={`mailto:${EMAIL}`} class="link-peso">{EMAIL}</a></li>
           <li>{PLACE}</li>
         </ul>
       </div>
@@ -95,33 +95,4 @@ const year = new Date().getFullYear();
   }
   /* su schermi stretti il testo di destra va a capo restando allineato a destra */
   .foot__bar span:last-child { text-align: right; }
-
-  /* link a nastro: al passaggio il testo esce a destra e la sua copia (subito a sinistra, fuori dal link) entra
-     al suo posto. A fine corsa la copia sta esattamente dove stava il testo: togliere la classe non si vede.
-     La classe la mette lo script qui sotto, così il giro arriva sempre in fondo anche se il mouse esce prima */
-  .foot__link { display: inline-block; vertical-align: top; overflow: clip; }
-  .foot__run { --nastro: calc(100% + 0.4em); display: inline-block; position: relative; }
-  .foot__copy { position: absolute; top: 0; left: calc(var(--nastro) * -1); width: 100%; user-select: none; }
-  .foot__link.is-run .foot__run { animation: foot-nastro 640ms cubic-bezier(0.65, 0, 0.35, 1); }
-  @keyframes foot-nastro { to { transform: translateX(var(--nastro)); } }
-
-  @media (hover: hover) and (pointer: fine) {
-    /* hover in bianco puro: resta nella bicromia, niente rosa da trasparenza */
-    .foot a { transition: color 200ms ease; }
-    .foot__zone a:hover, .foot__logo:hover { color: var(--bianco-puro); }
-  }
 </style>
-
-<script>
-  // link a nastro: un giro a ogni ingresso del mouse nel link, finito il giro si toglie la classe.
-  // Delegato al documento: vale anche per i footer delle pagine caricate dal ClientRouter
-  document.addEventListener('pointerover', e => {
-    if (e.pointerType !== 'mouse') return;
-    const link = (e.target as Element).closest('.foot__link');
-    if (!link || link.contains(e.relatedTarget as Node | null) || link.classList.contains('is-run')) return;
-    link.classList.add('is-run');
-  });
-  document.addEventListener('animationend', e => {
-    if (e.animationName.endsWith('foot-nastro')) (e.target as Element).closest('.foot__link')?.classList.remove('is-run');
-  });
-</script>

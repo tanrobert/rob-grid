@@ -6,6 +6,7 @@
 import { initArchive } from './archive';
 import { initInk } from './ink';
 import { initRighe } from './righe';
+import { fitTitles, initTitoloni } from './titoloni';
 import { pad2 } from '../lib/format';
 
 let cleanup: (() => void) | null = null;
@@ -45,8 +46,15 @@ export function initCells() {
   // Intro finita: tolgo la classe, così nessuna casella che ricompare
   // (filtri, cambio di breakpoint) rifà l'animazione d'ingresso
   const html = document.documentElement;
-  if (html.classList.contains('is-intro')) {
-    initRighe(signal);
+  const intro = html.classList.contains('is-intro');
+  // titoloni: misurati col font vero, prima che le righe dell'intro ne leggano gli a capo
+  initTitoloni(signal, reduced);
+  document.fonts.ready.then(() => {
+    if (signal.aborted) return;
+    fitTitles();
+    if (intro) initRighe(signal);
+  });
+  if (intro) {
     // la durata del filo dipende dal perimetro di ogni cella: aspetto la fine delle animazioni vere
     let live = true;
     introDone().then(() => { if (live) html.classList.remove('is-intro'); });

@@ -1,0 +1,367 @@
+<!doctype html>
+<!--
+  Laboratorio di tipografia cinetica: Schibsted Grotesk variabile (asse wght 400 → 900) dentro celle come
+  quelle del sito. Solo sviluppo: il sito non cambia. Niente hover (scelta del 17/10/2026): le animazioni
+  partono da sole, allo scroll, al tocco o col tempo.
+    npx astro build && npm run vt:serve → /_vt/cinetica.html (il font lo serve dist/fonts)
+-->
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cinetica lab</title>
+<style>
+  @font-face { font-family: 'Schibsted Grotesk'; src: url('/fonts/schibsted-grotesk.woff2') format('woff2'); font-weight: 400 900; font-display: block; }
+  :root { --rosso: #f03f24; --chiaro: #e7dfdf; --k: 1; }
+  * { box-sizing: border-box; margin: 0; }
+  body { background: var(--chiaro); color: var(--rosso); font: 500 16px/1.2 'Schibsted Grotesk', sans-serif; }
+  .mono { font-size: 11px; font-weight: 400; letter-spacing: 0.08em; text-transform: uppercase; font-variant-numeric: tabular-nums; }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  header { position: sticky; top: 0; z-index: 5; background: var(--chiaro); border-bottom: 1px solid var(--rosso); padding: 8px 10px; display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; }
+  header strong { font-weight: 800; letter-spacing: -0.01em; }
+  button { font: inherit; font-size: 12px; padding: 6px 10px; border: 1px solid currentColor; background: transparent; color: inherit; cursor: pointer; touch-action: manipulation; }
+  button[aria-pressed="true"] { background: var(--rosso); color: var(--chiaro); }
+  #fps { margin-left: auto; }
+  #rm { display: none; width: 100%; }
+  @media (prefers-reduced-motion: reduce) { #rm { display: block; } }
+
+  main { display: grid; grid-template-columns: repeat(12, 1fr); grid-auto-flow: row dense; gap: 10px; padding: 10px; max-width: 1840px; margin: 0 auto; }
+  @media (max-width: 1023px) { main { grid-template-columns: repeat(8, 1fr); } }
+  @media (max-width: 599px) { main { grid-template-columns: repeat(4, 1fr); } .cell { grid-column: 1 / -1 !important; } }
+  .cell { grid-column: span var(--w, 4); min-height: 300px; position: relative; overflow: clip; container-type: inline-size;
+    border: 1px solid var(--rosso); padding: 40px 20px 18px; display: flex; flex-direction: column; justify-content: flex-end; gap: 14px; }
+  .cell--red { background: var(--rosso); color: var(--chiaro); }
+  .cell > .n { position: absolute; top: 8px; left: 10px; }
+  .cell > .again { position: absolute; top: 3px; right: 3px; border: 0; padding: 5px 7px; }
+  .desc { font-size: 12px; font-weight: 400; line-height: 1.35; max-width: 52ch; }
+  .desc b { font-weight: 700; }
+
+  /* lettere: ogni carattere è uno span con --i (indice); le parole non si spezzano */
+  .w { white-space: nowrap; }
+  .big { font-size: clamp(110px, 42cqi, 240px); line-height: 0.8; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
+  .title { font-size: clamp(30px, 6.2cqi, 64px); line-height: 1.02; letter-spacing: -0.02em; text-wrap: balance; }
+  .word { font-size: clamp(54px, 17cqi, 150px); line-height: 0.9; letter-spacing: -0.03em; }
+
+  /* 01 · Sgonfia: le lettere entrano pesanti (900) e si sgonfiano al peso del testo */
+  .v-in .k { animation: k-in calc(900ms * var(--k)) cubic-bezier(0.2, 0.7, 0.2, 1) both; animation-delay: calc(var(--i) * 12ms * var(--k)); }
+  @keyframes k-in { from { font-weight: 900; } to { font-weight: 500; } }
+
+  /* 03 · Onda: il peso corre lungo la riga, in loop */
+  .wave { font-size: clamp(44px, 8.4cqi, 128px); line-height: 0.95; letter-spacing: -0.02em; text-transform: uppercase; white-space: nowrap; }
+  .wave .k { animation: k-wave calc(1800ms * var(--k)) ease-in-out infinite; animation-delay: calc(var(--i) * -60ms * var(--k)); }
+  @keyframes k-wave { 0%, 100% { font-weight: 400; } 50% { font-weight: 900; } }
+
+  /* 04 · Respiro: lento, le cifre sfasate */
+  .breath .k { animation: k-breath calc(4200ms * var(--k)) ease-in-out infinite; animation-delay: calc(var(--i) * -500ms * var(--k)); }
+  @keyframes k-breath { 0%, 100% { font-weight: 400; } 50% { font-weight: 900; } }
+
+  /* 06 · Scanner: la voce attiva è pesante, le altre leggere */
+  .scan { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 14px; }
+  .scan li { display: flex; gap: 8px; align-items: baseline; border-bottom: 1px solid var(--rosso); padding: 6px 0 5px; font-size: clamp(13px, 3.6cqi, 19px); font-weight: 400; transition: font-weight calc(320ms * var(--k)) ease-out; }
+  .scan li:nth-child(-n+3) { border-top: 1px solid var(--rosso); }
+  .scan li.on { font-weight: 900; }
+  .scan .mono { font-size: 9px; }
+
+  /* 08 · Scroll: il peso segue la velocità dello scroll, ogni lettera in ritardo sulla precedente */
+  .drag .k { transition: font-weight calc((120ms + var(--i) * 45ms) * var(--k)) ease-out; }
+
+  /* 09 · Macchina da scrivere: ogni lettera nuova arriva a 900 e si posa a 500 */
+  .typed { font-size: clamp(54px, 15cqi, 140px); line-height: 0.9; letter-spacing: -0.03em; white-space: nowrap; }
+  .typed .caret { font-weight: 400; animation: k-caret 1s steps(1) infinite; }
+  @keyframes k-caret { 50% { color: transparent; } }
+
+  /* fuori schermo: tutto fermo */
+  .cell[data-off] * { animation-play-state: paused !important; }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <strong>Cinetica lab</strong>
+  <span class="mono">Schibsted Grotesk · wght 400 → 900</span>
+  <button id="again">rilancia tutto</button>
+  <button id="slow" aria-pressed="false">rallenta ×4</button>
+  <span id="fps" class="mono">—</span>
+  <p id="rm" class="mono">"Riduci movimento" è attivo nel sistema: tutto fermo, come sarà nel sito.</p>
+</header>
+
+<main>
+  <section class="cell" style="--w:4" data-v="count">
+    <span class="n mono">01 · contatore</span><button class="again mono">↻</button>
+    <p class="big" data-count="14" aria-label="14">00</p>
+    <p class="desc">Il numero conta da 00 e il peso scende con lui: <b>pesante mentre corre</b>, si posa a 500 quando arriva. Per i contatori della home (14 progetti, 06 celle extra).</p>
+  </section>
+
+  <section class="cell" style="--w:8" data-v="in">
+    <span class="n mono">02 · sgonfia</span><button class="again mono">↻</button>
+    <h2 class="title split v-in">Progetto identità visive e punti di contatto fisici e digitali.</h2>
+    <p class="desc">Le lettere entrano a 900 e si sgonfiano a 500, una dopo l'altra (12 ms). La riga si accorcia mentre si posa: <b>il testo "respira" una volta sola</b>, all'ingresso.</p>
+  </section>
+
+  <section class="cell" style="--w:12; min-height: 220px" data-v="wave">
+    <span class="n mono">03 · onda</span>
+    <p class="wave split">Roberto · grafica · web · identità · </p>
+    <p class="desc">Un'onda di peso che corre lungo la riga, in loop. Per il nastro della home o per una cella "manifesto". <b>Sempre in movimento</b>: si ferma fuori schermo.</p>
+  </section>
+
+  <section class="cell" style="--w:4" data-v="breath">
+    <span class="n mono">04 · respiro</span>
+    <p class="big breath split">404</p>
+    <p class="desc">Respiro lento (4,2 s), le cifre sfasate. Per la pagina 404 o un numero grande fermo. Calmo, quasi impercettibile da lontano.</p>
+  </section>
+
+  <section class="cell" style="--w:4" data-v="clock">
+    <span class="n mono">05 · battito</span>
+    <p class="big" style="font-size: clamp(64px, 24cqi, 140px)"><span class="clock" aria-live="off"></span></p>
+    <p class="desc">Orologio: ogni cifra che cambia arriva a 900 e torna a 400. <b>Il secondo pulsa</b>, il minuto una volta al minuto.</p>
+  </section>
+
+  <section class="cell" style="--w:4" data-v="scan">
+    <span class="n mono">06 · scanner</span>
+    <ul class="scan">
+      <li><span class="mono">01</span>Logo</li><li><span class="mono">02</span>Branding</li><li><span class="mono">03</span>Print</li>
+      <li><span class="mono">04</span>Web</li><li><span class="mono">05</span>Imprese</li><li><span class="mono">06</span>Ospitalità</li>
+      <li><span class="mono">07</span>Prodotto</li><li><span class="mono">08</span>Ristorazione</li><li><span class="mono">09</span>Packaging</li>
+    </ul>
+    <p class="desc">Il peso passa da un tag all'altro in ordine di lettura. Per la cella dei tag: dice "qui si sceglie" senza hover.</p>
+  </section>
+
+  <section class="cell" style="--w:8" data-v="glitch">
+    <span class="n mono">07 · glitch di peso</span>
+    <h2 class="title split" style="font-size: clamp(34px, 7.4cqi, 76px)">Essenziale, accessibile, chiara.</h2>
+    <p class="desc">Ogni tanto due o tre lettere scattano a 900 per un istante. <b>Un glitch solo tipografico</b>, in bicromia, parente di quello della 404.</p>
+  </section>
+
+  <section class="cell cell--red" style="--w:4" data-v="drag">
+    <span class="n mono">08 · scroll</span>
+    <p class="word drag split">Scrivimi</p>
+    <p class="desc">Il peso segue la velocità dello scroll: <b>più scorri veloce, più ingrassa</b>, e ogni lettera arriva un po' dopo la precedente. Fermo, torna a 500. Scorri la pagina.</p>
+  </section>
+
+  <section class="cell" style="--w:6" data-v="typed">
+    <span class="n mono">09 · macchina da scrivere</span><button class="again mono">↻</button>
+    <p class="typed" aria-label="Scrivimi"><span class="typed__text" aria-hidden="true"></span><span class="caret" aria-hidden="true">_</span></p>
+    <p class="desc">Ogni lettera nuova arriva a 900 e si posa a 500, come un tasto premuto forte. Per "Scrivimi_" della cella contatti.</p>
+  </section>
+
+  <section class="cell cell--red" style="--w:6" data-v="tap">
+    <span class="n mono">10 · al tocco</span>
+    <p class="word tap split" style="font-size: clamp(64px, 22cqi, 190px)">Bio</p>
+    <p class="desc">Tocca o clicca la cella: le lettere si gonfiano e tornano, una dopo l'altra. <b>Non è un hover</b>: risponde al click, come la freccia che scattava al tocco.</p>
+  </section>
+
+  <section class="cell" style="--w:12; min-height: 420px" data-v="lens">
+    <span class="n mono">11 · lente (hover, idea di Roberto)</span>
+    <h2 class="title lens split" style="font-size: clamp(36px, 6.6cqi, 104px); max-width: 16ch">Progetto identità visive e punti di contatto fisici e digitali.</h2>
+    <p class="desc">Passa il mouse sul testo: <b>il peso cresce ad area attorno al puntatore</b>, 900 al centro e 500 ai bordi della lente, e torna giù quando esci. Sul telefono: trascina il dito in orizzontale sul testo.</p>
+    <label class="mono" style="display:flex; gap:8px; align-items:center">raggio <input id="radius" type="range" min="60" max="400" step="10" value="180" style="accent-color: var(--rosso)"></label>
+  </section>
+</main>
+
+<script>
+  const root = document.documentElement;
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const k = () => +getComputedStyle(root).getPropertyValue('--k');
+  const pad2 = n => String(n).padStart(2, '0');
+
+  /** Divide il testo in lettere (span.k con --i), parole intere (span.w), testo vero per gli screen reader */
+  function split(el) {
+    const text = el.textContent;
+    el.textContent = '';
+    const sr = Object.assign(document.createElement('span'), { className: 'sr-only', textContent: text });
+    el.append(sr);
+    let i = 0;
+    for (const part of text.split(/(\s+)/)) {
+      if (!part) continue;
+      if (/^\s+$/.test(part)) { el.append(' '); continue; }
+      const w = Object.assign(document.createElement('span'), { className: 'w' });
+      w.setAttribute('aria-hidden', 'true');
+      for (const ch of part) {
+        const s = Object.assign(document.createElement('span'), { className: 'k', textContent: ch });
+        s.style.setProperty('--i', i++);
+        w.append(s);
+      }
+      el.append(w);
+    }
+    return [...el.querySelectorAll('.k')];
+  }
+  const letters = new Map([...document.querySelectorAll('.split')].map(el => [el, split(el)]));
+
+  // celle fuori schermo: le animazioni CSS si fermano (data-off), i loop JS controllano `visible`
+  const visible = new Set();
+  const io = new IntersectionObserver(es => es.forEach(e => {
+    e.target.toggleAttribute('data-off', !e.isIntersecting);
+    if (e.isIntersecting) visible.add(e.target.dataset.v); else visible.delete(e.target.dataset.v);
+  }));
+  document.querySelectorAll('.cell').forEach(c => io.observe(c));
+
+  /** Animazione di peso con le Web Animations (riparte da capo a ogni chiamata) */
+  const pulse = (el, frames, ms, delay = 0) => reduced ? null : el.animate(frames.map(w => ({ fontWeight: w })), { duration: ms * k(), delay: delay * k(), easing: 'cubic-bezier(0.2, 0.7, 0.2, 1)' });
+
+  // ── 01 contatore ──
+  const counter = document.querySelector('[data-count]');
+  function count() {
+    const to = +counter.dataset.count, T = 1100 * k(), t0 = performance.now();
+    if (reduced) { counter.textContent = pad2(to); counter.style.fontWeight = 500; return; }
+    const step = now => {
+      const p = Math.min(1, (now - t0) / T), e = 1 - (1 - p) ** 3;
+      counter.textContent = pad2(Math.round(to * e));
+      counter.style.fontWeight = Math.round(900 - 400 * e);
+      if (p < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }
+
+  // ── 02 sgonfia: CSS; per ripartire si toglie e rimette la classe ──
+  function replayCss(el, cls) { el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); }
+
+  // ── 05 battito ──
+  const clock = document.querySelector('.clock');
+  let shown = '';
+  function tick() {
+    const d = new Date(), s = pad2(d.getHours()) + ':' + pad2(d.getMinutes()) + ':' + pad2(d.getSeconds());
+    if (!clock.children.length) {
+      clock.innerHTML = [...s].map((c, i) => `<span class="k"${i > 5 ? ' style="font-size:.38em;vertical-align:top;"' : ''}>${i === 5 ? '' : c}</span>`).join('');
+      clock.setAttribute('aria-label', s.slice(0, 5));
+    }
+    [...s].forEach((c, i) => {
+      if (i === 5 || c === shown[i]) return;
+      const el = clock.children[i];
+      el.textContent = c;
+      if (shown) pulse(el, [900, 400], 520);
+    });
+    shown = s;
+    [...clock.children].forEach(el => { el.style.fontWeight = 400; });
+  }
+  tick();
+  setInterval(tick, 1000);
+
+  // ── 06 scanner ──
+  const items = [...document.querySelectorAll('.scan li')];
+  let at = 0;
+  (function scan() {
+    if (!reduced && visible.has('scan')) { items.forEach((li, i) => li.classList.toggle('on', i === at)); at = (at + 1) % items.length; }
+    setTimeout(scan, 700 * k());
+  })();
+
+  // ── 07 glitch di peso ──
+  const gl = letters.get(document.querySelector('[data-v="glitch"] .split'));
+  (function glitch() {
+    if (!reduced && visible.has('glitch')) {
+      for (let n = 1 + Math.floor(Math.random() * 3); n--;) {
+        const el = gl[Math.floor(Math.random() * gl.length)];
+        if (/\w/.test(el.textContent)) el.animate([{ fontWeight: 900 }, { fontWeight: 900, offset: 0.7 }, { fontWeight: 500 }], { duration: 140 * k(), easing: 'steps(2, end)' });
+      }
+    }
+    setTimeout(glitch, (220 + Math.random() * 700) * k());
+  })();
+
+  // ── 08 scroll: peso = 500 + velocità, smorzato; le lettere seguono con la loro transizione ──
+  const drag = document.querySelector('.drag');
+  let lastY = scrollY, lastT = performance.now(), weight = 500, raf = 0;
+  function settle(now) {
+    const dt = Math.max(1, now - lastT), v = Math.abs(scrollY - lastY) / dt;  // px/ms
+    lastY = scrollY; lastT = now;
+    const target = 500 + Math.min(400, v * 260);
+    weight += (target - weight) * (1 - Math.exp(-dt / 90));
+    drag.style.fontWeight = Math.round(weight);
+    raf = Math.abs(weight - 500) > 1 || v > 0 ? requestAnimationFrame(settle) : 0;
+  }
+  addEventListener('scroll', () => { if (!reduced && !raf) { lastT = performance.now(); raf = requestAnimationFrame(settle); } }, { passive: true });
+  drag.querySelectorAll('.k').forEach(el => { el.style.fontWeight = 'inherit'; });
+
+  // ── 09 macchina da scrivere ──
+  const typed = document.querySelector('.typed__text');
+  let typing = 0;
+  function type() {
+    const word = 'Scrivimi', run = ++typing;
+    typed.textContent = '';
+    if (reduced) { typed.textContent = word; return; }
+    [...word].forEach((ch, i) => setTimeout(() => {
+      if (run !== typing) return;
+      const s = Object.assign(document.createElement('span'), { textContent: ch });
+      s.style.fontWeight = 500;
+      typed.append(s);
+      pulse(s, [900, 500], 600);
+    }, (180 + i * 110 + (i ? Math.random() * 90 : 0)) * k()));
+  }
+
+  // ── 10 al tocco ──
+  const tap = document.querySelector('[data-v="tap"]');
+  tap.addEventListener('pointerdown', () => letters.get(tap.querySelector('.split')).forEach((el, i) => pulse(el, [500, 900, 500], 560, i * 40)));
+
+  // ── 11 lente: peso per lettera dalla distanza dal puntatore (coseno rialzato), smorzato a ogni fotogramma ──
+  const lens = document.querySelector('.lens'), lensK = letters.get(lens);
+  const radius = document.getElementById('radius');
+  const lw = new Float32Array(lensK.length).fill(500);
+  let pointer = null, lensRaf = 0, lensPrev = 0;
+  function lensFrame(now) {
+    const dt = lensPrev ? now - lensPrev : 16, R = +radius.value;
+    lensPrev = now;
+    let moving = false;
+    // le posizioni si rileggono a ogni fotogramma: cambiando peso le lettere si spostano
+    const rects = pointer ? lensK.map(el => el.getBoundingClientRect()) : null;
+    lensK.forEach((el, i) => {
+      let target = 500;
+      if (rects) {
+        const r = rects[i], d = Math.hypot(r.left + r.width / 2 - pointer.x, r.top + r.height / 2 - pointer.y);
+        if (d < R) target = 500 + 400 * (0.5 + 0.5 * Math.cos(Math.PI * d / R));
+      }
+      lw[i] += (target - lw[i]) * (1 - Math.exp(-dt / (70 * k())));
+      if (Math.abs(lw[i] - target) > 0.5) moving = true;
+      el.style.fontWeight = Math.round(lw[i]);
+    });
+    lensRaf = moving || pointer ? requestAnimationFrame(lensFrame) : 0;
+    if (!lensRaf) lensPrev = 0;
+  }
+  const lensStart = () => { if (!reduced && !lensRaf) lensRaf = requestAnimationFrame(lensFrame); };
+  lens.addEventListener('pointermove', e => {
+    if (e.pointerType !== 'mouse' && !e.pressure) return;
+    pointer = { x: e.clientX, y: e.clientY };
+    lensStart();
+  });
+  lens.addEventListener('pointerleave', () => { pointer = null; lensStart(); });
+  for (const type of ['pointerup', 'pointercancel']) {
+    lens.addEventListener(type, e => { if (e.pointerType !== 'mouse') { pointer = null; lensStart(); } });
+  }
+  lens.style.touchAction = 'pan-y';  // sul telefono: trascinando in orizzontale la lente segue il dito
+
+  // ── rilancio e velocità ──
+  function replay() {
+    count();
+    replayCss(document.querySelector('.v-in'), 'v-in');
+    type();
+  }
+  document.querySelectorAll('.again').forEach(b => b.addEventListener('click', e => {
+    e.stopPropagation();
+    const v = b.closest('.cell').dataset.v;
+    if (v === 'count') count(); else if (v === 'in') replayCss(document.querySelector('.v-in'), 'v-in'); else if (v === 'typed') type();
+  }));
+  document.getElementById('again').addEventListener('click', replay);
+  document.getElementById('slow').addEventListener('click', e => {
+    const slow = e.target.getAttribute('aria-pressed') !== 'true';
+    e.target.setAttribute('aria-pressed', slow);
+    root.style.setProperty('--k', slow ? 4 : 1);
+    replay();
+  });
+  document.fonts.ready.then(replay);
+
+  // ── fotogrammi: media e fotogrammi lunghi (> 2 frame a 60 Hz) negli ultimi 2 secondi ──
+  const fps = document.getElementById('fps');
+  let frames = [], prev = 0;
+  (function meter(t) {
+    if (prev) frames.push([t, t - prev]);
+    prev = t;
+    frames = frames.filter(([ft]) => t - ft < 2000);
+    if (frames.length > 10) {
+      const avg = frames.reduce((a, [, d]) => a + d, 0) / frames.length;
+      fps.textContent = Math.round(1000 / avg) + ' fps · ' + frames.filter(([, d]) => d > 33).length + ' scatti';
+    }
+    requestAnimationFrame(meter);
+  })(0);
+</script>
+</body>
+</html>

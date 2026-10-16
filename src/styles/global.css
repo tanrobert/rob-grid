@@ -15,8 +15,10 @@
      Unico colore di ruolo: tutto ciò che è "rosso" nel sito usa questo, non --rosso */
   --inchiostro: var(--rosso);
 
-  --font-testo:  'Testo', 'Helvetica Neue', sans-serif;
-  --font-numeri: 'Numeri', 'Courier New', monospace;
+  /* un solo font, Schibsted Grotesk variabile (fonts.css), con due ruoli: testo, e numeri per linguette,
+     didascalie, orologio e righello (.mono). Non è monospaziato: dove le cifre cambiano, tabular-nums */
+  --font-testo:  'Schibsted Grotesk', 'Helvetica Neue', Arial, sans-serif;
+  --font-numeri: var(--font-testo);
 
   /* modulo: tutto è multiplo di 10px */
   --m:    10px;
@@ -90,7 +92,7 @@ html {
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   -webkit-text-size-adjust: 100%;
-  /* niente riquadro grigio al tocco su Android e iOS: la risposta la dà la freccia (:active, sotto) */
+  /* niente riquadro grigio al tocco su Android e iOS: la risposta è l'apertura della cella */
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -358,18 +360,14 @@ p { text-wrap: pretty; }
   display: grid; place-items: center;
   width: 30px; height: 30px;
 }
-.cell__go span { display: block; transition: transform 300ms var(--ease-out); }
-/* al tocco (su touch non c'è hover) la freccia scatta come in hover: la cella risponde subito */
-.cell--link:active .cell__go span { transform: translate(3px, -3px); }
+.cell__go span { display: block; }
 /* freccia (src/assets/arrow.svg): il colore segue il testo */
 .cell__go svg { width: 11px; height: 11px; }
 .cell__go svg * { fill: currentColor; }
 
+/* ✕ di chiusura delle hero (progetti, archivio, extra, info): tutta la hero chiude (close.ts) */
 @media (hover: hover) and (pointer: fine) {
-  .cell--link:hover .cell__go span { transform: translate(3px, -3px); }
-  /* ✕ di chiusura delle hero (progetti, archivio, extra, info): tutta la hero chiude (close.ts) */
   .cell[data-hero] { cursor: pointer; }
-  .cell[data-hero]:hover .cell__go span { transform: scale(1.25); }
 }
 
 .cell:has(> .duo) > :is(.cell__label, .cell__go, .caption) { color: var(--bianco); }
@@ -377,29 +375,11 @@ p { text-wrap: pretty; }
 :root[data-inchiostro="bianco"] .cell:has(> .duo) > :is(.cell__label, .cell__go, .caption) { color: var(--chiaro); }
 
 /* ── Media: foto piena ───────────────────────────────── */
-/* Niente filtri né blend mode sulle foto: su mobile rendevano lo scroll scattoso (soprattutto in archivio,
-   20 foto). Gli effetti vanno cotti nelle immagini. Il velo a quadretti in hover (fino alla 1.4.95) è
-   salvato in tools/effetti/velo-quadretti.md */
+/* Solo la foto: niente effetti né hover (ottobre 2026). Niente filtri né blend mode: su mobile rendevano lo
+   scroll scattoso (soprattutto in archivio, 20 foto). Effetti provati e salvati in tools/effetti/:
+   velo a quadretti in hover (fino alla 1.4.95), dithering a 1 bit (17/10/2026) */
 .duo { position: absolute; inset: 0; background: var(--bianco); }
 .duo img, .duo video { width: 100%; height: 100%; object-fit: cover; }
-
-/* Celle progetto: la foto in bianco e nero (cotta, tools/grigio.mjs) sopra quella a colori, sotto un rosso
-   semitrasparente che la colora; in hover si vede la foto a colori. Il rosso è --rosso, non --inchiostro:
-   a luce spenta resta rosso. Hero e foto senza versione grigia: piene */
-.duo__grigio { position: absolute; inset: 0; transition: opacity 300ms ease; }
-.duo:has(> .duo__grigio)::after {
-  content: ''; position: absolute; inset: 0; pointer-events: none;
-  background: var(--rosso); opacity: 0.45;
-  transition: opacity 300ms ease;
-}
-@media (hover: hover) and (pointer: fine) {
-  .cell--link:hover .duo__grigio,
-  .cell--link:hover .duo::after { opacity: 0; }
-}
-/* senza hover (touch) la foto a colori nella cella non si vede mai: display none, così (lazy) non si scarica */
-@media not ((hover: hover) and (pointer: fine)) {
-  .duo:has(> .duo__grigio) > img:not(.duo__grigio) { display: none; }
-}
 
 /* ── Intro (solo al primo caricamento) ────────────────── */
 /* 1. il filo parte da un vertice (data-from, scelto a caso da Layout.astro) e fa il giro;
@@ -460,6 +440,19 @@ p { text-wrap: pretty; }
 .riga { display: block; position: relative; overflow: clip; padding-bottom: 0.2em; margin-bottom: -0.2em; }
 .riga__in { display: inline-block; }
 .riga__filo { position: absolute; left: 0; right: 0; bottom: 0; border-top: var(--line) solid currentColor; transform: scaleX(0); }
+
+/* Link di testo (footer, liste, 404): in hover e col fuoco da tastiera il peso sale a 900 (font variabile,
+   lo "scanner" di tools/pages/cinetica.html). Mai sui titoli delle celle: viaggiano nell'espansione e
+   devono combaciare con quelli della hero */
+.link-peso { transition: font-weight 320ms var(--ease-out); }
+.link-peso:focus-visible { font-weight: 900; }
+@media (hover: hover) and (pointer: fine) {
+  .link-peso:hover { font-weight: 900; }
+}
+
+/* Lente dei titoloni (scripts/titoloni.ts): righe bloccate alla prima passata del mouse, così le parole
+   che ingrassano non cambiano riga */
+.lente__riga { display: block; white-space: nowrap; }
 /* vuoti: il filo animato sta sopra il bordo, trasparente fino a fine intro (poi torna il bordo vero) */
 .is-intro .void { border-color: transparent; }
 .is-intro .void::after { inset: calc(var(--line-dp) * -1); }

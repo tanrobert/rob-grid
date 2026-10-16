@@ -13,8 +13,6 @@ export interface Project {
       Tavola Photoshop: w×600 × h×600 px, margini 300 sopra/sotto e 200 ai lati. */
   shape?: Span;
   image?: ImageMetadata;
-  /** Copertina in bianco e nero (tools/grigio.mjs), sopra quella a colori nelle celle */
-  grey?: ImageMetadata;
   /** Video in loop (percorso in /public), mostrato al posto di `image`, che gli fa da poster */
   video?: string;
   /** Celle proprie della pagina progetto (cells in index.md), tra le celle fisse e precedente/successivo */

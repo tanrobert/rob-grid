@@ -6,7 +6,6 @@ import { z } from 'astro/zod';
  * Progetti: una cartella per progetto in src/content/progetti/<slug>/
  *   index.md               dati in alto (frontmatter), testo sotto
  *   copertina.png|jpg      foto della cella e della hero (la trova data/projects.ts per nome)
- *   copertina.grigio.webp  versione in bianco e nero (node tools/grigio.mjs)
  *   altre foto, video…     citati dalle celle con percorsi relativi (./foto.jpg)
  *
  * `cells`: le celle proprie della pagina progetto, in ordine, tra le celle fisse (hero, titolo,

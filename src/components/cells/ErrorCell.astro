@@ -1,5 +1,5 @@
 ---
-// Pagina d'errore (404): il codice grande in Söhne Mono con un glitch in bicromia, sotto titolo e link all'indice.
+// Pagina d'errore (404): il codice grande (cifre tabellari) con un glitch in bicromia, sotto titolo e link all'indice.
 // Il fondo a quadretti è quello dei vuoti (.cell--error in global.css).
 // Glitch: due copie del codice sopra quella vera, nascoste; a intervalli mostrano solo una fascia (clip-path)
 // spostata di lato, una nell'inchiostro e una nel bianco che "taglia" le cifre. Fuori schermo in pausa (.loop),
@@ -18,7 +18,7 @@ const { code, title } = Astro.props;
     <span class="err__slice err__slice--cut loop">{code}</span>
   </div>
   <h1 class="err__title">{title}<span class="sr-only"> (errore {code})</span></h1>
-  <a href="/" class="err__back mono">Torna all'indice</a>
+  <a href="/" class="err__back mono link-peso">Torna all'indice</a>
 </div>
 
 <style>

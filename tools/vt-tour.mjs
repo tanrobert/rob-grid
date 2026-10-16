@@ -27,9 +27,8 @@ await p.evaluate(() => {
     });
   });
   document.addEventListener('astro:after-swap', () => {
-    // la foto che si vede: nelle celle progetto quella in bianco e nero (sopra), nella hero quella a colori
     const media = document.querySelector('[data-morphing][data-part="media"]');
-    const img = media?.querySelector('img.duo__grigio') ?? media?.querySelector('img');
+    const img = media?.querySelector('img');
     const e = window.__log.at(-1);
     if (e && img) e.photo = img.complete ? 'pronta' : 'NON pronta';
   });

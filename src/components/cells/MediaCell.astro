@@ -12,10 +12,8 @@ interface Props {
   meta?: string;
   /** Hero della pagina: caricata subito, deve esserci già quando la cella si espande */
   priority?: boolean;
-  /** Versione in bianco e nero (lib/grigio.ts), sopra quella a colori: celle progetto */
-  grey?: ImageMetadata;
 }
-const { image, video, alt, sizes, title, meta, priority = false, grey } = Astro.props;
+const { image, video, alt, sizes, title, meta, priority = false } = Astro.props;
 const poster = image && video ? await getImage({ src: image, width: 1280, format: 'webp' }) : undefined;
 ---
 
@@ -27,7 +25,6 @@ const poster = image && video ? await getImage({ src: image, width: 1280, format
   ) : image && (
     <Image src={image} alt={alt} widths={[400, 800, 1200, 1600, 2400]} sizes={sizes} loading={priority ? 'eager' : 'lazy'} fetchpriority={priority ? 'high' : undefined} decoding="async" />
   )}
-  {grey && !video && <Image class="duo__grigio" src={grey} alt="" widths={[400, 800, 1200, 1600, 2400]} sizes={sizes} loading={priority ? 'eager' : 'lazy'} fetchpriority={priority ? 'high' : undefined} decoding="async" aria-hidden="true" />}
 </div>
 
 {title && (

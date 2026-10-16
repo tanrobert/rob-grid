@@ -146,8 +146,7 @@ function unname(doc: Document) {
  * lazy e la hero usa un file più grande: si scarica e decodifica ora, con un tetto per le reti lente.
  */
 function photoReady(media: HTMLElement): Promise<unknown> {
-  // nelle celle progetto si vede la foto in bianco e nero (MediaCell), nella hero quella a colori
-  const img = media.querySelector<HTMLImageElement>('img.duo__grigio') ?? media.querySelector('img');
+  const img = media.querySelector('img');
   const src = img?.getAttribute('src') ?? media.querySelector('video')?.getAttribute('poster');
   if (!src) return Promise.resolve();
   const pre = new Image();

@@ -36,7 +36,4 @@ const { tags, total } = Astro.props;
   }
   .tagbtn .mono { flex-shrink: 0; }
   .tagbtn[aria-pressed="true"] { background: var(--inchiostro); color: var(--bianco); }
-  @media (hover: hover) and (pointer: fine) {
-    .tagbtn[aria-pressed="false"]:hover { background: color-mix(in srgb, var(--inchiostro) 10%, transparent); }
-  }
 </style>

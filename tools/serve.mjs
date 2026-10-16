@@ -40,6 +40,6 @@ http.createServer((req, res) => {
 }).listen(port, '0.0.0.0', () => {
   const ips = Object.values(os.networkInterfaces()).flat().filter(i => i?.family === 'IPv4' && !i.internal).map(i => i.address);
   console.log('Sul telefono (stesso Wi-Fi):');
-  for (const ip of ips) console.log(`  sito:            http://${ip}:${port}/\n  pagina di prova: http://${ip}:${port}/_vt/vt-test.html\n  velo lab:        http://${ip}:${port}/_out/velo/`);
+  for (const ip of ips) console.log(`  sito:            http://${ip}:${port}/\n  pagina di prova: http://${ip}:${port}/_vt/vt-test.html\n  velo lab:        http://${ip}:${port}/_out/velo/\n  dither lab:      http://${ip}:${port}/_out/dither/\n  cinetica:        http://${ip}:${port}/_vt/cinetica.html`);
   console.log('Ctrl+C per spegnere.');
 });
