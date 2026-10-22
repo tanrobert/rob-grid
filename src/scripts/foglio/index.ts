@@ -1,21 +1,23 @@
 /**
  * Fogli aperti sopra il tavolo (components/foglio/Foglio.astro): le pagine info, extra, archivio e progetti
- * sono il tavolo con un foglio aperto sopra.
- * - Dal tavolo: il clic su una cella non cambia pagina. La pagina si scarica (carica.ts, di solito già in
- *   anticipo), il suo foglio si monta sopra il tavolo e l'indirizzo cambia (pushState).
- * - Da link diretto il foglio c'è già nella pagina (con l'intro); arrivando da un'altra pagina del sito entra
- *   dalla cella d'origine (in-arrivo, Layout.astro).
- * - Apertura: la hero vola dalla cella d'origine al suo posto crescendo davvero (larghezza e altezza, come nel
- *   prototipo tools/pages/tavolo.html), il retino entra, le altre celle arrivano una dopo l'altra.
- * - Chiusura (✕, Esc, clic sulla hero o fuori dalle celle, celle "Indice"): il contrario, poi resta il tavolo,
- *   indirizzo "/". Aperto dal tavolo si chiude tornando indietro nella cronologia, che così non cresce.
- *   Indietro e avanti aprono e chiudono (popstate → segui).
- * - Arrivando da un altro foglio (archivio → progetto, caricamento vero) la chiusura torna a quel foglio.
+ * sono il tavolo con uno o più fogli aperti sopra, impilati (pila).
+ * - Dal tavolo o da una cella di un foglio: il clic non cambia pagina. La pagina si scarica (carica.ts, di
+ *   solito già in anticipo), il suo foglio si monta in cima alla pila e l'indirizzo cambia (pushState). Il
+ *   foglio sotto resta montato e nascosto, coi suoi filtri e il suo scroll.
+ * - Precedente/successivo sostituiscono il foglio in cima (replaceState).
+ * - Apertura: le celle di quello che c'è sotto sfumano, la hero vola dalla cella cliccata al suo posto
+ *   crescendo davvero (larghezza e altezza, come nel prototipo tools/pages/tavolo.html), le altre celle
+ *   arrivano una dopo l'altra. Dal tavolo entra anche il retino.
+ * - Chiusura (✕, Esc, clic sulla hero o fuori dalle celle): toglie il foglio in cima, la hero torna nella sua
+ *   cella del foglio sotto o del tavolo. Celle "Indice": tutta la pila, fino al tavolo.
+ * - Cronologia: ogni voce sa a che livello della pila è ({ livello, origine }; il tavolo è −1). Indietro e
+ *   avanti (popstate) fanno quello che serve per arrivarci: segui().
+ * - Da link diretto il primo foglio c'è già nella pagina (con l'intro); arrivando da un'altra pagina del sito
+ *   entra dalla cella d'origine (in-arrivo, Layout.astro).
  * La hero che vola è una copia: quella vera resta nella griglia, che così non si ricompone.
  */
 import { gsap } from 'gsap';
 import { tavolo } from '../tavolo';
-import type { Pezzo } from '../tavolo/pezzi';
 import { T } from '../tavolo/tempi';
 import { initCells } from '../cells';
 import { homeTitle } from '../../data/site';
@@ -28,33 +30,61 @@ const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 /** Click sinistro senza modificatori: gli altri (nuova scheda, ecc.) restano al browser */
 const isPlainClick = (e: MouseEvent) => e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey;
 
+/** Da dove si apre un foglio e dove torna chiudendosi: una cella del tavolo o del foglio sotto */
+interface Origine {
+  cella: HTMLElement;
+  /** cosa nascondere mentre la hero è fuori: sul tavolo tutto il pezzo (con l'ombra) */
+  nascondi: HTMLElement;
+}
 interface Foglio {
   percorso: string;
   el: HTMLElement;
-  retino: HTMLElement;
   hero: HTMLElement;
   titolo: string;
-  /** la cella del tavolo da cui si apre e in cui si chiude */
-  origine: Pezzo | null;
-  /** arrivato da un altro foglio con un caricamento vero: chiudere = tornare lì */
+  origine: Origine | null;
+  /** scroll della pagina quando un altro foglio l'ha coperto */
+  scroll: number;
+  /** aperto in questa pagina (pushState): chiuderlo è tornare indietro nella cronologia */
+  qui: boolean;
+  /** arrivato da un altro foglio con un caricamento vero: chiudere = tornare a quella pagina */
   daFoglio: boolean;
 }
+/** Voce della cronologia: livello nella pila e come trovare la cella d'origine */
+type Stato = { livello?: number; origine?: { tavolo?: string; href?: string } } | null;
 
-let f: Foglio | null = null;
-let aperto = false;
-/** un volo o uno scaricamento in corso: indietro/avanti aspettano la fine (segui) */
+const stato = () => history.state as Stato;
+const livello = () => (location.pathname === '/' ? -1 : (stato()?.livello ?? 0));
+
+const pila: Foglio[] = [];
+let retino = document.querySelector<HTMLElement>('[data-retino]');
+/** un volo o uno scaricamento in corso: il resto aspetta la fine (segui) */
 let occupato = false;
+/** la cella appena cliccata: il prossimo volo parte da lì */
+let partenza: HTMLElement | null = null;
 
-/** La cella del tavolo per questo foglio: quella con questo id, se no la prima che porta qui */
-const origineDi = (percorso: string, id?: string | null) =>
-  tavolo?.pezzi.find(p => p.id === id)
-  ?? tavolo?.pezzi.find(p => p.el.querySelector(`:scope > a.cell[href="${percorso}"]`))
-  ?? null;
-const cella = (p: Pezzo | null) => p?.el.querySelector<HTMLElement>(':scope > .cell') ?? null;
+const cellaDi = (el: Element | null | undefined) => el?.closest<HTMLElement>('.cell') ?? null;
+/** Una cella da cui si può volare: nella pagina e visibile (un filtro dell'archivio la può aver nascosta) */
+const visibile = (el: HTMLElement | null) => (el?.isConnected && el.getClientRects().length ? el : null);
 
-/** Tutto il foglio tranne la hero: celle e, nell'archivio, la striscia dei tag */
-const altre = (f: Foglio) =>
-  [...f.el.querySelectorAll<HTMLElement>(':scope > .grid > .cell:not([data-hero]):not([hidden]), :scope > :not(.grid)')];
+/** La cella d'origine del foglio al livello `liv`: sul tavolo (livello 0) o nel foglio sotto */
+function origineDi(liv: number, percorso: string, o?: { tavolo?: string; href?: string }): Origine | null {
+  if (liv <= 0) {
+    const p = tavolo?.pezzi.find(p => p.id === o?.tavolo)
+      ?? tavolo?.pezzi.find(p => o?.href && p.el.querySelector(`a[href="${o.href}"]`))
+      ?? tavolo?.pezzi.find(p => p.el.querySelector(`:scope > a.cell[href="${percorso}"]`));
+    const c = p?.el.querySelector<HTMLElement>(':scope > .cell');
+    return p && c ? { cella: c, nascondi: p.el } : null;
+  }
+  const sotto = pila[liv - 1];
+  const c = (o?.href ? cellaDi(sotto?.el.querySelector(`a[href="${o.href}"]`)) : null)
+    ?? sotto?.el.querySelector<HTMLElement>(`a.cell[href="${percorso}"]`) ?? null;
+  return c ? { cella: c, nascondi: c } : null;
+}
+
+/** Tutto il foglio tranne la hero (e una cella da lasciare): celle e, nell'archivio, la striscia dei tag */
+const altre = (f: Foglio, tranne?: HTMLElement | null) =>
+  [...f.el.querySelectorAll<HTMLElement>(':scope > .grid > .cell:not([data-hero]):not([hidden]), :scope > :not(.grid)')]
+    .filter(el => el !== tranne);
 
 /** La hero che vola: una copia fuori dalla griglia, ferma nella finestra */
 function copia(hero: HTMLElement, r: DOMRect) {
@@ -88,188 +118,271 @@ const fotoPronta = (hero: HTMLElement) => {
   return img ? Promise.race([img.decode().catch(() => {}), sleep(600)]) : Promise.resolve();
 };
 
-/** Tavolo vivo (foglio chiuso) o inerte sotto il foglio. Il contenuto principale (id main, skip link) è chi si vede */
+/** Il contenuto principale (id main, skip link) è quello che si vede: il foglio in cima, o il tavolo */
+function principale() {
+  pila.forEach((f, i) => { f.el.id = i === pila.length - 1 ? 'main' : ''; });
+  if (tavolo) tavolo.v.el.id = pila.length ? '' : 'main';
+}
+/** Tavolo vivo (nessun foglio) o inerte sotto i fogli */
 function tavoloVivo(vivo: boolean) {
   html.classList.toggle('is-tavolo', vivo);
-  if (!tavolo) return;
-  tavolo.v.el.inert = !vivo;
-  tavolo.v.el.id = vivo ? 'main' : '';
-  if (f) f.el.id = vivo ? '' : 'main';
+  if (tavolo) tavolo.v.el.inert = !vivo;
 }
 
-async function apri({ dalTavolo = true, fuoco = false } = {}) {
-  if (!f) return;
-  const { el, retino, hero, origine } = f;
-  aperto = occupato = true;
+/**
+ * Il foglio `f` (già nella pila, al livello `liv`) entra: quello che c'era (il foglio sotto, quello che
+ * sostituisce o il tavolo) lascia il posto, la hero vola dalla cella `da`.
+ */
+async function entra(f: Foglio, { da = null as HTMLElement | null, sostituito = null as Foglio | null, retinoPieno = false, fuoco = false } = {}) {
+  occupato = true;
+  const liv = pila.indexOf(f);
+  const sotto = liv > 0 ? pila[liv - 1] : null;
+  await fotoPronta(f.hero);
+  const daRect = visibile(da)?.getBoundingClientRect();
+  // quello che c'era se ne va, tranne la cella da cui si parte
+  const via = sostituito ?? (sotto?.el.hidden ? null : sotto);
+  if (via) {
+    const resto = [...altre(via, da), ...(via.hero === da ? [] : [via.hero])];
+    await gsap.to(resto, { opacity: 0, duration: T(0.14), ease: 'power1.in' });
+    if (via === sotto) via.scroll = scrollY;
+    via.el.hidden = true;
+    gsap.set(resto, { clearProps: 'opacity' });
+  }
+  if (sostituito) {
+    sostituito.el.remove();
+    // sul tavolo torna visibile la cella del foglio sostituito, si nasconde quella del nuovo
+    if (sostituito.origine && sostituito.origine.nascondi !== f.origine?.nascondi) gsap.set(sostituito.origine.nascondi, { clearProps: 'visibility' });
+  }
+  const dalTavolo = liv === 0 && !sostituito;
   tavoloVivo(false);
+  f.el.hidden = false;
+  principale();
   document.title = f.titolo;
   scrollTo(0, 0);
   const resto = altre(f);
   gsap.set(resto, { opacity: 0 });
-  gsap.set(hero, { visibility: 'hidden' });
-  // arrivando da un altro foglio il retino c'era già
-  gsap.set(retino, { opacity: dalTavolo ? 0 : 1 });
+  gsap.set(f.hero, { visibility: 'hidden' });
+  if (retino) gsap.set(retino, { opacity: dalTavolo && !retinoPieno ? 0 : 1 });
   html.classList.remove('in-arrivo');
 
-  await fotoPronta(hero);
-  const fine = hero.getBoundingClientRect();
-  gsap.to(retino, { opacity: 1, duration: T(0.3), ease: 'power1.out' });
+  const fine = f.hero.getBoundingClientRect();
+  if (retino) gsap.to(retino, { opacity: 1, duration: T(0.3), ease: 'power1.out' });
   // i dettagli arrivano quando il foglio è quasi al suo posto, uno dopo l'altro
-  const q = parseFloat(getComputedStyle(el).getPropertyValue('--gap')) || 20;
+  const q = parseFloat(getComputedStyle(f.el).getPropertyValue('--gap')) || 20;
   gsap.fromTo(resto, { y: q * 0.5 }, {
-    opacity: 1, y: 0, duration: T(0.3), ease: 'power2.out', stagger: T(0.03), delay: T(dalTavolo ? 0.32 : 0.05),
+    opacity: 1, y: 0, duration: T(0.3), ease: 'power2.out', stagger: T(0.03), delay: T(daRect ? 0.32 : 0.05),
     clearProps: 'opacity,transform',
   });
-  const da = dalTavolo ? cella(origine) : null;
-  if (da && origine) {
-    const v = copia(hero, da.getBoundingClientRect());
-    gsap.set(origine.el, { visibility: 'hidden' });
+  if (liv === 0 && f.origine) gsap.set(f.origine.nascondi, { visibility: 'hidden' });
+  if (daRect) {
+    const v = copia(f.hero, daRect);
     await vola(v, fine, 0.55);
     v.remove();
-    gsap.set(hero, { clearProps: 'visibility' });
+    gsap.set(f.hero, { clearProps: 'visibility' });
   } else {
-    await gsap.fromTo(hero, { opacity: 0, visibility: 'visible' }, { opacity: 1, duration: T(0.3), ease: 'power1.out', clearProps: 'opacity,visibility' });
+    await gsap.fromTo(f.hero, { opacity: 0, visibility: 'visible' }, { opacity: 1, duration: T(0.3), ease: 'power1.out', clearProps: 'opacity,visibility' });
   }
-  if (fuoco) hero.querySelector<HTMLElement>('[data-close]')?.focus({ preventScroll: true });
+  if (fuoco) f.hero.querySelector<HTMLElement>('[data-close]')?.focus({ preventScroll: true });
   finito();
 }
 
-async function chiudi({ storia = true } = {}) {
+/** Il foglio in cima esce: la hero torna nella sua cella, sotto riappare il foglio di prima o il tavolo */
+async function esce() {
+  const f = pila.at(-1);
   if (!f) return;
-  const { retino, hero, origine } = f;
-  if (storia) history.pushState(null, '', '/');
   occupato = true;
-  document.title = homeTitle;
+  const sotto = pila.at(-2) ?? null;
+  const v = copia(f.hero, f.hero.getBoundingClientRect());
+  gsap.set(f.hero, { visibility: 'hidden' });
   const resto = altre(f);
-  gsap.to(resto, { opacity: 0, duration: T(0.14), ease: 'power1.in' });
-  gsap.to(retino, { opacity: 0, duration: T(0.38), delay: T(0.1), ease: 'power1.inOut' });
-  const a = cella(origine);
-  if (a && origine) {
-    const v = copia(hero, hero.getBoundingClientRect());
-    gsap.set(hero, { visibility: 'hidden' });
-    await vola(v, a.getBoundingClientRect(), 0.48);
+  let verso: HTMLElement | null = null;
+  if (!sotto) {
+    document.title = homeTitle;
+    gsap.to(resto, { opacity: 0, duration: T(0.14), ease: 'power1.in' });
+    if (retino) gsap.to(retino, { opacity: 0, duration: T(0.38), delay: T(0.1), ease: 'power1.inOut' });
+    verso = visibile(f.origine?.cella ?? null);
+    if (verso) await vola(v, verso.getBoundingClientRect(), 0.48);
     // posata: sotto c'è già la cella vera, la copia sfuma
-    gsap.set(origine.el, { clearProps: 'visibility' });
-    await gsap.to(v, { opacity: 0, duration: T(0.1), ease: 'power1.out' });
-    v.remove();
+    if (f.origine) gsap.set(f.origine.nascondi, { clearProps: 'visibility' });
+    await gsap.to(v, { opacity: 0, duration: T(verso ? 0.1 : 0.3), ease: 'power1.out' });
+    pila.pop();
+    f.el.remove();
+    tavoloVivo(true);
+    if (retino) gsap.set(retino, { clearProps: 'opacity' });
   } else {
-    await gsap.to(hero, { opacity: 0, duration: T(0.3), ease: 'power1.in' });
+    await gsap.to(resto, { opacity: 0, duration: T(0.14), ease: 'power1.in' });
+    pila.pop();
+    f.el.remove();
+    sotto.el.hidden = false;
+    document.title = sotto.titolo;
+    scrollTo(0, sotto.scroll);
+    verso = visibile(f.origine?.cella ?? null);
+    gsap.fromTo(altre(sotto, verso), { opacity: 0 }, { opacity: 1, duration: T(0.2), ease: 'power1.out', clearProps: 'opacity' });
+    if (verso) {
+      gsap.set(verso, { visibility: 'hidden' });
+      await vola(v, verso.getBoundingClientRect(), 0.48);
+      gsap.set(verso, { clearProps: 'visibility' });
+    }
+    await gsap.to(v, { opacity: 0, duration: T(verso ? 0.1 : 0.3), ease: 'power1.out' });
   }
-  aperto = false;
-  tavoloVivo(true);
-  gsap.set([...resto, hero, retino], { clearProps: 'opacity,transform,visibility' });
-  // il fuoco torna alla cella d'origine (o al tavolo, che porta in vista la cella col fuoco)
-  const link = a?.matches('a') ? a : a?.querySelector<HTMLElement>('a');
-  link?.focus({ preventScroll: true });
+  v.remove();
+  principale();
+  // il fuoco torna alla cella d'origine (sul tavolo, che porta in vista la cella col fuoco)
+  (verso?.matches('a') ? verso : verso?.querySelector<HTMLElement>('a'))?.focus({ preventScroll: true });
   finito();
 }
 
-/** Il foglio della pagina scaricata, sopra il tavolo al posto di quello di prima (chiuso) */
-async function monta(doc: Document, percorso: string, origine?: string | null) {
+/** Il foglio della pagina scaricata, montato nascosto in cima alla pila */
+async function monta(doc: Document, percorso: string, liv: number, o?: { tavolo?: string; href?: string }) {
   await stili(doc);
+  if (!retino) {
+    retino = document.importNode(doc.querySelector<HTMLElement>('[data-retino]')!, true);
+    tavolo!.v.el.after(retino);
+  }
   const el = document.importNode(doc.querySelector<HTMLElement>('main[data-foglio]')!, true);
-  const retino = document.importNode(doc.querySelector<HTMLElement>('[data-retino]')!, true);
-  f?.el.remove();
-  f?.retino.remove();
   el.id = '';
-  tavolo!.v.el.after(retino, el);
+  el.hidden = true;
+  (pila.at(-1)?.el ?? retino).after(el);
   // le celle nuove non rifanno l'ingresso
   html.classList.remove('is-intro');
   html.classList.add('ha-foglio');
-  f = { percorso, el, retino, hero: el.querySelector<HTMLElement>('[data-hero]')!, titolo: doc.title, origine: origineDi(percorso, origine), daFoglio: false };
+  const f: Foglio = {
+    percorso, el, hero: el.querySelector<HTMLElement>('[data-hero]')!, titolo: doc.title,
+    origine: origineDi(liv, percorso, o), scroll: 0, qui: true, daFoglio: false,
+  };
   // orologi, archivio, globo, titoloni… anche per le celle nuove
   initCells();
+  return f;
 }
 
-// fine di un volo o di uno scaricamento: se nel frattempo è cambiato l'indirizzo (indietro/avanti), il foglio lo segue
+// fine di un volo o di uno scaricamento: se nel frattempo è cambiato l'indirizzo (indietro/avanti), si segue
 function finito() {
   occupato = false;
   segui();
 }
+
+/** Porta la pila al livello dell'indirizzo di adesso: un passo alla volta, ognuno animato */
 async function segui() {
   if (occupato) return;
-  const p = location.pathname;
-  if (aperto && f?.percorso === p) return;
-  if (aperto) return chiudi({ storia: false });  // poi, se serve, finito() apre quello giusto
-  if (!eFoglio(p)) return;
-  const id = (history.state as { origine?: string } | null)?.origine;
-  if (f?.percorso === p) f.origine = origineDi(p, id) ?? f.origine;
-  else {
-    occupato = true;
-    try {
-      await monta(await carica(p), p, id);
-    } catch {
-      location.reload();
-      return;
+  const L = livello(), p = location.pathname, cima = pila.length - 1;
+  if (L === cima && (L < 0 || pila[cima].percorso === p)) return;
+  const da = partenza;
+  partenza = null;
+
+  if (L < cima) {
+    // più livelli in un colpo (Indice, cronologia): via subito quelli in mezzo, il foglio in cima torna
+    // nella cella da cui era partito il primo di loro
+    if (L + 1 < cima) {
+      const primo = pila[L + 1];
+      pila[cima].origine = primo.origine;
+      for (const f of pila.splice(L + 1, cima - L - 1)) f.el.remove();
     }
-    occupato = false;
-    if (location.pathname !== p) return segui();
+    return esce();
   }
-  apri({ fuoco: true });
+  if (!eFoglio(p)) return location.reload();
+  const liv = Math.min(L, cima + 1);
+  occupato = true;
+  let f: Foglio;
+  try {
+    f = await monta(await carica(p), p, liv, stato()?.origine);
+  } catch {
+    location.reload();
+    return;
+  }
+  if (liv === cima) {
+    // stesso livello, altra pagina: sostituisce (precedente/successivo)
+    const vecchio = pila[cima];
+    pila[cima] = f;
+    return entra(f, { da, sostituito: vecchio });
+  }
+  pila.push(f);
+  entra(f, { da: da ?? f.origine?.cella ?? null, fuoco: !da });
 }
 addEventListener('popstate', () => { segui(); });
 
-function chiusura() {
-  if (!f || !aperto || occupato) return;
-  // aperto dal tavolo in questa pagina, o arrivato da un altro foglio: si torna indietro
-  if (f.daFoglio || (history.state as { foglio?: boolean } | null)?.foglio) history.back();
-  else chiudi();
+/** Chiude il foglio in cima (o tutta la pila, `tutto`) */
+function chiusura(tutto = false) {
+  if (!pila.length || occupato) return;
+  const L = livello();
+  if (tutto && L > 0) {
+    // Indice: fino al tavolo in un colpo
+    if (pila[0].qui) history.go(-(L + 1));
+    else { history.pushState({ livello: -1 }, '', '/'); segui(); }
+    return;
+  }
+  // aperto in questa pagina, o arrivato da un altro foglio: si torna indietro
+  if (pila.at(-1)!.qui || pila[0].daFoglio) history.back();
+  else { history.pushState({ livello: -1 }, '', '/'); segui(); }
 }
 
 /** Clic sulla hero (fuori da link e comandi, senza testo appena selezionato) o fuori dalle celle */
-const fuori = (t: Element) =>
-  (!!t.closest('.cell[data-hero]') && !t.closest('a, button, input, select, textarea, label, [role="switch"]') && !!getSelection()?.isCollapsed)
-  || t === f?.el || t === f?.retino || (t.matches('.grid') && !!f?.el.contains(t));
+const fuori = (t: Element) => {
+  const f = pila.at(-1);
+  return (!!t.closest('.cell[data-hero]') && !t.closest('a, button, input, select, textarea, label, [role="switch"]') && !!getSelection()?.isCollapsed)
+    || t === f?.el || t === retino || (t.matches('.grid') && !!f?.el.contains(t));
+};
 
-// in cattura: prima dei link
+// in cattura: prima dei link. La ✕ della hero chiude un foglio, le celle "Indice" tutta la pila
 document.addEventListener('click', e => {
-  if (!aperto || !isPlainClick(e)) return;
+  if (!pila.length || html.classList.contains('is-tavolo') || !isPlainClick(e)) return;
   const t = e.target as Element;
-  if (!t.closest('a[data-close]') && !fuori(t)) return;
+  const x = t.closest<HTMLElement>('a[data-close]');
+  if (!x && !fuori(t)) return;
   e.preventDefault();
-  chiusura();
+  chiusura(!!x && !x.classList.contains('cell__go'));
 }, { capture: true });
-document.addEventListener('keydown', e => { if (e.key === 'Escape') chiusura(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !html.classList.contains('is-tavolo')) chiusura(); });
 
-// clic su una cella del tavolo che porta a un foglio: si apre qui, senza cambiare pagina. I clic alla fine di
-// un trascinamento non arrivano qui (li ferma scripts/tavolo/gesti.ts)
+/** Scarica la pagina prima di cambiare indirizzo: se non riesce, la pagina vera */
+async function prepara(a: HTMLAnchorElement, sostituisci = false) {
+  occupato = true;
+  try {
+    await carica(a.pathname);
+  } catch {
+    if (sostituisci) location.replace(a.href);
+    else location.assign(a.href);
+    return false;
+  }
+  occupato = false;
+  return true;
+}
+
+// clic su una cella che porta a un foglio, sul tavolo o nel foglio in cima: si apre qui, senza cambiare
+// pagina. I clic alla fine di un trascinamento non arrivano qui (li ferma scripts/tavolo/gesti.ts)
 document.addEventListener('click', async e => {
   const a = (e.target as Element).closest?.<HTMLAnchorElement>('a[href]');
-  const pezzo = a?.closest<HTMLElement>('[data-pezzo]');
-  if (!a || !pezzo || e.defaultPrevented || !isPlainClick(e) || a.origin !== location.origin || !eFoglio(a.pathname)) return;
+  if (!a || e.defaultPrevented || !isPlainClick(e) || a.origin !== location.origin || !eFoglio(a.pathname)) return;
+  const pezzo = a.closest<HTMLElement>('[data-pezzo]');
+  const cima = pila.at(-1);
+  const nelFoglio = !!cima && cima.el.contains(a) && !html.classList.contains('is-tavolo');
+  if (!pezzo && !nelFoglio) return;
   e.preventDefault();
-  if (occupato || aperto) return;
-  const id = pezzo.dataset.pezzo!;
-  // se lo scaricamento non riesce: la pagina vera, che si apre da questa cella (in-arrivo)
-  try { sessionStorage.setItem(ORIGINE, JSON.stringify({ href: a.pathname + a.search, id })); } catch {}
-  occupato = true;
-  let doc: Document;
-  try {
-    doc = await carica(a.pathname);
-  } catch {
-    location.assign(a.href);
-    return;
+  if (occupato) return;
+  const url = a.pathname + a.search + a.hash;
+  if (pezzo) {
+    if (!html.classList.contains('is-tavolo') && pila.length) return;
+    const id = pezzo.dataset.pezzo!;
+    // se lo scaricamento non riesce: la pagina vera, che si apre da questa cella (in-arrivo)
+    try { sessionStorage.setItem(ORIGINE, JSON.stringify({ href: a.pathname + a.search, id })); } catch {}
+    if (!(await prepara(a))) return;
+    partenza = cellaDi(a);
+    history.pushState({ livello: 0, origine: { tavolo: id } }, '', url);
+  } else {
+    const sostituisci = a.hasAttribute('data-replace');
+    if (!(await prepara(a, sostituisci))) return;
+    partenza = cellaDi(a);
+    const L = livello();
+    if (sostituisci) history.replaceState({ livello: L, origine: { href: a.pathname } }, '', url);
+    else history.pushState({ livello: L + 1, origine: { href: a.getAttribute('href')! } }, '', url);
   }
-  history.pushState({ foglio: true, origine: id }, '', a.pathname + a.search + a.hash);
-  await monta(doc, a.pathname, id);
-  occupato = false;
-  apri();
-});
-
-// precedente/successivo: la pagina sostituisce quella corrente nella cronologia, così la chiusura torna dove si era partiti
-document.addEventListener('click', e => {
-  const a = (e.target as Element).closest?.<HTMLAnchorElement>('a[data-replace]');
-  if (!a || e.defaultPrevented || !isPlainClick(e)) return;
-  e.preventDefault();
-  location.replace(a.href);
+  segui();
 });
 
 // ── Avvio ────────────────────────────────────────────────
 const el = document.querySelector<HTMLElement>('main[data-foglio]');
-const retino = document.querySelector<HTMLElement>('[data-retino]');
 const hero = el?.querySelector<HTMLElement>('[data-hero]');
-if (el && retino && hero) {
-  // foglio già nella pagina (link diretto o caricamento vero)
+if (el && hero && retino) {
+  // foglio già nella pagina (link diretto o caricamento vero): il primo della pila
   const percorso = location.pathname;
   let daFoglio = false;
   try {
@@ -281,22 +394,29 @@ if (el && retino && hero) {
     const o = JSON.parse(sessionStorage.getItem(ORIGINE) ?? 'null');
     if (o?.href === percorso + location.search) id = o.id;
   } catch {}
-  f = { percorso, el, retino, hero, titolo: document.title, origine: daFoglio ? null : origineDi(percorso, id), daFoglio };
-  aperto = true;
-  if (html.classList.contains('in-arrivo')) apri({ dalTavolo: !daFoglio });
-  else tavoloVivo(false);
+  const f: Foglio = {
+    percorso, el, hero, titolo: document.title, scroll: 0, qui: false, daFoglio,
+    origine: daFoglio ? null : origineDi(0, percorso, { tavolo: id }),
+  };
+  pila.push(f);
+  if (html.classList.contains('in-arrivo')) entra(f, { da: f.origine?.cella ?? null, retinoPieno: daFoglio });
+  else {
+    tavoloVivo(false);
+    principale();
+    if (f.origine) gsap.set(f.origine.nascondi, { visibility: 'hidden' });
+  }
 }
 
 // le pagine delle celle del tavolo, scaricate in anticipo: subito quando il browser è libero, e comunque
-// appena il puntatore si avvicina a una cella
+// appena il puntatore si avvicina a una cella (anche nei fogli)
 if (tavolo) {
   const percorsi = [...tavolo.v.el.querySelectorAll<HTMLAnchorElement>('[data-pezzo] a[href]')]
     .filter(a => a.origin === location.origin && eFoglio(a.pathname)).map(a => a.pathname);
   setTimeout(() => anticipa(percorsi), html.classList.contains('is-intro') ? 2000 : 300);
   const vicino = (e: Event) => {
-    const a = (e.target as Element).closest?.<HTMLAnchorElement>('[data-pezzo] a[href]');
+    const a = (e.target as Element).closest?.<HTMLAnchorElement>('a[href]');
     if (a && a.origin === location.origin && eFoglio(a.pathname)) carica(a.pathname).catch(() => {});
   };
-  tavolo.v.el.addEventListener('pointerover', vicino, { passive: true });
-  tavolo.v.el.addEventListener('pointerdown', vicino, { passive: true });
+  document.addEventListener('pointerover', vicino, { passive: true });
+  document.addEventListener('pointerdown', vicino, { passive: true });
 }

@@ -173,7 +173,8 @@ console.log(`${browser} — ${BASE}`);
 // ── Fogli sopra il tavolo ───────────────────────────────────────────────
 /** Stato del foglio: aperto, tavolo inerte, h1, cella d'origine nascosta, copie in volo, fuoco */
 const foglio = p => p.evaluate(() => {
-  const f = document.querySelector('[data-foglio]');
+  // il foglio in cima alla pila (quelli sotto sono nascosti)
+  const f = document.querySelector('main[data-foglio]:not([hidden])');
   const html = document.documentElement;
   return {
     path: location.pathname + location.search,
@@ -367,25 +368,99 @@ if (chrome) {
   await p.close();
 }
 {
-  // archivio → progetto → Esc: si torna all'archivio. Successivo: sostituisce nella cronologia
+  // pila: tavolo → archivio (filtrato, scorso) → progetto → successivo → ✕ → archivio com'era → tag → Indice
+  const p = await page();
+  await spia(p);
+  await fresh(p);
+  await p.evaluate(() => { window.__stesso = true; });
+  const cima = 'main[data-foglio]:not([hidden])';
+  const fogli = () => p.$$eval('main[data-foglio]', l => l.map(m => (m.hidden ? 'nascosto' : 'in vista')).join(' '));
+  const progettiVisti = () => p.$$eval(`${cima} .cell--project:not([hidden])`, l => l.length);
+  await clicCella(p, 'archivio');
+  await sleep(1300);
+  await p.click(`${cima} .cell--tags button[data-tag]:not([data-tag=""])`);
+  await sleep(900);
+  const tagUrl = (await foglio(p)).path;
+  const filtrati = await progettiVisti();
+  await p.evaluate(() => scrollTo(0, 240));
+  await sleep(300);
+  const sc = await p.evaluate(() => scrollY);
+  const c = await p.evaluate(sel => {
+    for (const a of document.querySelectorAll(`${sel} .cell--project:not([hidden])`)) {
+      const r = a.getBoundingClientRect();
+      if (r.top > 10 && r.bottom < innerHeight - 10) return { href: a.getAttribute('href'), x: r.left, y: r.top, w: r.width, h: r.height };
+    }
+    return null;
+  }, cima);
+  const lunga = await p.evaluate(() => history.length);
+  await p.mouse.click(c.x + c.w / 2, c.y + c.h / 2);
+  await sleep(1500);
+  let f = await foglio(p);
+  const v = f.voli.at(-1);
+  check(await p.evaluate(() => window.__stesso === true) && f.path === c.href && f.aperto && await fogli() === 'nascosto in vista', 'archivio → progetto: foglio in cima, archivio montato sotto', `${f.path} · ${await fogli()}`);
+  check(v?.vista && Math.abs(v.x - c.x) < 2 && Math.abs(v.y - c.y) < 2, 'la hero parte dalla cella dell\'archivio', v ? `${v.x},${v.y} · cella ${Math.round(c.x)},${Math.round(c.y)}` : 'nessun volo');
+  // successivo: sostituisce il foglio in cima
+  await p.click(`${cima} a[data-id="succ"]`);
+  await sleep(1500);
+  f = await foglio(p);
+  const succ = f.path;
+  check(succ !== c.href && f.aperto && await p.evaluate(() => history.length) === lunga + 1 && await fogli() === 'nascosto in vista', 'successivo: sostituisce il foglio in cima, cronologia invariata', succ);
+  // ✕: l'archivio com'era
+  await p.click(`${cima} [data-hero] [data-close]`);
+  await sleep(1300);
+  f = await foglio(p);
+  const sc2 = await p.evaluate(() => scrollY);
+  check(f.path === tagUrl && f.aperto && await fogli() === 'in vista' && await progettiVisti() === filtrati && Math.abs(sc2 - sc) < 2, '✕: torna all\'archivio con lo stesso filtro e lo stesso scroll', `${f.path} · scroll ${sc} → ${sc2}`);
+  check(f.copie === 0 && !f.titolo.startsWith('Roberto Tanasi ·'), 'nessuna copia rimasta, titolo dell\'archivio', f.titolo);
+  // avanti e indietro ripercorrono la pila
+  await p.evaluate(() => history.forward());
+  await sleep(1500);
+  f = await foglio(p);
+  check(f.path === succ && f.aperto && await fogli() === 'nascosto in vista', 'avanti: di nuovo il progetto');
+  await p.evaluate(() => history.back());
+  await sleep(1500);
+  f = await foglio(p);
+  check(f.path === tagUrl && await fogli() === 'in vista', 'indietro: di nuovo l\'archivio');
+  // tag di un progetto → archivio filtrato in cima
+  await p.mouse.click(c.x + c.w / 2, c.y + c.h / 2);
+  await sleep(1500);
+  const tagLink = await p.$eval(`${cima} [data-id="tag"] a[href*="tag="]`, a => a.getAttribute('href'));
+  await p.click(`${cima} [data-id="tag"] a[href="${tagLink}"]`);
+  await sleep(1500);
+  f = await foglio(p);
+  const tutte = await p.$$eval(`${cima} .cell--project`, l => l.length);
+  check(f.path === tagLink && await fogli() === 'nascosto nascosto in vista' && await progettiVisti() < tutte, 'tag del progetto: archivio filtrato in cima alla pila', `${f.path} · ${await fogli()}`);
+  // indietro al progetto, poi Indice: tutta la pila, fino al tavolo
+  await p.keyboard.press('Escape');
+  await sleep(1300);
+  await p.click(`${cima} a.cell[data-close]`);
+  await sleep(1500);
+  f = await foglio(p);
+  check(f.path === '/' && !f.aperto && await fogli() === '' && f.main === 'tavolo' && !f.nascoste.length, 'Indice: dal progetto al tavolo in un colpo', `${f.path} · fogli: ${await fogli() || 'nessuno'}`);
+  check(await p.evaluate(() => window.__stesso === true), 'sempre nello stesso documento');
+  await p.close();
+}
+{
+  // filtri dell'archivio con Flip: a fine animazione celle al posto della griglia, doppio clic veloce
   const p = await page();
   await p.goto(BASE + '/archivio', { waitUntil: 'networkidle0' });
   await sleep(2500);
-  const prima = await p.$eval('.foglio .cell--project', a => a.getAttribute('href'));
-  await Promise.all([p.waitForNavigation({ waitUntil: 'load' }), p.click('.foglio .cell--project')]);
-  await sleep(1200);
-  let f = await foglio(p);
-  check(f.path === prima && f.aperto && !f.intro, 'archivio → progetto', f.path);
-  const lunga = await p.evaluate(() => history.length);
-  await Promise.all([p.waitForNavigation({ waitUntil: 'load' }), p.click('a[data-id="succ"]')]);
-  await sleep(1200);
-  f = await foglio(p);
-  check(f.path !== prima && f.aperto && await p.evaluate(() => history.length) === lunga, 'successivo: sostituisce il progetto nella cronologia', f.path);
-  // indietro: in Firefox la pagina torna dalla cache del browser, senza un evento di caricamento da aspettare
-  await p.keyboard.press('Escape');
-  await sleep(2000);
-  f = await foglio(p);
-  check(f.path === '/archivio' && f.aperto, 'Esc: torna all\'archivio', f.path);
+  const bottoni = await p.$$('.foglio .cell--tags button[data-tag]:not([data-tag=""])');
+  await bottoni[0].click();
+  await bottoni[1].click();
+  await sleep(1500);
+  const r = await p.evaluate(() => {
+    const viste = [...document.querySelectorAll('.foglio .cell--project:not([hidden])')];
+    return {
+      viste: viste.length,
+      conteggio: Number(document.querySelector('.foglio [data-count]').textContent),
+      // niente trasformazioni o opacità rimaste: ogni cella è dove la mette la griglia
+      ferme: viste.every(c => getComputedStyle(c).transform === 'none' && getComputedStyle(c).opacity === '1'),
+      path: location.pathname + location.search,
+      premuto: document.querySelector('.foglio .cell--tags [aria-pressed="true"]')?.dataset.tag,
+    };
+  });
+  check(r.viste === r.conteggio && r.ferme && r.path.endsWith(`tag=${r.premuto}`), 'filtri con Flip: doppio clic, celle ferme al loro posto, conteggio e indirizzo', `${r.viste} progetti · ${r.path}`);
   await p.close();
 }
 {

@@ -217,8 +217,9 @@ export function initCells() {
   });
 
   // ── Misure della griglia ───────────────────────────────
-  const grid = document.querySelector<HTMLElement>('.grid');
+  // la griglia in cui sta la cella (nella pila dei fogli ce ne possono essere più d'una)
   const meter = document.querySelector<HTMLElement>('[data-meter]');
+  const grid = meter?.closest<HTMLElement>('.grid');
   if (grid && meter) {
     const set = (k: string, v: string) => { const dd = meter.querySelector(`[data-key="${k}"]`); if (dd) dd.textContent = v; };
     const measure = () => {
