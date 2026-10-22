@@ -1,0 +1,180 @@
+---
+// Tavolo della home: carta quadrettata infinita e celle appoggiate sopra, da spostare, lanciare e aprire
+// (comportamento in scripts/tavolo/, prototipo in tools/pages/tavolo.html). Ogni cella sta in un involucro
+// .pezzo (posizione e ombra), che è quello che si muove.
+// La disposizione si calcola qui per tre finestre tipo (senza JavaScript il tavolo si vede comunque) e
+// nel browser per la finestra vera, prima di mostrare il tavolo.
+import type { Cell } from '../../data/grid-types';
+import CellContent from '../CellContent.astro';
+import { inQuadretti, pack, FINESTRE, Q, versione } from '../../lib/tavolo';
+import { BREAKPOINTS } from '../../lib/grid';
+
+interface Props {
+  cells: Cell[];
+}
+const { cells } = Astro.props;
+
+const ids = new Set<string>();
+for (const c of cells) {
+  if (ids.has(c.id)) throw new Error(`[tavolo] id duplicato: "${c.id}"`);
+  ids.add(c.id);
+}
+
+const misure = cells.map(c => ({ id: c.id, ...inQuadretti(c) }));
+const posti = {
+  lg: pack(misure, FINESTRE.lg),
+  md: pack(misure, FINESTRE.md),
+  sm: pack(misure, FINESTRE.sm),
+};
+// intro: le celle entrano in ordine di distanza dal marchio (la prima cella, al centro). Qui sulla disposizione
+// del build, nel browser su quella vera (scripts/tavolo)
+const centro = (i: number) => ({ x: posti.lg[i].x + misure[i].w / 2, y: posti.lg[i].y + misure[i].h / 2 });
+const lontano = (i: number) => Math.hypot(centro(i).x - centro(0).x, centro(i).y - centro(0).y);
+const turni = new Map(cells.map((_, i) => i).sort((a, b) => lontano(a) - lontano(b)).map((i, n) => [i, n]));
+const firstProject = cells.findIndex(c => c.type === 'project');
+const projects = cells.filter(c => c.type === 'project').length;
+---
+
+<main id="main" class="tavolo" data-tavolo data-versione={versione(misure)} style={`--q-lg:${Q.lg}px;--q-sm:${Q.sm}px`}>
+  <div class="tavolo__carta" data-carta aria-hidden="true"></div>
+  <div class="tavolo__mondo" data-mondo>
+    {cells.map((cell, i) => {
+      const { w, h } = misure[i];
+      const { lg, md, sm } = { lg: posti.lg[i], md: posti.md[i], sm: posti.sm[i] };
+      return (
+        <div
+          class="pezzo"
+          data-pezzo={cell.id}
+          data-w={w}
+          data-h={h}
+          style={`--qw:${w};--qh:${h};--x:${lg.x};--y:${lg.y};--x-md:${md.x};--y-md:${md.y};--x-sm:${sm.x};--y-sm:${sm.y}`}
+        >
+          {cell.frame !== false && <div class="pezzo__ombra" data-ombra aria-hidden="true"></div>}
+          <CellContent
+            cell={cell} index={i} turno={turni.get(i)} priority={i === firstProject} projects={projects}
+            sizes={`(max-width: ${BREAKPOINTS.md - 1}px) ${w * Q.sm}px, ${w * Q.lg}px`}
+          />
+        </div>
+      );
+    })}
+  </div>
+</main>
+
+<div class="attrezzi" role="group" aria-label="Tavolo" data-attrezzi hidden>
+  <button type="button" class="mono" data-riordina>Riordina</button>
+  <button type="button" class="mono" data-centro>Torna al centro</button>
+</div>
+
+<style>
+  /* la finestra sul tavolo: niente scroll (overflow: clip non si scorre nemmeno da script, col fuoco da tastiera)
+     e niente gesti del browser, li fa scripts/tavolo/gesti.ts */
+  .tavolo {
+    --q: var(--q-lg);
+    position: fixed; inset: 0;
+    overflow: clip;
+    background: var(--bianco);
+    touch-action: none;
+    cursor: grab;
+    user-select: none; -webkit-user-select: none;
+    -webkit-touch-callout: none;
+  }
+  /* margini interni delle celle (global.css) in scala con lo zoom: --zoom = quadretto / quadretto di base (vista.ts) */
+  .tavolo {
+    --pad: calc(var(--m) * 2 * var(--zoom, 1));
+    --pad-label: calc(var(--pad) + 22px * var(--zoom, 1));
+  }
+  @media (max-width: 599px) { .tavolo { --q: var(--q-sm); --pad: calc(var(--m) * 1.4 * var(--zoom, 1)); } }
+  .tavolo.is-panning { cursor: grabbing; }
+
+  /* carta: quadretti e crocini (ogni 4 quadretti, sul modulo della griglia di prima). Uno strato più grande
+     della finestra di un modulo per lato, che si sposta solo del resto rispetto al modulo: le linee sembrano
+     infinite e il browser non ridisegna nulla. Senza JavaScript il centro del tavolo è al centro della finestra.
+     Colori dalle variabili: seguono la luce spenta e il contrasto alto */
+  .tavolo__carta {
+    --modulo: calc(var(--q) * 4);
+    --carta-ink: color-mix(in srgb, var(--inchiostro) 22%, transparent);
+    position: absolute;
+    left: calc(var(--modulo) * -1); top: calc(var(--modulo) * -1);
+    width: calc(100% + 2 * var(--modulo)); height: calc(100% + 2 * var(--modulo));
+    background-image:
+      linear-gradient(to right, var(--carta-ink) var(--line-dp), transparent var(--line-dp)),
+      linear-gradient(to bottom, var(--carta-ink) var(--line-dp), transparent var(--line-dp));
+    background-size: var(--q) var(--q);
+    translate: mod(round(50vw, 1px), var(--modulo)) mod(round(50dvh, 1px), var(--modulo));
+    will-change: transform;
+    pointer-events: none;
+  }
+  /* crocini: la forma è una maschera (un SVG senza colore, centrato sull'angolo di ogni modulo: i bracci escono
+     dai bordi e rientrano dal lato opposto), il colore è l'inchiostro */
+  .tavolo__carta::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: var(--inchiostro);
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='5' height='1'/%3E%3Crect width='1' height='5'/%3E%3Crect x='100%25' width='4' height='1' transform='translate(-4 0)'/%3E%3Crect y='100%25' width='1' height='4' transform='translate(0 -4)'/%3E%3C/svg%3E") 0 0 / var(--modulo) var(--modulo) repeat;
+  }
+  /* intro: la carta compare a giri quadrati dal centro del tavolo (--ox, --oy: lo scrive scripts/tavolo/vista.ts),
+     un modulo per giro (o più, --passo-giro, se la finestra è grande). Stessa maschera dei crocini delle pagine
+     (global.css): il giro n sfuma mentre --giro va da n a n+1, e a intro finita --giro torna a coprire tutto */
+  :global(.is-intro) .tavolo__carta {
+    --ox: 50%; --oy: 50%;
+    --giro: 1000;
+    --a: calc(var(--giro) * var(--passo-giro, var(--modulo)));
+    --b: calc(max(var(--giro) - 1, 0) * var(--passo-giro, var(--modulo)));
+    --c: rgb(0 0 0 / min(1, var(--giro)));
+    mask-image:
+      linear-gradient(to right, transparent calc(var(--ox) - var(--a)), var(--c) calc(var(--ox) - var(--b)), var(--c) calc(var(--ox) + var(--b)), transparent calc(var(--ox) + var(--a))),
+      linear-gradient(to bottom, transparent calc(var(--oy) - var(--a)), var(--c) calc(var(--oy) - var(--b)), var(--c) calc(var(--oy) + var(--b)), transparent calc(var(--oy) + var(--a)));
+    mask-composite: intersect;
+    animation: crocini-in 960ms linear backwards;
+  }
+  .tavolo__mondo {
+    position: absolute; left: 0; top: 0;
+    translate: round(50vw, 1px) round(50dvh, 1px);
+    will-change: transform;
+  }
+
+  /* pezzo = cella sul tavolo, posizione in quadretti dal centro (scritta al build per breakpoint) */
+  .pezzo {
+    position: absolute; left: 0; top: 0;
+    width: calc(var(--qw) * var(--q));
+    height: calc(var(--qh) * var(--q));
+    translate: calc(var(--x) * var(--q)) calc(var(--y) * var(--q));
+  }
+  @media (max-width: 1023px) { .pezzo { translate: calc(var(--x-md) * var(--q)) calc(var(--y-md) * var(--q)); } }
+  @media (max-width: 599px)  { .pezzo { translate: calc(var(--x-sm) * var(--q)) calc(var(--y-sm) * var(--q)); } }
+
+  /* col JavaScript le posizioni sono transform scritti da GSAP */
+  .tavolo.is-vivo :is(.tavolo__carta, .tavolo__mondo, .pezzo) { translate: none; }
+  /* finché il JavaScript non ha disposto il tavolo per la finestra vera le celle non si vedono (niente salti);
+     se non arriva compaiono lo stesso dopo un attimo, alle posizioni del build */
+  :global(html.js) .tavolo:not(.is-vivo) .tavolo__mondo { visibility: hidden; animation: tavolo-attesa 0s 1.5s both; }
+  @keyframes tavolo-attesa { to { visibility: visible; } }
+
+  /* lati in quadretti per il filo dell'intro: 4 quadretti = 1 unità, quindi il tempo per quadretto è un quarto */
+  .pezzo > :global(.cell) { position: absolute; inset: 0; --cw: var(--qw); --ch: var(--qh); --t-draw-u: 17.5ms; }
+  /* il marchio senza filo sta direttamente sulla carta */
+  .pezzo > :global(.cell--bare) { background: transparent; }
+  /* ombra della cella sollevata: retino di puntini pieni (il contrario del retino a fori sotto la cella aperta) */
+  .pezzo__ombra {
+    position: absolute; inset: 0;
+    background: radial-gradient(circle at 2px 2px, var(--inchiostro) 0 1.15px, transparent 1.4px) 0 0 / 4px 4px;
+  }
+  /* nell'intro le celle sono trasparenti finché il filo non ha fatto il giro: l'ombra sotto si vedrebbe */
+  :global(.is-intro) .pezzo__ombra { visibility: hidden; }
+
+  .attrezzi {
+    position: fixed; z-index: 40;
+    top: max(var(--gap), env(safe-area-inset-top));
+    right: max(var(--gap), env(safe-area-inset-right));
+    display: flex; gap: var(--gap);
+  }
+  .attrezzi[hidden] { display: none; }
+  .attrezzi button {
+    appearance: none; margin: 0;
+    padding: 10px 12px;
+    background: var(--bianco);
+    color: var(--inchiostro);
+    border: var(--line) solid var(--inchiostro);
+    cursor: pointer;
+  }
+</style>

@@ -1,13 +1,9 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import Grid from '../components/Grid.astro';
-import SiteFooter from '../components/SiteFooter.astro';
-import { grid } from '../data/grid';
+import Tavolo from '../components/tavolo/Tavolo.astro';
+import { tavolo } from '../data/tavolo';
 ---
 
-<Layout>
-  <main id="main" class="sheet">
-    <Grid cells={grid} />
-    <SiteFooter />
-  </main>
+<Layout tavolo>
+  <Tavolo cells={tavolo} />
 </Layout>

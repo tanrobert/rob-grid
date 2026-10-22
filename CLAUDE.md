@@ -1,7 +1,7 @@
 # rob-astro — portfolio di Roberto Tanasi
 
 Portfolio da graphic designer costruito come **griglia modulare di caselle** in bicromia rosso/bianco.
-Astro 7 statico (Vite 8, compilatore Rust), nessun framework UI, TypeScript. Unica libreria runtime: d3-geo (solo per il globo, caricata su richiesta). Dominio `https://roberto.design`, progetto Vercel `rob-grid`.
+Astro 7 statico (Vite 8, compilatore Rust), nessun framework UI, TypeScript. Librerie runtime: GSAP (gesti e animazioni del tavolo, da npm: ~33 KB gzip in più nello script di tutte le pagine) e d3-geo (solo per il globo, caricata su richiesta). Dominio `https://roberto.design`, progetto Vercel `rob-grid`.
 Lingua del sito e dei commenti nel codice: **italiano**.
 
 ## Comandi
@@ -14,17 +14,19 @@ src/
   content.config.ts         schema dei progetti (collection `progetti`), con le celle ammesse nelle pagine progetto
   content/progetti/<slug>/  un progetto per cartella: index.md (dati + testo), copertina.png|jpg, materiali
   layouts/Layout.astro      <head>, ClientRouter, script inline (intro + --dp), import di morph.ts e cells.ts
-  pages/                    index · archivio (filtri per tag) · info · extra · progetti/[slug] · 404 (una cella `error` a tutta larghezza)
+  pages/                    index (il tavolo) · archivio (filtri per tag) · info · extra · progetti/[slug] · 404 (una cella `error` a tutta larghezza)
   components/
-    Grid.astro              rende le celle + calcola i "vuoti" per ogni breakpoint
+    Grid.astro              griglia delle pagine: le celle + i "vuoti" per ogni breakpoint
+    CellContent.astro       una cella completa (guscio + contenuto del suo tipo): lo usano griglia e tavolo
+    tavolo/Tavolo.astro     TAVOLO DELLA HOME: carta quadrettata, celle in involucri .pezzo (posizione, ombra a retino), Riordina/Torna al centro
     Cell.astro              guscio di ogni casella: <a> se cliccabile, <div> altrimenti; linguetta + freccia/✕ (solo testo, senza riquadro).
                             Tutte le hero sono celle della griglia con `heroOf`: stesso tipo della cella di partenza, al doppio (progetti: forma ×2; info, extra, archivio: 2×2 → 4×4, su mobile 4×2)
-    SiteFooter.astro        footer = casella rossa sempre ultima, fuori dalla griglia; tocca sempre il fondo della finestra (scripts/fill.ts)
+    SiteFooter.astro        footer delle pagine (sulla home è la cella `recapiti`, ContattiCell) = casella rossa sempre ultima, fuori dalla griglia; tocca sempre il fondo della finestra (scripts/fill.ts)
     SvgAsset.astro          rende un SVG dal registro
     TagButtons.astro        pulsanti filtro (casella tags + barra mobile dell'archivio)
     cells/*Cell.astro       un componente per ogni tipo di cella
   data/
-    grid.ts                 GRIGLIA HOME: l'ordine e le misure delle celle si modificano qui
+    tavolo.ts               CELLE DELLA HOME: ordine (= lettura e spirale della disposizione) e misure; id fissi
     extra.ts                celle extra (orologio, misure, cursore, registro, occhio, globo): pagina /extra, il numero in home si aggiorna da solo
     grid-types.ts           tipo `Cell` (unione di tutti i tipi di cella)
     projects.ts             adattatore: legge la collection → `Project[]` (copertina per nome, dummy se manca; avviso se la copertina non è sul modulo)
@@ -33,12 +35,16 @@ src/
     site.ts                 dati del sito (nome, email, P.IVA, luogo) e pageTitle ("Pagina · Roberto Tanasi")
   lib/
     grid.ts                 COLS, BREAKPOINTS, resolveSpans, findVoids (replica di grid-auto-flow: row dense)
+    tavolo.ts               quadretti (1 unità = 4), Q di base 25/18 px, zoom 12–48, pack (disposizione a spirale, al build e nel browser), versione
     projects.ts             projectYear, firstYear, projectsByYear
     tags.ts                 TagCount, tagSlug, allTags
     format.ts               pad2 ("03")
     globe.ts                proiezione del globo (d3-geo), orientamento siderale reale; usato al build e nel browser
     version.ts              versione del footer dal messaggio dell'ultimo commit
   scripts/
+    tavolo/                 gesti del tavolo con GSAP: index (avvio dopo ogni swap, pulizia prima), vista (pan, zoom = --q, pixel reali),
+                            gesti (puntatore, rotella, tastiera; il click dopo un gesto si ferma), pezzi (prendi, porta, lascia, riordina),
+                            memoria (sessionStorage con versione), tempi
     cells.ts                comportamenti vivi (orologio, meteo Open-Meteo, occhio, cursore, misure, pausa offscreen); reinit su astro:page-load, cleanup su before-swap
     archive.ts              filtri archivio (?tag=), View Transition delle caselle, vuoti ricalcolati nel browser
     morph.ts                espansione cella → pagina e ritorno. Nell'HTML solo chiavi e ruoli: `data-morph` (href della cella) = `data-hero` (hero d'arrivo), `data-title-of` (cella del titolo d'arrivo), `data-part` = il ruolo di un pezzo (media, go, title, num, note, eyebrow…: **qualsiasi ruolo presente da tutti e due i lati viaggia**, uno per cella; il resto resta nella finestra). Come viaggia lo dice la classe (`KIND` in morph.ts): frame (finestre), photo, scale (titolo, numero, freccia: riquadro stretto sul contenuto), text (tutto il resto, resta della sua misura). I nomi (`morph-<ruolo>`, classe `morph` + tipo) li dà solo `morph.ts`, nel loader di Astro (entrambi i documenti, pagina vecchia non ancora catturata), ai pezzi presenti da tutti e due i lati, e li toglie a fine transizione (`data-morphing`). Lì anche fondo della finestra, foto d'arrivo pronta e riquadro della foto. Coreografia in global.css. In `npm run dev` la console avvisa dei pezzi segnati male (ruolo doppio o sconosciuto, due hero)
@@ -52,7 +58,7 @@ src/
   styles/global.css         token, griglia, cella, media, intro, view transitions, reduced motion
   styles/fonts.css          tutte le @font-face (importato da global.css)
 vercel.json                 cache dei font (immutable: se un font cambia, cambiargli nome) e intestazioni di sicurezza
-tools/                      verifica delle View Transitions, solo sviluppo (vedi "Verifica"); risultati in tools/out/ (ignorata da git)
+tools/                      verifica delle View Transitions e del tavolo (tavolo-tour.mjs), solo sviluppo (vedi "Verifica"); risultati in tools/out/ (ignorata da git)
 ```
 
 ## Progetti
@@ -66,9 +72,9 @@ tools/                      verifica delle View Transitions, solo sviluppo (vedi
 ## Sistema a griglia
 - Colonne: **12** desktop (≥1024) · **8** tablet (600–1023) · **4** mobile (<600). `COLS`/`BREAKPOINTS` in `lib/grid.ts` vanno tenuti allineati a `--cols` e alle media query di `global.css`.
 - **Unità piccola**: la cella quadrata "base" è **2×2** unità; le misure dispari danno le forme intermedie (es. 4×3, anche su mobile). Unità `--u` calcolata su `.grid` con `100cqw` (`.sheet` è il container). Tetto `--u-max` (145px = cella 2×2 da 300px): `.sheet` ha `max-width` di conseguenza e si centra (da ~1870px). I crocini stanno a ogni incrocio di unità.
-- Ogni cella: `w`/`h` in unità, override `md`/`sm`, `tone: 'red'`, `href`, `label: false` (niente linguetta; di base la linguetta è il solo numero della cella: i nomi li dicono già titoli, occhielli e didascalie), `heroOf`, `hideOn`, `frame: false` (senza filo). Celle svg: `fit: 'bleed'` (a tutta cella, come il logo R in home e in Info).
-- L'ordine in `data/grid.ts` conta: la griglia è `row dense`. I buchi rimasti diventano `.void` (carta a quadretti di mezzo passo della griglia: scalano con le celle, le linee passano per i crocini e per il centro di ogni unità), calcolati al build per breakpoint e ricalcolati nel browser dopo i filtri.
-- **Forma dei progetti**: `shape` (w×h in unità) nell'`index.md` del progetto è l'unica misura del progetto. `scaleShape` (`lib/grid.ts`) la usa ×1 per la cella in home (`projectCell` in `data/grid.ts`) e in archivio, ×2 per la hero della pagina progetto; se non ci sta nelle colonne va a tutta larghezza con lo stesso rapporto (su mobile la hero "si sposta" senza crescere). Niente `md`/`sm` a mano sui progetti: il rapporto deve restare quello dell'immagine. Senza `shape`: archivio 4×4/2×2, hero 6×6.
+- Ogni cella: `w`/`h` in unità (sul tavolo ×4 quadretti, o `q` in quadretti), override `md`/`sm`, `tone: 'red'`, `href`, `label: false` (niente linguetta; di base la linguetta è il solo numero della cella: i nomi li dicono già titoli, occhielli e didascalie), `heroOf`, `hideOn`, `frame: false` (senza filo). Celle svg: `fit: 'bleed'` (a tutta cella, come il logo R in home e in Info).
+- Nelle griglie delle pagine l'ordine conta: la griglia è `row dense`. I buchi rimasti diventano `.void` (carta a quadretti di mezzo passo della griglia: scalano con le celle, le linee passano per i crocini e per il centro di ogni unità), calcolati al build per breakpoint e ricalcolati nel browser dopo i filtri.
+- **Forma dei progetti**: `shape` (w×h in unità) nell'`index.md` del progetto è l'unica misura del progetto. `scaleShape` (`lib/grid.ts`) la usa ×1 in archivio (sul tavolo della home la forma × 4 quadretti, `projectCell` in `data/tavolo.ts`), ×2 per la hero della pagina progetto; se non ci sta nelle colonne va a tutta larghezza con lo stesso rapporto (su mobile la hero "si sposta" senza crescere). Niente `md`/`sm` a mano sui progetti: il rapporto deve restare quello dell'immagine. Senza `shape`: archivio 4×4/2×2, hero 6×6.
 - **Tavola Photoshop per progetto**: modulo 600 px per unità (es. 4×3 → 2400×1800), layout guide con canale 0 e margini 300 sopra/sotto · 200 ai lati (½ e ⅓ di unità: liberi da linguetta, freccia e didascalia nella cella più piccola). Forme più larghe di 4 unità si stringono su mobile e tagliano i lati: margini maggiori (eurofish 6×4 → 400 · 500). La build avvisa (`[progetti] …`) se la copertina non è w×600 × h×600: a ottobre 2026 è in regola solo Spazioquadro.
 - Tipi di cella: svg, logotipo (ROBERTO col font del logotipo, il più grande che sta nella cella), marquee (un logo `svg` o un `text` col font del logotipo; anche `vertical`, o `ruotato`: girato di 90° in una striscia verticale, come il nastro 1×6 della home), text, list, stat, media, project, clock, cursor, meter, mark, eye, globe, archive-head, tags, error (404: codice a cifre tabellari con glitch in bicromia, su carta a quadretti come i vuoti).
 - **Luce**: la R in alto a sinistra della home (cella `logo`, svg con `ink: true`) è un `role=switch` ("Luce"). Accesa = inchiostro rosso su carta chiara; spenta = rosso e bianco scambiati (carta rossa, inchiostro chiaro; le foto restano come sono e le scritte su di esse chiare). Il colore nuovo si allarga a cerchio dal centro della R (View Transition della stessa pagina, `html.vt-ink`, `--t-ink`). Scelta in `localStorage` (`inchiostro`: `bianco`/`rosso`; il vecchio `nero` vale come spenta), applicata da Layout.astro prima del primo disegno e dopo ogni swap. Fino a ottobre 2026 c'era una cella `luce` a parte (sole/luna con eclisse), tolta.
@@ -135,7 +141,8 @@ tools/                      verifica delle View Transitions, solo sviluppo (vedi
 
 ## Verifica (prima di dire "fatto")
 1. `npx astro build` senza errori. Se Roberto ha `npm run dev` acceso (porta 4321), la build rigenera la cache di Vite e il dev server risponde 504 ai moduli: niente ClientRouter, niente View Transitions. Avvisarlo di riavviare il dev server dopo la build.
-2. **Transizioni**: `npx astro preview --port 4399` acceso, poi `npm run vt:tour -- chrome` e `npm run vt:tour -- firefox` (giro completo: aperture, chiusure, indietro/avanti, Esc, archivio, tag, doppio click; controlla anche le marcature delle pagine). `--android` lo ripete come Firefox per Android (solo dissolvenza). Esce con errore se una transizione si interrompe, resta un nome, i pezzi non combaciano o la foto d'arrivo non è pronta.
+2. **Tavolo**: `npm run tavolo:tour -- chrome` e `-- firefox` (con la preview accesa): disposizione, trascinamento senza aprire, click che apre, pan, zoom col punto fermo, ricarica, Riordina, tocco (tap, dito che sposta, pressione lunga, pizzico), riduci movimento, pixel al 125%, scatti con CPU ×4. Tocco, riduci movimento, 125% e scatti solo in Chrome.
+   **Transizioni**: `npx astro preview --port 4399` acceso, poi `npm run vt:tour -- chrome` e `npm run vt:tour -- firefox` (giro completo: aperture, chiusure, indietro/avanti, Esc, archivio, tag, doppio click; controlla anche le marcature delle pagine). `--android` lo ripete come Firefox per Android (solo dissolvenza). Esce con errore se una transizione si interrompe, resta un nome, i pezzi non combaciano o la foto d'arrivo non è pronta.
    Per vedere com'è: `npm run vt:film -- 'a[data-id="info"]' --close` → foto della transizione rallentata ×10 e foglio di provini in `tools/out/` (solo Chrome: gli screenshot di Firefox non catturano le View Transitions).
    Telefono vero (stesso Wi-Fi): `npm run vt:serve` → sito e pagina di prova sulla rete di casa. Video di Roberto: `npm run vt:frames -- video.mp4 --step 0.0333` (fotogrammi senza ffmpeg).
    `puppeteer-core` usa Chrome e Firefox installati (percorsi in `tools/lib.mjs`, o `CHROME_PATH`/`FIREFOX_PATH`).
@@ -170,7 +177,7 @@ Roberto fa commit e push da solo: committare solo se lo chiede. La versione nel 
 - Firefox per Android: per ora solo dissolvenza (vedi "Trappole note"). Riprovare l'espansione ai prossimi aggiornamenti di Firefox; eventualmente segnalarlo a Mozilla.
 - "Flash bianco" in Chrome per Android (video del 10/10/2026, prima apertura di Eurofish): per ~130ms, mentre lo schermo è fermo tra la cattura e lo swap, i pezzi della cella con nome spariscono (l'indicatore del righello, nome fisso, no). Provato `will-change` sui pezzi prima della cattura: non risolve, tolto. Lasciato perdere per ora; se si riprende: prova sul telefono con la callback allungata (1s) per capire se il buco dura quanto il fermo.
 
-- **Tavolo** (idea del 22/10/2026, prototipo separato, non ancora nel sito): home come tavolo quadrettato esplorabile, celle-fogli da spostare, lanciare e aprire sopra il tavolo, zoom = misura del quadretto, matita con segni incisi sulle celle. Prototipo: `tools/pages/tavolo.html` (`npm run vt:serve` → `/_vt/tavolo.html`); esempi GSAP: `tools/pages/gsap-lab.html`. Fluido anche su Firefox per Android, dove le View Transitions scattano. Decisioni e prossimi passi nelle memorie di Claude (progetto tavolo).
+- **Tavolo** (idea del 22/10/2026; fasi 1–2 di 7 nel sito dal 22/10/2026: la home è il tavolo, le celle aprono ancora le pagine di oggi con l'espansione. Intro: carta a giri dal centro del tavolo, filo delle celle in ordine di distanza dal marchio (--i scritto da scripts/tavolo), lati in quadretti; crocini del tavolo = maschera colorata con --inchiostro; --pad/--pad-label in scala con lo zoom (--zoom); titoloni in cqi, rimisurati a misura ferma): home come tavolo quadrettato esplorabile, celle-fogli da spostare, lanciare e aprire sopra il tavolo, zoom = misura del quadretto, matita con segni incisi sulle celle. Prototipo: `tools/pages/tavolo.html` (`npm run vt:serve` → `/_vt/tavolo.html`); esempi GSAP: `tools/pages/gsap-lab.html`. Fluido anche su Firefox per Android, dove le View Transitions scattano. Decisioni e prossimi passi nelle memorie di Claude (progetto tavolo).
 
 ### Struttura per i contenuti (piano, ottobre 2026)
 Obiettivo: una base solida, così che poi resti solo da inserire il contenuto vero. Dal 16/10/2026 in home c'è solo Kiale, il primo progetto lavorato sul serio (gli altri restano in archivio). In ordine:

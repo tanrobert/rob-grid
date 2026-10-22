@@ -8,12 +8,15 @@ interface Props {
   descrizione?: string;
   /** false sulle pagine che non devono indicare un indirizzo canonico (404) */
   canonical?: boolean;
+  /** la pagina è il tavolo (home): niente scroll, i gesti li fa scripts/tavolo */
+  tavolo?: boolean;
 }
 
 const {
   titolo = `${site.name} · Graphic designer`,
   descrizione = `Identità visive, packaging e siti web. Portfolio di ${site.name}, graphic designer: progetti per ristorazione, ospitalità, cultura e imprese.`,
   canonical: withCanonical = true,
+  tavolo = false,
 } = Astro.props;
 
 const canonical = new URL(Astro.url.pathname, Astro.site);
@@ -22,7 +25,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
 ---
 
 <!doctype html>
-<html lang="it">
+<html lang="it" class:list={[tavolo && 'is-tavolo']}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -37,6 +40,8 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <link rel="preload" href="/fonts/schibsted-grotesk.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="/fonts/roberto-grafica-black.woff2" as="font" type="font/woff2" crossorigin />
     <script is:inline>
+      // js: il tavolo resta nascosto finché scripts/tavolo non l'ha disposto per la finestra vera
+      document.documentElement.classList.add('js');
       if (!matchMedia('(prefers-reduced-motion: reduce)').matches) document.documentElement.classList.add('is-intro');
 
       // --dp = 1 pixel reale dello schermo in px CSS (Windows al 125% → 0.8px).
@@ -93,6 +98,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
   import '../scripts/close';
   import '../scripts/ruler';
   import '../scripts/fill';
+  import '../scripts/tavolo';
   import { initCells } from '../scripts/cells';
   document.addEventListener('astro:page-load', initCells);
 </script>

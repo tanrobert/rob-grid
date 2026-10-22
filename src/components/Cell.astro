@@ -12,9 +12,11 @@ interface Props {
   href?: string;
   /** attributi extra sull'elemento (es. data-tags nell'archivio) */
   attrs?: Record<string, string>;
+  /** turno nell'intro, se diverso dall'ordine di lettura (sul tavolo: per distanza dal marchio) */
+  turno?: number;
 }
 
-const { cell, index, attrs = {} } = Astro.props;
+const { cell, index, attrs = {}, turno = index } = Astro.props;
 const href = Astro.props.href ?? cell.href;
 const n = pad2(index + 1);
 
@@ -37,7 +39,7 @@ const linkAttrs = href
 
 <Tag
   class:list={classes}
-  style={`${spanStyle(cell)};--i:${index}`}
+  style={`${spanStyle(cell)};--i:${turno}`}
   data-cell={cell.type}
   data-id={cell.id}
   {...linkAttrs}

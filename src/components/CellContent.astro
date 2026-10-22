@@ -1,0 +1,79 @@
+---
+// Una cella completa: il guscio (Cell.astro) col contenuto del suo tipo. Un solo modo di rendere
+// le celle, usato dalla griglia delle pagine (Grid.astro) e dal tavolo della home (tavolo/Tavolo.astro)
+import type { Cell as CellData } from '../data/grid-types';
+import { getProject } from '../data/projects';
+import { mediaSizes } from '../lib/grid';
+import { tagSlug } from '../lib/tags';
+import Cell from './Cell.astro';
+import SvgCell from './cells/SvgCell.astro';
+import LogotipoCell from './cells/LogotipoCell.astro';
+import MarqueeCell from './cells/MarqueeCell.astro';
+import TextCell from './cells/TextCell.astro';
+import ListCell from './cells/ListCell.astro';
+import StatCell from './cells/StatCell.astro';
+import MediaCell from './cells/MediaCell.astro';
+import ClockCell from './cells/ClockCell.astro';
+import MeterCell from './cells/MeterCell.astro';
+import CursorCell from './cells/CursorCell.astro';
+import MarkCell from './cells/MarkCell.astro';
+import EyeCell from './cells/EyeCell.astro';
+import GlobeCell from './cells/GlobeCell.astro';
+import ArchiveHeadCell from './cells/ArchiveHeadCell.astro';
+import TagsCell from './cells/TagsCell.astro';
+import ErrorCell from './cells/ErrorCell.astro';
+import ContattiCell from './cells/ContattiCell.astro';
+
+interface Props {
+  cell: CellData;
+  /** posizione nella lettura: numero della linguetta e turno dell'intro */
+  index: number;
+  /** Archivio: i progetti ricevono data-tags per i filtri */
+  filterable?: boolean;
+  /** foto caricata subito: la prima foto della pagina, quasi sempre l'elemento più grande in vista (LCP) */
+  priority?: boolean;
+  /** progetti nella stessa griglia: il totale della cella dei tag */
+  projects?: number;
+  /** turno nell'intro, se diverso da index (Cell.astro) */
+  turno?: number;
+  /** `sizes` delle foto, se non quello della griglia (sul tavolo: in px dai quadretti) */
+  sizes?: string;
+}
+const { cell, index, filterable = false, priority = false, projects = 0, turno, sizes = mediaSizes(cell) } = Astro.props;
+
+const p = cell.type === 'project' ? getProject(cell.slug) : undefined;
+if (cell.type === 'project' && !p) throw new Error(`[grid] progetto non trovato: "${cell.slug}"`);
+---
+
+{cell.type === 'project' && p ? (
+  <Cell
+    cell={cell}
+    index={index}
+    turno={turno}
+    href={cell.href ?? `/progetti/${p.slug}`}
+    attrs={filterable ? { 'data-tags': p.tags.map(tagSlug).join(' ') } : undefined}
+  >
+    {/* alt vuoto: la cella è un link e la didascalia lo nomina già (titolo e anno) */}
+    <MediaCell image={p.image} video={p.video} alt="" sizes={sizes} title={p.title} meta={p.period} priority={priority} />
+  </Cell>
+) : (
+  <Cell cell={cell} index={index} turno={turno}>
+    {cell.type === 'svg' && <SvgCell svg={cell.svg} fit={cell.fit} ink={cell.ink} />}
+    {cell.type === 'logotipo' && <LogotipoCell />}
+    {cell.type === 'marquee' && <MarqueeCell svg={cell.svg} text={cell.text} speed={cell.speed} reverse={cell.reverse} vertical={cell.vertical} ruotato={cell.ruotato} />}
+    {cell.type === 'text' && <TextCell eyebrow={cell.eyebrow} title={cell.title} body={cell.body} as={cell.as} size={cell.size} />}
+    {cell.type === 'list' && <ListCell title={cell.title} items={cell.items} />}
+    {cell.type === 'stat' && <StatCell value={cell.value} caption={cell.caption} countUp={cell.countUp} heading={cell.heading} />}
+    {cell.type === 'media' && <MediaCell image={cell.image} video={cell.video} alt={cell.alt} sizes={sizes} title={cell.caption} priority={!!cell.heroOf} />}
+    {cell.type === 'clock' && <ClockCell />}
+    {cell.type === 'meter' && <MeterCell />}
+    {cell.type === 'cursor' && <CursorCell />}
+    {cell.type === 'mark' && <MarkCell />}
+    {cell.type === 'eye' && <EyeCell />}
+    {cell.type === 'globe' && <GlobeCell />}
+    {cell.type === 'error' && <ErrorCell code={cell.code} title={cell.title} />}
+    {cell.type === 'archive-head' && <ArchiveHeadCell total={cell.total} />}
+    {cell.type === 'tags' && <TagsCell tags={cell.tags} total={projects} />}
+    {cell.type === 'contatti' && <ContattiCell />}
+  </Cell>
+)}

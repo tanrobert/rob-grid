@@ -8,6 +8,7 @@ import { initInk } from './ink';
 import { initRighe } from './righe';
 import { fitTitles, initTitoloni } from './titoloni';
 import { pad2 } from '../lib/format';
+import type { VistaEvento } from './tavolo/vista';
 
 let cleanup: (() => void) | null = null;
 
@@ -71,7 +72,7 @@ export function initCells() {
       if (e.isIntersecting) video.play().catch(() => {});
       else video.pause();
     }
-  }, { rootMargin: '10% 0px' });
+  }, { rootMargin: '10%' });  // anche di lato: sul tavolo le celle escono a destra e a sinistra
   document.querySelectorAll('.cell').forEach(el => io.observe(el));
   teardown.push(() => io.disconnect());
 
@@ -115,20 +116,23 @@ export function initCells() {
   // ── Registro: la ghiera gira con lo scroll, in sincrono col righello ─
   // un quarto di riga della griglia = una tacca (5°), come il righello (--ruler-step in global.css).
   // Scorrendo in giù le tacche a destra salgono, come quelle del righello.
+  // Sul tavolo gira col pan (scripts/tavolo/vista.ts): un quadretto = una tacca (il modulo è 4 quadretti)
   const rings = [...document.querySelectorAll<SVGGElement>('[data-ring]')];
   if (rings.length && !reduced) {
     let frame = 0;
     let tick = 25;
+    let tavolo: VistaEvento | null = null;
     const measure = () => { tick = (parseFloat(getComputedStyle(document.body).getPropertyValue('--ruler-step')) || 100) / 4; };
     const turn = () => {
       frame = 0;
-      const deg = (-scrollY / tick) * 5;
+      const deg = tavolo ? (tavolo.y / tavolo.q) * 5 : (-scrollY / tick) * 5;
       for (const r of rings) {
         if (r.closest('[data-offscreen]')) continue;
         r.style.transform = `rotate(${deg}deg)`;
       }
     };
     addEventListener('scroll', () => { frame ||= requestAnimationFrame(turn); }, { passive: true, signal });
+    document.addEventListener('tavolo:vista', e => { tavolo = (e as CustomEvent<VistaEvento>).detail; frame ||= requestAnimationFrame(turn); }, { signal });
     addEventListener('resize', () => { measure(); frame ||= requestAnimationFrame(turn); }, { passive: true, signal });
     teardown.push(() => cancelAnimationFrame(frame));
     measure();

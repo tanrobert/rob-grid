@@ -1,0 +1,39 @@
+---
+// Recapiti come cella del tavolo (il footer delle pagine, SiteFooter.astro, ridotto ai dati):
+// email e luogo in alto, P.IVA, informativa, anno e versione in basso
+import { siteVersion } from '../../lib/version';
+import { site } from '../../data/site';
+
+const year = new Date().getFullYear();
+---
+
+<div class="contatti">
+  <ul class="contatti__dati">
+    <li><a href={`mailto:${site.email}`} class="link-peso">{site.email}</a></li>
+    <li>{site.place}</li>
+  </ul>
+  <div class="contatti__piede mono">
+    <p><span>P.IVA {site.piva}</span><span>Informativa privacy</span></p>
+    <p><span>© {year} {site.name}</span><span>Portfolio modulare v.{siteVersion}</span></p>
+  </div>
+</div>
+
+<style>
+  .contatti {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; justify-content: space-between; gap: var(--m);
+    padding: var(--pad-label) var(--pad) var(--pad);
+  }
+  .contatti__dati { list-style: none; display: flex; flex-direction: column; gap: 4px; }
+  .contatti__dati li {
+    font-size: clamp(14px, 6cqi, 22px);
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+  }
+  .contatti__piede { display: flex; flex-direction: column; gap: 4px; }
+  /* come la barra del footer: a sinistra e a destra, e se non ci stanno il testo di destra va a capo allineato a destra */
+  .contatti__piede p { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0 var(--m); }
+  .contatti__piede span:last-child { margin-left: auto; text-align: right; }
+</style>

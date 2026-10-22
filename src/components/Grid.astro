@@ -1,25 +1,7 @@
 ---
 import type { Cell as CellData } from '../data/grid-types';
-import { getProject } from '../data/projects';
-import { COLS, mediaSizes, resolveSpans, findVoids } from '../lib/grid';
-import Cell from './Cell.astro';
-import SvgCell from './cells/SvgCell.astro';
-import LogotipoCell from './cells/LogotipoCell.astro';
-import MarqueeCell from './cells/MarqueeCell.astro';
-import TextCell from './cells/TextCell.astro';
-import ListCell from './cells/ListCell.astro';
-import StatCell from './cells/StatCell.astro';
-import MediaCell from './cells/MediaCell.astro';
-import ClockCell from './cells/ClockCell.astro';
-import MeterCell from './cells/MeterCell.astro';
-import CursorCell from './cells/CursorCell.astro';
-import MarkCell from './cells/MarkCell.astro';
-import EyeCell from './cells/EyeCell.astro';
-import GlobeCell from './cells/GlobeCell.astro';
-import ArchiveHeadCell from './cells/ArchiveHeadCell.astro';
-import TagsCell from './cells/TagsCell.astro';
-import ErrorCell from './cells/ErrorCell.astro';
-import { tagSlug } from '../lib/tags';
+import { COLS, resolveSpans, findVoids } from '../lib/grid';
+import CellContent from './CellContent.astro';
 
 interface Props {
   cells: CellData[];
@@ -37,6 +19,7 @@ for (const c of cells) {
 // buchi lasciati dall'incastro automatico, per ogni breakpoint
 // la prima foto della griglia è quasi sempre l'elemento più grande in vista (LCP): caricata subito
 const firstProject = cells.findIndex(c => c.type === 'project');
+const projects = cells.filter(c => c.type === 'project').length;
 
 const voids = (Object.keys(COLS) as (keyof typeof COLS)[]).flatMap(bp =>
   findVoids(cells.filter(c => !c.hideOn?.includes(bp)).map(c => resolveSpans(c)[bp]), COLS[bp]).map(v => ({ ...v, bp })),
@@ -44,43 +27,9 @@ const voids = (Object.keys(COLS) as (keyof typeof COLS)[]).flatMap(bp =>
 ---
 
 <div class="grid" data-filterable={filterable ? '' : undefined}>
-  {cells.map((cell, i) => {
-    if (cell.type === 'project') {
-      const p = getProject(cell.slug);
-      if (!p) throw new Error(`[grid] progetto non trovato: "${cell.slug}"`);
-      return (
-        <Cell
-          cell={cell}
-          index={i}
-          href={cell.href ?? `/progetti/${p.slug}`}
-          attrs={filterable ? { 'data-tags': p.tags.map(tagSlug).join(' ') } : undefined}
-        >
-          {/* alt vuoto: la cella è un link e la didascalia lo nomina già (titolo e anno) */}
-          <MediaCell image={p.image} video={p.video} alt="" sizes={mediaSizes(cell)} title={p.title} meta={p.period} priority={i === firstProject} />
-        </Cell>
-      );
-    }
-    return (
-      <Cell cell={cell} index={i}>
-        {cell.type === 'svg' && <SvgCell svg={cell.svg} fit={cell.fit} ink={cell.ink} />}
-        {cell.type === 'logotipo' && <LogotipoCell />}
-        {cell.type === 'marquee' && <MarqueeCell svg={cell.svg} text={cell.text} speed={cell.speed} reverse={cell.reverse} vertical={cell.vertical} ruotato={cell.ruotato} />}
-        {cell.type === 'text' && <TextCell eyebrow={cell.eyebrow} title={cell.title} body={cell.body} as={cell.as} size={cell.size} />}
-        {cell.type === 'list' && <ListCell title={cell.title} items={cell.items} />}
-        {cell.type === 'stat' && <StatCell value={cell.value} caption={cell.caption} countUp={cell.countUp} heading={cell.heading} />}
-        {cell.type === 'media' && <MediaCell image={cell.image} video={cell.video} alt={cell.alt} sizes={mediaSizes(cell)} title={cell.caption} priority={!!cell.heroOf} />}
-        {cell.type === 'clock' && <ClockCell />}
-        {cell.type === 'meter' && <MeterCell />}
-        {cell.type === 'cursor' && <CursorCell />}
-        {cell.type === 'mark' && <MarkCell />}
-        {cell.type === 'eye' && <EyeCell />}
-        {cell.type === 'globe' && <GlobeCell />}
-        {cell.type === 'error' && <ErrorCell code={cell.code} title={cell.title} />}
-        {cell.type === 'archive-head' && <ArchiveHeadCell total={cell.total} />}
-        {cell.type === 'tags' && <TagsCell tags={cell.tags} total={cells.filter(c => c.type === 'project').length} />}
-      </Cell>
-    );
-  })}
+  {cells.map((cell, i) => (
+    <CellContent cell={cell} index={i} filterable={filterable} priority={i === firstProject} projects={projects} />
+  ))}
   {voids.map(v => (
     <div
       class:list={['void', `void--${v.bp}`]}

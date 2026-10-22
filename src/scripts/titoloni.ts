@@ -4,7 +4,8 @@
  * - Misura: il corpo più grande con cui il titolo sta nella sua cella, col font vero. Lo spazio in più
  *   (HEADROOM) serve alla lente, che allarga le lettere. Si calcola prima che la pagina si veda: dopo lo
  *   swap (astro:after-swap, il font c'è già) e al primo caricamento prima delle righe dell'intro (righe.ts,
- *   che leggono gli a capo). Al resize si rifà.
+ *   che leggono gli a capo). Il corpo si scrive in cqi (larghezza della cella): allo zoom del tavolo e al resize
+ *   il titolo scala con la cella, e la misura esatta si rifà a misura ferma (ATTESA).
  * - Lente (idea di Roberto, ottobre 2026, provata in tools/pages/cinetica.html): col mouse il peso cresce
  *   ad area attorno al puntatore, 900 al centro e 500 al bordo (raggio = RAGGIO corpi). Gli a capo si
  *   bloccano alla prima passata (righe a filo, nowrap), se no le parole che ingrassano cambiano riga.
@@ -16,6 +17,7 @@ const MIN = 20, MAX = 220;   // px
 const HEADROOM = 0.94;       // il corpo trovato, ridotto: margine per le lettere più pesanti
 const RAGGIO = 2.5;          // raggio della lente, in corpi del titolo
 const SMORZA = 70;           // ms: quanto in fretta il peso insegue il puntatore
+const ATTESA = 150;          // ms senza cambi di misura prima di rimisurare
 
 const titles = () => [...document.querySelectorAll<HTMLElement>(SELECTOR)];
 
@@ -41,7 +43,9 @@ function fit(title: HTMLElement) {
     title.style.fontSize = `${mid}px`;
     if (fits(title)) lo = mid; else hi = mid;
   }
-  title.style.fontSize = `${Math.floor(lo * HEADROOM)}px`;
+  // in cqi: la cella (container) è il riquadro più vicino con container-type
+  const cella = title.closest<HTMLElement>('.cell')?.clientWidth;
+  title.style.fontSize = cella ? `${(Math.floor(lo * HEADROOM) / cella) * 100}cqi` : `${Math.floor(lo * HEADROOM)}px`;
   title.style.transition = '';
 }
 
@@ -100,16 +104,16 @@ export function initTitoloni(signal: AbortSignal, reduced: boolean) {
   const list = titles();
   if (!list.length) return;
 
-  // resize (e cambio di breakpoint): si rimisura al fotogramma dopo. La prima notifica (all'observe) no:
-  // la prima misura la fanno lo swap o cells.ts, prima delle righe dell'intro
-  let raf = 0, first = true;
+  // resize, cambio di breakpoint, zoom del tavolo: intanto il titolo scala con la cella (cqi), a misura ferma si
+  // rimisura. La prima notifica (all'observe) no: la prima misura la fanno lo swap o cells.ts, prima delle righe
+  let timer = 0, first = true;
   const ro = new ResizeObserver(() => {
     if (first) { first = false; return; }
-    cancelAnimationFrame(raf);
-    raf = requestAnimationFrame(fitTitles);
+    clearTimeout(timer);
+    timer = window.setTimeout(fitTitles, ATTESA);
   });
   list.forEach(t => ro.observe(t.parentElement!));
-  signal.addEventListener('abort', () => { ro.disconnect(); cancelAnimationFrame(raf); });
+  signal.addEventListener('abort', () => { ro.disconnect(); clearTimeout(timer); });
 
   if (reduced || !matchMedia('(hover: hover) and (pointer: fine)').matches) return;
 

@@ -102,6 +102,9 @@ html {
 }
 
 body { min-height: 100svh; }
+/* home = tavolo (components/tavolo): la pagina non scorre, niente tirare per aggiornare. Il righello si nasconde
+   da solo (ruler.ts: niente da scorrere) */
+html.is-tavolo, html.is-tavolo body { overflow: hidden; overscroll-behavior: none; }
 
 ::selection { background: var(--inchiostro); color: var(--bianco); }
 

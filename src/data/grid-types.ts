@@ -32,6 +32,8 @@ interface CellBase extends Span {
   heroOf?: string;
   /** Nasconde la cella su questi breakpoint (il calcolo dei vuoti ne tiene conto). */
   hideOn?: Array<'lg' | 'md' | 'sm'>;
+  /** Misura sul tavolo della home, in quadretti, quando non è w×h unità × 4 (lib/tavolo.ts) */
+  q?: Span;
 }
 
 export type Cell = CellBase & (
@@ -68,6 +70,8 @@ export type Cell = CellBase & (
   | { type: 'globe' }
   /** pagina d'errore: codice grande con glitch, titolo (h1) e link all'indice, su carta a quadretti */
   | { type: 'error'; code: string; title: string }
+  /** recapiti del footer (email, luogo, P.IVA, versione) come cella del tavolo */
+  | { type: 'contatti' }
   // solo archivio
   | { type: 'archive-head'; total: number }
   | { type: 'tags'; tags: TagCount[] }
