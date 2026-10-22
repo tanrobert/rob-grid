@@ -1,6 +1,6 @@
 // Giro del tavolo della home: disposizione, gesti col mouse e col dito, zoom, memoria della visita, Riordina,
 // riduzione del movimento, pixel netti al 125% e scatti durante il pan. Poi i fogli aperti sopra il tavolo
-// (scripts/foglio): link diretto, apertura dalla cella, chiusure, indietro e avanti, archivio → progetto.
+// (scripts/foglio): dal tavolo senza ricaricare, link diretto, chiusure, indietro e avanti, archivio → progetto.
 //   npm run tavolo:tour -- [chrome|firefox]
 // Il tocco (CDP), riduci movimento, il 125% e gli scatti solo in Chrome. Esce con errore se qualcosa non torna.
 import { args, launch, sleep, BASE } from './lib.mjs';
@@ -180,6 +180,8 @@ const foglio = p => p.evaluate(() => {
     aperto: !!f && getComputedStyle(f).display !== 'none' && !html.classList.contains('is-tavolo'),
     inerte: !!document.querySelector('[data-tavolo]')?.inert,
     h1: [...document.querySelectorAll('h1')].length,
+    h1vivi: [...document.querySelectorAll('h1')].filter(h => !h.closest('[inert]')).length,
+    main: document.getElementById('main')?.matches('[data-foglio]') ? 'foglio' : document.getElementById('main')?.matches('[data-tavolo]') ? 'tavolo' : null,
     intro: html.classList.contains('is-intro'),
     nascoste: [...document.querySelectorAll('[data-pezzo]')].filter(el => getComputedStyle(el).visibility === 'hidden').map(el => el.dataset.pezzo),
     copie: document.querySelectorAll('body > .cell[aria-hidden]').length,
@@ -194,7 +196,7 @@ const spia = p => p.evaluateOnNewDocument(() => {
   new MutationObserver(ms => ms.forEach(m => m.addedNodes.forEach(n => {
     if (n.nodeType === 1 && n.matches('.cell[aria-hidden]') && n.parentElement === document.body) {
       const r = n.getBoundingClientRect();
-      window.__voli.push({ x: Math.round(r.left), y: Math.round(r.top), w: Math.round(r.width), h: Math.round(r.height), vista: getComputedStyle(n).visibility === 'visible' });
+      window.__voli.push({ x: Math.round(r.left), y: Math.round(r.top), w: Math.round(r.width), h: Math.round(r.height), vista: getComputedStyle(n).visibility === 'visible', t: performance.now() });
     }
   }))).observe(document, { childList: true, subtree: true });
 });
@@ -233,47 +235,135 @@ const spia = p => p.evaluateOnNewDocument(() => {
   check(s1.cells[id].gx - s0.cells[id].gx === 2 && s1.path === '/', 'dopo la chiusura il tavolo si usa come in home');
   await p.close();
 }
+/** Pause tra due fotogrammi da adesso a `stop` (headless non è legato ai 60 Hz: oltre 33ms = scatto visibile) */
+const fotogrammi = p => p.evaluate(() => {
+  window.__pause = []; let last = performance.now();
+  const tick = t => { window.__pause.push([last, t - last]); last = t; window.__raf = requestAnimationFrame(tick); };
+  window.__raf = requestAnimationFrame(tick);
+});
+/** volo: pausa più lunga da quando parte la copia della hero (spia); prima: quella del montaggio del foglio */
+const stop = p => p.evaluate(() => {
+  cancelAnimationFrame(window.__raf);
+  const t0 = window.__voli?.at(-1)?.t ?? 0;
+  const max = l => Math.max(0, ...l.map(([, d]) => d));
+  return { volo: max(window.__pause.filter(([a]) => a >= t0)), prima: max(window.__pause.filter(([a]) => a < t0)) };
+});
+/** Clic sul centro della parte in vista di una cella del tavolo */
+const clicCella = async (p, id) => { const pt = inView(await state(p), id); await p.mouse.click(pt.x, pt.y); };
 {
-  // dalla home: click sulla cella → la pagina si apre dalla cella (niente intro), la ✕ la richiude lì
+  // dalla home: il clic apre il foglio sopra il tavolo nello stesso documento, la hero vola dalla cella
   const p = await page();
   await spia(p);
   await fresh(p);
+  await p.evaluate(() => { window.__stesso = true; });
   const s0 = await state(p);
-  const id = visible(s0, ['info', 'archivio', 'extra']);
+  const id = visible(s0, ['info', 'extra']);
   const c = s0.cells[id];
-  await Promise.all([p.waitForNavigation({ waitUntil: 'load' }), p.mouse.click(center(c).x, center(c).y)]);
-  // fotogrammi durante il volo
-  await p.evaluate(() => {
-    window.__gap = 0; let last = performance.now();
-    const tick = t => { window.__gap = Math.max(window.__gap, t - last); last = t; window.__raf = requestAnimationFrame(tick); };
-    window.__raf = requestAnimationFrame(tick);
-  });
+  const href = await p.$eval(`[data-pezzo="${id}"] a`, a => a.getAttribute('href'));
+  const lunga = await p.evaluate(() => history.length);
+  await fotogrammi(p);
+  await p.mouse.click(center(c).x, center(c).y);
   await sleep(1500);
-  const gap = await p.evaluate(() => { cancelAnimationFrame(window.__raf); return window.__gap; });
+  const gap = await stop(p);
   let f = await foglio(p);
   const v = f.voli[0];
-  check(f.aperto && !f.intro && f.nascoste.join() === id, `click su "${id}": foglio aperto, niente intro, cella d'origine sul foglio`, f.path);
+  check(await p.evaluate(() => window.__stesso === true), `click su "${id}": nessun caricamento di pagina`);
+  check(f.path === href && f.aperto && f.inerte && f.nascoste.join() === id && !f.titolo.startsWith('Roberto Tanasi ·'), 'foglio aperto sopra il tavolo, indirizzo e titolo della pagina', `${f.path} · ${f.titolo}`);
+  check(f.h1vivi === 1 && f.main === 'foglio', 'un solo h1 accessibile, il contenuto principale è il foglio', `h1: ${f.h1vivi} · main: ${f.main}`);
   check(v?.vista && Math.abs(v.x - c.x) < 2 && Math.abs(v.y - c.y) < 2 && Math.abs(v.w - c.w) < 2, 'la hero parte dalla cella, visibile', v ? `${v.x},${v.y} ${v.w}×${v.h} · cella ${Math.round(c.x)},${Math.round(c.y)} ${Math.round(c.w)}` : 'nessun volo');
-  check(gap < 50, 'apertura: niente scatti', `pausa più lunga tra due fotogrammi ${gap.toFixed(0)}ms`);
+  check(gap.volo < 34, 'volo: niente scatti', `pausa più lunga ${gap.volo.toFixed(0)}ms · montaggio prima del volo ${gap.prima.toFixed(0)}ms`);
   check(f.copie === 0, 'a volo finito la copia non c\'è più');
+  // ✕: si torna indietro nella cronologia, la hero rientra nella sua cella
   await p.click('[data-hero] [data-close]');
   await sleep(1000);
   f = await foglio(p);
   const s1 = await state(p);
-  const back = s1.cells[id];
-  check(f.path === '/' && !f.aperto && !f.nascoste.length && f.fuoco === id, '✕: la hero torna nella sua cella', f.path);
-  check(Math.abs(back.x - c.x) < 1 && Math.abs(back.y - c.y) < 1, 'il tavolo è come era in home');
-  await p.evaluate(() => history.back());
+  check(f.path === '/' && !f.aperto && !f.nascoste.length && f.fuoco === id && f.main === 'tavolo', '✕: la hero torna nella sua cella, indirizzo /', f.path);
+  check(Math.abs(s1.cells[id].x - c.x) < 1 && Math.abs(s1.cells[id].y - c.y) < 1, 'il tavolo è come era');
+  // avanti riapre, indietro richiude
+  await p.evaluate(() => history.forward());
   await sleep(1200);
+  f = await foglio(p);
+  check(f.path === href && f.aperto && f.nascoste.join() === id, 'avanti: il foglio si riapre dalla cella');
   // clic sulla hero e clic fuori dalle celle chiudono
   await p.click('[data-hero]', { offset: { x: 60, y: 120 } });
   await sleep(1000);
   check((await foglio(p)).path === '/', 'clic sulla hero: chiude');
-  await p.evaluate(() => history.back());
+  await clicCella(p, id);
   await sleep(1200);
   await p.mouse.click(8, 450);
   await sleep(1000);
-  check((await foglio(p)).path === '/', 'clic fuori dal foglio: chiude');
+  f = await foglio(p);
+  check(f.path === '/' && await p.evaluate(() => history.length) === lunga + 1, 'clic fuori dal foglio: chiude, la cronologia non cresce', `history.length ${lunga} → ${await p.evaluate(() => history.length)}`);
+
+  // archivio dal tavolo: gli stili della pagina arrivano col foglio, i filtri funzionano
+  await clicCella(p, 'archivio');
+  await sleep(1300);
+  f = await foglio(p);
+  const tagbar = await p.$eval('.foglio .tagbar', el => getComputedStyle(el).display);
+  check(f.path === '/archivio' && f.aperto && tagbar === 'none', 'archivio: aperto, stili della pagina presenti', `striscia dei tag: ${tagbar}`);
+  const tutte = await p.$$eval('.foglio .cell--project', l => l.length);
+  await p.click('.foglio .cell--tags button[data-tag]:not([data-tag=""])');
+  await sleep(900);
+  const viste = await p.$$eval('.foglio .cell--project:not([hidden])', l => l.length);
+  const conteggio = await p.$eval('.foglio [data-count]', el => Number(el.textContent));
+  f = await foglio(p);
+  check(viste < tutte && conteggio === viste && f.path.startsWith('/archivio?tag='), 'archivio: i filtri funzionano', `${viste}/${tutte} · ${f.path}`);
+  await p.keyboard.press('Escape');
+  await sleep(1000);
+  check((await foglio(p)).path === '/', 'Esc: chiude l\'archivio');
+
+  // extra: le celle vive partono anche nel foglio montato
+  await clicCella(p, 'extra');
+  await sleep(2500);
+  const vive = await p.evaluate(() => ({
+    ora: document.querySelector('.foglio [data-clock]')?.textContent?.trim(),
+    globo: !!document.querySelector('.foglio [data-globe] path'),
+  }));
+  await sleep(1100);
+  const ora2 = await p.evaluate(() => document.querySelector('.foglio [data-clock]')?.textContent?.trim());
+  check(vive.globo && ora2 !== vive.ora, 'extra: orologio e globo vivi nel foglio');
+  await p.keyboard.press('Escape');
+  await sleep(1000);
+
+  // doppio clic rapido: un foglio solo, aperto
+  const pt = inView(await state(p), id);
+  await p.mouse.click(pt.x, pt.y, { clickCount: 1 });
+  await p.mouse.click(pt.x, pt.y, { clickCount: 2 });
+  await sleep(1500);
+  f = await foglio(p);
+  const fogli = await p.$$eval('main[data-foglio]', l => l.length);
+  check(f.path === href && f.aperto && fogli === 1 && f.copie === 0, 'doppio clic: un foglio solo, aperto', `fogli: ${fogli}`);
+  check(await p.evaluate(() => window.__stesso === true), 'sempre nello stesso documento');
+  await p.close();
+}
+if (chrome) {
+  // apertura con CPU ×4
+  const p = await page();
+  await spia(p);
+  await fresh(p);
+  await sleep(1000);
+  const cdp = await p.createCDPSession();
+  await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
+  const id = visible(await state(p), ['info', 'extra', 'archivio']);
+  await fotogrammi(p);
+  await clicCella(p, id);
+  await sleep(2500);
+  const gap = await stop(p);
+  // il montaggio del foglio (stili, celle vive) prima del volo è un ritardo al clic, non uno scatto
+  check((await foglio(p)).aperto && gap.volo < 50 && gap.prima < 200, 'volo con CPU ×4: niente scatti', `pausa più lunga ${gap.volo.toFixed(0)}ms · montaggio prima del volo ${gap.prima.toFixed(0)}ms`);
+  await p.close();
+}
+if (chrome) {
+  // scaricamento che non riesce: si apre lo stesso, con la pagina vera
+  const p = await page();
+  await p.evaluateOnNewDocument(() => { if (location.pathname === '/') window.fetch = () => Promise.reject(new Error('rete giù')); });
+  await fresh(p);
+  const id = visible(await state(p), ['info', 'extra']);
+  await Promise.all([p.waitForNavigation({ waitUntil: 'load' }), clicCella(p, id)]);
+  await sleep(1500);
+  const f = await foglio(p);
+  check(f.path !== '/' && f.aperto && f.nascoste.join() === id, 'scaricamento fallito: si apre la pagina vera, dalla cella', f.path);
   await p.close();
 }
 {
@@ -305,12 +395,12 @@ const spia = p => p.evaluateOnNewDocument(() => {
   const s = await state(p);
   if (inView(s, 'tag')) {
     const tag = await p.$eval('[data-pezzo="tag"] a[href*="tag="]', a => a.getAttribute('href'));
-    await Promise.all([p.waitForNavigation({ waitUntil: 'load' }), p.click(`[data-pezzo="tag"] a[href="${tag}"]`)]);
+    await p.click(`[data-pezzo="tag"] a[href="${tag}"]`);
     await sleep(1500);
     const f = await foglio(p);
     const viste = await p.$$eval('.foglio .cell--project:not([hidden])', l => l.length);
     const tutte = await p.$$eval('.foglio .cell--project', l => l.length);
-    check(f.path === tag && f.aperto && viste < tutte && f.nascoste.join() === 'tag', 'tag in home: archivio filtrato, aperto dalla cella dei tag', `${viste}/${tutte}`);
+    check(f.path === tag && f.aperto && viste < tutte && f.nascoste.join() === 'tag', 'tag in home: archivio filtrato sopra il tavolo, dalla cella dei tag', `${viste}/${tutte}`);
   } else check(false, 'cella dei tag in vista');
   await p.close();
 }
