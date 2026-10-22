@@ -8,3 +8,6 @@ export const site = {
 
 /** Titolo della scheda: "Pagina · Roberto Tanasi" */
 export const pageTitle = (page: string) => `${page} · ${site.name}`;
+
+/** Titolo della home: anche quello che torna chiudendo un foglio (scripts/foglio) */
+export const homeTitle = `${site.name} · Graphic designer`;

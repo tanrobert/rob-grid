@@ -2,8 +2,9 @@
 import type { GetStaticPaths } from 'astro';
 import type { Cell } from '../../data/grid-types';
 import Layout from '../../layouts/Layout.astro';
-import Grid from '../../components/Grid.astro';
-import SiteFooter from '../../components/SiteFooter.astro';
+import Tavolo from '../../components/tavolo/Tavolo.astro';
+import Foglio from '../../components/foglio/Foglio.astro';
+import { tavolo } from '../../data/tavolo';
 import { projects } from '../../data/projects';
 import { tagSlug } from '../../lib/tags';
 import { projectYear, projectsByYear } from '../../lib/projects';
@@ -31,7 +32,7 @@ const siblingCell = (id: string, label: string, step: number): Cell => {
 
 const cells: Cell[] = [
   { id: 'hero', type: 'media', ...heroSpan, heroOf: `/progetti/${p.slug}`, image: p.image, video: p.video, alt: `${p.title} — ${p.description}` },
-  { id: 'progetto', type: 'text', w: 4, h: 2, as: 'h1', size: 's', eyebrow: 'Progetto', title: p.title, body: p.description, titleOf: `/progetti/${p.slug}` },
+  { id: 'progetto', type: 'text', w: 4, h: 2, as: 'h1', size: 's', eyebrow: 'Progetto', title: p.title, body: p.description },
   { id: 'tag', type: 'list', w: 4, h: 2, title: 'Tag', items: p.tags.map(t => ({ label: t, href: `/archivio?tag=${tagSlug(t)}` })) },
   { id: 'anno', type: 'stat', w: 2, h: 2, value: year, caption: p.period },
   { id: 'indietro', type: 'text', w: 2, h: 2, tone: 'red', href: '/', as: 'p', size: 'm', eyebrow: 'Chiudi', title: 'Indice' },
@@ -43,9 +44,7 @@ const cells: Cell[] = [
 ];
 ---
 
-<Layout titolo={pageTitle(p.title)} descrizione={p.description}>
-  <main id="main" class="sheet">
-    <Grid cells={cells} />
-    <SiteFooter />
-  </main>
+<Layout foglio titolo={pageTitle(p.title)} descrizione={p.description}>
+  <Tavolo cells={tavolo} sotto />
+  <Foglio cells={cells} />
 </Layout>

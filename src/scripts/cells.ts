@@ -1,6 +1,5 @@
 /**
- * Comportamenti delle celle "vive". Si reinizializza a ogni astro:page-load
- * e ripulisce tutto (listener, timer, observer) prima dello swap di pagina.
+ * Comportamenti delle celle "vive", del tavolo e del foglio. Si avvia una volta per pagina (Layout.astro).
  */
 
 import { initArchive } from './archive';
@@ -19,29 +18,28 @@ function introDone(cell?: Element) {
     .filter(a => a instanceof CSSAnimation && INTRO.includes(a.animationName));
   return Promise.allSettled(anims.map(a => a.finished));
 }
-// contatori già animati (per data-id della cella): il modulo sopravvive alle navigazioni del ClientRouter
-const counted = new Set<string>();
-
-// View Transition tra le pagine in corso: i lavori pesanti aspettano che finisca, se no la prima
-// apertura di una pagina (es. Extra col globo) perde fotogrammi e l'espansione salta
-let transition: Promise<unknown> = Promise.resolve();
-document.addEventListener('astro:before-swap', e => { transition = e.viewTransition.finished.catch(() => {}); });
+// contatori già animati (per data-id della cella), per tutta la visita: ogni pagina è un caricamento nuovo
+const CONTATI = 'contati';
+const counted = {
+  all(): string[] { try { return JSON.parse(sessionStorage.getItem(CONTATI) ?? '[]'); } catch { return []; } },
+  has(key: string) { return this.all().includes(key); },
+  add(key: string) { try { sessionStorage.setItem(CONTATI, JSON.stringify([...new Set([...this.all(), key])])); } catch {} },
+};
 
 export function initCells() {
   cleanup?.();
   const ac = new AbortController();
   const teardown: Array<() => void> = [() => ac.abort()];
   cleanup = () => { teardown.forEach(fn => fn()); cleanup = null; };
-  document.addEventListener('astro:before-swap', () => cleanup?.(), { once: true });
 
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const { signal } = ac;
 
   initArchive(signal);
   initInk(signal, reduced);
-  // globo: d3-geo e le terre si caricano solo se la casella c'è, a transizione finita
+  // globo: d3-geo e le terre si caricano solo se la casella c'è
   if (document.querySelector('[data-globe]')) {
-    transition.then(() => signal.aborted || import('./globe').then(m => m.initGlobe(signal, reduced)));
+    import('./globe').then(m => signal.aborted || m.initGlobe(signal, reduced));
   }
 
   // Intro finita: tolgo la classe, così nessuna casella che ricompare
@@ -116,7 +114,8 @@ export function initCells() {
   // ── Registro: la ghiera gira con lo scroll, in sincrono col righello ─
   // un quarto di riga della griglia = una tacca (5°), come il righello (--ruler-step in global.css).
   // Scorrendo in giù le tacche a destra salgono, come quelle del righello.
-  // Sul tavolo gira col pan (scripts/tavolo/vista.ts): un quadretto = una tacca (il modulo è 4 quadretti)
+  // Sul tavolo gira col pan (scripts/tavolo/vista.ts): un quadretto = una tacca (il modulo è 4 quadretti);
+  // nel foglio sopra il tavolo con lo scroll
   const rings = [...document.querySelectorAll<SVGGElement>('[data-ring]')];
   if (rings.length && !reduced) {
     let frame = 0;
@@ -125,10 +124,10 @@ export function initCells() {
     const measure = () => { tick = (parseFloat(getComputedStyle(document.body).getPropertyValue('--ruler-step')) || 100) / 4; };
     const turn = () => {
       frame = 0;
-      const deg = tavolo ? (tavolo.y / tavolo.q) * 5 : (-scrollY / tick) * 5;
+      const pan = tavolo ? (tavolo.y / tavolo.q) * 5 : 0, scroll = (-scrollY / tick) * 5;
       for (const r of rings) {
         if (r.closest('[data-offscreen]')) continue;
-        r.style.transform = `rotate(${deg}deg)`;
+        r.style.transform = `rotate(${r.closest('[data-tavolo]') ? pan : scroll}deg)`;
       }
     };
     addEventListener('scroll', () => { frame ||= requestAnimationFrame(turn); }, { passive: true, signal });
@@ -148,9 +147,6 @@ export function initCells() {
     if (!text || !Number.isFinite(target)) return;
     const key = el.closest<HTMLElement>('[data-id]')?.dataset.id ?? text;
     if (counted.has(key)) return;
-    // arriva da un'espansione (morph.ts, es. chiusura di Extra entrando dal link diretto): il numero
-    // che viaggia è già quello finale, ripartire da zero lo cambierebbe a metà transizione
-    if (el.hasAttribute('data-morphing')) { counted.add(key); return; }
     const show = (n: number) => { el.textContent = String(n).padStart(text.length, '0'); };
     // stessa curva per tutti, durata proporzionale al valore (come il filo dell'intro): i numeri piccoli finiscono prima
     const DURATION = target * 90;

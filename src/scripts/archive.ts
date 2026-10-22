@@ -1,8 +1,8 @@
 /**
  * Filtri dell'archivio: un tag alla volta, stato nell'URL (?tag=…).
  * I progetti che non corrispondono vengono nascosti, la griglia si ricompone
- * con una View Transition (ogni casella scivola al suo nuovo posto) e i buchi
- * rimasti vengono riempiti con caselle vuote a quadretti, ricalcolate nel browser.
+ * con una View Transition (ogni casella scivola al suo nuovo posto). Nel foglio i buchi
+ * lasciano vedere il retino; in una griglia con i vuoti (Grid.astro) si ricalcolano qui.
  */
 import { BREAKPOINTS, COLS, findVoids } from '../lib/grid';
 import { pad2 } from '../lib/format';
@@ -21,6 +21,8 @@ const breakpoint = (): Bp =>
 
 /** Stesso calcolo del build, sulle caselle visibili adesso */
 function layoutVoids(grid: HTMLElement) {
+  // nel foglio sopra il tavolo i buchi lasciano vedere il retino: niente vuoti
+  if (grid.hasAttribute('data-senza-vuoti')) return;
   grid.querySelectorAll(':scope > .void:not(.void--fill)').forEach(v => v.remove());
   const bp = breakpoint();
   const suffix = bp === 'lg' ? '' : `-${bp}`;

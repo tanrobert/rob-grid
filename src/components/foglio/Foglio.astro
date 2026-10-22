@@ -1,0 +1,55 @@
+---
+// Foglio aperto sopra il tavolo (pagine info, extra, archivio, progetti): la griglia delle celle della pagina
+// sugli stessi quadretti del tavolo (una cella di w unità è larga 4w − 1 quadretti, a un quadretto l'una
+// dall'altra), sopra il retino che lascia intravedere il tavolo. Il foglio scorre con la pagina, il tavolo
+// resta fermo dietro. Apertura e chiusura: scripts/foglio. In fondo i recapiti, come sul tavolo.
+import type { Cell } from '../../data/grid-types';
+import Grid from '../Grid.astro';
+
+interface Props {
+  cells: Cell[];
+  /** Archivio: i progetti ricevono data-tags per i filtri */
+  filterable?: boolean;
+}
+const { cells, filterable = false } = Astro.props;
+const recapiti: Cell = { id: 'recapiti', type: 'contatti', w: 4, h: 2, tone: 'red' };
+---
+
+<div class="retino" data-retino aria-hidden="true"></div>
+<main id="main" class="foglio" data-foglio>
+  <slot />
+  <Grid cells={[...cells, recapiti]} filterable={filterable} vuoti={false} />
+</main>
+
+<style>
+  /* quadretto del foglio: il più grande con cui le colonne della pagina (12, 8, 4) stanno nella finestra con un
+     quadretto di margine per lato, fino a 36px (≈ la vecchia cella più grande). Passo della griglia = 4 quadretti:
+     ci si allineano anche il righello e la ghiera della cella registro (--ruler-step) */
+  :global(html.ha-foglio body) {
+    --qf: round(down, min(100vw / (var(--cols) * 4 + 1), 36px), 1px);
+    --ruler-step: calc(var(--qf) * 4);
+  }
+  .foglio {
+    --gap: var(--qf);
+    --u: calc(var(--qf) * 3);
+    position: relative;
+    width: calc(var(--qf) * (var(--cols) * 4 + 1));
+    margin-inline: auto;
+    padding: var(--qf);
+  }
+  /* niente crocini della griglia: li fa il retino */
+  .foglio :global(.grid::before) { display: none; }
+
+  /* carta piena con un foro ogni 4px: si intravede il tavolo, ma senza mezze tinte (niente rosa) */
+  .retino {
+    position: fixed; inset: 0;
+    background: radial-gradient(circle at 2px 2px, transparent 0 0.9px, var(--bianco) 1.1px) 0 0 / 4px 4px;
+  }
+
+  /* foglio chiuso: resta il tavolo (scripts/foglio) */
+  :global(html.is-tavolo) :is(.foglio, .retino) { display: none; }
+  /* arrivo da una cella del tavolo: foglio e retino aspettano l'apertura (scripts/foglio). Se il JavaScript non
+     arriva compaiono lo stesso dopo un attimo */
+  :global(html.in-arrivo) :is(.foglio, .retino) { visibility: hidden; animation: foglio-attesa 0s 1.5s both; }
+  @keyframes foglio-attesa { to { visibility: visible; } }
+</style>

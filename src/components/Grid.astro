@@ -7,8 +7,10 @@ interface Props {
   cells: CellData[];
   /** Archivio: i progetti ricevono data-tags per i filtri */
   filterable?: boolean;
+  /** false nel foglio (components/foglio): nei buchi si vede il retino, niente vuoti a quadretti */
+  vuoti?: boolean;
 }
-const { cells, filterable = false } = Astro.props;
+const { cells, filterable = false, vuoti: conVuoti = true } = Astro.props;
 
 const ids = new Set<string>();
 for (const c of cells) {
@@ -21,12 +23,12 @@ for (const c of cells) {
 const firstProject = cells.findIndex(c => c.type === 'project');
 const projects = cells.filter(c => c.type === 'project').length;
 
-const voids = (Object.keys(COLS) as (keyof typeof COLS)[]).flatMap(bp =>
+const voids = !conVuoti ? [] : (Object.keys(COLS) as (keyof typeof COLS)[]).flatMap(bp =>
   findVoids(cells.filter(c => !c.hideOn?.includes(bp)).map(c => resolveSpans(c)[bp]), COLS[bp]).map(v => ({ ...v, bp })),
 );
 ---
 
-<div class="grid" data-filterable={filterable ? '' : undefined}>
+<div class="grid" data-filterable={filterable ? '' : undefined} data-senza-vuoti={conVuoti ? undefined : ''}>
   {cells.map((cell, i) => (
     <CellContent cell={cell} index={i} filterable={filterable} priority={i === firstProject} projects={projects} />
   ))}
@@ -37,5 +39,5 @@ const voids = (Object.keys(COLS) as (keyof typeof COLS)[]).flatMap(bp =>
       aria-hidden="true"
     ></div>
   ))}
-  <div class="void void--fill" style={`--i:${cells.length}`} hidden aria-hidden="true"></div>
+  {conVuoti && <div class="void void--fill" style={`--i:${cells.length}`} hidden aria-hidden="true"></div>}
 </div>

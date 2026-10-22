@@ -1,8 +1,9 @@
 ---
 import type { Cell } from '../data/grid-types';
 import Layout from '../layouts/Layout.astro';
-import Grid from '../components/Grid.astro';
-import SiteFooter from '../components/SiteFooter.astro';
+import Tavolo from '../components/tavolo/Tavolo.astro';
+import Foglio from '../components/foglio/Foglio.astro';
+import { tavolo } from '../data/tavolo';
 import { site, pageTitle } from '../data/site';
 
 // In testa l'arrivo dell'espansione della cella "info" della home: stessa cella (testo rosso,
@@ -23,9 +24,7 @@ const cells: Cell[] = [
 ];
 ---
 
-<Layout titolo={pageTitle('Bio')} descrizione={`Chi sono: ${site.name}, graphic designer. Identità visive, packaging e siti web per ristorazione, ospitalità, cultura e imprese.`}>
-  <main id="main" class="sheet">
-    <Grid cells={cells} />
-    <SiteFooter />
-  </main>
+<Layout foglio titolo={pageTitle('Bio')} descrizione={`Chi sono: ${site.name}, graphic designer. Identità visive, packaging e siti web per ristorazione, ospitalità, cultura e imprese.`}>
+  <Tavolo cells={tavolo} sotto />
+  <Foglio cells={cells} />
 </Layout>

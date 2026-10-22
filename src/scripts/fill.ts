@@ -35,7 +35,6 @@ export function fillSheet() {
   fill.hidden = rows < 1;
 }
 
-document.addEventListener('astro:after-swap', fillSheet);
 addEventListener('resize', fillSheet);
 document.fonts.ready.then(fillSheet);  // l'altezza del footer dipende dai font
 fillSheet();

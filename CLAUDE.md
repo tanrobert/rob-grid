@@ -13,15 +13,16 @@ Lingua del sito e dei commenti nel codice: **italiano**.
 src/
   content.config.ts         schema dei progetti (collection `progetti`), con le celle ammesse nelle pagine progetto
   content/progetti/<slug>/  un progetto per cartella: index.md (dati + testo), copertina.png|jpg, materiali
-  layouts/Layout.astro      <head>, ClientRouter, script inline (intro + --dp), import di morph.ts e cells.ts
-  pages/                    index (il tavolo) · archivio (filtri per tag) · info · extra · progetti/[slug] · 404 (una cella `error` a tutta larghezza)
+  layouts/Layout.astro      <head> (niente ClientRouter dalla fase 3a: ogni pagina è un caricamento vero), script inline (intro solo se non si arriva dal sito, `in-arrivo`, --dp, luce), import degli script; prop `tavolo` (home) e `foglio`
+  pages/                    index (il tavolo) · archivio · info · extra · progetti/[slug] = tavolo (`<Tavolo sotto>`, inerte, senza h1) + foglio aperto (`<Foglio>`) · 404 (griglia e footer di prima, una cella `error`)
   components/
     Grid.astro              griglia delle pagine: le celle + i "vuoti" per ogni breakpoint
+    foglio/Foglio.astro     FOGLIO APERTO SOPRA IL TAVOLO: retino fisso (fori ogni 4px) + <main> con la griglia della pagina sui quadretti (--qf, cella = 4w−1 quadretti, gap 1 quadretto, niente vuoti) + cella `recapiti` in fondo. Scorre con la pagina, il tavolo resta fermo
     CellContent.astro       una cella completa (guscio + contenuto del suo tipo): lo usano griglia e tavolo
     tavolo/Tavolo.astro     TAVOLO DELLA HOME: carta quadrettata, celle in involucri .pezzo (posizione, ombra a retino), Riordina/Torna al centro
     Cell.astro              guscio di ogni casella: <a> se cliccabile, <div> altrimenti; linguetta + freccia/✕ (solo testo, senza riquadro).
                             Tutte le hero sono celle della griglia con `heroOf`: stesso tipo della cella di partenza, al doppio (progetti: forma ×2; info, extra, archivio: 2×2 → 4×4, su mobile 4×2)
-    SiteFooter.astro        footer delle pagine (sulla home è la cella `recapiti`, ContattiCell) = casella rossa sempre ultima, fuori dalla griglia; tocca sempre il fondo della finestra (scripts/fill.ts)
+    SiteFooter.astro        footer, ormai solo nella 404 (tavolo e fogli hanno la cella `recapiti`, ContattiCell)
     SvgAsset.astro          rende un SVG dal registro
     TagButtons.astro        pulsanti filtro (casella tags + barra mobile dell'archivio)
     cells/*Cell.astro       un componente per ogni tipo di cella
@@ -35,21 +36,21 @@ src/
     site.ts                 dati del sito (nome, email, P.IVA, luogo) e pageTitle ("Pagina · Roberto Tanasi")
   lib/
     grid.ts                 COLS, BREAKPOINTS, resolveSpans, findVoids (replica di grid-auto-flow: row dense)
-    tavolo.ts               quadretti (1 unità = 4), Q di base 25/18 px, zoom 12–48, pack (disposizione a spirale, al build e nel browser), versione
+    tavolo.ts               quadretti (1 unità = 4), Q di base 25/18 px, zoom 16–48, pack (disposizione a spirale, al build e nel browser), versione
     projects.ts             projectYear, firstYear, projectsByYear
     tags.ts                 TagCount, tagSlug, allTags
     format.ts               pad2 ("03")
     globe.ts                proiezione del globo (d3-geo), orientamento siderale reale; usato al build e nel browser
     version.ts              versione del footer dal messaggio dell'ultimo commit
   scripts/
-    tavolo/                 gesti del tavolo con GSAP: index (avvio dopo ogni swap, pulizia prima), vista (pan, zoom = --q, pixel reali),
+    tavolo/                 gesti del tavolo con GSAP: index (avvio al caricamento, salva su pagehide, esporta `tavolo`), vista (pan, zoom = --q, pixel reali),
                             gesti (puntatore, rotella, tastiera; il click dopo un gesto si ferma), pezzi (prendi, porta, lascia, riordina),
                             memoria (sessionStorage con versione), tempi
     cells.ts                comportamenti vivi (orologio, meteo Open-Meteo, occhio, cursore, misure, pausa offscreen); reinit su astro:page-load, cleanup su before-swap
     archive.ts              filtri archivio (?tag=), View Transition delle caselle, vuoti ricalcolati nel browser
-    morph.ts                espansione cella → pagina e ritorno. Nell'HTML solo chiavi e ruoli: `data-morph` (href della cella) = `data-hero` (hero d'arrivo), `data-title-of` (cella del titolo d'arrivo), `data-part` = il ruolo di un pezzo (media, go, title, num, note, eyebrow…: **qualsiasi ruolo presente da tutti e due i lati viaggia**, uno per cella; il resto resta nella finestra). Come viaggia lo dice la classe (`KIND` in morph.ts): frame (finestre), photo, scale (titolo, numero, freccia: riquadro stretto sul contenuto), text (tutto il resto, resta della sua misura). I nomi (`morph-<ruolo>`, classe `morph` + tipo) li dà solo `morph.ts`, nel loader di Astro (entrambi i documenti, pagina vecchia non ancora catturata), ai pezzi presenti da tutti e due i lati, e li toglie a fine transizione (`data-morphing`). Lì anche fondo della finestra, foto d'arrivo pronta e riquadro della foto. Coreografia in global.css. In `npm run dev` la console avvisa dei pezzi segnati male (ruolo doppio o sconosciuto, due hero)
-    close.ts                chiusura della pagina aperta da una cella: ✕ (a[data-close]), click sulla hero ed Esc → history.back() (o la home se si è entrati da fuori). Click ascoltati in cattura: in bolla il ClientRouter partiva prima e avviava una seconda navigazione dalla ✕ (a volte due transizioni)
-    fill.ts                 pagine corte: il foglio è alto almeno quanto la finestra, sotto la griglia un vuoto a tutta larghezza a righe intere (.void--fill, in Grid.astro) e il footer si allunga del resto di riga (.sheet.is-corta), così tocca il fondo e il suo bordo alto resta sulla griglia. Dopo lo swap, al resize e dopo i filtri dell'archivio
+    morph.ts                NON PIÙ IMPORTATO dalla fase 3a (espansione con le View Transitions del ClientRouter). Resta per la 3b, che ne riprende `photoReady`; si cancella nella fase 7
+    foglio/index.ts         apertura e chiusura del foglio: la copia della hero (con la foto già scaricata, `currentSrc`) vola dalla cella d'origine del tavolo (sessionStorage `tavolo:origine`, se no la prima cella che porta lì) alla hero e ritorno; ✕, Esc, clic sulla hero o fuori → pushState('/') e tavolo vivo; popstate riapre/richiude; da un altro foglio (referrer) la chiusura è history.back(); `data-replace` → location.replace
+    fill.ts                 (solo 404) pagine corte: il foglio è alto almeno quanto la finestra, sotto la griglia un vuoto a righe intere (.void--fill) e il footer si allunga del resto di riga (.sheet.is-corta). Al caricamento, al resize e dopo i filtri
     ruler.ts                righello al posto della scrollbar: indicatore + percentuale, trascinamento e click
     globe.ts                casella terra: giro d'ingresso, tempo reale, trascinamento e ritorno (import dinamico da cells.ts)
     ink.ts                  interruttore della luce: luce spenta = rosso e bianco scambiati (data-inchiostro="bianco", localStorage), cerchio dall'icona
@@ -139,10 +140,14 @@ tools/                      verifica delle View Transitions e del tavolo (tavolo
 - **Misure lette subito dopo aver cambiato una classe, con `prefers-reduced-motion`**: la regola globale dà a ogni proprietà una transizione da 0.01ms (`transition-property` resta `all`), quindi nello stesso istante il valore è ancora quello vecchio (il footer risultava ancora allungato dopo aver tolto `is-corta`). In `fill.ts` solo letture dello stato attuale, niente "togli e rimisura". In `titoloni.ts` il corpo provato restava quello vecchio e il titolo usciva a 220px: durante la misura `transition: none` sul titolo.
 - `--u`/`--step` sono token in `:root` con `100cqw`: si risolvono dove vengono usati, quindi valgono solo in elementi il cui container è `.sheet` (non dentro le celle).
 
+- **Copia della hero che vola (scripts/foglio)**: nasce da `cloneNode`, quindi eredita gli stili inline della hero. All'apertura la hero è già nascosta (`visibility: hidden`) e la copia volava invisibile: va rimessa `visible`. E con `srcset` la copia, partendo piccola, sceglieva un file più piccolo ancora da scaricare e volava vuota: le si dà il `currentSrc` della hero. Il controllo del giro sulla posizione non bastava: ora controlla anche che sia visibile.
+- **Memoria del tavolo e test**: il tavolo salva su `pagehide`, quindi "svuota sessionStorage e ricarica" riscrive la memoria appena cancellata. Nei test la memoria si svuota anche dopo il pagehide (`forget` in tavolo-tour.mjs).
+- Firefox con puppeteer: `goBack`/`waitForNavigation` aspettano un caricamento che, tornando dalla cache del browser, non arriva. Nei test `history.back()` dalla pagina e una pausa.
+
 ## Verifica (prima di dire "fatto")
 1. `npx astro build` senza errori. Se Roberto ha `npm run dev` acceso (porta 4321), la build rigenera la cache di Vite e il dev server risponde 504 ai moduli: niente ClientRouter, niente View Transitions. Avvisarlo di riavviare il dev server dopo la build.
-2. **Tavolo**: `npm run tavolo:tour -- chrome` e `-- firefox` (con la preview accesa): disposizione, trascinamento senza aprire, click che apre, pan, zoom col punto fermo, ricarica, Riordina, tocco (tap, dito che sposta, pressione lunga, pizzico), riduci movimento, pixel al 125%, scatti con CPU ×4. Tocco, riduci movimento, 125% e scatti solo in Chrome.
-   **Transizioni**: `npx astro preview --port 4399` acceso, poi `npm run vt:tour -- chrome` e `npm run vt:tour -- firefox` (giro completo: aperture, chiusure, indietro/avanti, Esc, archivio, tag, doppio click; controlla anche le marcature delle pagine). `--android` lo ripete come Firefox per Android (solo dissolvenza). Esce con errore se una transizione si interrompe, resta un nome, i pezzi non combaciano o la foto d'arrivo non è pronta.
+2. **Tavolo e fogli**: `npm run tavolo:tour -- chrome` e `-- firefox` (con la preview accesa): fogli (link diretto, un solo h1, Esc/✕/clic sulla hero o fuori, indietro/avanti, apertura dalla cella con la copia visibile, archivio → progetto → indietro, successivo con replace, tag della home → archivio filtrato), disposizione, trascinamento senza aprire, click che apre, pan, zoom col punto fermo, ricarica, Riordina, tocco (tap, dito che sposta, pressione lunga, pizzico), riduci movimento, pixel al 125%, scatti con CPU ×4. Tocco, riduci movimento, 125% e scatti solo in Chrome.
+   **Transizioni (fino alla fase 3a, ora non valgono più: niente ClientRouter)**: `npx astro preview --port 4399` acceso, poi `npm run vt:tour -- chrome` e `npm run vt:tour -- firefox` (giro completo: aperture, chiusure, indietro/avanti, Esc, archivio, tag, doppio click; controlla anche le marcature delle pagine). `--android` lo ripete come Firefox per Android (solo dissolvenza). Esce con errore se una transizione si interrompe, resta un nome, i pezzi non combaciano o la foto d'arrivo non è pronta.
    Per vedere com'è: `npm run vt:film -- 'a[data-id="info"]' --close` → foto della transizione rallentata ×10 e foglio di provini in `tools/out/` (solo Chrome: gli screenshot di Firefox non catturano le View Transitions).
    Telefono vero (stesso Wi-Fi): `npm run vt:serve` → sito e pagina di prova sulla rete di casa. Video di Roberto: `npm run vt:frames -- video.mp4 --step 0.0333` (fotogrammi senza ffmpeg).
    `puppeteer-core` usa Chrome e Firefox installati (percorsi in `tools/lib.mjs`, o `CHROME_PATH`/`FIREFOX_PATH`).
@@ -177,7 +182,7 @@ Roberto fa commit e push da solo: committare solo se lo chiede. La versione nel 
 - Firefox per Android: per ora solo dissolvenza (vedi "Trappole note"). Riprovare l'espansione ai prossimi aggiornamenti di Firefox; eventualmente segnalarlo a Mozilla.
 - "Flash bianco" in Chrome per Android (video del 10/10/2026, prima apertura di Eurofish): per ~130ms, mentre lo schermo è fermo tra la cattura e lo swap, i pezzi della cella con nome spariscono (l'indicatore del righello, nome fisso, no). Provato `will-change` sui pezzi prima della cattura: non risolve, tolto. Lasciato perdere per ora; se si riprende: prova sul telefono con la callback allungata (1s) per capire se il buco dura quanto il fermo.
 
-- **Tavolo** (idea del 22/10/2026; fasi 1–2 di 7 nel sito dal 22/10/2026: la home è il tavolo, le celle aprono ancora le pagine di oggi con l'espansione. Intro: carta a giri dal centro del tavolo, filo delle celle in ordine di distanza dal marchio (--i scritto da scripts/tavolo), lati in quadretti; crocini del tavolo = maschera colorata con --inchiostro; --pad/--pad-label in scala con lo zoom (--zoom); titoloni in cqi, rimisurati a misura ferma): home come tavolo quadrettato esplorabile, celle-fogli da spostare, lanciare e aprire sopra il tavolo, zoom = misura del quadretto, matita con segni incisi sulle celle. Prototipo: `tools/pages/tavolo.html` (`npm run vt:serve` → `/_vt/tavolo.html`); esempi GSAP: `tools/pages/gsap-lab.html`. Fluido anche su Firefox per Android, dove le View Transitions scattano. Decisioni e prossimi passi nelle memorie di Claude (progetto tavolo).
+- **Tavolo** (idea del 22/10/2026; fasi 1–3a di 7 nel sito dal 23/10/2026: la home è il tavolo, le pagine sono tavolo + foglio aperto; dalla home una cella carica la pagina (caricamento vero, poi il volo: si vede il ricaricamento, lo toglie la 3b). Intro: carta a giri dal centro del tavolo, filo delle celle in ordine di distanza dal marchio (--i scritto da scripts/tavolo), lati in quadretti; crocini del tavolo = maschera colorata con --inchiostro; --pad/--pad-label in scala con lo zoom (--zoom); titoloni in cqi, rimisurati a misura ferma): home come tavolo quadrettato esplorabile, celle-fogli da spostare, lanciare e aprire sopra il tavolo, zoom = misura del quadretto, matita con segni incisi sulle celle. Prototipo: `tools/pages/tavolo.html` (`npm run vt:serve` → `/_vt/tavolo.html`); esempi GSAP: `tools/pages/gsap-lab.html`. Fluido anche su Firefox per Android, dove le View Transitions scattano. Decisioni e prossimi passi nelle memorie di Claude (progetto tavolo).
 
 ### Struttura per i contenuti (piano, ottobre 2026)
 Obiettivo: una base solida, così che poi resti solo da inserire il contenuto vero. Dal 16/10/2026 in home c'è solo Kiale, il primo progetto lavorato sul serio (gli altri restano in archivio). In ordine:

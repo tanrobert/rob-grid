@@ -2,7 +2,6 @@
  * Righello al posto della scrollbar: le tacche sono uno sfondo di <body> (scorrono con la pagina),
  * qui si muove solo l'indicatore con la percentuale.
  * Trascinando l'indicatore o cliccando sul righello la pagina scorre, come una scrollbar vera.
- * L'elemento è persistente tra le pagine (transition:persist): si inizializza una volta sola.
  */
 
 const ruler = document.querySelector<HTMLElement>('[data-ruler]');
@@ -11,11 +10,8 @@ const pct = ruler?.querySelector<HTMLElement>('[data-ruler-pct]');
 
 if (ruler && thumb && pct) {
   const root = document.documentElement;
-  // righello attivo → il CSS nasconde la scrollbar nativa.
-  // Lo swap del ClientRouter riscrive le classi di <html>: la rimetto dopo ogni navigazione.
-  const activate = () => root.classList.add('has-ruler');
-  activate();
-  document.addEventListener('astro:after-swap', activate);
+  // righello attivo → il CSS nasconde la scrollbar nativa
+  root.classList.add('has-ruler');
   const maxScroll = () => root.scrollHeight - innerHeight;
   // corsa dell'indicatore: dall'alto della finestra al basso, meno la sua altezza
   const travel = () => ruler.clientHeight - thumb.offsetHeight;
@@ -37,11 +33,7 @@ if (ruler && thumb && pct) {
 
   addEventListener('scroll', schedule, { passive: true });
   addEventListener('resize', schedule);
-  new ResizeObserver(schedule).observe(document.body);  // altezza della pagina (filtri, immagini, navigazione)
-  document.addEventListener('astro:page-load', schedule);
-  // subito dopo lo swap, prima che la View Transition fotografi la pagina nuova: se il righello
-  // sparisse a transizione avviata (pagina che non scorre), Firefox annullerebbe tutta l'animazione
-  document.addEventListener('astro:after-swap', update);
+  new ResizeObserver(schedule).observe(document.body);  // altezza della pagina (filtri, immagini, foglio chiuso)
   update();
 
   // ── Trascinamento dell'indicatore ─────────────────────

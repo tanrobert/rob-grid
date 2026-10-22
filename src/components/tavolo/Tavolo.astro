@@ -11,8 +11,15 @@ import { BREAKPOINTS } from '../../lib/grid';
 
 interface Props {
   cells: Cell[];
+  /** sotto un foglio aperto (components/foglio): il tavolo non è la pagina. Niente <main> e niente h1
+      (il titolo è quello del foglio), inerte finché il foglio resta aperto (scripts/foglio) */
+  sotto?: boolean;
 }
-const { cells } = Astro.props;
+const { sotto = false } = Astro.props;
+const cells = sotto
+  ? Astro.props.cells.map(c => (c.type === 'text' && c.as === 'h1' ? { ...c, as: 'p' as const } : c))
+  : Astro.props.cells;
+const Radice = sotto ? 'div' : 'main';
 
 const ids = new Set<string>();
 for (const c of cells) {
@@ -35,7 +42,7 @@ const firstProject = cells.findIndex(c => c.type === 'project');
 const projects = cells.filter(c => c.type === 'project').length;
 ---
 
-<main id="main" class="tavolo" data-tavolo data-versione={versione(misure)} style={`--q-lg:${Q.lg}px;--q-sm:${Q.sm}px`}>
+<Radice id={sotto ? undefined : 'main'} class="tavolo" data-tavolo data-versione={versione(misure)} inert={sotto} style={`--q-lg:${Q.lg}px;--q-sm:${Q.sm}px`}>
   <div class="tavolo__carta" data-carta aria-hidden="true"></div>
   <div class="tavolo__mondo" data-mondo>
     {cells.map((cell, i) => {
@@ -58,7 +65,7 @@ const projects = cells.filter(c => c.type === 'project').length;
       );
     })}
   </div>
-</main>
+</Radice>
 
 <div class="attrezzi" role="group" aria-label="Tavolo" data-attrezzi hidden>
   <button type="button" class="mono" data-riordina>Riordina</button>
@@ -169,6 +176,8 @@ const projects = cells.filter(c => c.type === 'project').length;
     display: flex; gap: var(--gap);
   }
   .attrezzi[hidden] { display: none; }
+  /* col foglio aperto i comandi del tavolo non servono */
+  :global(html.ha-foglio:not(.is-tavolo)) .attrezzi { display: none; }
   .attrezzi button {
     appearance: none; margin: 0;
     padding: 10px 12px;

@@ -12,8 +12,8 @@ import { BREAKPOINTS } from './grid';
 export const PER_UNITA = 4;
 /** Lato del quadretto di base, in px: computer e telefono (sotto BREAKPOINTS.md) */
 export const Q = { lg: 25, sm: 18 } as const;
-/** Zoom: il quadretto va da QMIN a QMAX px */
-export const QMIN = 12, QMAX = 48;
+/** Zoom: il quadretto va da QMIN a QMAX px. Sotto 16 i testi a misura fissa (11 e 14 px) non stavano più nelle celle */
+export const QMIN = 16, QMAX = 48;
 
 /** Misura di una cella sul tavolo: `q` scritto a mano, se no le unità × 4 */
 export const inQuadretti = (cell: Cell): Span => cell.q ?? { w: cell.w * PER_UNITA, h: cell.h * PER_UNITA };

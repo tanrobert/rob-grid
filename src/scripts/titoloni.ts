@@ -3,7 +3,7 @@
  * home, la bio in Info).
  * - Misura: il corpo più grande con cui il titolo sta nella sua cella, col font vero. Lo spazio in più
  *   (HEADROOM) serve alla lente, che allarga le lettere. Si calcola prima che la pagina si veda: dopo lo
- *   swap (astro:after-swap, il font c'è già) e al primo caricamento prima delle righe dell'intro (righe.ts,
+ *   caricamento, prima delle righe dell'intro (righe.ts,
  *   che leggono gli a capo). Il corpo si scrive in cqi (larghezza della cella): allo zoom del tavolo e al resize
  *   il titolo scala con la cella, e la misura esatta si rifà a misura ferma (ATTESA).
  * - Lente (idea di Roberto, ottobre 2026, provata in tools/pages/cinetica.html): col mouse il peso cresce
@@ -50,9 +50,6 @@ function fit(title: HTMLElement) {
 }
 
 export const fitTitles = () => titles().forEach(fit);
-
-// pagina nuova: misurata prima che la View Transition la catturi
-document.addEventListener('astro:after-swap', fitTitles);
 
 // ── Lente ─────────────────────────────────────────────────
 

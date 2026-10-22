@@ -2,8 +2,7 @@
  * Tavolo della home (components/tavolo/Tavolo.astro): carta infinita, celle da spostare, lanciare e aprire,
  * zoom = misura del quadretto. Prototipo e scelte: tools/pages/tavolo.html.
  * Stessa visita = tavolo com'era (memoria.ts); visita nuova = disposizione pensata per la finestra vera.
- * Si avvia al primo caricamento e dopo ogni swap del ClientRouter (prima che la View Transition fotografi la
- * pagina nuova: tornando da una pagina la cella deve già essere al suo posto), si ripulisce prima dello swap.
+ * C'è anche sotto i fogli aperti (components/foglio): lì è inerte finché il foglio resta aperto.
  */
 import { gsap } from 'gsap';
 import { InertiaPlugin } from 'gsap/InertiaPlugin';
@@ -46,7 +45,7 @@ function giri(v: Vista) {
   v.carta.style.setProperty('--passo-giro', `${S * Math.max(1, Math.ceil(servono / 8))}px`);
 }
 
-function initTavolo(el: HTMLElement): () => void {
+function initTavolo(el: HTMLElement): Tavolo {
   const ac = new AbortController();
   const v = creaVista(el);
   const pezzi = leggiPezzi(v.mondo);
@@ -106,22 +105,12 @@ function initTavolo(el: HTMLElement): () => void {
     attrezzi.querySelector('[data-centro]')?.addEventListener('click', () => vai(t, 0, 0, 0.6), { signal: ac.signal });
   }
 
-  return () => {
-    if (mosso) t.salva();
-    ac.abort();
-    gsap.killTweensOf([v.pan, ...pezzi.flatMap(p => (p.ombra ? [p.el, p.ombra] : [p.el]))]);
-    InertiaPlugin.untrack(v.pan);
-    pezzi.forEach(p => InertiaPlugin.untrack(p.el));
-  };
+  // uscendo dalla pagina (anche verso la cache del browser, per tornare con indietro): il tavolo com'è adesso,
+  // anche a metà inerzia
+  addEventListener('pagehide', () => { if (mosso) t.salva(); }, { signal: ac.signal });
+  return t;
 }
 
-let cleanup: (() => void) | null = null;
-function start() {
-  cleanup?.();
-  cleanup = null;
-  const el = document.querySelector<HTMLElement>('[data-tavolo]');
-  if (el) cleanup = initTavolo(el);
-}
-start();
-document.addEventListener('astro:after-swap', start);
-document.addEventListener('astro:before-swap', () => { cleanup?.(); cleanup = null; });
+const el = document.querySelector<HTMLElement>('[data-tavolo]');
+/** Il tavolo della pagina, se c'è: lo usa scripts/foglio per aprire e chiudere i fogli dalle sue celle */
+export const tavolo = el ? initTavolo(el) : null;

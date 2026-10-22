@@ -164,7 +164,7 @@ export function initGesti(t: Tavolo) {
   on('pointerup', end);
   on('pointercancel', end);
 
-  // in cattura, prima del link e del ClientRouter (che salta i click con preventDefault)
+  // in cattura, prima del link (e di scripts/foglio, che ricorda la cella cliccata)
   on('click', e => {
     if (performance.now() - fermo > QUIETE) return;
     fermo = 0;

@@ -1,5 +1,6 @@
 // Giro del tavolo della home: disposizione, gesti col mouse e col dito, zoom, memoria della visita, Riordina,
-// riduzione del movimento, pixel netti al 125% e scatti durante il pan.
+// riduzione del movimento, pixel netti al 125% e scatti durante il pan. Poi i fogli aperti sopra il tavolo
+// (scripts/foglio): link diretto, apertura dalla cella, chiusure, indietro e avanti, archivio → progetto.
 //   npm run tavolo:tour -- [chrome|firefox]
 // Il tocco (CDP), riduci movimento, il 125% e gli scatti solo in Chrome. Esce con errore se qualcosa non torna.
 import { args, launch, sleep, BASE } from './lib.mjs';
@@ -25,10 +26,15 @@ async function page({ width = 1440, height = 900, touch = false, scale = 1, redu
     && console.log(`  !! console ${m.type()}:`, m.text()));
   return p;
 }
+/** Memoria della visita vuota anche dopo la ricarica: uscendo il tavolo salva (pagehide), qui si cancella dopo */
+const forget = p => p.evaluate(() => {
+  sessionStorage.clear();
+  addEventListener('pagehide', () => sessionStorage.clear());
+});
 /** Home appena aperta, visita nuova (niente posizioni salvate) */
 async function fresh(p) {
   await p.goto(BASE + '/', { waitUntil: 'networkidle0' });
-  await p.evaluate(() => sessionStorage.clear());
+  await forget(p);
   await p.reload({ waitUntil: 'networkidle0' });
   await sleep(2500);  // fine dell'intro
 }
@@ -141,7 +147,7 @@ console.log(`${browser} — ${BASE}`);
   const s5 = await state(p);
   check(Math.abs(s5.ox - Math.round(s5.vw / 2)) < 1 && Math.abs(s5.oy - Math.round(s5.vh / 2)) < 1, 'torna al centro');
   // al quadretto di partenza, se no la disposizione si fa per lo zoom di adesso
-  await p.evaluate(() => sessionStorage.clear());
+  await forget(p);
   await p.reload({ waitUntil: 'networkidle0' });
   await sleep(1500);
   await mouseDrag(p, center((await state(p)).cells[id]), -5 * s0.q, 4 * s0.q);
@@ -157,10 +163,166 @@ console.log(`${browser} — ${BASE}`);
   await sleep(1500);
   const s7 = await state(p);
   check(s7.path !== '/', `click su "${link}": apre`, s7.path);
-  await p.goBack();
+  await p.evaluate(() => history.back());
   await sleep(1500);
   const s8 = await state(p);
   check(s8.path === '/' && grid(s8) === grid(s6), 'indietro: tavolo com\'era');
+  await p.close();
+}
+
+// ── Fogli sopra il tavolo ───────────────────────────────────────────────
+/** Stato del foglio: aperto, tavolo inerte, h1, cella d'origine nascosta, copie in volo, fuoco */
+const foglio = p => p.evaluate(() => {
+  const f = document.querySelector('[data-foglio]');
+  const html = document.documentElement;
+  return {
+    path: location.pathname + location.search,
+    aperto: !!f && getComputedStyle(f).display !== 'none' && !html.classList.contains('is-tavolo'),
+    inerte: !!document.querySelector('[data-tavolo]')?.inert,
+    h1: [...document.querySelectorAll('h1')].length,
+    intro: html.classList.contains('is-intro'),
+    nascoste: [...document.querySelectorAll('[data-pezzo]')].filter(el => getComputedStyle(el).visibility === 'hidden').map(el => el.dataset.pezzo),
+    copie: document.querySelectorAll('body > .cell[aria-hidden]').length,
+    fuoco: document.activeElement?.closest('[data-pezzo]')?.dataset.pezzo ?? null,
+    titolo: document.title,
+    voli: window.__voli ?? [],
+  };
+});
+/** Ogni copia della hero che parte in volo: dove nasce (il riquadro di partenza) */
+const spia = p => p.evaluateOnNewDocument(() => {
+  window.__voli = [];
+  new MutationObserver(ms => ms.forEach(m => m.addedNodes.forEach(n => {
+    if (n.nodeType === 1 && n.matches('.cell[aria-hidden]') && n.parentElement === document.body) {
+      const r = n.getBoundingClientRect();
+      window.__voli.push({ x: Math.round(r.left), y: Math.round(r.top), w: Math.round(r.width), h: Math.round(r.height), vista: getComputedStyle(n).visibility === 'visible' });
+    }
+  }))).observe(document, { childList: true, subtree: true });
+});
+{
+  const p = await page();
+  // link diretto: il tavolo sotto, inerte, un solo h1
+  await p.goto(BASE + '/info', { waitUntil: 'networkidle0' });
+  await forget(p);
+  await p.reload({ waitUntil: 'networkidle0' });
+  await sleep(2500);
+  let f = await foglio(p);
+  check(f.aperto && f.inerte && f.h1 === 1, 'link diretto a /info: foglio aperto, tavolo inerte, un solo h1', `h1: ${f.h1}`);
+  // Esc: la hero torna nella cella "info" del tavolo, indirizzo "/"
+  await p.keyboard.press('Escape');
+  await sleep(1000);
+  f = await foglio(p);
+  const st = await state(p);
+  check(f.path === '/' && !f.aperto && !f.inerte && !f.copie && !f.nascoste.length, 'Esc: resta il tavolo, indirizzo /', f.path);
+  check(f.titolo.startsWith('Roberto Tanasi ·') && f.fuoco === 'info', 'titolo della home, fuoco sulla cella d\'origine', `fuoco: ${f.fuoco}`);
+  check(st.vivo && st.scroll === 0, 'tavolo vivo, pagina ferma');
+  // indietro riapre, avanti richiude
+  await p.evaluate(() => history.back());
+  await sleep(1200);
+  f = await foglio(p);
+  check(f.path === '/info' && f.aperto && f.inerte && f.nascoste.join() === 'info', 'indietro: il foglio si riapre dalla cella');
+  await p.evaluate(() => history.forward());
+  await sleep(1200);
+  f = await foglio(p);
+  check(f.path === '/' && !f.aperto, 'avanti: si richiude');
+  // tavolo vivo dopo la chiusura: una cella si trascina ancora
+  const s0 = await state(p);
+  const id = visible(s0, ['metodo', 'tag', 'nome']);
+  await mouseDrag(p, center(s0.cells[id]), 2 * s0.q, 0);
+  await sleep(900);
+  const s1 = await state(p);
+  check(s1.cells[id].gx - s0.cells[id].gx === 2 && s1.path === '/', 'dopo la chiusura il tavolo si usa come in home');
+  await p.close();
+}
+{
+  // dalla home: click sulla cella → la pagina si apre dalla cella (niente intro), la ✕ la richiude lì
+  const p = await page();
+  await spia(p);
+  await fresh(p);
+  const s0 = await state(p);
+  const id = visible(s0, ['info', 'archivio', 'extra']);
+  const c = s0.cells[id];
+  await Promise.all([p.waitForNavigation({ waitUntil: 'load' }), p.mouse.click(center(c).x, center(c).y)]);
+  // fotogrammi durante il volo
+  await p.evaluate(() => {
+    window.__gap = 0; let last = performance.now();
+    const tick = t => { window.__gap = Math.max(window.__gap, t - last); last = t; window.__raf = requestAnimationFrame(tick); };
+    window.__raf = requestAnimationFrame(tick);
+  });
+  await sleep(1500);
+  const gap = await p.evaluate(() => { cancelAnimationFrame(window.__raf); return window.__gap; });
+  let f = await foglio(p);
+  const v = f.voli[0];
+  check(f.aperto && !f.intro && f.nascoste.join() === id, `click su "${id}": foglio aperto, niente intro, cella d'origine sul foglio`, f.path);
+  check(v?.vista && Math.abs(v.x - c.x) < 2 && Math.abs(v.y - c.y) < 2 && Math.abs(v.w - c.w) < 2, 'la hero parte dalla cella, visibile', v ? `${v.x},${v.y} ${v.w}×${v.h} · cella ${Math.round(c.x)},${Math.round(c.y)} ${Math.round(c.w)}` : 'nessun volo');
+  check(gap < 50, 'apertura: niente scatti', `pausa più lunga tra due fotogrammi ${gap.toFixed(0)}ms`);
+  check(f.copie === 0, 'a volo finito la copia non c\'è più');
+  await p.click('[data-hero] [data-close]');
+  await sleep(1000);
+  f = await foglio(p);
+  const s1 = await state(p);
+  const back = s1.cells[id];
+  check(f.path === '/' && !f.aperto && !f.nascoste.length && f.fuoco === id, '✕: la hero torna nella sua cella', f.path);
+  check(Math.abs(back.x - c.x) < 1 && Math.abs(back.y - c.y) < 1, 'il tavolo è come era in home');
+  await p.evaluate(() => history.back());
+  await sleep(1200);
+  // clic sulla hero e clic fuori dalle celle chiudono
+  await p.click('[data-hero]', { offset: { x: 60, y: 120 } });
+  await sleep(1000);
+  check((await foglio(p)).path === '/', 'clic sulla hero: chiude');
+  await p.evaluate(() => history.back());
+  await sleep(1200);
+  await p.mouse.click(8, 450);
+  await sleep(1000);
+  check((await foglio(p)).path === '/', 'clic fuori dal foglio: chiude');
+  await p.close();
+}
+{
+  // archivio → progetto → Esc: si torna all'archivio. Successivo: sostituisce nella cronologia
+  const p = await page();
+  await p.goto(BASE + '/archivio', { waitUntil: 'networkidle0' });
+  await sleep(2500);
+  const prima = await p.$eval('.foglio .cell--project', a => a.getAttribute('href'));
+  await Promise.all([p.waitForNavigation({ waitUntil: 'load' }), p.click('.foglio .cell--project')]);
+  await sleep(1200);
+  let f = await foglio(p);
+  check(f.path === prima && f.aperto && !f.intro, 'archivio → progetto', f.path);
+  const lunga = await p.evaluate(() => history.length);
+  await Promise.all([p.waitForNavigation({ waitUntil: 'load' }), p.click('a[data-id="succ"]')]);
+  await sleep(1200);
+  f = await foglio(p);
+  check(f.path !== prima && f.aperto && await p.evaluate(() => history.length) === lunga, 'successivo: sostituisce il progetto nella cronologia', f.path);
+  // indietro: in Firefox la pagina torna dalla cache del browser, senza un evento di caricamento da aspettare
+  await p.keyboard.press('Escape');
+  await sleep(2000);
+  f = await foglio(p);
+  check(f.path === '/archivio' && f.aperto, 'Esc: torna all\'archivio', f.path);
+  await p.close();
+}
+{
+  // un tag della home apre l'archivio filtrato (pagina nuova: dopo un ritorno dalla cache Firefox non segue goto)
+  const p = await page();
+  await fresh(p);
+  const s = await state(p);
+  if (inView(s, 'tag')) {
+    const tag = await p.$eval('[data-pezzo="tag"] a[href*="tag="]', a => a.getAttribute('href'));
+    await Promise.all([p.waitForNavigation({ waitUntil: 'load' }), p.click(`[data-pezzo="tag"] a[href="${tag}"]`)]);
+    await sleep(1500);
+    const f = await foglio(p);
+    const viste = await p.$$eval('.foglio .cell--project:not([hidden])', l => l.length);
+    const tutte = await p.$$eval('.foglio .cell--project', l => l.length);
+    check(f.path === tag && f.aperto && viste < tutte && f.nascoste.join() === 'tag', 'tag in home: archivio filtrato, aperto dalla cella dei tag', `${viste}/${tutte}`);
+  } else check(false, 'cella dei tag in vista');
+  await p.close();
+}
+if (chrome) {
+  // riduci movimento: si chiude subito
+  const p = await page({ reduced: true });
+  await p.goto(BASE + '/extra', { waitUntil: 'networkidle0' });
+  await sleep(300);
+  await p.keyboard.press('Escape');
+  await sleep(150);
+  const f = await foglio(p);
+  check(f.path === '/' && !f.aperto && !f.copie, 'riduci movimento: chiude subito');
   await p.close();
 }
 
@@ -200,7 +362,7 @@ if (chrome) {
   await touch('touchEnd', []);
   await sleep(1500);
   check((await state(p)).path !== '/', `tocco su "${link}": apre`, (await state(p)).path);
-  await p.goBack();
+  await p.evaluate(() => history.back());
   await sleep(1500);
   await p.evaluate(() => addEventListener('contextmenu', e => { if (!e.defaultPrevented) window.__menu = (window.__menu ?? 0) + 1; }));
 

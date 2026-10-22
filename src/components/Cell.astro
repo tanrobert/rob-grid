@@ -25,16 +25,15 @@ const isHome = href === '/';
 // linguetta: solo il numero (il nome lo dicono già titolo, occhiello o didascalia); label: false = niente linguetta
 const showLabel = cell.label !== false;
 
-// Espansione (scripts/morph.ts): la cella cliccabile si apre nella hero della pagina (data-hero = suo href);
-// nella pagina d'arrivo la cella del titolo (data-title-of) accoglie il titolo della didascalia
+// hero del foglio (data-hero = indirizzo della pagina): da lì il foglio si apre e si chiude (scripts/foglio)
 const hero = cell.heroOf;
-const titleOf = 'titleOf' in cell ? cell.titleOf : undefined;
 
-// cella cliccabile → <a> (il link a "/" chiude la pagina corrente); altrimenti <div>
+// cella cliccabile → <a> (il link a "/" chiude il foglio); altrimenti <div>.
+// data-replace: la pagina sostituisce quella corrente nella cronologia (precedente/successivo)
 const Tag = href ? 'a' : 'div';
 const linkAttrs = href
-  ? { href, 'data-morph': isHome ? undefined : href, 'data-close': isHome ? '' : undefined, 'data-astro-history': cell.replace ? 'replace' : undefined }
-  : { 'data-hero': hero, 'data-title-of': titleOf };
+  ? { href, 'data-close': isHome ? '' : undefined, 'data-replace': cell.replace ? '' : undefined }
+  : { 'data-hero': hero };
 ---
 
 <Tag
@@ -47,6 +46,6 @@ const linkAttrs = href
 >
   {showLabel && <span class="cell__label mono" aria-hidden="true"><span>{n}</span></span>}
   {href && <span class="cell__go" aria-hidden="true" data-part="go"><span><Arrow /></span></span>}
-  {!href && hero && <a href="/" class="cell__go" aria-label="Chiudi e torna alla griglia" data-close data-part="go"><span><Close /></span></a>}
+  {!href && hero && <a href="/" class="cell__go" aria-label="Chiudi e torna al tavolo" data-close data-part="go"><span><Close /></span></a>}
   <slot />
 </Tag>

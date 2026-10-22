@@ -1,7 +1,6 @@
 ---
-import { ClientRouter } from 'astro:transitions';
 import '../styles/global.css';
-import { site } from '../data/site';
+import { site, homeTitle } from '../data/site';
 
 interface Props {
   titolo?: string;
@@ -10,22 +9,23 @@ interface Props {
   canonical?: boolean;
   /** la pagina è il tavolo (home): niente scroll, i gesti li fa scripts/tavolo */
   tavolo?: boolean;
+  /** la pagina è il tavolo con un foglio aperto sopra (components/foglio): scorre il foglio */
+  foglio?: boolean;
 }
 
 const {
-  titolo = `${site.name} · Graphic designer`,
+  titolo = homeTitle,
   descrizione = `Identità visive, packaging e siti web. Portfolio di ${site.name}, graphic designer: progetti per ristorazione, ospitalità, cultura e imprese.`,
   canonical: withCanonical = true,
   tavolo = false,
+  foglio = false,
 } = Astro.props;
 
 const canonical = new URL(Astro.url.pathname, Astro.site);
-// Nel <head>, il primo script inline fa partire l'intro solo al caricamento "vero":
-// il ClientRouter non lo riesegue nelle navigazioni
 ---
 
 <!doctype html>
-<html lang="it" class:list={[tavolo && 'is-tavolo']}>
+<html lang="it" class:list={[tavolo && 'is-tavolo', foglio && 'ha-foglio']}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -40,40 +40,39 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <link rel="preload" href="/fonts/schibsted-grotesk.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="/fonts/roberto-grafica-black.woff2" as="font" type="font/woff2" crossorigin />
     <script is:inline>
-      // js: il tavolo resta nascosto finché scripts/tavolo non l'ha disposto per la finestra vera
-      document.documentElement.classList.add('js');
-      if (!matchMedia('(prefers-reduced-motion: reduce)').matches) document.documentElement.classList.add('is-intro');
-
-      // --dp = 1 pixel reale dello schermo in px CSS (Windows al 125% → 0.8px).
-      // Serve alle linee disegnate con i gradienti, che il browser non aggancia ai pixel.
-      // Si aggiorna con lo zoom e dopo ogni navigazione (lo swap riscrive gli attributi di <html>).
       (function () {
         var root = document.documentElement;
-        function setDp() { root.style.setProperty('--dp', 1 / devicePixelRatio + 'px'); }
+        // js: il tavolo resta nascosto finché scripts/tavolo non l'ha disposto per la finestra vera
+        root.classList.add('js');
+
+        // Arrivo da una pagina del sito (click, non ricarica): niente intro. Su una pagina con foglio il foglio
+        // entra dalla cella del tavolo che l'ha aperto (scripts/foglio): fino ad allora resta nascosto (in-arrivo)
+        var nav = performance.getEntriesByType('navigation')[0];
+        var tipo = nav ? nav.type : 'navigate';
+        var interno = false;
+        try { interno = tipo !== 'reload' && !!document.referrer && new URL(document.referrer).origin === location.origin; } catch (e) {}
+        if (interno && root.classList.contains('ha-foglio')) root.classList.add('in-arrivo');
+        if (!interno && tipo !== 'back_forward' && !matchMedia('(prefers-reduced-motion: reduce)').matches) root.classList.add('is-intro');
+
+        // --dp = 1 pixel reale dello schermo in px CSS (Windows al 125% → 0.8px).
+        // Serve alle linee disegnate con i gradienti, che il browser non aggancia ai pixel. Si aggiorna con lo zoom
         function watch() {
-          setDp();
+          root.style.setProperty('--dp', 1 / devicePixelRatio + 'px');
           matchMedia('(resolution: ' + devicePixelRatio + 'dppx)').addEventListener('change', watch, { once: true });
         }
         watch();
-        document.addEventListener('astro:after-swap', setDp);
 
         // luce spenta con l'interruttore (scripts/ink.ts): prima del primo disegno, niente lampo di colori.
         // 'nero' è la scelta salvata dalla versione precedente dell'interruttore: vale come luce spenta
-        function setInk() {
-          var scelta = null;
-          try { scelta = localStorage.getItem('inchiostro'); } catch (e) {}
-          if (scelta === 'bianco' || scelta === 'nero') root.dataset.inchiostro = 'bianco';
-        }
-        setInk();
-        document.addEventListener('astro:after-swap', setInk);
-
+        var scelta = null;
+        try { scelta = localStorage.getItem('inchiostro'); } catch (e) {}
+        if (scelta === 'bianco' || scelta === 'nero') root.dataset.inchiostro = 'bianco';
       })();
     </script>
-    <ClientRouter />
   </head>
   <body>
     <a href="#main" class="skip-link">Salta al contenuto principale</a>
-    <div class="ruler" data-ruler aria-hidden="true" transition:persist="ruler">
+    <div class="ruler" data-ruler aria-hidden="true">
       <div class="ruler__thumb" data-ruler-thumb><span class="ruler__pct" data-ruler-pct>000%</span></div>
     </div>
     <slot />
@@ -94,11 +93,10 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
 </html>
 
 <script>
-  import '../scripts/morph';
-  import '../scripts/close';
   import '../scripts/ruler';
   import '../scripts/fill';
   import '../scripts/tavolo';
+  import '../scripts/foglio';
   import { initCells } from '../scripts/cells';
-  document.addEventListener('astro:page-load', initCells);
+  initCells();
 </script>

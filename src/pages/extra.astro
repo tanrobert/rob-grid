@@ -1,8 +1,9 @@
 ---
 import type { Cell } from '../data/grid-types';
 import Layout from '../layouts/Layout.astro';
-import Grid from '../components/Grid.astro';
-import SiteFooter from '../components/SiteFooter.astro';
+import Tavolo from '../components/tavolo/Tavolo.astro';
+import Foglio from '../components/foglio/Foglio.astro';
+import { tavolo } from '../data/tavolo';
 import { extraCells } from '../data/extra';
 import { pad2 } from '../lib/format';
 import { site, pageTitle } from '../data/site';
@@ -20,11 +21,10 @@ const cells: Cell[] = [
 ---
 
 <Layout
+  foglio
   titolo={pageTitle('Celle extra')}
   descrizione={`Le celle extra del portfolio di ${site.name}, graphic designer: orologio, misure della griglia, cursore, registro, occhio e globo terrestre in tempo reale.`}
 >
-  <main id="main" class="sheet">
-    <Grid cells={cells} />
-    <SiteFooter />
-  </main>
+  <Tavolo cells={tavolo} sotto />
+  <Foglio cells={cells} />
 </Layout>
