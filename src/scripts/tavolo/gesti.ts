@@ -3,6 +3,7 @@
  * - fondo: trascinato muove il tavolo, lasciato va avanti per inerzia;
  * - cella col mouse: dopo pochi px diventa trascinamento (si può lanciare);
  * - cella col dito: muove il tavolo, a meno di tenerla premuta (pressione lunga = presa);
+ * - con la matita presa (matita.ts) un dito o il mouse disegna; due dita spostano e zoomano;
  * - due dita: zoom, e insieme spostano il tavolo. Rotella del mouse e Ctrl + rotella (il pizzico del
  *   trackpad arriva così): zoom; il trackpad con due dita sposta.
  * Senza movimento il click resta al browser: le celle sono link veri e aprono le pagine. Il click che
@@ -29,6 +30,7 @@ interface Attesa {
   presa?: Presa;
 }
 interface Pizzico { mode: 'pinch'; d0: number; q0: number; w: Posto; m: Posto }
+interface Disegno { mode: 'draw'; id: number; t0: number }
 
 export function initGesti(t: Tavolo) {
   const { v, signal } = t;
@@ -36,7 +38,7 @@ export function initGesti(t: Tavolo) {
   const on = <K extends keyof HTMLElementEventMap>(type: K, fn: (e: HTMLElementEventMap[K]) => void, opts: AddEventListenerOptions = {}) =>
     el.addEventListener(type, fn, { signal, ...opts });
 
-  let g: Attesa | Pizzico | null = null;
+  let g: Attesa | Pizzico | Disegno | null = null;
   const pts = new Map<number, Posto>();  // dita (o mouse) appoggiati adesso
   // fine dell'ultimo gesto che si è mosso: il click che lo segue (subito dopo) non apre niente
   let fermo = 0;
@@ -102,13 +104,21 @@ export function initGesti(t: Tavolo) {
     pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
     // secondo dito: pizzico (salvo mentre si porta una cella)
     if (pts.size === 2 && g?.mode !== 'drag') {
-      if (g && g.mode !== 'pinch') { clearTimeout(g.timer); unpress(g); }
+      // il primo dito ha appena iniziato un segno: era l'inizio del pizzico, non un disegno
+      if (g?.mode === 'draw') { if (performance.now() - g.t0 < 250) t.matita?.annulla(); else t.matita?.fine(); }
+      else if (g && g.mode !== 'pinch') { clearTimeout(g.timer); unpress(g); }
       startPinch();
       return;
     }
     if (g) return;
     fermo = 0;
     gsap.killTweensOf(v.pan);
+    if (t.matita?.attiva()) {
+      g = { mode: 'draw', id: e.pointerId, t0: performance.now() };
+      t.matita.inizia(e.clientX, e.clientY);
+      capture(e.pointerId);
+      return;
+    }
     const pezzo = pezzoDi(e.target);
     const a: Attesa = {
       mode: 'wait', id: e.pointerId, touch, pezzo,
@@ -126,6 +136,11 @@ export function initGesti(t: Tavolo) {
     if (pts.has(e.pointerId)) pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
     if (g?.mode === 'pinch') { pinch(g); return; }
     if (!g || e.pointerId !== g.id) return;
+    if (g.mode === 'draw') {
+      // tutti i punti intermedi che il browser ha raccolto tra un fotogramma e l'altro: tratto continuo
+      for (const ev of e.getCoalescedEvents?.() ?? [e]) t.matita?.continua(ev.clientX, ev.clientY);
+      return;
+    }
     const now = performance.now(), dt = Math.max(1, now - g.pt);
     // velocità in px/s, smorzata: guida rotazione e inclinazione del foglio, e il lancio
     g.vx += ((e.clientX - g.px) / dt * 1000 - g.vx) * 0.35;
@@ -151,6 +166,8 @@ export function initGesti(t: Tavolo) {
     pts.delete(e.pointerId);
     if (g?.mode === 'pinch') { if (pts.size < 2) endPinch(g); return; }
     if (!g || e.pointerId !== g.id) return;
+    // fine del tratto: il click che segue non apre la cella su cui si è disegnato
+    if (g.mode === 'draw') { t.matita?.fine(); fermo = performance.now(); g = null; return; }
     const a = g;
     g = null;
     clearTimeout(a.timer);

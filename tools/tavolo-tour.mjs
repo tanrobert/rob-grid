@@ -491,6 +491,103 @@ if (chrome) {
   await p.close();
 }
 
+// ── Matita ──────────────────────────────────────────────────────────────
+/** Segni: quanti tratti sul tavolo e su ogni cella, scala del gruppo del tavolo, stato dei pulsanti */
+const segni = p => p.evaluate(() => {
+  const celle = {};
+  document.querySelectorAll('[data-pezzo]').forEach(el => {
+    const n = el.querySelectorAll(':scope > [data-segni] path').length;
+    if (n) celle[el.dataset.pezzo] = n;
+  });
+  const g = document.querySelector('[data-segni-tavolo]');
+  return {
+    tavolo: g.querySelectorAll('path').length, celle,
+    scala: g.getAttribute('transform'),
+    presa: document.querySelector('[data-matita]').getAttribute('aria-pressed') === 'true',
+    cancella: !document.querySelector('[data-cancella]').hidden,
+    mano: document.documentElement.classList.contains('matita-in-mano'),
+  };
+});
+{
+  const p = await page();
+  await fresh(p);
+  const s0 = await state(p);
+  await p.click('[data-matita]');
+  await sleep(500);
+  let m = await segni(p);
+  check(m.presa && m.mano && !m.cancella, 'matita presa: diventa il cursore, "Cancella tutto" ancora nascosto');
+  // un tratto dalla carta dentro una cella: due pezzi, uno sul tavolo e uno sulla cella
+  const id = visible(s0, ['archivio', 'extra', 'info']);
+  const c = s0.cells[id];
+  const bg = await background(p);
+  const da = { x: c.x - s0.q * 2, y: c.y + c.h / 2 };
+  await mouseDrag(p, da, s0.q * 4, 0, 300, 20);
+  await sleep(700);
+  m = await segni(p);
+  let st = await state(p);
+  check(m.tavolo >= 1 && m.celle[id] >= 1 && m.cancella, `tratto dalla carta su "${id}": tagliato sul bordo, un pezzo per foglio`, JSON.stringify({ tavolo: m.tavolo, celle: m.celle }));
+  check(st.path === '/' && grid(st) === grid(s0), 'disegnando non si apre né si sposta niente');
+  // Esc posa la matita; la cella spostata si porta dietro i suoi segni
+  await p.keyboard.press('Escape');
+  await sleep(500);
+  m = await segni(p);
+  check(!m.presa && !m.mano, 'Esc: matita posata');
+  await mouseDrag(p, center(st.cells[id]), 3 * st.q, 2 * st.q);
+  await sleep(900);
+  m = await segni(p);
+  check(m.celle[id] >= 1, 'la cella spostata si porta dietro i suoi segni');
+  // zoom: i segni del tavolo scalano col quadretto
+  await p.mouse.move(bg.x, bg.y);
+  await p.mouse.wheel({ deltaY: -100 });
+  await sleep(500);
+  st = await state(p);
+  m = await segni(p);
+  check(m.scala === `scale(${st.q})`, 'zoom: i segni del tavolo seguono il quadretto', m.scala);
+  // aprire e chiudere un foglio non li cancella
+  const altra = visible(st, ['extra', 'info', 'archivio'].filter(x => x !== id)) ?? id;
+  await clicCella(p, altra);
+  await sleep(1300);
+  await p.keyboard.press('Escape');
+  await sleep(1100);
+  m = await segni(p);
+  check(m.tavolo >= 1 && m.celle[id] >= 1, 'aprendo e chiudendo un foglio i segni restano');
+  // Cancella tutto
+  await p.click('[data-cancella]');
+  await sleep(500);
+  m = await segni(p);
+  check(!m.tavolo && !Object.keys(m.celle).length && !m.cancella, 'Cancella tutto: via i segni e il pulsante');
+  await p.close();
+}
+if (chrome) {
+  // dito: con la matita un dito disegna, due dita zoomano senza lasciare segni
+  const p = await page({ width: 412, height: 860, touch: true });
+  await fresh(p);
+  const cdp = await p.createCDPSession();
+  const touch = (type, pts) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: pts.map((pt, i) => ({ x: pt.x, y: pt.y, id: i })) });
+  await p.tap('[data-matita]');
+  await sleep(400);
+  const s0 = await state(p);
+  await touch('touchStart', [{ x: 120, y: 500 }]);
+  for (let i = 1; i <= 12; i++) { await touch('touchMove', [{ x: 120 + i * 8, y: 500 + i * 3 }]); await sleep(20); }
+  await touch('touchEnd', []);
+  await sleep(400);
+  let m = await segni(p);
+  const n = m.tavolo + Object.values(m.celle).reduce((a, b) => a + b, 0);
+  const s1 = await state(p);
+  check(n >= 1 && s1.ox === s0.ox && s1.path === '/', 'dito con la matita: disegna, il tavolo resta fermo', `${n} tratti`);
+  const mid = { x: 206, y: 430 };
+  await touch('touchStart', [{ x: mid.x - 40, y: mid.y }]);
+  await sleep(30);
+  await touch('touchStart', [{ x: mid.x - 40, y: mid.y }, { x: mid.x + 40, y: mid.y }]);
+  for (let i = 1; i <= 10; i++) { await touch('touchMove', [{ x: mid.x - 40 - i * 6, y: mid.y }, { x: mid.x + 40 + i * 6, y: mid.y }]); await sleep(25); }
+  await touch('touchEnd', []);
+  await sleep(500);
+  m = await segni(p);
+  const n2 = m.tavolo + Object.values(m.celle).reduce((a, b) => a + b, 0);
+  check(n2 === n && (await state(p)).q > s1.q, 'due dita con la matita: zoom, nessun segno in più', `${n} → ${n2} tratti`);
+  await p.close();
+}
+
 // ── Riduzione del movimento (emulata solo in Chrome) ────────────────────
 if (chrome) {
   const p = await page({ reduced: true });

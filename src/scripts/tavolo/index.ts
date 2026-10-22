@@ -12,6 +12,7 @@ import { creaVista, scala, applica, aPixel, clampQ, ox, oy, type Vista } from '.
 import { leggiPezzi, posa, alza, disponi, riordina, type Pezzo } from './pezzi';
 import { initGesti, vai } from './gesti';
 import { leggi, scrivi } from './memoria';
+import { initMatita, type Matita } from './matita';
 
 gsap.registerPlugin(InertiaPlugin);
 
@@ -21,6 +22,8 @@ export interface Tavolo {
   /** ordine più alto in uso: la prossima cella presa va sopra */
   zTop: number;
   signal: AbortSignal;
+  /** la matita (matita.ts), presa o posata */
+  matita?: Matita;
   /** tutte le celle al loro posto alla misura del quadretto di adesso */
   posaTutti(): void;
   /** zoom finito: le foto ingrandite si ricaricano più grandi */
@@ -96,6 +99,7 @@ function initTavolo(el: HTMLElement): Tavolo {
   giri(v);
   t.nitide();
   InertiaPlugin.track(v.pan, 'x,y');
+  t.matita = initMatita(t);
   initGesti(t);
 
   const attrezzi = document.querySelector<HTMLElement>('[data-attrezzi]');
