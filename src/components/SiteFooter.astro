@@ -1,7 +1,6 @@
 ---
 // Casella di chiusura: sempre l'ultima, larga quanto il foglio.
 // Dentro: logo largo due colonne della griglia, poi tre zone distribuite in base al testo.
-import SvgAsset from './SvgAsset.astro';
 import { siteVersion } from '../lib/version';
 import { site } from '../data/site';
 
@@ -20,7 +19,7 @@ const year = new Date().getFullYear();
 
   <div class="foot__cols">
     <a href="/" class="foot__logo" aria-label={`${site.name}, homepage`}>
-      <SvgAsset name="roberto" />
+      <span class="logotipo">Roberto</span>
     </a>
 
     <div class="foot__zones">
@@ -66,7 +65,7 @@ const year = new Date().getFullYear();
     padding-inline: var(--pad);
   }
   .foot__logo { flex: none; width: calc(4 * var(--u) + 3 * var(--gap) - 2 * var(--pad)); }
-  .foot__logo :global(svg) { width: 100%; height: auto; }
+  .foot__logo .logotipo { font-size: calc((4 * var(--u) + 3 * var(--gap) - 2 * var(--pad)) / var(--roberto-w)); }
 
   /* desktop: le zone sono fratelli diretti del logo nella stessa riga */
   .foot__zones { display: contents; }

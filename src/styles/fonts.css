@@ -7,3 +7,7 @@
 
 @font-face { font-family: 'Schibsted Grotesk'; src: url('/fonts/schibsted-grotesk.woff2') format('woff2'); font-weight: 400 900; font-style: normal; font-display: swap; }
 @font-face { font-family: 'Schibsted Grotesk'; src: url('/fonts/schibsted-grotesk-italic.woff2') format('woff2'); font-weight: 400 900; font-style: italic; font-display: swap; }
+
+/* Roberto Grafica Black: il font di Roberto, solo per il logotipo (maiuscole, un peso). block: col font di riserva
+   il nome comparirebbe in un altro carattere e poi cambierebbe; è 4 KB e ha il preload in Layout.astro */
+@font-face { font-family: 'Roberto Grafica'; src: url('/fonts/roberto-grafica-black.woff2') format('woff2'); font-weight: 900; font-style: normal; font-display: block; }

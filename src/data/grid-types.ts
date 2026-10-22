@@ -37,8 +37,12 @@ interface CellBase extends Span {
 export type Cell = CellBase & (
   /** ink: la cella è l'interruttore della luce, premuta scambia rosso e bianco del sito (scripts/ink.ts) */
   | { type: 'svg'; svg: SvgName; fit?: 'contain' | 'bleed'; ink?: boolean }
+  /** ROBERTO scritto col font del logotipo, largo quanto la cella */
+  | { type: 'logotipo' }
   | {
-      type: 'marquee'; svg: SvgName; /** secondi per un giro completo */ speed?: number; reverse?: boolean;
+      type: 'marquee'; /** secondi per un giro completo */ speed?: number; reverse?: boolean;
+      /** cosa scorre: un logo del registro, o un testo scritto col font del logotipo (uno dei due) */
+      svg?: SvgName; text?: string;
       /** Scorre dall'alto in basso invece che da destra a sinistra */
       vertical?: boolean;
       /** Logo orizzontale girato di 90° in una cella verticale: si legge dal basso, scorre verso il basso */

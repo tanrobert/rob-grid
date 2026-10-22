@@ -41,20 +41,20 @@ export const grid: Cell[] = [
   // ── riga 1 ────────────────────────────────────────────
   // la R è l'interruttore della luce: premuta, rosso e bianco del sito si scambiano
   { id: 'logo',    type: 'svg',     w: 1, h: 1, svg: 'logo-r', fit: 'bleed', label: false, frame: false, ink: true },
-  { id: 'nome',    type: 'svg',     w: 4, h: 1, sm: { w: 3 }, svg: 'roberto' },
+  { id: 'nome',    type: 'logotipo', w: 4, h: 1, sm: { w: 3 } },
   { id: 'archivio', type: 'stat',   w: 2, h: 2, href: '/archivio', value: pad2(projects.length), caption: 'Progetti in archivio', countUp: true },
 
   // ── righe 2–3 ─────────────────────────────────────────
   {
     id: 'intro', type: 'text', w: 5, h: 2, md: { w: 4, h: 2 }, as: 'h1', size: 'l',
-    eyebrow: `Graphic designer — dal ${firstYear}`,
+    eyebrow: `Graphic designer · dal ${firstYear}`,
     title: 'Progetto identità visive e punti di contatto fisici e digitali.',
   },
   // per ora l'unico progetto in home: è quello su cui si lavora. Gli altri sono in archivio
   projectCell('kiale', 'kiale'),
-  // il nastro "Roberto · grafica, web" girato in verticale. speed = secondi per giro: il logo lungo è
-  // ~2,8 volte il "roberto", 112s = stessa velocità dei 40s di prima
-  { id: 'nastro',  type: 'marquee', w: 1, h: 6, svg: 'logo-completo-orizzontale-lungo', speed: 112, ruotato: true },
+  // il nastro "Roberto · progettazione visiva" girato in verticale, col font del logotipo. speed = secondi per giro:
+  // il testo è lungo ~31 maiuscole, 155s = stessa velocità del vecchio logo (22,5 in 112s)
+  { id: 'nastro',  type: 'marquee', w: 1, h: 6, text: 'Roberto · progettazione visiva ·', speed: 155, ruotato: true },
   { id: 'info',     type: 'text',    w: 2, h: 2, tone: 'red', href: '/info', title: 'Bio', as: 'p', size: 'm', eyebrow: 'Chi sono' },
 
   // ── righe 4–5 ─────────────────────────────────────────

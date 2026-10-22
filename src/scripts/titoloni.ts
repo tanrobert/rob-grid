@@ -32,6 +32,9 @@ function fits(title: HTMLElement) {
 
 function fit(title: HTMLElement) {
   unsplit(title);
+  // con prefers-reduced-motion la regola globale dà a ogni proprietà una transizione da 0.01ms: il corpo
+  // misurato resterebbe quello vecchio, tutto "ci sta" e il titolo usciva a MAX
+  title.style.transition = 'none';
   let lo = MIN, hi = MAX;
   for (let n = 0; n < 9; n++) {
     const mid = (lo + hi) / 2;
@@ -39,6 +42,7 @@ function fit(title: HTMLElement) {
     if (fits(title)) lo = mid; else hi = mid;
   }
   title.style.fontSize = `${Math.floor(lo * HEADROOM)}px`;
+  title.style.transition = '';
 }
 
 export const fitTitles = () => titles().forEach(fit);

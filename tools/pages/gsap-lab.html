@@ -1,0 +1,479 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Laboratorio GSAP</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400..900&display=swap">
+<style>
+  /* Una colonna di riquadri: a sinistra cosa fa l'esempio, a destra il palco dove succede */
+  :root {
+    --bg: #f5f3f0;
+    --ink: #1c1a17;
+    --accent: #f03f24;
+    --muted: #6b655d;
+    --rule: #d6d0c7;
+    --font: 'Schibsted Grotesk', 'Helvetica Neue', Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --bg: #1c1a17; --ink: #f5f3f0; --accent: #ff5b3d; --muted: #a39c92; --rule: #3b3732; color-scheme: dark; }
+  }
+  :root[data-theme="dark"] { --bg: #1c1a17; --ink: #f5f3f0; --accent: #ff5b3d; --muted: #a39c92; --rule: #3b3732; color-scheme: dark; }
+
+  body {
+    background: var(--bg); color: var(--ink);
+    font: 500 16px/1.45 var(--font);
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 32px 64px;
+  }
+  .wrap { max-width: 1120px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1fr); gap: 56px; }
+
+  header { display: grid; gap: 12px; max-width: 62ch; }
+  h1 { font-size: clamp(44px, 9vw, 104px); font-weight: 900; line-height: .9; letter-spacing: -.035em; margin: 0; text-wrap: balance; }
+  header p { margin: 0; color: var(--muted); }
+
+  .demo {
+    display: grid; grid-template-columns: minmax(0, 17rem) minmax(0, 1fr); gap: 24px 40px;
+    border-top: 1px solid var(--ink); padding-top: 16px;
+  }
+  .info { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+  .tag { margin: 0; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+  h2 { margin: 0; font-size: 26px; line-height: 1.05; font-weight: 800; letter-spacing: -.02em; text-wrap: balance; }
+  .info p { margin: 0; }
+  .info .css { color: var(--muted); font-size: 14px; }
+  .ctrl { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 4px; }
+  .btn {
+    font: 600 12px/1 var(--font); letter-spacing: .08em; text-transform: uppercase;
+    color: var(--ink); background: transparent; border: 1px solid var(--ink);
+    padding: 10px 14px; cursor: pointer; touch-action: manipulation;
+  }
+  .btn:active { background: var(--ink); color: var(--bg); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+  input[type="range"] { accent-color: var(--accent); width: 100%; }
+
+  .stage {
+    position: relative; overflow: hidden; min-width: 0;
+    border: 1px solid var(--rule); min-height: 300px;
+    display: grid; place-items: center;
+  }
+
+  /* 1 · lettere */
+  .split-t { margin: 0; padding: 24px; font-size: clamp(40px, 7vw, 88px); font-weight: 900; line-height: .95; letter-spacing: -.03em; text-align: center; text-wrap: balance; }
+
+  /* 2 · peso */
+  .lens { margin: 0; padding: 24px; font-size: clamp(32px, 9vw, 112px); font-weight: 400; line-height: 1; letter-spacing: -.02em; white-space: nowrap; }
+  .stage--lens { touch-action: pan-y; cursor: crosshair; }
+
+  /* 3 · timeline */
+  .stage--tl { place-items: stretch; }
+  .shape { position: absolute; left: 24px; width: 48px; height: 48px; }
+  .shape:nth-child(1) { top: 22%; background: var(--ink); }
+  .shape:nth-child(2) { top: calc(50% - 24px); background: var(--accent); border-radius: 50%; }
+  .shape:nth-child(3) { bottom: 22%; border: 2px solid var(--ink); }
+
+  /* 4 · griglia */
+  .dots { display: grid; grid-template-columns: repeat(16, 1fr); gap: 10px; padding: 24px; width: 100%; }
+  .dot { aspect-ratio: 1; border-radius: 50%; background: var(--ink); cursor: pointer; }
+  .dot.on { background: var(--accent); }
+
+  /* 5 · flip */
+  .tiles { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; padding: 20px; width: 100%; align-content: center; }
+  .tile { aspect-ratio: 1; display: flex; align-items: flex-end; padding: 8px; font-size: 13px; font-variant-numeric: tabular-nums; border: 1px solid var(--ink); }
+  .tile:nth-child(3n+1) { background: var(--ink); color: var(--bg); }
+  .tile:nth-child(4n+2) { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+  .tiles.is-list { grid-template-columns: repeat(2, 1fr); }
+  .tiles.is-list .tile { aspect-ratio: auto; height: 32px; align-items: center; }
+
+  /* 6 · trascina */
+  .stage--drag { place-items: center; touch-action: none; }
+  .tokens { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; padding: 24px; }
+  .token { width: 64px; height: 64px; background: var(--ink); cursor: grab; touch-action: none; }
+  .token:nth-child(2) { border-radius: 50%; background: var(--accent); }
+  .token:nth-child(3) { background: transparent; border: 2px solid var(--ink); }
+  .token:nth-child(4) { border-radius: 50% 0; }
+  .token:nth-child(5) { border-radius: 0 50% 50% 0; background: var(--accent); }
+  .hint { position: absolute; left: 12px; bottom: 10px; margin: 0; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); pointer-events: none; }
+
+  /* 7–8 · svg */
+  .morph { width: min(220px, 70%); height: auto; }
+  .morph path { fill: var(--accent); }
+  .draw { width: min(520px, 92%); height: auto; }
+  .draw path { fill: none; stroke: var(--ink); stroke-width: 7; stroke-linecap: round; stroke-linejoin: round; }
+  .draw path.red { stroke: var(--accent); }
+
+  /* 9 · scramble */
+  .scramble { margin: 0; padding: 24px; font-size: clamp(30px, 5.5vw, 64px); font-weight: 800; letter-spacing: -.02em; text-align: center; overflow-wrap: anywhere; }
+
+  /* 10 · scroll */
+  .scrolly { height: 260vh; position: relative; }
+  .sticky {
+    position: sticky; top: env(safe-area-inset-top, 0px);
+    height: min(70vh, 560px); overflow: hidden;
+    border: 1px solid var(--rule); display: flex; flex-direction: column; justify-content: center;
+  }
+  .scroll-word { margin: 0; padding-left: 24px; font-size: clamp(90px, 24vw, 300px); font-weight: 400; line-height: .9; letter-spacing: -.04em; white-space: nowrap; width: max-content; }
+  .pct { position: absolute; right: 14px; bottom: 10px; margin: 0; font-size: 13px; font-variant-numeric: tabular-nums; color: var(--accent); }
+
+  /* 11 · velocità */
+  .skews { display: grid; gap: 4px; padding-block: 16px; }
+  .skew-line { margin: 0; font-size: clamp(48px, 11vw, 140px); font-weight: 900; line-height: .95; letter-spacing: -.04em; will-change: transform; }
+  .skew-line:nth-child(2) { color: var(--accent); }
+
+  .reduced-note { display: none; color: var(--muted); font-size: 14px; }
+  .is-reduced .reduced-note { display: block; }
+  .is-reduced .scrolly { height: auto; }
+  .is-reduced .sticky { position: static; }
+  .is-reduced .scroll-word { white-space: normal; width: auto; font-size: clamp(56px, 12vw, 140px); }
+
+  @media (max-width: 760px) {
+    .demo { grid-template-columns: minmax(0, 1fr); }
+    .stage { min-height: 240px; }
+    .dots { grid-template-columns: repeat(10, 1fr); gap: 8px; }
+    .tiles { grid-template-columns: repeat(4, 1fr); }
+    .tiles.is-list { grid-template-columns: minmax(0, 1fr); }
+    .tiles.is-list .tile { height: 22px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Laboratorio GSAP</h1>
+    <p>Undici cose che GSAP sa fare, la libreria di animazione in JavaScript. Ogni esempio parte quando entra nello schermo e "Rifai" lo ripete. Sotto ogni nome c'è anche quanto sarebbe difficile farlo solo con il CSS.</p>
+    <p class="reduced-note">Il sistema chiede di ridurre il movimento: gli esempi partono solo quando premi un pulsante, e quelli legati allo scroll sono fermi.</p>
+  </header>
+
+  <article class="demo" id="d-split">
+    <div class="info">
+      <p class="tag">SplitText</p>
+      <h2>Lettere una alla volta</h2>
+      <p>Divide un testo in righe, parole e lettere e le anima in sequenza, con pochi millesimi di ritardo tra una e l'altra.</p>
+      <p class="css">Solo CSS: uno span e un ritardo scritti a mano per ogni lettera.</p>
+      <div class="ctrl"><button class="btn" data-replay>Rifai</button></div>
+    </div>
+    <div class="stage"><p class="split-t">La forma arriva lettera per lettera</p></div>
+  </article>
+
+  <article class="demo" id="d-lens">
+    <div class="info">
+      <p class="tag">quickTo · font variabile</p>
+      <h2>Il peso segue il cursore</h2>
+      <p>Ogni lettera ingrassa in base alla distanza dal puntatore, e insegue il valore con un piccolo ritardo, senza scatti. Sul telefono trascina il dito in orizzontale.</p>
+      <p class="css">Solo CSS: impossibile, serve JavaScript per la distanza.</p>
+      <div class="ctrl"><button class="btn" data-replay>Rifai</button></div>
+    </div>
+    <div class="stage stage--lens"><p class="lens">Peso variabile</p></div>
+  </article>
+
+  <article class="demo" id="d-tl">
+    <div class="info">
+      <p class="tag">Timeline</p>
+      <h2>Una sequenza che si comanda</h2>
+      <p>Tre animazioni sovrapposte in una sola timeline: si può fermare, mandare indietro o trascinare a mano col cursore.</p>
+      <p class="css">Solo CSS: la sequenza sì, ma non si torna indietro né si trascina.</p>
+      <div class="ctrl">
+        <button class="btn" data-replay>Dall'inizio</button>
+        <button class="btn" data-play>Avanti</button>
+        <button class="btn" data-reverse>Indietro</button>
+      </div>
+      <label class="css" for="tl-range">Posizione nella sequenza</label>
+      <input id="tl-range" type="range" min="0" max="1000" value="0">
+    </div>
+    <div class="stage stage--tl"><div class="shape"></div><div class="shape"></div><div class="shape"></div></div>
+  </article>
+
+  <article class="demo" id="d-grid">
+    <div class="info">
+      <p class="tag">Stagger a griglia</p>
+      <h2>Un'onda che parte dal tocco</h2>
+      <p>Il ritardo di ogni punto dipende dalla distanza da quello toccato: l'animazione si propaga come un sasso nell'acqua. Tocca un punto qualsiasi.</p>
+      <p class="css">Solo CSS: si può, ma i ritardi vanno ricalcolati per ogni punto di partenza.</p>
+      <div class="ctrl"><button class="btn" data-replay>Rifai dal centro</button></div>
+    </div>
+    <div class="stage"><div class="dots"></div></div>
+  </article>
+
+  <article class="demo" id="d-flip">
+    <div class="info">
+      <p class="tag">Flip</p>
+      <h2>Il layout cambia, gli elementi viaggiano</h2>
+      <p>Flip fotografa dove sono gli elementi, cambia il layout di colpo e poi li fa scivolare dalla vecchia posizione alla nuova.</p>
+      <p class="css">Solo CSS: no, le posizioni di griglia non si animano. Le View Transitions fanno qualcosa di simile, ma con fotografie degli elementi.</p>
+      <div class="ctrl">
+        <button class="btn" data-shuffle>Mescola</button>
+        <button class="btn" data-view>Griglia o lista</button>
+      </div>
+    </div>
+    <div class="stage"><div class="tiles"></div></div>
+  </article>
+
+  <article class="demo" id="d-drag">
+    <div class="info">
+      <p class="tag">Draggable · Inertia</p>
+      <h2>Trascina e lancia</h2>
+      <p>Gli oggetti si trascinano col mouse o col dito e, lasciati andare, proseguono con lo slancio fino al bordo.</p>
+      <p class="css">Solo CSS: impossibile.</p>
+      <div class="ctrl"><button class="btn" data-reset>Rimetti a posto</button></div>
+    </div>
+    <div class="stage stage--drag">
+      <div class="tokens"><div class="token"></div><div class="token"></div><div class="token"></div><div class="token"></div><div class="token"></div></div>
+      <p class="hint">Trascina le forme</p>
+    </div>
+  </article>
+
+  <article class="demo" id="d-morph">
+    <div class="info">
+      <p class="tag">MorphSVG</p>
+      <h2>Una forma diventa un'altra</h2>
+      <p>Cerchio, quadrato, stella, macchia: anche con un numero diverso di punti, GSAP trova come passare dall'una all'altra.</p>
+      <p class="css">Solo CSS: solo tra tracciati con gli stessi punti, e non in tutti i browser.</p>
+      <div class="ctrl"><button class="btn" data-replay>Rifai</button></div>
+    </div>
+    <div class="stage">
+      <svg class="morph" viewBox="0 0 200 200" aria-hidden="true">
+        <path id="m-shape" d="M100,18 A88,88 0 1,1 100,194 A88,88 0 1,1 100,18 Z"/>
+        <g style="display:none">
+          <path id="m-circle" d="M100,18 A88,88 0 1,1 100,194 A88,88 0 1,1 100,18 Z"/>
+          <path id="m-square" d="M22,22 H178 V178 H22 Z"/>
+          <path id="m-star" d="M100.0,18.0 L122.3,75.3 L183.7,78.8 L136.1,117.7 L151.7,177.2 L100.0,144.0 L48.3,177.2 L63.9,117.7 L16.3,78.8 L77.7,75.3 Z"/>
+          <path id="m-blob" d="M100,22 C152,16 186,58 176,106 C168,152 132,184 90,178 C46,172 18,138 26,94 C33,54 58,27 100,22 Z"/>
+        </g>
+      </svg>
+    </div>
+  </article>
+
+  <article class="demo" id="d-draw">
+    <div class="info">
+      <p class="tag">DrawSVG</p>
+      <h2>Il tratto si disegna</h2>
+      <p>Una linea SVG che si traccia da sola, come una penna: firme, schemi, frecce, percorsi su una mappa.</p>
+      <p class="css">Solo CSS: si può col trucco del tratteggio, ma serve la lunghezza esatta di ogni linea.</p>
+      <div class="ctrl"><button class="btn" data-replay>Rifai</button></div>
+    </div>
+    <div class="stage">
+      <svg class="draw" viewBox="0 0 400 200" aria-hidden="true">
+        <path d="M20,100 C60,30 100,30 140,100 S220,170 260,100 S340,30 380,100"/>
+        <path class="red" d="M200,42 A58,58 0 1,1 199.9,42"/>
+        <path d="M40,182 L360,182"/>
+      </svg>
+    </div>
+  </article>
+
+  <article class="demo" id="d-scramble">
+    <div class="info">
+      <p class="tag">ScrambleText</p>
+      <h2>Testo che si decifra</h2>
+      <p>Le lettere passano per caratteri a caso prima di fermarsi su quelle giuste. Utile per titoli, numeri, cambi di stato.</p>
+      <p class="css">Solo CSS: impossibile.</p>
+      <div class="ctrl"><button class="btn" data-replay>Rifai</button></div>
+    </div>
+    <div class="stage"><p class="scramble" aria-live="polite">E alla fine si legge</p></div>
+  </article>
+
+  <article class="demo" id="d-scroll">
+    <div class="info">
+      <p class="tag">ScrollTrigger · scrub</p>
+      <h2>Lo scroll guida il tempo</h2>
+      <p>L'animazione non ha una durata: avanza e torna indietro insieme alla pagina. Qui la parola scorre di lato e intanto ingrassa. Scorri lentamente.</p>
+      <p class="css">Solo CSS: in parte, con le animazioni legate allo scroll, ma non ancora in tutti i browser.</p>
+    </div>
+  </article>
+  <div class="scrolly">
+    <div class="sticky">
+      <p class="scroll-word">Scorri piano, poi torna su</p>
+      <p class="pct">0%</p>
+    </div>
+  </div>
+
+  <article class="demo" id="d-skew">
+    <div class="info">
+      <p class="tag">ScrollTrigger · velocità</p>
+      <h2>Più corri, più si piega</h2>
+      <p>GSAP misura la velocità dello scroll: le righe si inclinano quando scorri in fretta e tornano dritte quando ti fermi.</p>
+      <p class="css">Solo CSS: impossibile, il CSS non conosce la velocità.</p>
+    </div>
+    <div class="skews" aria-hidden="true">
+      <p class="skew-line">Scorri</p>
+      <p class="skew-line">veloce</p>
+      <p class="skew-line">e guarda</p>
+    </div>
+  </article>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/SplitText.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/Flip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/Draggable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/InertiaPlugin.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/MorphSVGPlugin.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/DrawSVGPlugin.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrambleTextPlugin.min.js"></script>
+<script>
+  gsap.registerPlugin(ScrollTrigger, SplitText, Flip, Draggable, InertiaPlugin, MorphSVGPlugin, DrawSVGPlugin, ScrambleTextPlugin);
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  document.documentElement.classList.toggle('is-reduced', reduced);
+  const $ = (sel, root = document) => root.querySelector(sel);
+  const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
+
+  // Un esempio = una timeline. A riposo resta sull'ultimo fotogramma (pagina completa anche senza animazioni);
+  // parte da capo quando il riquadro entra nello schermo, e "Rifai" la ripete
+  function demo(id, make) {
+    const root = document.getElementById(id);
+    const tl = make(root);
+    tl.progress(1).pause();
+    $('[data-replay]', root)?.addEventListener('click', () => tl.restart());
+    if (!reduced) ScrollTrigger.create({ trigger: root, start: 'top bottom', once: true, onEnter: () => tl.restart() });
+    return tl;
+  }
+
+  function init() {
+    // 1 · lettere
+    demo('d-split', root => {
+      const split = SplitText.create($('.split-t', root), { type: 'words,chars', mask: 'chars' });
+      return gsap.timeline().from(split.chars, { yPercent: 110, rotate: 6, duration: .7, ease: 'power3.out', stagger: .025 });
+    });
+
+    // 2 · peso che segue il cursore
+    demo('d-lens', root => {
+      const stage = $('.stage', root);
+      const chars = SplitText.create($('.lens', root), { type: 'chars' }).chars;
+      const to = chars.map(c => gsap.quickTo(c, 'fontWeight', { duration: .35, ease: 'power3' }));
+      const weigh = (x, y) => {
+        const radius = parseFloat(getComputedStyle(chars[0]).fontSize) * 1.6;
+        chars.forEach((c, i) => {
+          const r = c.getBoundingClientRect();
+          const d = Math.hypot(x - (r.left + r.width / 2), y - (r.top + r.height / 2));
+          to[i](400 + 500 * Math.max(0, 1 - d / radius));
+        });
+      };
+      stage.addEventListener('pointermove', e => weigh(e.clientX, e.clientY));
+      stage.addEventListener('pointerleave', () => to.forEach(f => f(400)));
+      // giro automatico: un puntatore immaginario attraversa la parola
+      const p = { t: 0 };
+      return gsap.timeline()
+        .fromTo(p, { t: 0 }, { t: 1, duration: 1.8, ease: 'power1.inOut', onUpdate() {
+          const r = $('.lens', root).getBoundingClientRect();
+          weigh(r.left + r.width * p.t, r.top + r.height / 2);
+        } })
+        .add(() => to.forEach(f => f(400)));
+    });
+
+    // 3 · timeline comandabile
+    const tlRoot = document.getElementById('d-tl');
+    const range = $('#tl-range');
+    const tl = demo('d-tl', root => {
+      const stage = $('.stage', root);
+      const [a, b, c] = $$('.shape', root);
+      const dist = () => stage.clientWidth - 48 - 48;
+      const t = gsap.timeline({ defaults: { duration: .9, ease: 'power2.inOut' }, onUpdate: () => { range.value = Math.round(t.progress() * 1000); } })
+        .to(a, { x: dist, rotate: 180 })
+        .to(b, { x: dist, scale: .5 }, '<0.25')
+        .to(c, { x: dist, borderRadius: '50%' }, '<0.25')
+        .to([a, b, c], { x: 0, rotate: 0, scale: 1, borderRadius: (i) => (i === 1 ? '50%' : '0%'), stagger: .06 }, '+=0.4');
+      addEventListener('resize', () => { const pr = t.progress(); t.invalidate().progress(pr); });
+      return t;
+    });
+    $('[data-play]', tlRoot).addEventListener('click', () => tl.play());
+    $('[data-reverse]', tlRoot).addEventListener('click', () => tl.reverse());
+    range.addEventListener('input', () => tl.pause().progress(range.value / 1000));
+
+    // 4 · onda a griglia
+    const dotsEl = $('#d-grid .dots');
+    const cols = () => (matchMedia('(max-width: 760px)').matches ? 10 : 16);
+    for (let i = 0; i < 16 * 7; i++) dotsEl.append(Object.assign(document.createElement('div'), { className: 'dot' }));
+    const dots = () => $$('.dot', dotsEl).slice(0, cols() * 7);
+    const fitDots = () => $$('.dot', dotsEl).forEach((d, i) => { d.hidden = i >= cols() * 7; });
+    fitDots(); addEventListener('resize', fitDots);
+    const ripple = from => {
+      const list = dots();
+      list.forEach((d, i) => d.classList.toggle('on', i === from));
+      const stagger = { grid: 'auto', from, amount: .8 };
+      return gsap.timeline()
+        .to(list, { scale: .15, duration: .3, ease: 'power2.in', stagger })
+        .to(list, { scale: 1, duration: .6, ease: 'back.out(3)', stagger }, '<0.3')
+        .add(() => list[from]?.classList.remove('on'), '+=0.2');
+    };
+    demo('d-grid', () => ripple(Math.floor(cols() * 3.5)));
+    dotsEl.addEventListener('click', e => {
+      const i = dots().indexOf(e.target);
+      if (i >= 0) ripple(i);
+    });
+
+    // 5 · flip
+    const tiles = $('#d-flip .tiles');
+    for (let i = 1; i <= 12; i++) tiles.append(Object.assign(document.createElement('div'), { className: 'tile', textContent: String(i).padStart(2, '0') }));
+    const flip = change => {
+      const state = Flip.getState($$('.tile', tiles));
+      change();
+      Flip.from(state, { duration: .7, ease: 'power3.inOut', stagger: .02, absolute: true });
+    };
+    $('#d-flip [data-shuffle]').addEventListener('click', () => flip(() => gsap.utils.shuffle($$('.tile', tiles)).forEach(t => tiles.append(t))));
+    $('#d-flip [data-view]').addEventListener('click', () => flip(() => tiles.classList.toggle('is-list')));
+
+    // 6 · trascina e lancia
+    const tokens = $$('#d-drag .token');
+    Draggable.create(tokens, {
+      bounds: $('#d-drag .stage'), inertia: true, edgeResistance: .65,
+      onPress() { gsap.to(this.target, { scale: 1.12, duration: .2 }); },
+      onRelease() { gsap.to(this.target, { scale: 1, duration: .3 }); },
+    });
+    $('#d-drag [data-reset]').addEventListener('click', () => gsap.to(tokens, { x: 0, y: 0, duration: .9, ease: 'elastic.out(1, .6)', stagger: .04 }));
+
+    // 7 · morph
+    demo('d-morph', () => gsap.timeline({ defaults: { duration: .8, ease: 'power3.inOut' } })
+      .to('#m-shape', { morphSVG: '#m-square' }, '+=0.3')
+      .to('#m-shape', { morphSVG: '#m-star' }, '+=0.5')
+      .to('#m-shape', { morphSVG: '#m-blob' }, '+=0.5')
+      .to('#m-shape', { morphSVG: '#m-circle' }, '+=0.5'));
+
+    // 8 · disegno
+    demo('d-draw', root => gsap.timeline()
+      .from($$('path', root), { drawSVG: 0, duration: 1.2, ease: 'power2.inOut', stagger: .3 }));
+
+    // 9 · scramble
+    demo('d-scramble', root => {
+      const el = $('.scramble', root);
+      const sc = text => ({ duration: 1.1, scrambleText: { text, chars: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', speed: .5 } });
+      return gsap.timeline()
+        .to(el, sc('Un messaggio in codice'))
+        .to(el, sc('Cambia sotto i tuoi occhi'), '+=0.9')
+        .to(el, sc('E alla fine si legge'), '+=0.9');
+    });
+
+    if (reduced) return;
+
+    // 10 · scroll che guida il tempo
+    const word = $('.scroll-word'), sticky = $('.sticky'), pct = $('.pct');
+    gsap.to(word, {
+      // la corsa si misura col peso finale: a 900 la parola è più larga
+      x: () => { const w0 = word.style.fontWeight; word.style.fontWeight = 900; const w = word.scrollWidth; word.style.fontWeight = w0; return -(w - sticky.clientWidth + 48); },
+      fontWeight: 900, ease: 'none',
+      scrollTrigger: { trigger: '.scrolly', start: 'top top', end: 'bottom bottom', scrub: .3, invalidateOnRefresh: true,
+        onUpdate: s => { pct.textContent = Math.round(s.progress * 100) + '%'; } },
+    });
+
+    // 11 · velocità dello scroll
+    const lines = $$('.skew-line');
+    const setSkew = gsap.quickSetter(lines, 'skewY', 'deg');
+    const proxy = { skew: 0 };
+    gsap.set(lines, { transformOrigin: 'right center', force3D: true });
+    ScrollTrigger.create({
+      onUpdate: self => {
+        const s = gsap.utils.clamp(-14, 14, self.getVelocity() / -250);
+        if (Math.abs(s) > Math.abs(proxy.skew)) {
+          proxy.skew = s;
+          gsap.to(proxy, { skew: 0, duration: .8, ease: 'power3', overwrite: true, onUpdate: () => setSkew(proxy.skew) });
+        }
+      },
+    });
+  }
+
+  document.fonts.ready.then(init);
+</script>
+</body>
+</html>

@@ -5,10 +5,10 @@
   /* palette (da terminal-astro). Il sito usa rosso e bianco:
      bianco = fondo di pagina e caselle, e scritte/fili/loghi sulle caselle rosse */
   --rosso:  hsl(8 87% 54%);     /* = #f03f24, ripetuto nei crocini SVG di .grid */
-  --chiaro: hsl(0, 15%, 89%);   /* = #e7dfdf, bianco caldo, unico bianco del sito */
+  --chiaro: hsl(36 20% 95%);    /* = #f5f3f0, bianco caldo, unico bianco del sito */
   /* carta del sito (fondo di pagina e celle, scritte sulle celle piene): il chiaro, o il rosso a luce spenta */
   --bianco: var(--chiaro);
-  --nero:   hsl(0 12% 13%);
+  --nero:   hsl(36 10% 10%);    /* = #1c1a17 */
   --giallo: hsl(55 89% 53%);
   --verde:  hsl(143 88% 54%);
   /* inchiostro del sito: rosso, o il chiaro a luce spenta (cella "luce", scripts/ink.ts).
@@ -19,6 +19,11 @@
      didascalie, orologio e righello (.mono). Non è monospaziato: dove le cifre cambiano, tabular-nums */
   --font-testo:  'Schibsted Grotesk', 'Helvetica Neue', Arial, sans-serif;
   --font-numeri: var(--font-testo);
+  /* logotipo ROBERTO (classe .logotipo) */
+  --font-logo:   'Roberto Grafica', var(--font-testo);
+  /* ROBERTO nel font del logotipo, in em: largo 5,21 (inchiostro, senza i margini delle lettere), maiuscole alte 0,68 */
+  --roberto-w: 5.21;
+  --maiuscole: 0.68;
 
   /* modulo: tutto è multiplo di 10px */
   --m:    10px;
@@ -62,17 +67,17 @@
 }
 /* luce spenta: rosso e bianco si scambiano, inchiostro chiaro su carta rossa. data-inchiostro su <html>
    (Layout.astro lo rimette dopo ogni swap). I crocini sono un'immagine e non leggono le variabili:
-   stessa trama col colore di --chiaro (#e7dfdf) */
+   stessa trama col colore di --chiaro (#f5f3f0) */
 :root[data-inchiostro="bianco"] {
   --inchiostro: var(--chiaro);
   --bianco: var(--rosso);
-  --crocini: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23e7dfdf'%3E%3Crect width='5' height='1'/%3E%3Crect width='1' height='5'/%3E%3Crect x='100%25' width='4' height='1' transform='translate(-4 0)'/%3E%3Crect y='100%25' width='1' height='4' transform='translate(0 -4)'/%3E%3C/g%3E%3C/svg%3E");
+  --crocini: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23f5f3f0'%3E%3Crect width='5' height='1'/%3E%3Crect width='1' height='5'/%3E%3Crect x='100%25' width='4' height='1' transform='translate(-4 0)'/%3E%3Crect y='100%25' width='1' height='4' transform='translate(0 -4)'/%3E%3C/g%3E%3C/svg%3E");
 }
-/* chi chiede più contrasto al sistema, a luce accesa: inchiostro nero (rosso su bianco è 2,9:1, nero ~13:1).
-   Crocini col colore di --nero (#251d1d) */
+/* chi chiede più contrasto al sistema, a luce accesa: inchiostro nero (rosso su bianco è 3,5:1, nero ~15,7:1).
+   Crocini col colore di --nero (#1c1a17) */
 @media (prefers-contrast: more) { :root:not([data-inchiostro]) {
   --inchiostro: var(--nero);
-  --crocini: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23251d1d'%3E%3Crect width='5' height='1'/%3E%3Crect width='1' height='5'/%3E%3Crect x='100%25' width='4' height='1' transform='translate(-4 0)'/%3E%3Crect y='100%25' width='1' height='4' transform='translate(0 -4)'/%3E%3C/g%3E%3C/svg%3E");
+  --crocini: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%231c1a17'%3E%3Crect width='5' height='1'/%3E%3Crect width='1' height='5'/%3E%3Crect x='100%25' width='4' height='1' transform='translate(-4 0)'/%3E%3Crect y='100%25' width='1' height='4' transform='translate(0 -4)'/%3E%3C/g%3E%3C/svg%3E");
 } }
 @supports (width: round(down, 1px, 1px)) {
   :root { --line-dp: max(var(--dp), round(down, var(--line), var(--dp))); }
@@ -186,6 +191,21 @@ p { text-wrap: pretty; }
   letter-spacing: 0.08em;
   text-transform: uppercase;
   font-variant-numeric: tabular-nums;
+}
+
+/* Logotipo: Roberto Grafica Black (fonts.css). La riga è alta quanto le maiuscole e il riquadro è
+   rifilato sull'inchiostro di ROBERTO, così si allinea e si centra come il vecchio SVG. Dal font (unità 1000):
+   ascendente 900 e discendente 160 → con interlinea 0,68 le maiuscole cadono 0,03 em sotto il riquadro;
+   margine sinistro della R 0,07 em, destro della O 0,03. Il corpo lo decide chi lo usa */
+.logotipo {
+  display: block;
+  font-family: var(--font-logo);
+  font-weight: 900;
+  text-transform: uppercase;
+  white-space: nowrap;
+  line-height: var(--maiuscole);
+  margin-inline: -0.07em -0.03em;
+  translate: 0 -0.03em;
 }
 
 .sr-only {

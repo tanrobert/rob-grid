@@ -4,6 +4,7 @@ import { getProject } from '../data/projects';
 import { COLS, mediaSizes, resolveSpans, findVoids } from '../lib/grid';
 import Cell from './Cell.astro';
 import SvgCell from './cells/SvgCell.astro';
+import LogotipoCell from './cells/LogotipoCell.astro';
 import MarqueeCell from './cells/MarqueeCell.astro';
 import TextCell from './cells/TextCell.astro';
 import ListCell from './cells/ListCell.astro';
@@ -62,7 +63,8 @@ const voids = (Object.keys(COLS) as (keyof typeof COLS)[]).flatMap(bp =>
     return (
       <Cell cell={cell} index={i}>
         {cell.type === 'svg' && <SvgCell svg={cell.svg} fit={cell.fit} ink={cell.ink} />}
-        {cell.type === 'marquee' && <MarqueeCell svg={cell.svg} speed={cell.speed} reverse={cell.reverse} vertical={cell.vertical} ruotato={cell.ruotato} />}
+        {cell.type === 'logotipo' && <LogotipoCell />}
+        {cell.type === 'marquee' && <MarqueeCell svg={cell.svg} text={cell.text} speed={cell.speed} reverse={cell.reverse} vertical={cell.vertical} ruotato={cell.ruotato} />}
         {cell.type === 'text' && <TextCell eyebrow={cell.eyebrow} title={cell.title} body={cell.body} as={cell.as} size={cell.size} />}
         {cell.type === 'list' && <ListCell title={cell.title} items={cell.items} />}
         {cell.type === 'stat' && <StatCell value={cell.value} caption={cell.caption} countUp={cell.countUp} heading={cell.heading} />}

@@ -1,0 +1,18 @@
+---
+// ROBERTO scritto col font del logotipo (classe .logotipo in global.css), il più grande che sta nella cella
+---
+
+<div class="logotipo-cella">
+  <p class="logotipo">Roberto</p>
+</div>
+
+<style>
+  .logotipo-cella {
+    position: absolute; inset: 0;
+    display: grid; place-items: center;
+    padding: var(--pad);
+  }
+  .logotipo {
+    font-size: min((100cqw - 2 * var(--pad)) / var(--roberto-w), (100cqh - 2 * var(--pad)) / var(--maiuscole));
+  }
+</style>

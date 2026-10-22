@@ -3,7 +3,10 @@ import SvgAsset from '../SvgAsset.astro';
 import { svgs, type SvgName } from '../../data/svgs';
 
 interface Props {
-  svg: SvgName;
+  /** un logo del registro, oppure… */
+  svg?: SvgName;
+  /** …un testo, scritto col font del logotipo (.logotipo) */
+  text?: string;
   speed?: number;
   reverse?: boolean;
   /** scorre dall'alto in basso */
@@ -11,24 +14,24 @@ interface Props {
   /** logo orizzontale girato di 90° in una cella verticale */
   ruotato?: boolean;
 }
-const { svg, speed = 40, reverse = false, vertical = false, ruotato = false } = Astro.props;
+const { svg, text, speed = 40, reverse = false, vertical = false, ruotato = false } = Astro.props;
 // due metà identiche: la traccia scorre del 50% e riparte senza stacco.
 // Orizzontale: tre copie per metà. Verticale: il logo è già più alto della cella, ne basta una.
 const copies = vertical ? [0] : [0, 1, 2];
 // spazio tra una copia e l'altra, proprio di ogni logo (data/svgs.ts)
-const gap = svgs[svg].gap ?? 0;
+const gap = svg ? svgs[svg].gap ?? 0 : 0;
 ---
 
 <div class:list={['marquee', vertical && 'marquee--y', ruotato && 'marquee--ruotato']} aria-hidden="true">
   <div class:list={['track', 'loop', reverse && 'track--reverse']} style={`--speed:${speed}s;--gap:${gap}`}>
     {[0, 1].map(() => (
       <div class="half">
-        {copies.map(() => <SvgAsset name={svg} class="item" />)}
+        {copies.map(() => svg ? <SvgAsset name={svg} class="item" /> : <span class="item logotipo">{text}</span>)}
       </div>
     ))}
   </div>
 </div>
-<span class="sr-only">{svgs[svg].label}</span>
+<span class="sr-only">{svg ? svgs[svg].label : text}</span>
 
 <style>
   .marquee {
@@ -63,6 +66,14 @@ const gap = svgs[svg].gap ?? 0;
     rotate: -90deg;
   }
   .marquee--ruotato .half :global(.item) { --h: calc(100cqi - 2 * var(--pad)); }
+
+  /* testo: maiuscole alte quanto il logo. Riquadro senza rifilo (i margini delle lettere fanno parte del ritmo)
+     e dopo ogni copia uno spazio, così tra "·" e la R c'è lo stesso stacco che c'è dentro il testo */
+  .half .logotipo.item {
+    width: auto;
+    font-size: calc(var(--h) / var(--maiuscole));
+    margin-inline: 0 0.22em;
+  }
 
   /* ── Verticale: scorre verso il basso ── */
   .marquee--y { flex-direction: column; }
