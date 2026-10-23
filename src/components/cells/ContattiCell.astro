@@ -1,5 +1,5 @@
 ---
-// Recapiti come cella del tavolo (il footer delle pagine, SiteFooter.astro, ridotto ai dati):
+// Recapiti come cella (il footer di prima, ridotto ai dati), sul tavolo, in fondo ai fogli e nella 404:
 // email e luogo in alto, P.IVA, informativa, anno e versione in basso
 import { siteVersion } from '../../lib/version';
 import { site } from '../../data/site';
@@ -33,7 +33,7 @@ const year = new Date().getFullYear();
     overflow-wrap: anywhere;
   }
   .contatti__piede { display: flex; flex-direction: column; gap: 4px; }
-  /* come la barra del footer: a sinistra e a destra, e se non ci stanno il testo di destra va a capo allineato a destra */
+  /* a sinistra e a destra, e se non ci stanno il testo di destra va a capo allineato a destra */
   .contatti__piede p { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0 var(--m); }
   .contatti__piede span:last-child { margin-left: auto; text-align: right; }
 </style>

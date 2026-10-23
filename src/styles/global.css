@@ -4,14 +4,14 @@
 :root {
   /* palette (da terminal-astro). Il sito usa rosso e bianco:
      bianco = fondo di pagina e caselle, e scritte/fili/loghi sulle caselle rosse */
-  --rosso:  hsl(8 87% 54%);     /* = #f03f24, ripetuto nei crocini SVG di .grid */
+  --rosso:  hsl(8 87% 54%);     /* = #f03f24 */
   --chiaro: hsl(36 20% 95%);    /* = #f5f3f0, bianco caldo, unico bianco del sito */
-  /* carta del sito (fondo di pagina e celle, scritte sulle celle piene): il chiaro, o il rosso a luce spenta */
+  /* carta del sito (fondo di pagina e celle, scritte sulle celle piene): il chiaro, o il rosso a colori invertiti */
   --bianco: var(--chiaro);
   --nero:   hsl(36 10% 10%);    /* = #1c1a17 */
   --giallo: hsl(55 89% 53%);
   --verde:  hsl(143 88% 54%);
-  /* inchiostro del sito: rosso, o il chiaro a luce spenta (cella "luce", scripts/ink.ts).
+  /* inchiostro del sito: rosso, o il chiaro a colori invertiti (la R, Inverti: scripts/ink.ts).
      Unico colore di ruolo: tutto ciò che è "rosso" nel sito usa questo, non --rosso */
   --inchiostro: var(--rosso);
 
@@ -36,29 +36,15 @@
   /* --line agganciato ai pixel reali, per le linee disegnate con i gradienti (vedi @supports sotto) */
   --line-dp: var(--line);
 
-  /* unità piccola: la casella quadrata "base" è 2×2 unità, le unità singole danno le forme intermedie */
+  /* colonne delle pagine (12, 8, 4): il foglio (components/foglio) ne ricava quadretto e unità */
   --cols: 12;
-  /* lato massimo dell'unità: oltre, il foglio smette di crescere e si centra (da ~1870px).
-     145px = una casella 2×2 da 300px (2 × 145 + gap) */
-  --u-max: 145px;
-  /* unità = lato della cella quadrata. 100cqw si risolve dove il token viene usato:
-     usarlo solo in elementi il cui container è .sheet (non dentro le celle, che sono container a loro volta) */
-  --u: calc((100cqw - (var(--cols) - 1) * var(--gap)) / var(--cols));
-  --step: calc(var(--u) + var(--gap));
-  /* crocini di registro: uno per tile, all'angolo in alto a sinistra (i bracci escono dai bordi e rientrano dal lato opposto).
-     SVG senza viewBox: le coordinate restano in px qualunque sia la dimensione del tile.
-     Spessore 1px scritto nell'SVG: un'immagine di sfondo non legge var(--line), aggiornarlo a mano. */
-  --crocini: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23f03f24'%3E%3Crect width='5' height='1'/%3E%3Crect width='1' height='5'/%3E%3Crect x='100%25' width='4' height='1' transform='translate(-4 0)'/%3E%3Crect y='100%25' width='1' height='4' transform='translate(0 -4)'/%3E%3C/g%3E%3C/svg%3E");
-  /* gli stessi crocini senza colore, come maschera: il colore lo dà var(--inchiostro) (carta del tavolo e delle pagine) */
+  /* crocini di registro, come maschera (il colore lo dà var(--inchiostro)): uno per tile, all'angolo in alto a
+     sinistra (i bracci escono dai bordi e rientrano dal lato opposto). SVG senza viewBox: le coordinate restano in
+     px qualunque sia la misura del tile. Carta del tavolo e della pagina vera */
   --crocini-forma: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='5' height='1'/%3E%3Crect width='1' height='5'/%3E%3Crect x='100%25' width='4' height='1' transform='translate(-4 0)'/%3E%3Crect y='100%25' width='1' height='4' transform='translate(0 -4)'/%3E%3C/svg%3E");
 
   --ease-out:   cubic-bezier(0.22, 1, 0.36, 1);
-  --ease-morph: cubic-bezier(0.72, 0, 0.18, 1);
-  --t-morph:    720ms;
-  --t-swap:     220ms;  /* scambio dei contenuti nelle finestre dell'espansione */
-  --t-page:     360ms;  /* dissolvenza della pagina intera nell'espansione… */
-  --t-page-delay: calc(var(--t-morph) * 0.55);  /* …che parte oltre metà corsa della cella */
-  --t-tile:     420ms;  /* filtro dell'archivio: le celle scivolano al nuovo posto */
+  --ease-morph: cubic-bezier(0.72, 0, 0.18, 1);  /* filo dell'intro e cerchio di Inverti */
   --t-draw-u:   70ms;   /* intro: tempo del filo per ogni unità di perimetro (2×2 → 560ms, 4×2 → 840ms)… */
   --t-draw-max: 900ms;  /* …fino a questo tetto: le celle più grandi disegnano il filo più veloci */
   --t-fill:     400ms;  /* intro: fondo e contenuto entrano a filo finito */
@@ -67,19 +53,22 @@
 
   color-scheme: light;
 }
-/* luce spenta: rosso e bianco si scambiano, inchiostro chiaro su carta rossa. data-inchiostro su <html>
-   (Layout.astro lo rimette dopo ogni swap). I crocini sono un'immagine e non leggono le variabili:
-   stessa trama col colore di --chiaro (#f5f3f0) */
+/* colori invertiti: rosso e bianco si scambiano, inchiostro chiaro su carta rossa. data-inchiostro su <html>
+   (Layout.astro, prima del primo disegno) */
 :root[data-inchiostro="bianco"] {
   --inchiostro: var(--chiaro);
   --bianco: var(--rosso);
-  --crocini: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23f5f3f0'%3E%3Crect width='5' height='1'/%3E%3Crect width='1' height='5'/%3E%3Crect x='100%25' width='4' height='1' transform='translate(-4 0)'/%3E%3Crect y='100%25' width='1' height='4' transform='translate(0 -4)'/%3E%3C/g%3E%3C/svg%3E");
 }
-/* chi chiede più contrasto al sistema, a luce accesa: inchiostro nero (rosso su bianco è 3,5:1, nero ~15,7:1).
-   Crocini col colore di --nero (#1c1a17) */
+/* tinta nera (Woberto, il marchio nascosto sotto la R: scripts/ink.ts): il rosso diventa nero, e Inverti
+   scambia nero e bianco. data-tinta su <html>, solo per la visita (Layout.astro) */
+:root[data-tinta="nero"] { --inchiostro: var(--nero); }
+:root[data-tinta="nero"][data-inchiostro="bianco"] {
+  --inchiostro: var(--chiaro);
+  --bianco: var(--nero);
+}
+/* chi chiede più contrasto al sistema, a colori non invertiti: inchiostro nero (rosso su bianco è 3,5:1, nero ~15,7:1) */
 @media (prefers-contrast: more) { :root:not([data-inchiostro]) {
   --inchiostro: var(--nero);
-  --crocini: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%231c1a17'%3E%3Crect width='5' height='1'/%3E%3Crect width='1' height='5'/%3E%3Crect x='100%25' width='4' height='1' transform='translate(-4 0)'/%3E%3Crect y='100%25' width='1' height='4' transform='translate(0 -4)'/%3E%3C/g%3E%3C/svg%3E");
 } }
 @supports (width: round(down, 1px, 1px)) {
   :root { --line-dp: max(var(--dp), round(down, var(--line), var(--dp))); }
@@ -92,7 +81,7 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html {
-  overflow-x: clip;  /* i crocini ai lati del foglio non devono creare scroll orizzontale */
+  overflow-x: clip;  /* la carta della pagina vera sborda ai lati (components/foglio): niente scroll orizzontale */
   background: var(--bianco);
   color: var(--inchiostro);
   font-family: var(--font-testo);
@@ -118,13 +107,11 @@ html.has-ruler::-webkit-scrollbar { display: none; }
 html:not(.has-ruler) .ruler { display: none; }
 
 /* tacche nel margine destro, sfondo di <body>: scorrono con la pagina e misurano la griglia.
-   A ogni riga (sui crocini, a mezzo gap) un "checkpoint" largo quanto il margine, ogni quarto di riga
-   una tacca da 5px: la metà cade sulle linee dei quadretti dei vuoti.
-   --ruler-step = --step, ricavato da 100vw perché qui fuori dal foglio 100cqw non c'è (la scrollbar la nasconde
-   il righello). Registrato come lunghezza: cells.ts ne legge il valore in px per la ghiera della cella mark. */
+   A ogni riga un "checkpoint" largo quanto il margine, ogni quarto di riga una tacca da 5px.
+   --ruler-step = passo della griglia del foglio (4 quadretti), lo scrive components/foglio. Registrato come
+   lunghezza: cells.ts ne legge il valore in px per la ghiera della cella mark. */
 @property --ruler-step { syntax: '<length>'; inherits: true; initial-value: 0px; }
 body {
-  --ruler-step: calc(min((100vw - var(--gap) * (var(--cols) + 1)) / var(--cols), var(--u-max)) + var(--gap));
   --tick-short: 5px;
   background-image:
     linear-gradient(var(--inchiostro) var(--line-dp), transparent var(--line-dp)),
@@ -156,7 +143,6 @@ body {
   color: var(--bianco);
   cursor: grab;
   touch-action: none;
-  view-transition-name: ruler-thumb;  /* tra una pagina e l'altra scivola alla nuova posizione */
 }
 /* area di presa più grande della linea: sopra, sotto e verso le caselle */
 .ruler__thumb::before { content: ''; position: absolute; inset: -12px 0 -12px -12px; }
@@ -186,7 +172,7 @@ h1, h2, h3, h4 { font-weight: 500; text-wrap: balance; }
 p { text-wrap: pretty; }
 
 :focus-visible { outline: 2px solid var(--inchiostro); outline-offset: 3px; }
-/* dentro le celle rosse (footer compreso) un contorno rosso non si vedrebbe */
+/* dentro le celle rosse un contorno rosso non si vedrebbe */
 .cell--red :focus-visible { outline-color: var(--bianco); }
 
 .mono {
@@ -226,41 +212,7 @@ p { text-wrap: pretty; }
 }
 .skip-link:focus { top: var(--gap); }
 
-/* ── Foglio + griglia ─────────────────────────────────── */
-.sheet {
-  container-type: inline-size;
-  /* larghezza massima = colonne da --u-max + gap tra loro + margini: la cella non supera --u-max */
-  max-width: calc(var(--u-max) * var(--cols) + var(--gap) * (var(--cols) + 1));
-  margin-inline: auto;
-  padding: var(--gap);
-  position: relative;
-  /* alto almeno quanto la finestra: il footer tocca sempre il fondo (scripts/fill.ts) */
-  display: flex; flex-direction: column;
-  min-height: 100svh;
-}
-/* pagina corta: il footer si allunga del resto di riga sotto il vuoto di riempimento */
-.sheet.is-corta > .foot { flex-grow: 1; }
-/* crocini anche ai lati quando il foglio è più stretto della finestra: stessa trama della griglia,
-   allineata alle sue colonne e righe. Le fasce entrano di un gap nel foglio, così coprono anche
-   la colonna di incroci sul bordo esterno della griglia (a mezzo gap dall'ultima casella). */
-.sheet::before, .sheet::after {
-  --side: calc((100vw - 100%) / 2);                          /* margine fuori dal foglio */
-  --side-in: clamp(0px, var(--side) * 1000, var(--gap));     /* = --gap se c'è margine, 0 se no */
-  content: '';
-  position: absolute; top: 0; bottom: 0;
-  width: calc(var(--side) + var(--side-in));
-  background: var(--crocini) repeat;
-  background-size: var(--step) var(--step);
-  pointer-events: none;
-}
-/* incroci a mezzo gap dal bordo del foglio, poi ogni --step (-0.5px: centro del filo da 1px) */
-/* --ox/--oy: il crocino più vicino al centro della finestra, nel riquadro di ogni strato di crocini: da lì parte
-   l'intro. In orizzontale è il centro del foglio (colonne pari: c'è sempre un crocino); in verticale le file
-   stanno a mezzo gap + n passi dall'alto del foglio, si arrotonda al passo (--ruler-step, in px anche qui) */
-.sheet::before, .sheet::after { --oy: calc(round(50vh - var(--gap) / 2, var(--ruler-step)) + var(--gap) / 2); }
-.sheet::before { right: calc(100% - var(--side-in)); background-position: right calc(var(--gap) / 2 + 0.5px) top calc(var(--gap) / 2 - 0.5px); --ox: 50vw; }
-.sheet::after  { left: calc(100% - var(--side-in));  background-position: left calc(var(--gap) / 2 - 0.5px) top calc(var(--gap) / 2 - 0.5px); --ox: calc(100% - 50vw); }
-
+/* ── Griglia delle pagine (components/foglio: --u e --gap in quadretti) ── */
 .grid {
   position: relative;
   display: grid;
@@ -269,39 +221,6 @@ p { text-wrap: pretty; }
   grid-auto-flow: row dense;
   gap: var(--gap);
 }
-/* crocini agli incroci, visibili solo nei gap: strato sotto le celle (le celle sono posizionate e vengono dopo),
-   separato dalla griglia perché nell'intro ha la sua maschera */
-.grid::before {
-  content: '';
-  position: absolute; inset: 0;
-  background-image: var(--crocini);
-  background-repeat: repeat;
-  background-size: var(--step) var(--step);
-  background-position: calc(var(--u) + var(--gap) / 2 - 0.5px) calc(var(--u) + var(--gap) / 2 - 0.5px);
-  pointer-events: none;
-  --ox: 50%; --oy: calc(round(50vh - var(--gap) / 2, var(--ruler-step)) - var(--gap) / 2);
-}
-
-/* ── Vuoti: riempiono i buchi dell'incastro, uno per breakpoint ── */
-/* Nell'intro entra come le celle (filo che fa il giro, poi fondo e quadretti): vedi "Intro".
-   Le misure in unità (--cw/--ch) e il ritardo (--i) li scrive Grid.astro: ogni vuoto vale per un breakpoint */
-.void {
-  /* fondo: carta a quadretti (sotto, dopo .cell) */
-  display: none;
-  position: relative;
-  /* a riposo il filo è un bordo vero: agganciato ai pixel, più netto dei gradienti anche al 125% */
-  border: var(--line) solid var(--inchiostro);
-}
-
-/* vuoti ricalcolati nel browser (archivio filtrato): valgono per il breakpoint corrente */
-.void--live { display: block; }
-@media (min-width: 1024px) { .void--lg { display: block; } }
-@media (min-width: 600px) and (max-width: 1023px) { .void--md { display: block; } }
-@media (max-width: 599px) { .void--sm { display: block; } }
-/* riempimento sotto la griglia nelle pagine corte (scripts/fill.ts): largo quanto la griglia, righe intere (--ch).
-   Senza grid-row esplicita: con row dense finisce dopo tutte le celle, nelle prime righe tutte libere */
-.void--fill { display: block; grid-column: 1 / -1; grid-row: span var(--ch); --cw: var(--cols); }
-.void--fill[hidden] { display: none; }
 
 /* ── Cella ────────────────────────────────────────────── */
 .cell {
@@ -318,27 +237,19 @@ p { text-wrap: pretty; }
   --ch: var(--h, 1);
 }
 
-/* ── Carta a quadretti: fondo dei vuoti e della cella della 404 (dopo .cell, che ha il suo fondo) ── */
-/* mezzo passo della griglia: i quadretti scalano con le celle e le linee passano per i crocini
-   (a mezzo gap fuori dal riquadro) e per il centro di ogni unità, in fase con le tacche del righello */
-.void, .cell--error {
-  --carta-step: calc(var(--step) / 2);
-  --carta-line: var(--line);
+/* ── Cella della 404 (dopo .cell, che ha il suo fondo): la carta a quadretti della pagina vera, coi quadretti
+   del foglio (--qf) agganciati al bordo della cella ── */
+.cell--error {
   --carta-ink: color-mix(in srgb, var(--inchiostro) 22%, transparent);
   background:
-    linear-gradient(to right, var(--carta-ink) var(--carta-line), transparent var(--carta-line)),
-    linear-gradient(to bottom, var(--carta-ink) var(--carta-line), transparent var(--carta-line)),
+    linear-gradient(to right, var(--carta-ink) var(--line-dp), transparent var(--line-dp)),
+    linear-gradient(to bottom, var(--carta-ink) var(--line-dp), transparent var(--line-dp)),
     var(--bianco);
-  background-size: var(--carta-step) var(--carta-step);
-  background-position: calc((var(--gap) + var(--carta-line)) / -2) calc((var(--gap) + var(--carta-line)) / -2);
+  background-size: var(--qf) var(--qf);
   background-origin: border-box;
 }
 /* colore registrato: nell'intro i quadretti sfumano col fondo (fill-in) invece di comparire di colpo */
 @property --carta-ink { syntax: '<color>'; inherits: false; initial-value: transparent; }
-/* spessore agganciato ai pixel reali (--dp, da Layout.astro). Il passo no: segue la griglia, che non è agganciata */
-@supports (width: round(down, 1px, 1px)) {
-  .void, .cell--error { --carta-line: var(--line-dp); }
-}
 @media (max-width: 1023px) { .cell { grid-column: span var(--w-md); grid-row: span var(--h-md); --cw: var(--w-md, 1); --ch: var(--h-md, 1); } }
 @media (max-width: 599px)  { .cell { grid-column: span var(--w-sm); grid-row: span var(--h-sm); --cw: var(--w-sm, 1); --ch: var(--h-sm, 1); } }
 @media (min-width: 1024px) { .cell.hide-lg { display: none; } }
@@ -347,9 +258,8 @@ p { text-wrap: pretty; }
 
 /* filo sopra al contenuto, anche sui media: quattro lati disegnati con gradienti,
    agganciati ai pixel reali. --l0…--l3 = quanto è lungo ogni lato (0–1),
-   in senso orario da in alto: alto, destra, basso, sinistra. Pieni fuori dall'intro. Sui vuoti solo
-   nell'intro, sopra il loro bordo (trasparente finché il filo non ha fatto il giro). */
-.cell::after, .is-intro .void::after, .is-intro .foot::after {
+   in senso orario da in alto: alto, destra, basso, sinistra. Pieni fuori dall'intro. */
+.cell::after {
   content: '';
   position: absolute; inset: 0; z-index: 3;
   --l0: 1; --l1: 1; --l2: 1; --l3: 1;
@@ -390,13 +300,13 @@ p { text-wrap: pretty; }
 .cell__go svg { width: 11px; height: 11px; }
 .cell__go svg * { fill: currentColor; }
 
-/* ✕ di chiusura delle hero (progetti, archivio, extra, info): tutta la hero chiude (close.ts) */
+/* ✕ di chiusura delle hero (progetti, archivio, extra, info): tutta la hero chiude il foglio (scripts/foglio) */
 @media (hover: hover) and (pointer: fine) {
   .cell[data-hero] { cursor: pointer; }
 }
 
 .cell:has(> .duo) > :is(.cell__label, .cell__go, .caption) { color: var(--bianco); }
-/* luce spenta: le scritte sulle foto restano chiare (rosse sulle foto non si leggevano) */
+/* colori invertiti: le scritte sulle foto restano chiare (rosse sulle foto non si leggevano) */
 :root[data-inchiostro="bianco"] .cell:has(> .duo) > :is(.cell__label, .cell__go, .caption) { color: var(--chiaro); }
 
 /* ── Media: foto piena ───────────────────────────────── */
@@ -411,28 +321,27 @@ p { text-wrap: pretty; }
    2. finito il giro entrano fondo e contenuto. */
 @property --draw { syntax: '<number>'; inherits: false; initial-value: 1; }
 @keyframes frame-draw { from { --draw: 0; } }
-/* --carta-ink: i quadretti dei vuoti, che entrano col fondo (sulle celle non c'è) */
+/* --carta-ink: i quadretti della cella della 404, che entrano col fondo */
 @keyframes fill-in { from { background-color: transparent; --carta-ink: transparent; } }
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
-/* crocini: a giri dal crocino centrale. --giro = quanti giri sono comparsi (il giro n sfuma tra n e n+1) */
+/* carta del tavolo (components/tavolo): a giri dal centro. --giro = quanti giri sono comparsi (il giro n sfuma tra n e n+1) */
 @property --giro { syntax: '<number>'; inherits: false; initial-value: 0; }
 @keyframes crocini-in { from { --giro: 0; } to { --giro: 8; } }
 
 /* posizione del vertice di partenza sul perimetro (in unità, in senso orario dall'alto a sinistra).
-   Il filo va a velocità costante: la durata cresce col perimetro, le celle piccole compaiono prima. */
-/* il footer entra come una cella: larga quanto il foglio, l'altezza in unità (--ch) e il turno (--i) li scrive Layout.astro */
-.foot { --cw: var(--cols); }
-.cell, .void, .foot {
-  --from: 0;
+   Il filo va a velocità costante: la durata cresce col perimetro, le celle piccole compaiono prima.
+   Anche sul pezzo del tavolo (components/tavolo): la sua caduta nell'intro parte a filo finito. */
+.cell { --from: 0; }
+:is(.cell, .pezzo) {
   --per: calc((var(--cw) + var(--ch)) * 2);
-  /* tetto: sulle celle grandi (hero, footer) il contenuto non aspetta più di --t-draw-max */
+  /* tetto: sulle celle grandi (hero) il contenuto non aspetta più di --t-draw-max */
   --t-draw: min(calc(var(--per) * var(--t-draw-u)), var(--t-draw-max));
 }
-:is(.cell, .void, .foot)[data-from="1"] { --from: var(--cw); }
-:is(.cell, .void, .foot)[data-from="2"] { --from: calc(var(--cw) + var(--ch)); }
-:is(.cell, .void, .foot)[data-from="3"] { --from: calc(var(--cw) * 2 + var(--ch)); }
+.cell[data-from="1"] { --from: var(--cw); }
+.cell[data-from="2"] { --from: calc(var(--cw) + var(--ch)); }
+.cell[data-from="3"] { --from: calc(var(--cw) * 2 + var(--ch)); }
 
-.is-intro :is(.cell, .void, .foot)::after {
+.is-intro .cell::after {
   --run: calc(var(--draw) * var(--per));  /* tratto già disegnato */
   /* ogni lato parte quando il tratto arriva al suo inizio: inizio = distanza dal vertice di partenza */
   --l0: clamp(0, (var(--run) - mod(0 - var(--from), var(--per))) / var(--cw), 1);
@@ -442,12 +351,12 @@ p { text-wrap: pretty; }
   animation: frame-draw var(--t-draw) var(--ease-morph) both;
   animation-delay: calc(var(--i) * 30ms);
 }
-.is-intro :is(.cell, .void, .foot) {
+.is-intro .cell {
   /* il fondo (rosso o bianco che copre i crocini) entra col contenuto */
   animation: fill-in var(--t-fill) var(--ease-out) backwards;
   animation-delay: calc(var(--i) * 30ms + var(--t-draw));
 }
-.is-intro :is(.cell, .foot) > * {
+.is-intro .cell > * {
   /* backwards, non both: a fine animazione l'opacità torna libera (serve ai filtri) */
   animation: fade-in var(--t-fill) var(--ease-out) backwards;
   animation-delay: calc(var(--i) * 30ms + var(--t-draw));
@@ -466,9 +375,8 @@ p { text-wrap: pretty; }
 .riga__in { display: inline-block; }
 .riga__filo { position: absolute; left: 0; right: 0; bottom: 0; border-top: var(--line) solid currentColor; transform: scaleX(0); }
 
-/* Link di testo (footer, liste, 404): in hover e col fuoco da tastiera il peso sale a 900 (font variabile,
-   lo "scanner" di tools/pages/cinetica.html). Mai sui titoli delle celle: viaggiano nell'espansione e
-   devono combaciare con quelli della hero */
+/* Link di testo (recapiti, liste, 404): in hover e col fuoco da tastiera il peso sale a 900 (font variabile,
+   lo "scanner" di tools/pages/cinetica.html). Mai sui titoli delle celle */
 .link-peso { transition: font-weight 320ms var(--ease-out); }
 .link-peso:focus-visible { font-weight: 900; }
 @media (hover: hover) and (pointer: fine) {
@@ -478,130 +386,18 @@ p { text-wrap: pretty; }
 /* Lente dei titoloni (scripts/titoloni.ts): righe bloccate alla prima passata del mouse, così le parole
    che ingrassano non cambiano riga */
 .lente__riga { display: block; white-space: nowrap; }
-/* vuoti: il filo animato sta sopra il bordo, trasparente fino a fine intro (poi torna il bordo vero) */
-.is-intro .void { border-color: transparent; }
-.is-intro .void::after { inset: calc(var(--line-dp) * -1); }
-/* crocini: maschera solo durante l'intro, quadrata (due fasce incrociate) così un giro = gli 8, 16, 24…
-   crocini attorno al centrale. Ogni fascia ha il pieno largo 2 × (giro − 1) passi e sfuma per un passo:
-   il giro n compare mentre --giro va da n a n+1, quando il precedente è già pieno. Sotto 1 il pieno non c'è
-   e la punta sale con --giro (il crocino centrale sfuma da solo). 8 giri coprono la finestra; finita
-   l'animazione (backwards) --giro torna al valore della regola, che copre tutta la pagina */
-.is-intro .grid::before, .is-intro .sheet::before, .is-intro .sheet::after {
-  --giro: 1000;
-  --a: calc(var(--giro) * var(--ruler-step));
-  --b: calc(max(var(--giro) - 1, 0) * var(--ruler-step));
-  --c: rgb(0 0 0 / min(1, var(--giro)));
-  mask-image:
-    linear-gradient(to right, transparent calc(var(--ox) - var(--a)), var(--c) calc(var(--ox) - var(--b)), var(--c) calc(var(--ox) + var(--b)), transparent calc(var(--ox) + var(--a))),
-    linear-gradient(to bottom, transparent calc(var(--oy) - var(--a)), var(--c) calc(var(--oy) - var(--b)), var(--c) calc(var(--oy) + var(--b)), transparent calc(var(--oy) + var(--a)));
-  mask-composite: intersect;
-  animation: crocini-in 960ms linear backwards;
-}
-
 /* animazioni infinite in pausa fuori schermo */
 [data-offscreen] .loop { animation-play-state: paused !important; }
 
-/* ── View Transitions: la cella si espande nella pagina ─ */
-/* morph.ts dà un nome (morph-<ruolo>) ai pezzi presenti da tutti e due i lati, solo durante la
-   transizione, e una classe per come viaggiano:
-   .frame  la cella ↔ la hero (morph-window): finestra che si allarga e rivela il contenuto
-   .photo  la foto (morph-media), che cresce sotto la finestra
-   .scale  freccia ↔ ✕, titolo, numero: cambiano misura e si scalano
-   .text   tutto il resto (didascalie, occhielli…): si sposta restando della sua misura
-   Viaggiano tutti con la stessa curva; la chiusura è l'apertura al contrario (html.morph-close). */
-::view-transition-group(*.morph) {
-  animation-duration: var(--t-morph);
-  animation-timing-function: var(--ease-morph);
-}
-/* dal basso: la foto, la finestra, i pezzi piccoli e il righello */
-::view-transition-group(*.photo) { z-index: 1; }
-::view-transition-group(morph-window) { z-index: 2; }
-::view-transition-group(*.scale), ::view-transition-group(*.text), ::view-transition-group(ruler-thumb) { z-index: 3; }
-/* Finestre. Niente scaling: il riquadro si allarga e taglia, i contenuti restano fermi in alto a
-   sinistra (dove sta la linguetta in entrambi gli stati) e si scambiano in dissolvenza. Quello che
-   deve restare in vista mentre la finestra cambia forma (es. la didascalia in basso) va marcato
-   come pezzo (data-part) e viaggia per conto suo.
-   Il filo lo disegna l'outline della finestra, sopra l'istantanea: quello vero delle celle resta
-   fuori dalle istantanee, che non si deformano (se no il filo d'arrivo comparirebbe già alla misura
-   finale dentro una finestra che cambia ancora forma). */
-.cell[data-morphing]::after { opacity: 0; }
-/* la finestra di una cella con foto è trasparente: dentro deve vedersi la foto che cresce sotto
-   (fuori dalle transizioni la foto copre comunque i crocini) */
-.cell:has(> .duo) { background: transparent; }
-/* Firefox non taglia da solo ciò che sborda */
-::view-transition-image-pair(*.frame), ::view-transition-image-pair(*.photo) { overflow: clip; }
-::view-transition-old(*.frame), ::view-transition-new(*.frame) {
-  width: 100%; height: 100%;
-  object-fit: none;
-  object-position: left top;
-  mix-blend-mode: normal;
-  outline: var(--line-dp) solid var(--inchiostro);
-  outline-offset: calc(var(--line-dp) * -1);
-}
-::view-transition-old(*.frame) { animation: var(--t-swap) ease both vt-out; }
-::view-transition-new(*.frame) { animation: var(--t-swap) ease both vt-in; }
-
-/* Foto: sotto, piena, quella grande (la hero); sopra quella della cella, che esce all'apertura ed
-   entra alla fine della chiusura */
-::view-transition-old(*.photo), ::view-transition-new(*.photo) {
-  width: 100%; height: 100%;
-  object-fit: cover;
-  mix-blend-mode: normal;
-}
-/* cella e hero con ritagli diversi: ognuna sta nel riquadro della foto intera, animato da morph.ts */
-html.morph-photo::view-transition-old(*.photo),
-html.morph-photo::view-transition-new(*.photo) {
-  object-fit: contain;
-  left: 50%; top: 50%; translate: -50% -50%;
-}
-::view-transition-old(*.photo) { z-index: 1; animation: var(--t-swap) ease both vt-out; }
-::view-transition-new(*.photo) { animation: none; }
-html.morph-close::view-transition-old(*.photo) { z-index: auto; animation: none; }
-html.morph-close::view-transition-new(*.photo) { z-index: 1; animation: var(--t-swap) ease both vt-in; }
-
-/* Chiusura: lo scambio dei contenuti avviene alla fine invece che all'inizio. La cella grande resta
-   visibile (tagliata dalla finestra) mentre si stringe; la piccola entra quando la finestra è arrivata */
-html.morph-close::view-transition-old(*.frame), html.morph-close::view-transition-new(*.frame),
-html.morph-close::view-transition-new(*.photo) { animation-delay: calc(var(--t-morph) - var(--t-swap)); }
-
-/* Pezzi piccoli: si scambiano in dissolvenza lungo tutta la corsa. Quelli .scale seguono la larghezza
-   del gruppo (riquadri stretti sul contenuto: si scalano senza deformarsi), centrati in verticale:
-   l'interlinea aggiunge spazio uguale sopra e sotto, quindi i centri combaciano anche con interlinee
-   diverse. Le lettere combaciano solo se il testo ha le stesse proporzioni ai due lati (spaziatura in
-   em uguale: con -0.04em nella cella e -0.06em nella hero "Info" si sdoppiava): la hero usa lo stesso
-   componente della cella. Quelli .text restano della loro misura, fermi in alto a sinistra */
-::view-transition-old(*.scale), ::view-transition-new(*.scale) {
-  top: 50%; translate: 0 -50%;
-  animation-timing-function: var(--ease-morph);
-}
-::view-transition-old(*.text), ::view-transition-new(*.text) {
-  width: 100%; height: 100%;
-  object-fit: none;
-  object-position: left top;
-}
-
-/* Pagina intera: dissolvenza vera, la vecchia resta piena sotto e la nuova la copre entrando.
-   Se sfumassero tutte e due, nel mezzo resterebbe il foglio vuoto: un lampo chiaro a ogni click */
+/* ── Cambio d'inchiostro (scripts/ink.ts): View Transition della stessa pagina. La pagina col colore nuovo si
+   allarga a cerchio dall'interruttore Inverti sopra quella vecchia, ferma. Centro e raggio (fino all'angolo
+   più lontano) li scrive ink.ts. Con riduci movimento ink.ts cambia colore senza transizione ── */
 ::view-transition-old(root) { animation: none; }
-::view-transition-new(root) { animation: var(--t-page) ease var(--t-page-delay) both vt-in; }
-/* senza espansione (Firefox per Android, morph.ts): la pagina nuova entra subito, senza aspettare la cella */
-html.morph-plain::view-transition-new(root) { animation-delay: 0s; }
-/* Cambio d'inchiostro (scripts/ink.ts): la pagina col colore nuovo si allarga a cerchio
-   dall'interruttore della luce sopra quella vecchia, ferma. Centro e raggio (fino all'angolo più lontano) li scrive ink.ts */
 html.vt-ink::view-transition-new(root) { animation: ink-flood var(--t-ink) var(--ease-morph) both; }
 @keyframes ink-flood {
   from { clip-path: circle(0 at var(--macchia-x) var(--macchia-y)); }
   to   { clip-path: circle(var(--macchia-r) at var(--macchia-x) var(--macchia-y)); }
 }
-@keyframes vt-out { to { opacity: 0; } }
-@keyframes vt-in  { from { opacity: 0; } }
-
-/* ── View Transition del filtro archivio: le caselle scivolano al nuovo posto ── */
-::view-transition-group(*.tile) {
-  animation-duration: var(--t-tile);
-  animation-timing-function: var(--ease-morph);
-}
-html.vt-filter::view-transition-new(root) { animation-duration: calc(var(--t-tile) / 2); animation-delay: 0s; }
 
 /* ── Riduzione del movimento ──────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
@@ -611,10 +407,6 @@ html.vt-filter::view-transition-new(root) { animation-duration: calc(var(--t-til
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
-  .is-intro :is(.cell, .void, .foot), .is-intro :is(.cell, .void, .foot)::after, .is-intro :is(.cell, .foot) > *,
-  .is-intro .grid::before, .is-intro .sheet::before, .is-intro .sheet::after { animation: none !important; }
+  .is-intro .cell, .is-intro .cell::after, .is-intro .cell > * { animation: none !important; }
   .loop { animation: none !important; }
-  ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
-  /* meno movimento, non zero: tra una pagina e l'altra resta una dissolvenza breve, senza espansione */
-  ::view-transition-new(root) { animation: vt-in 200ms ease both !important; }
 }

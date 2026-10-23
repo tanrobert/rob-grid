@@ -1,4 +1,4 @@
-// Strumenti di verifica delle View Transitions (solo sviluppo, non finiscono nel sito).
+// Strumenti di verifica del sito (giro del tavolo, fotogrammi dei video, server per il telefono): solo sviluppo.
 // Usano Chrome e Firefox già installati sul PC: puppeteer-core non scarica browser.
 // Percorsi diversi: variabili d'ambiente CHROME_PATH / FIREFOX_PATH. Sito: VT_BASE (default preview).
 import puppeteer from 'puppeteer-core';
@@ -33,36 +33,6 @@ export function launch(browser = 'chrome', { headless = true } = {}) {
   return puppeteer.launch(browser === 'firefox'
     ? { browser: 'firefox', executablePath: BROWSERS.firefox, headless }
     : { executablePath: BROWSERS.chrome, headless: headless ? 'new' : false });
-}
-
-/** Pagina a misura di telefono (default 412×860); in Chrome anche touch e viewport mobile */
-export async function open(b, { width = 412, height = 860, ua } = {}) {
-  const p = await b.newPage();
-  const chrome = !(await b.version()).toLowerCase().includes('firefox');
-  await p.setViewport({ width: +width, height: +height, ...(chrome && +width < 600 ? { isMobile: true, hasTouch: true } : {}) });
-  if (ua) await p.setUserAgent(ua);
-  p.on('pageerror', e => console.log('  !! errore nella pagina:', e.message));
-  // avvisi della pagina (es. [morph] in sviluppo: pezzi segnati male)
-  p.on('console', m => ['warn', 'warning', 'error'].includes(m.type()) && console.log(`  !! console ${m.type()}:`, m.text()));
-  return p;
-}
-
-/**
- * Rallenta le transizioni (×factor) riscrivendo i token di global.css: li legge anche morph.ts,
- * quindi rallentano pure le animazioni create da script (DevTools setPlaybackRate quelle no).
- */
-export function slowDown(p, factor = 10) {
-  return p.evaluate(f => {
-    // prima via il rallentamento precedente: se no i tempi letti sono già moltiplicati (×100)
-    document.adoptedStyleSheets = [];
-    const css = getComputedStyle(document.documentElement);
-    const ms = t => parseFloat(t) * (t.trim().endsWith('ms') ? 1 : 1000);
-    const tokens = ['--t-morph', '--t-swap', '--t-page', '--t-tile']
-      .map(n => `${n}:${ms(css.getPropertyValue(n)) * f}ms !important`).join(';');
-    const sheet = new CSSStyleSheet();
-    sheet.replaceSync(`:root{${tokens}}`);
-    document.adoptedStyleSheets = [sheet];
-  }, factor);
 }
 
 /** Foglio di provini: le immagini in griglia, salvato come jpg (si apre con qualsiasi visualizzatore) */

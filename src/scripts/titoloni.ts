@@ -5,7 +5,8 @@
  *   (HEADROOM) serve alla lente, che allarga le lettere. Si calcola prima che la pagina si veda: dopo lo
  *   caricamento, prima delle righe dell'intro (righe.ts,
  *   che leggono gli a capo). Il corpo si scrive in cqi (larghezza della cella): allo zoom del tavolo e al resize
- *   il titolo scala con la cella, e la misura esatta si rifà a misura ferma (ATTESA).
+ *   il titolo scala con la cella, e la misura esatta si rifà a misura ferma (ATTESA), ma sul tavolo solo se cambia
+ *   la forma della cella (lo zoom ne cambia solo la scala).
  * - Lente (idea di Roberto, ottobre 2026, provata in tools/pages/cinetica.html): col mouse il peso cresce
  *   ad area attorno al puntatore, 900 al centro e 500 al bordo (raggio = RAGGIO corpi). Gli a capo si
  *   bloccano alla prima passata (righe a filo, nowrap), se no le parole che ingrassano cambiano riga.
@@ -101,11 +102,20 @@ export function initTitoloni(signal: AbortSignal, reduced: boolean) {
   const list = titles();
   if (!list.length) return;
 
-  // resize, cambio di breakpoint, zoom del tavolo: intanto il titolo scala con la cella (cqi), a misura ferma si
-  // rimisura. La prima notifica (all'observe) no: la prima misura la fanno lo swap o cells.ts, prima delle righe
+  // resize, cambio di breakpoint: intanto il titolo scala con la cella (cqi), a misura ferma si rimisura.
+  // Lo zoom del tavolo no: cambia la scala, non la forma, e il titolo scala con la cella come le altre. Rimisurato
+  // a zoom fermo scattava (occhiello e linguetta non scalano: la misura nuova non era in proporzione, 9,25 → 10 cqi)
+  // La prima notifica (all'observe) no: la prima misura la fa cells.ts, prima delle righe
   let timer = 0, first = true;
-  const ro = new ResizeObserver(() => {
+  const forma = new WeakMap<Element, number>();
+  const ro = new ResizeObserver(entries => {
+    const cambiate = entries.filter(({ target, contentRect: r }) => {
+      const ora = r.width / r.height, prima = forma.get(target);
+      forma.set(target, ora);
+      return prima === undefined || !target.closest('.pezzo') || Math.abs(ora / prima - 1) > 0.01;
+    });
     if (first) { first = false; return; }
+    if (!cambiate.length) return;
     clearTimeout(timer);
     timer = window.setTimeout(fitTitles, ATTESA);
   });

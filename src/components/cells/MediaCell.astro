@@ -1,6 +1,8 @@
 ---
 import type { ImageMetadata } from 'astro';
 import { Image, getImage } from 'astro:assets';
+import fs from 'node:fs';
+import path from 'node:path';
 
 interface Props {
   image?: ImageMetadata;
@@ -15,11 +17,15 @@ interface Props {
 }
 const { image, video, alt, sizes, title, meta, priority = false } = Astro.props;
 const poster = image && video ? await getImage({ src: image, width: 1280, format: 'webp' }) : undefined;
+// se accanto all'mp4 (H.264, per tutti) c'è lo stesso nome in .webm (AV1, molto più leggero), chi lo sa leggere usa quello
+const webm = video?.replace(/\.mp4$/, '.webm');
+const conWebm = !!webm && webm !== video && fs.existsSync(path.join(process.cwd(), 'public', webm));
 ---
 
-<div class="duo" data-part="media">
+<div class="duo">
   {video ? (
     <video data-autoplay muted loop playsinline preload="none" poster={poster?.src} aria-label={alt || undefined}>
+      {conWebm && <source src={webm} type='video/webm; codecs="av01.0.05M.08"' />}
       <source src={video} type="video/mp4" />
     </video>
   ) : image && (
@@ -29,7 +35,7 @@ const poster = image && video ? await getImage({ src: image, width: 1280, format
 
 {title && (
   <div class="caption">
-    <span class="caption__title" data-part="title">{title}</span>
+    <span class="caption__title">{title}</span>
     {meta && <span class="mono">{meta}</span>}
   </div>
 )}

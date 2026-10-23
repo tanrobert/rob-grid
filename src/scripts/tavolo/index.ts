@@ -13,6 +13,7 @@ import { leggiPezzi, posa, alza, disponi, riordina, type Pezzo } from './pezzi';
 import { initGesti, vai } from './gesti';
 import { leggi, scrivi } from './memoria';
 import { initMatita, type Matita } from './matita';
+import { initSuono } from '../suono';
 
 gsap.registerPlugin(InertiaPlugin);
 
@@ -37,7 +38,11 @@ function turni(pezzi: Pezzo[]) {
   const m = centro(pezzi[0]);
   const lontano = (p: Pezzo) => Math.hypot(centro(p).x - m.x, centro(p).y - m.y);
   [...pezzi].sort((a, b) => lontano(a) - lontano(b))
-    .forEach((p, n) => p.el.querySelector<HTMLElement>(':scope > .cell')?.style.setProperty('--i', String(n)));
+    .forEach((p, n) => {
+      // sul pezzo (caduta) e sulla cella, che ha già il suo turno scritto al build
+      p.el.style.setProperty('--i', String(n));
+      p.el.querySelector<HTMLElement>(':scope > .cell')?.style.setProperty('--i', String(n));
+    });
 }
 
 /** Intro: la carta compare a giri dal centro del tavolo, al massimo 8 (crocini-in, global.css): su una finestra
@@ -107,6 +112,7 @@ function initTavolo(el: HTMLElement): Tavolo {
     attrezzi.hidden = false;
     attrezzi.querySelector('[data-riordina]')?.addEventListener('click', () => riordina(t), { signal: ac.signal });
     attrezzi.querySelector('[data-centro]')?.addEventListener('click', () => vai(t, 0, 0, 0.6), { signal: ac.signal });
+    initSuono(ac.signal);
   }
 
   // uscendo dalla pagina (anche verso la cache del browser, per tornare con indietro): il tavolo com'è adesso,

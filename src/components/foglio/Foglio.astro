@@ -22,7 +22,7 @@ const recapiti: Cell = { id: 'recapiti', type: 'contatti', w: 4, h: 2, tone: 're
 {!pagina && <div class="retino" data-retino aria-hidden="true"></div>}
 <main id="main" class:list={['foglio', pagina && 'foglio--pagina']} data-foglio={pagina ? undefined : ''}>
   <slot />
-  <Grid cells={[...cells, recapiti]} filterable={filterable} vuoti={false} />
+  <Grid cells={[...cells, recapiti]} filterable={filterable} />
 </main>
 
 <style>
@@ -41,8 +41,6 @@ const recapiti: Cell = { id: 'recapiti', type: 'contatti', w: 4, h: 2, tone: 're
     margin-inline: auto;
     padding: var(--qf);
   }
-  /* niente crocini della griglia: li fa il retino */
-  .foglio :global(.grid::before) { display: none; }
 
   /* pagina vera: la carta del tavolo (quadretti e crocini ogni 4) agganciata al foglio, che riempie almeno la
      finestra. La carta sborda ai lati di un numero intero di moduli: le linee cadono sui bordi delle celle e i
@@ -65,8 +63,6 @@ const recapiti: Cell = { id: 'recapiti', type: 'contatti', w: 4, h: 2, tone: 're
     background: var(--inchiostro);
     mask: var(--crocini-forma) 0 0 / calc(var(--qf) * 4) calc(var(--qf) * 4) repeat;
   }
-  /* la cella d'errore ha i suoi quadretti (global.css): qui sono quelli della carta, allineati */
-  .foglio--pagina :global(.cell--error) { --carta-step: var(--qf); background-position: 0 0; }
 
   /* carta piena con un foro ogni 4px: si intravede il tavolo, ma senza mezze tinte (niente rosa) */
   .retino {

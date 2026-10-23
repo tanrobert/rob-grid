@@ -30,15 +30,21 @@ interface CellBase extends Span {
   frame?: false;
   /** La cella è l'arrivo dell'espansione della cella con questo href (es. '/archivio'). */
   heroOf?: string;
-  /** Nasconde la cella su questi breakpoint (il calcolo dei vuoti ne tiene conto). */
+  /** Nasconde la cella su questi breakpoint. */
   hideOn?: Array<'lg' | 'md' | 'sm'>;
   /** Misura sul tavolo della home, in quadretti, quando non è w×h unità × 4 (lib/tavolo.ts) */
   q?: Span;
+  /** Solo sul tavolo: nascosta sotto la cella `id`, spostata di x, y quadretti dal suo angolo in alto a sinistra.
+      Fuori dalla spirale, sotto tutte le altre, invisibile nell'intro: si scopre spostando chi la copre */
+  sotto?: Sotto;
 }
 
+export interface Sotto { id: string; x: number; y: number }
+
 export type Cell = CellBase & (
-  /** ink: la cella è l'interruttore della luce, premuta scambia rosso e bianco del sito (scripts/ink.ts) */
-  | { type: 'svg'; svg: SvgName; fit?: 'contain' | 'bleed'; ink?: boolean }
+  /** ink: la cella è l'interruttore Inverti, premuta scambia rosso e bianco del sito (scripts/ink.ts).
+      tinta: Woberto, il marchio nero nascosto sotto la R: il primo clic porta il nero, i successivi invertono */
+  | { type: 'svg'; svg: SvgName; fit?: 'contain' | 'bleed'; ink?: boolean; tinta?: boolean }
   /** ROBERTO scritto col font del logotipo, largo quanto la cella */
   | { type: 'logotipo' }
   | {
@@ -68,7 +74,7 @@ export type Cell = CellBase & (
   | { type: 'globe' }
   /** pagina d'errore: codice grande con glitch, titolo (h1) e link all'indice, su carta a quadretti */
   | { type: 'error'; code: string; title: string }
-  /** recapiti del footer (email, luogo, P.IVA, versione) come cella del tavolo */
+  /** recapiti (email, luogo, P.IVA, versione): cella del tavolo e dei fogli */
   | { type: 'contatti' }
   // solo archivio
   | { type: 'archive-head'; total: number }

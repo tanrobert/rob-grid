@@ -36,16 +36,24 @@ function projectCell(id: string, slug: string): Cell {
 }
 
 export const tavolo: Cell[] = [
-  // al centro: la R è l'interruttore della luce, premuta scambia rosso e bianco del sito
+  // al centro: la R è l'interruttore Inverti, premuta scambia rosso e bianco del sito
   { id: 'logo',     type: 'svg',      w: 2, h: 2, svg: 'logo-r', fit: 'bleed', label: false, frame: false, ink: true },
+  // primo easter egg: sotto la R, dietro la sua asta, il marchio di Woberto (la R girata, nera). Si scopre
+  // spostando la R; premuto cambia la tinta del sito (scripts/ink.ts)
+  {
+    id: 'woberto', type: 'svg', w: 1, h: 1, q: { w: 2, h: 2 }, svg: 'logo-r', fit: 'bleed', label: false, frame: false,
+    tinta: true, sotto: { id: 'logo', x: 1, y: 1 },
+  },
   { id: 'nome',     type: 'logotipo', w: 5, h: 1, q: { w: 20, h: 4 } },
   {
     id: 'intro', type: 'text', w: 4, h: 3, q: { w: 16, h: 10 }, as: 'h1', size: 'l',
     eyebrow: `Graphic designer · dal ${firstYear}`,
     title: 'Progetto identità visive e punti di contatto fisici e digitali.',
   },
-  // per ora l'unico progetto sul tavolo: è quello su cui si lavora. Gli altri sono in archivio
+  // progetti sul tavolo: Kiale, quello su cui si lavora, ed Eurofish col video del mare (il caso più pesante,
+  // tenuto apposta per misurare il tavolo). Gli altri sono in archivio
   projectCell('kiale', 'kiale'),
+  projectCell('eurofish', 'eurofish'),
   { id: 'archivio', type: 'stat',     w: 2, h: 2, href: '/archivio', value: pad2(projects.length), caption: 'Progetti in archivio', countUp: true },
   { id: 'info',     type: 'text',     w: 2, h: 2, tone: 'red', href: '/info', title: 'Bio', as: 'p', size: 'm', eyebrow: 'Chi sono' },
   { id: 'tag',      type: 'list',     w: 4, h: 2, title: 'Tag', items: topTags },

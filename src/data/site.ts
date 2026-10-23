@@ -1,4 +1,4 @@
-// Dati del sito in un posto solo: footer, contatti, titoli delle pagine
+// Dati del sito in un posto solo: recapiti, contatti, titoli delle pagine
 export const site = {
   name: 'Roberto Tanasi',
   email: 'info@robertotanasi.it',

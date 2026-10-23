@@ -7,7 +7,9 @@ import { InertiaPlugin } from 'gsap/InertiaPlugin';
 import { pack } from '../../lib/tavolo';
 import { applica } from './vista';
 import { T, REDUCED, LANCIO } from './tempi';
+import { suona } from '../suono';
 import type { Tavolo } from './index';
+import type { Sotto } from '../../data/grid-types';
 
 export interface Pezzo {
   id: string;
@@ -15,15 +17,26 @@ export interface Pezzo {
   ombra: HTMLElement | null;
   /** misure e posizione in quadretti */
   w: number; h: number; gx: number; gy: number;
-  /** ordine sopra/sotto: l'ultima presa sta sopra */
+  /** ordine sopra/sotto: l'ultima presa sta sopra; −1 = nascosta sotto un'altra, finché non si prende */
   z: number;
+  /** nascosta sotto un'altra cella (grid-types, `sotto`): la disposizione la mette sotto la sua ospite */
+  sotto?: Sotto;
 }
 
+/** z di partenza: le nascoste sotto tutte (anche per la matita, che disegna sulla cella più in alto) */
+const zBase = (p: Pezzo) => (p.sotto ? -1 : 0);
+
 export const leggiPezzi = (mondo: HTMLElement): Pezzo[] =>
-  [...mondo.querySelectorAll<HTMLElement>('[data-pezzo]')].map(el => ({
-    id: el.dataset.pezzo!, el, ombra: el.querySelector<HTMLElement>('[data-ombra]'),
-    w: Number(el.dataset.w), h: Number(el.dataset.h), gx: 0, gy: 0, z: 0,
-  }));
+  [...mondo.querySelectorAll<HTMLElement>('[data-pezzo]')].map(el => {
+    const [id, x, y] = el.dataset.sotto?.split(' ') ?? [];
+    const p: Pezzo = {
+      id: el.dataset.pezzo!, el, ombra: el.querySelector<HTMLElement>('[data-ombra]'),
+      w: Number(el.dataset.w), h: Number(el.dataset.h), gx: 0, gy: 0, z: 0,
+      sotto: id ? { id, x: Number(x), y: Number(y) } : undefined,
+    };
+    p.z = zBase(p);
+    return p;
+  });
 
 export const posa = (p: Pezzo, q: number) => gsap.set(p.el, { x: p.gx * q, y: p.gy * q });
 
@@ -60,6 +73,7 @@ export function prendi(t: Tavolo, p: Pezzo, sx: number, sy: number, touch: boole
   if (p.ombra) gsap.to(p.ombra, { x: t.v.q * 0.55, y: t.v.q * 0.55, duration: T(0.18), ease: 'power2.out' });
   InertiaPlugin.track(el, 'x,y');
   if (touch) try { navigator.vibrate?.(8); } catch {}
+  suona('presa');
   return {
     p,
     x0: Number(gsap.getProperty(el, 'x')), y0: Number(gsap.getProperty(el, 'y')),
@@ -83,13 +97,16 @@ export function porta(pr: Presa, dx: number, dy: number, vx: number, vy: number)
 export function lascia(t: Tavolo, pr: Presa, vx: number, vy: number) {
   const { p } = pr, { el } = p, q = t.v.q;
   const snap = (n: number) => Math.round(n / q) * q;
+  // lanciata forte, ricade più forte
+  const forza = Math.min(1, Math.hypot(vx, vy) / 2000);
   const land = () => {
+    suona('ricaduta', forza);
     InertiaPlugin.untrack(el);
     p.gx = Math.round(Number(gsap.getProperty(el, 'x')) / q);
     p.gy = Math.round(Number(gsap.getProperty(el, 'y')) / q);
     // il foglio si posa: l'ombra rientra appena dopo l'aggancio
-    gsap.to(el, { scale: 1, duration: T(0.22), ease: 'power2.inOut' });
-    if (p.ombra) gsap.to(p.ombra, { x: 0, y: 0, duration: T(0.22), ease: 'power2.inOut' });
+    gsap.to(el, { scale: 1, duration: T(0.18), ease: 'power2.inOut' });
+    if (p.ombra) gsap.to(p.ombra, { x: 0, y: 0, duration: T(0.18), ease: 'power2.inOut' });
     t.salva();
   };
   // raddrizzarsi con una piccola oscillazione, senza un ritorno secco
@@ -111,7 +128,7 @@ export function lascia(t: Tavolo, pr: Presa, vx: number, vy: number) {
 export function riordina(t: Tavolo) {
   const q = t.v.q;
   disponi(t);
-  t.pezzi.forEach(p => alza(p, 0));
+  t.pezzi.forEach(p => alza(p, zBase(p)));
   t.zTop = 0;
   [...t.pezzi].sort((a, b) => Math.hypot(a.gx, a.gy) - Math.hypot(b.gx, b.gy)).forEach((p, i) => {
     gsap.to(p.el, { x: p.gx * q, y: p.gy * q, rotation: 0, scale: 1, skewX: 0, duration: T(0.7), ease: 'power3.inOut', delay: T(i * 0.018) });

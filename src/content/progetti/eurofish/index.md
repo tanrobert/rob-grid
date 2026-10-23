@@ -1,6 +1,6 @@
 ---
-# in panchina: il video (8.6 MB, 1080p) appesantiva lo scroll. Da ricomprimere (prova 1280 crf31 ≈ 3.1 MB)
-# video: /media/eurofish-video.mp4
+# il mare: AV1 1200×800 (.webm, 2,1 MB) e H.264 960×640 (.mp4, 2 MB) per chi non legge AV1; prima 8,6 MB in 1080p
+video: /media/eurofish-mare.mp4
 title: "Eurofish Napoli"
 tags: [Imprese, Prodotto, Logo, Packaging, Veicoli]
 period: "dal 2025"

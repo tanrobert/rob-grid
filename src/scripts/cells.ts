@@ -12,7 +12,7 @@ import type { VistaEvento } from './tavolo/vista';
 let cleanup: (() => void) | null = null;
 
 // animazioni d'ingresso (global.css): finite quando il filo ha chiuso il giro, il contenuto è entrato e i crocini sono comparsi
-const INTRO = ['frame-draw', 'fill-in', 'fade-in', 'crocini-in'];
+const INTRO = ['frame-draw', 'fill-in', 'fade-in', 'crocini-in', 'pezzo-atterra', 'ombra-compare'];
 function introDone(cell?: Element) {
   const anims = (cell ? cell.getAnimations({ subtree: true }) : document.getAnimations())
     .filter(a => a instanceof CSSAnimation && INTRO.includes(a.animationName));

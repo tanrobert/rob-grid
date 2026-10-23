@@ -9,7 +9,7 @@
 
 import { drawGlobe, realSpin, type Spin } from '../lib/globe';
 
-let introDone = false;  // il modulo sopravvive alle navigazioni del ClientRouter
+let introDone = false;  // il modulo resta tra un foglio e l'altro (scripts/foglio): il giro d'ingresso una volta sola
 
 const INTRO_MS = 2400;
 const RETURN_DELAY_MS = 500;

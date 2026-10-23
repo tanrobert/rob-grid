@@ -5,14 +5,21 @@ import { svgs, type SvgName } from '../../data/svgs';
 interface Props {
   svg: SvgName;
   fit?: 'contain' | 'bleed';
-  /** la cella è l'interruttore della luce (scripts/ink.ts): premuta, rosso e bianco del sito si scambiano */
+  /** la cella è l'interruttore Inverti (scripts/ink.ts): premuta, rosso e bianco del sito si scambiano */
   ink?: boolean;
+  /** Woberto (scripts/ink.ts): il marchio girato e nero, cambia la tinta del sito */
+  tinta?: boolean;
 }
-const { svg, fit = 'contain', ink = false } = Astro.props;
+const { svg, fit = 'contain', ink = false, tinta = false } = Astro.props;
 ---
 
-{ink ? (
-  <button class:list={['svg', `svg--${fit}`, 'svg--switch']} type="button" role="switch" aria-checked="true" aria-label="Luce" title="Spegni la luce" data-ink>
+{tinta ? (
+  /* fuori dal Tab: un segreto si trova spostando la R, non col Tab (che porterebbe in vista la cella) */
+  <button class:list={['svg', `svg--${fit}`, 'svg--switch', 'svg--woberto']} type="button" tabindex="-1" aria-label="Woberto" data-woberto>
+    <SvgAsset name={svg} />
+  </button>
+) : ink ? (
+  <button class:list={['svg', `svg--${fit}`, 'svg--switch']} type="button" role="switch" aria-checked="false" aria-label="Inverti i colori" title="Inverti i colori" data-ink>
     <SvgAsset name={svg} />
   </button>
 ) : (
@@ -35,4 +42,10 @@ const { svg, fit = 'contain', ink = false } = Astro.props;
     color: inherit; font: inherit;
     cursor: pointer;
   }
+  /* ogni marchio tiene il suo colore: la R resta rossa anche col sito nero (Woberto non la fa nera), Woberto resta
+     nero col sito rosso. Col sito del suo colore ognuno ha l'inchiostro, così si vede anche a carta scambiata */
+  :global(:root[data-tinta="nero"]) [data-ink] { color: var(--rosso); }
+  .svg--woberto { color: var(--nero); }
+  :global(:root[data-tinta="nero"]) .svg--woberto { color: var(--inchiostro); }
+  .svg--woberto :global(svg) { rotate: 180deg; }
 </style>

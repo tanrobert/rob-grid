@@ -1,0 +1,301 @@
+<!doctype html>
+<!--
+  Laboratorio dei suoni: i momenti semplici del tavolo (presa, ricaduta, foglio, luce), tre varianti
+  sintetizzate ciascuno con Web Audio (rumore filtrato e oscillatori, nessun file). Solo sviluppo: il sito non cambia.
+  Ogni suono varia un poco tono e volume a ogni colpo, così non suona mai uguale.
+    npx astro build && npm run vt:serve → /_vt/suoni.html (il font lo serve dist/fonts)
+-->
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Suoni lab</title>
+<style>
+  @font-face { font-family: 'Schibsted Grotesk'; src: url('/fonts/schibsted-grotesk.woff2') format('woff2'); font-weight: 400 900; font-display: block; }
+  :root { --rosso: #f03f24; --chiaro: #f5f3f0; --ink: var(--rosso); --paper: var(--chiaro); --q: 25px; }
+  html.spenta { --ink: var(--chiaro); --paper: var(--rosso); }
+  * { box-sizing: border-box; margin: 0; }
+  body { background: var(--paper); color: var(--ink); font: 500 16px/1.25 'Schibsted Grotesk', sans-serif; }
+  .mono { font-size: 11px; font-weight: 400; letter-spacing: 0.08em; text-transform: uppercase; font-variant-numeric: tabular-nums; }
+
+  header { position: sticky; top: 0; z-index: 5; background: var(--paper); border-bottom: 1px solid var(--ink); padding: 8px 10px; display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; }
+  header strong { font-weight: 800; }
+  button { font: inherit; font-size: 12px; padding: 6px 10px; border: 1px solid currentColor; background: transparent; color: inherit; cursor: pointer; touch-action: manipulation; }
+  button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+  input[type=range] { accent-color: var(--ink); width: 110px; vertical-align: middle; }
+  label { display: inline-flex; gap: 6px; align-items: center; }
+
+  .wrap { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 10px; padding: 10px; }
+  @media (max-width: 899px) { .wrap { grid-template-columns: 1fr; } }
+
+  /* carta a quadretti con una cella da prendere */
+  .tavolo { position: relative; height: 70vh; min-height: 420px; border: 1px solid var(--ink); overflow: hidden; touch-action: none;
+    background-image: linear-gradient(to right, color-mix(in srgb, var(--ink) 22%, transparent) 1px, transparent 1px),
+                      linear-gradient(to bottom, color-mix(in srgb, var(--ink) 22%, transparent) 1px, transparent 1px);
+    background-size: var(--q) var(--q); }
+  .pezzo { position: absolute; left: 0; top: 0; width: calc(var(--q) * 8); height: calc(var(--q) * 6); cursor: grab; }
+  .pezzo .ombra { position: absolute; inset: 0; background-image: radial-gradient(var(--ink) 1px, transparent 1.4px); background-size: 4px 4px; transition: transform 180ms ease-in-out; }
+  .pezzo .cella { position: absolute; inset: 0; background: var(--paper); border: 1px solid var(--ink); padding: 10px; display: flex; flex-direction: column; justify-content: space-between; transition: scale 180ms ease-in-out; }
+  .pezzo.su { cursor: grabbing; }
+  .pezzo.su .cella { scale: 1.035; transition-timing-function: ease-out; }
+  .pezzo.su .ombra { transform: translate(calc(var(--q) * .55), calc(var(--q) * .55)); }
+  .pezzo .cella b { font-size: 28px; font-weight: 800; line-height: 1; }
+  .tavolo .aiuto { position: absolute; left: 10px; bottom: 8px; pointer-events: none; }
+
+  /* foglio che si apre sopra il tavolo */
+  .foglio { position: absolute; inset: 8% 10%; background: var(--paper); border: 1px solid var(--ink); padding: 14px; translate: 0 110%; transition: translate 420ms cubic-bezier(.7,0,.2,1); z-index: 3; }
+  .foglio.aperto { translate: 0 0; }
+  .foglio button { position: absolute; top: 10px; right: 10px; }
+  .foglio p { max-width: 30ch; margin-top: 40px; font-size: 22px; }
+
+  /* pannello delle scelte */
+  .pannello { display: flex; flex-direction: column; gap: 10px; }
+  .momento { border: 1px solid var(--ink); padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+  .momento h2 { font-size: 18px; font-weight: 800; display: flex; justify-content: space-between; align-items: baseline; }
+  .momento .varianti { display: flex; gap: 6px; flex-wrap: wrap; }
+  .momento .reg { display: flex; gap: 12px; flex-wrap: wrap; }
+  .momento p { font-size: 13px; }
+  #scelte { border: 1px solid var(--ink); padding: 10px; white-space: pre-wrap; user-select: all; }
+</style>
+</head>
+<body>
+<header>
+  <strong>Suoni lab</strong>
+  <label class="mono">Volume generale <input type="range" id="master" min="0" max="100" value="60"></label>
+  <button id="muto" aria-pressed="false">Muto</button>
+  <span class="mono" id="stato">Audio fermo: tocca qualcosa per avviarlo</span>
+</header>
+
+<div class="wrap">
+  <div class="tavolo" id="tavolo">
+    <div class="pezzo" id="pezzo">
+      <div class="ombra"></div>
+      <div class="cella"><span class="mono">01</span><b>Prendimi</b><span class="mono">trascina · lancia</span></div>
+    </div>
+    <div class="foglio" id="foglio" aria-hidden="true">
+      <button id="chiudi" aria-label="Chiudi">✕</button>
+      <p>Un foglio aperto sopra il tavolo. ✕ o Esc per chiuderlo.</p>
+    </div>
+    <span class="mono aiuto">Lanciata forte, la cella ricade più forte</span>
+  </div>
+
+  <div class="pannello" id="pannello">
+    <div class="varianti">
+      <button id="apri">Apri foglio</button>
+      <button id="luce" role="switch" aria-checked="true">Luce</button>
+    </div>
+    <div class="mono">Scelte (da incollare a Claude)</div>
+    <div id="scelte" class="mono"></div>
+  </div>
+</div>
+
+<script>
+// ---------- audio ----------
+let ctx, out, rumore;
+function avvia() {
+  if (ctx) { if (ctx.state !== 'running') ctx.resume(); return; }
+  ctx = new AudioContext();
+  out = ctx.createGain();
+  out.connect(ctx.destination);
+  livello();
+  // un secondo di rumore bianco, riusato da tutti i suoni
+  rumore = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
+  const d = rumore.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  document.getElementById('stato').textContent = 'Audio acceso';
+}
+const muto = document.getElementById('muto'), master = document.getElementById('master');
+function livello() { if (out) out.gain.value = muto.getAttribute('aria-pressed') === 'true' ? 0 : (master.value / 100) ** 2; }
+master.oninput = livello;
+muto.onclick = () => { muto.setAttribute('aria-pressed', muto.getAttribute('aria-pressed') !== 'true'); livello(); };
+
+/** variazione casuale ±f */
+const vari = (f) => 1 + (Math.random() * 2 - 1) * f;
+
+/** inviluppo: sale in a secondi, scende in d, dal tempo t */
+function inv(g, t, picco, a, d) {
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(picco, t + a);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + a + d);
+}
+/** colpo di rumore filtrato */
+function soffio({ t, tipo = 'bandpass', f = 2000, f2, Q = 1, picco = .3, a = .004, d = .08, dest }) {
+  const s = ctx.createBufferSource(); s.buffer = rumore;
+  s.playbackRate.value = vari(.1);
+  const fl = ctx.createBiquadFilter(); fl.type = tipo; fl.Q.value = Q;
+  fl.frequency.setValueAtTime(f, t);
+  if (f2) fl.frequency.exponentialRampToValueAtTime(f2, t + a + d);
+  const g = ctx.createGain(); inv(g, t, picco, a, d);
+  s.connect(fl).connect(g).connect(dest);
+  s.start(t, Math.random() * .5); s.stop(t + a + d + .02);
+}
+/** colpo di oscillatore, con caduta di tono da f a f2 */
+function tono({ t, forma = 'sine', f = 200, f2, picco = .3, a = .002, d = .06, dest }) {
+  const o = ctx.createOscillator(); o.type = forma;
+  o.frequency.setValueAtTime(f, t);
+  if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + a + d);
+  const g = ctx.createGain(); inv(g, t, picco, a, d);
+  o.connect(g).connect(dest);
+  o.start(t); o.stop(t + a + d + .02);
+}
+
+// ---------- i momenti: tre varianti ciascuno; k = intensità 0..1, p = tono (moltiplica le frequenze) ----------
+const MOMENTI = {
+  presa: {
+    nome: 'Presa', nota: 'Quando la cella si solleva (180 ms).',
+    varianti: {
+      A: { nome: 'Fruscio', suona: (t, p, dest) => soffio({ t, f: 3200 * p, Q: .8, picco: .35, a: .006, d: .09, dest }) },
+      B: { nome: 'Pizzico', suona: (t, p, dest) => {
+        soffio({ t, tipo: 'highpass', f: 5000 * p, picco: .25, a: .002, d: .035, dest });
+        tono({ t, f: 1800 * p, picco: .06, d: .012, dest });
+      } },
+      C: { nome: 'Soffio', suona: (t, p, dest) => soffio({ t, tipo: 'lowpass', f: 700 * p, f2: 2600 * p, Q: .5, picco: .3, a: .03, d: .11, dest }) },
+    },
+  },
+  ricaduta: {
+    nome: 'Ricaduta', nota: 'Quando la cella si posa (180 ms). Più forte se lanciata.',
+    varianti: {
+      A: { nome: 'Tocco', suona: (t, p, dest, k) => {
+        tono({ t, f: 150 * p, f2: 70 * p, picco: .5 * (.4 + .6 * k), d: .07, dest });
+        soffio({ t, tipo: 'lowpass', f: 700 * p, picco: .25 * (.4 + .6 * k), d: .04, dest });
+      } },
+      B: { nome: 'Carta', suona: (t, p, dest, k) => {
+        soffio({ t, f: 1300 * p, Q: 1.2, picco: .35 * (.4 + .6 * k), a: .003, d: .07, dest });
+        tono({ t, f: 220 * p, f2: 120 * p, picco: .18 * (.4 + .6 * k), d: .05, dest });
+      } },
+      C: { nome: 'Tic', suona: (t, p, dest, k) => {
+        tono({ t, forma: 'triangle', f: 950 * p, f2: 700 * p, picco: .2 * (.4 + .6 * k), d: .018, dest });
+        soffio({ t, tipo: 'highpass', f: 3000 * p, picco: .08 * (.4 + .6 * k), d: .02, dest });
+      } },
+    },
+  },
+  foglio: {
+    nome: 'Foglio', nota: 'Apertura e chiusura (il tono sale aprendo, scende chiudendo).',
+    varianti: {
+      A: { nome: 'Solleva', suona: (t, p, dest, k, chiude) => {
+        const [f, f2] = chiude ? [3000, 600] : [600, 3000];
+        soffio({ t, f: f * p, f2: f2 * p, Q: .7, picco: .22, a: .12, d: .2, dest });
+      } },
+      B: { nome: 'Sfoglia', suona: (t, p, dest, k, chiude) => {
+        for (let i = 0; i < 4; i++) soffio({ t: t + i * .045 + Math.random() * .02, f: (chiude ? 2800 - i * 400 : 1600 + i * 400) * p, Q: 1.5, picco: .18, a: .003, d: .035, dest });
+      } },
+      C: { nome: 'Aria', suona: (t, p, dest, k, chiude) => {
+        const [f, f2] = chiude ? [1400, 300] : [300, 1400];
+        soffio({ t, tipo: 'lowpass', f: f * p, f2: f2 * p, Q: .4, picco: .3, a: .18, d: .24, dest });
+      } },
+    },
+  },
+  luce: {
+    nome: 'Luce', nota: 'L’interruttore (la R in alto a sinistra).',
+    varianti: {
+      A: { nome: 'Interruttore', suona: (t, p, dest) => {
+        tono({ t, forma: 'square', f: 2400 * p, picco: .05, d: .006, dest });
+        soffio({ t, tipo: 'highpass', f: 4000 * p, picco: .2, a: .001, d: .012, dest });
+        soffio({ t: t + .045, tipo: 'bandpass', f: 1800 * p, Q: 2, picco: .12, a: .001, d: .015, dest });
+      } },
+      B: { nome: 'Tic', suona: (t, p, dest) => tono({ t, forma: 'triangle', f: 1300 * p, f2: 900 * p, picco: .22, d: .025, dest }) },
+      C: { nome: 'Pop', suona: (t, p, dest) => tono({ t, f: 650 * p, f2: 280 * p, picco: .4, d: .045, dest }) },
+    },
+  },
+};
+
+// stato delle scelte: variante, volume, tono per ogni momento
+const scelte = {};
+for (const id in MOMENTI) scelte[id] = { v: 'A', vol: 70, tono: 100 };
+
+function suona(id, k = .6, chiude = false) {
+  avvia();
+  const s = scelte[id], m = MOMENTI[id];
+  const g = ctx.createGain(); g.gain.value = (s.vol / 100) ** 2 * vari(.15); g.connect(out);
+  m.varianti[s.v].suona(ctx.currentTime + .005, s.tono / 100 * vari(.06), g, k, chiude);
+}
+
+// ---------- pannello ----------
+const pannello = document.getElementById('pannello'), elScelte = document.getElementById('scelte');
+const dove = pannello.querySelector('.mono');
+function scrivi() {
+  elScelte.textContent = Object.entries(scelte).map(([id, s]) =>
+    `${MOMENTI[id].nome}: ${s.v} ${MOMENTI[id].varianti[s.v].nome} · vol ${s.vol} · tono ${s.tono}`).join('\n');
+}
+for (const [id, m] of Object.entries(MOMENTI)) {
+  const box = document.createElement('section'); box.className = 'momento';
+  box.innerHTML = `<h2>${m.nome}<button data-play>▶ Prova</button></h2><p>${m.nota}</p>
+    <div class="varianti">${Object.entries(m.varianti).map(([v, x]) => `<button data-v="${v}" aria-pressed="${v === 'A'}">${v} · ${x.nome}</button>`).join('')}</div>
+    <div class="reg mono"><label>Vol <input type="range" data-r="vol" min="0" max="100" value="70"></label>
+    <label>Tono <input type="range" data-r="tono" min="50" max="200" value="100"></label></div>`;
+  box.querySelector('[data-play]').onclick = () => suona(id);
+  box.querySelectorAll('[data-v]').forEach(b => b.onclick = () => {
+    scelte[id].v = b.dataset.v;
+    box.querySelectorAll('[data-v]').forEach(x => x.setAttribute('aria-pressed', x === b));
+    scrivi(); suona(id);
+  });
+  box.querySelectorAll('[data-r]').forEach(r => {
+    r.oninput = () => { scelte[id][r.dataset.r] = +r.value; scrivi(); };
+    r.onchange = () => suona(id);
+  });
+  pannello.insertBefore(box, dove);
+}
+scrivi();
+
+// ---------- tavolo: prendi, porta, lascia ----------
+const tavolo = document.getElementById('tavolo'), pezzo = document.getElementById('pezzo');
+const Q = 25;
+let pos = { x: Q * 4, y: Q * 3 }, presa = null;
+const metti = () => pezzo.style.transform = `translate(${pos.x}px, ${pos.y}px)`;
+metti();
+pezzo.addEventListener('pointerdown', (e) => {
+  pezzo.setPointerCapture(e.pointerId);
+  pezzo.style.transition = 'none';
+  // coordinate della cella relative al tavolo
+  const r = tavolo.getBoundingClientRect();
+  presa = { dx: e.clientX - r.left - pos.x, dy: e.clientY - r.top - pos.y, r, storia: [{ x: e.clientX, y: e.clientY, t: e.timeStamp }] };
+  pezzo.classList.add('su');
+  suona('presa');
+});
+pezzo.addEventListener('pointermove', (e) => {
+  if (!presa) return;
+  pos = { x: e.clientX - presa.r.left - presa.dx, y: e.clientY - presa.r.top - presa.dy };
+  presa.storia.push({ x: e.clientX, y: e.clientY, t: e.timeStamp });
+  if (presa.storia.length > 6) presa.storia.shift();
+  metti();
+});
+function lascia(e) {
+  if (!presa) return;
+  const h = presa.storia, a = h[0], b = h[h.length - 1];
+  const dt = Math.max(1, b.t - a.t), v = Math.hypot(b.x - a.x, b.y - a.y) / dt * 1000; // px/s
+  const { r } = presa;
+  presa = null;
+  // aggancio ai quadretti dentro il tavolo, poi si posa
+  pos.x = Math.round(Math.min(Math.max(pos.x, 0), r.width - Q * 8) / Q) * Q;
+  pos.y = Math.round(Math.min(Math.max(pos.y, 0), r.height - Q * 6) / Q) * Q;
+  pezzo.style.transition = 'transform 340ms cubic-bezier(.34,1.8,.64,1)';
+  metti();
+  setTimeout(() => { pezzo.classList.remove('su'); suona('ricaduta', Math.min(1, v / 2000)); }, 340);
+}
+pezzo.addEventListener('pointerup', lascia);
+pezzo.addEventListener('pointercancel', lascia);
+
+// ---------- foglio ----------
+const foglio = document.getElementById('foglio');
+function apri(si) {
+  if (foglio.classList.contains('aperto') === si) return;
+  foglio.classList.toggle('aperto', si);
+  foglio.setAttribute('aria-hidden', !si);
+  suona('foglio', .6, !si);
+}
+document.getElementById('apri').onclick = () => apri(true);
+document.getElementById('chiudi').onclick = () => apri(false);
+addEventListener('keydown', (e) => { if (e.key === 'Escape') apri(false); });
+
+// ---------- luce ----------
+const luce = document.getElementById('luce');
+luce.onclick = () => {
+  const accesa = luce.getAttribute('aria-checked') !== 'true';
+  luce.setAttribute('aria-checked', accesa);
+  luce.setAttribute('aria-pressed', !accesa);
+  document.documentElement.classList.toggle('spenta', !accesa);
+  suona('luce');
+};
+</script>
+</body>
+</html>

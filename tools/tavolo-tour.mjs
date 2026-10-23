@@ -46,7 +46,8 @@ const state = p => p.evaluate(() => {
   const q = parseFloat(t.style.getPropertyValue('--q'));
   const m = new DOMMatrix(getComputedStyle(t.querySelector('[data-mondo]')).transform);
   const cells = {};
-  for (const el of document.querySelectorAll('[data-pezzo]')) {
+  // le celle nascoste sotto un'altra (Woberto) non contano: stanno apposta sotto la loro ospite
+  for (const el of document.querySelectorAll('[data-pezzo]:not([data-sotto])')) {
     const r = el.getBoundingClientRect();
     cells[el.dataset.pezzo] = { x: r.left, y: r.top, w: r.width, h: r.height, gx: Math.round((r.left - m.e) / q * 100) / 100, gy: Math.round((r.top - m.f) / q * 100) / 100 };
   }
@@ -327,14 +328,17 @@ const clicCella = async (p, id) => { const pt = inView(await state(p), id); awai
   await p.keyboard.press('Escape');
   await sleep(1000);
 
-  // doppio clic rapido: un foglio solo, aperto
-  const pt = inView(await state(p), id);
+  // doppio clic rapido: un foglio solo, aperto (la cella si sceglie adesso: aprendo "extra" la vista può essersi spostata)
+  const sDoppio = await state(p);
+  const idDoppio = visible(sDoppio, ['info', 'extra', 'archivio']) ?? id;
+  const hrefDoppio = await p.$eval(`[data-pezzo="${idDoppio}"] a`, a => a.getAttribute('href'));
+  const pt = inView(sDoppio, idDoppio);
   await p.mouse.click(pt.x, pt.y, { clickCount: 1 });
   await p.mouse.click(pt.x, pt.y, { clickCount: 2 });
   await sleep(1500);
   f = await foglio(p);
   const fogli = await p.$$eval('main[data-foglio]', l => l.length);
-  check(f.path === href && f.aperto && fogli === 1 && f.copie === 0, 'doppio clic: un foglio solo, aperto', `fogli: ${fogli}`);
+  check(f.path === hrefDoppio && f.aperto && fogli === 1 && f.copie === 0, 'doppio clic: un foglio solo, aperto', `fogli: ${fogli}`);
   check(await p.evaluate(() => window.__stesso === true), 'sempre nello stesso documento');
   await p.close();
 }
@@ -488,6 +492,44 @@ if (chrome) {
   await sleep(150);
   const f = await foglio(p);
   check(f.path === '/' && !f.aperto && !f.copie, 'riduci movimento: chiude subito');
+  await p.close();
+}
+
+// ── Woberto, il marchio nascosto sotto la R ─────────────────────────────
+{
+  const p = await page();
+  await fresh(p);
+  const vedo = () => p.evaluate(() => {
+    const b = document.querySelector('[data-woberto]'), r = b.getBoundingClientRect(), html = document.documentElement;
+    const x = r.left + r.width / 2, y = r.top + r.height / 2;
+    return { coperto: !b.contains(document.elementFromPoint(x, y)), x, y, tinta: html.dataset.tinta ?? 'rosso', inv: html.dataset.inchiostro ? 'inv' : 'no' };
+  });
+  let w = await vedo();
+  check(w.coperto, 'Woberto nascosto sotto la R');
+  // la R presa lontano da Woberto (in basso a destra) e portata via
+  const s = await state(p), r = s.cells.logo;
+  await mouseDrag(p, { x: r.x + r.w * 0.85, y: r.y + r.h * 0.9 }, 12 * s.q, 0);
+  await sleep(900);
+  w = await vedo();
+  check(!w.coperto && w.tinta === 'rosso' && w.inv === 'no', 'spostata la R, Woberto in vista (e i colori non si sono invertiti)');
+  // ognuno il suo colore: il primo clic sul marchio dell'altro colore cambia il colore, i successivi invertono
+  const logo = () => state(p).then(s => ({ x: s.cells.logo.x + s.cells.logo.w * 0.85, y: s.cells.logo.y + s.cells.logo.h * 0.9 }));
+  const giro = [];
+  for (const chi of ['W', 'W', 'W', 'R', 'R', 'W', 'R', 'R']) {
+    const pt = chi === 'W' ? w : await logo();
+    await p.mouse.click(pt.x, pt.y);
+    await sleep(1300);
+    const v = await vedo();
+    giro.push(`${chi}:${v.tinta}/${v.inv}`);
+    if (giro.length === 1) {
+      await p.reload({ waitUntil: 'networkidle0' });
+      await sleep(2500);
+      w = await vedo();
+      check(w.tinta === 'nero' && !w.coperto, 'ricarica: nero e Woberto dove era');
+    }
+  }
+  const atteso = 'W:nero/no W:nero/inv W:nero/no R:rosso/no R:rosso/inv W:nero/inv R:rosso/inv R:rosso/no';
+  check(giro.join(' ') === atteso, 'R e Woberto: il primo clic porta il colore, poi inverte', giro.join(' → '));
   await p.close();
 }
 

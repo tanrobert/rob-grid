@@ -3,7 +3,7 @@
  * da 1px (come quello delle celle), la riga esce da lì salendo e il filo si ritira verso destra. Righe a
  * PASSO l'una dall'altra. Parte quando entra il contenuto della sua cella (animazione fill-in di global.css):
  * stesso ritmo dell'intro, qualunque sia la misura della cella. Finito, il titolo torna com'era (a capo
- * liberi al resize, titolo intero per l'espansione di morph.ts).
+ * liberi al resize).
  * Solo al caricamento "vero" (html.is-intro, mai con prefers-reduced-motion). Prova: tools/pages/testi.html.
  */
 

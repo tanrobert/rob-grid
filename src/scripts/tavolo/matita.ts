@@ -4,21 +4,19 @@
  *   (la cella più in alto in quel punto, o il tavolo) e lo segue quando si sposta.
  * - Coordinate in quadretti: allo zoom i segni si ridisegnano netti.
  * - Durano finché si resta qui (anche aprendo e chiudendo fogli): niente salvataggio.
- * - Col mouse la matita vola dalla scatolina (il pulsante) alla punta del puntatore e diventa il cursore;
- *   posata, torna a volo nella scatolina. Sul touch non c'è cursore: solo la scatolina.
+ * - Col mouse, presa dalla scatolina (il pulsante), la matita è subito il cursore e nella scatolina ne resta la
+ *   sagoma; posata, torna subito nella scatolina. Sul touch non c'è cursore: solo la scatolina.
  * I gesti (un dito o il mouse disegna, due dita spostano e zoomano) sono in gesti.ts.
  */
 import { gsap } from 'gsap';
 import type { Posto } from '../../lib/tavolo';
 import { ox, oy, type VistaEvento } from './vista';
 import type { Pezzo } from './pezzi';
-import { REDUCED, T } from './tempi';
+import { T } from './tempi';
 import type { Tavolo } from './index';
 
 const SVGNS = 'http://www.w3.org/2000/svg';
 const FINE = matchMedia('(hover: hover) and (pointer: fine)').matches;
-/** misura della matita in volo e posizione della punta (px) */
-const PENNA = 24, PUNTA = { x: 1.5, y: 22.5 };
 
 export interface Matita {
   attiva(): boolean;
@@ -47,7 +45,6 @@ export function initMatita(t: Tavolo): Matita {
   const fogli = new Map(t.pezzi.map(p => [p, p.el.querySelector<SVGSVGElement>(':scope > [data-segni]')!]));
   const pulsante = document.querySelector<HTMLButtonElement>('[data-matita]');
   const cancella = document.querySelector<HTMLButtonElement>('[data-cancella]');
-  const volo = document.querySelector<SVGSVGElement>('[data-matita-volo]');
   const scatolina = pulsante?.querySelector<SVGSVGElement>('.matita__ico');
   let attiva = false;
 
@@ -86,40 +83,15 @@ export function initMatita(t: Tavolo): Matita {
   const segni = () => [...v.mondo.querySelectorAll<SVGPathElement>('.segni path')];
   const aggiornaCancella = () => { if (cancella) cancella.hidden = !segni().length; };
 
-  // ── Prendere e posare ──
-  const mouse = { x: innerWidth / 2, y: innerHeight / 2 };
-  addEventListener('pointermove', e => { if (e.pointerType === 'mouse') { mouse.x = e.clientX; mouse.y = e.clientY; } }, { passive: true, signal });
+  // ── Prendere e posare: subito, senza volo (scelta di Roberto, 24/10/2026) ──
   function prendi(on: boolean) {
     if (on === attiva) return;
     attiva = on;
     v.el.classList.toggle('is-matita', on);
     pulsante?.setAttribute('aria-pressed', String(on));
-    if (!volo || !scatolina) return;
-    const r = scatolina.getBoundingClientRect(), piccola = r.width / PENNA;
-    gsap.killTweensOf(volo);
-    html.classList.remove('matita-in-volo');
-    if (!FINE || REDUCED) {
-      scatolina.classList.toggle('is-vuota', on);
-      html.classList.toggle('matita-in-mano', on && FINE);
-      return;
-    }
-    if (on) {
-      // si stacca dalla scatolina: resta la sagoma, la matita cresce e va sotto il puntatore
-      scatolina.classList.add('is-vuota');
-      html.classList.add('matita-in-volo');
-      gsap.set(volo, { visibility: 'visible', x: r.left, y: r.top, scale: piccola, transformOrigin: '0 0' });
-      gsap.to(volo, {
-        x: () => mouse.x - PUNTA.x, y: () => mouse.y - PUNTA.y, scale: 1, duration: 0.28, ease: 'power3.out',
-        onComplete() { html.classList.replace('matita-in-volo', 'matita-in-mano'); gsap.set(volo, { visibility: 'hidden' }); },
-      });
-    } else {
-      html.classList.remove('matita-in-mano');
-      gsap.set(volo, { visibility: 'visible', x: mouse.x - PUNTA.x, y: mouse.y - PUNTA.y, scale: 1, transformOrigin: '0 0' });
-      gsap.to(volo, {
-        x: r.left, y: r.top, scale: piccola, duration: 0.26, ease: 'power3.inOut',
-        onComplete() { gsap.set(volo, { visibility: 'hidden' }); scatolina.classList.remove('is-vuota'); },
-      });
-    }
+    // nella scatolina resta la sagoma; col mouse la matita è il cursore
+    scatolina?.classList.toggle('is-vuota', on);
+    html.classList.toggle('matita-in-mano', on && FINE);
   }
   pulsante?.addEventListener('click', () => prendi(!attiva), { signal });
   cancella?.addEventListener('click', () => {

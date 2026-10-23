@@ -27,7 +27,7 @@ for (const c of cells) {
   ids.add(c.id);
 }
 
-const misure = cells.map(c => ({ id: c.id, ...inQuadretti(c) }));
+const misure = cells.map(c => ({ id: c.id, ...inQuadretti(c), sotto: c.sotto }));
 const posti = {
   lg: pack(misure, FINESTRE.lg),
   md: pack(misure, FINESTRE.md),
@@ -56,6 +56,7 @@ const projects = cells.filter(c => c.type === 'project').length;
           data-pezzo={cell.id}
           data-w={w}
           data-h={h}
+          data-sotto={cell.sotto ? `${cell.sotto.id} ${cell.sotto.x} ${cell.sotto.y}` : undefined}
           style={`--qw:${w};--qh:${h};--x:${lg.x};--y:${lg.y};--x-md:${md.x};--y-md:${md.y};--x-sm:${sm.x};--y-sm:${sm.y}`}
         >
           {cell.frame !== false && <div class="pezzo__ombra" data-ombra aria-hidden="true"></div>}
@@ -84,9 +85,15 @@ const projects = cells.filter(c => c.type === 'project').length;
   </button>
   <button type="button" class="mono" data-riordina>Riordina</button>
   <button type="button" class="mono" data-centro>Torna al centro</button>
+  {/* suono (scripts/suono.ts): spento di base; altoparlante con una ✕ da spento, con le onde da acceso */}
+  <button type="button" class="attrezzi__suono" data-suono aria-pressed="false" aria-label="Suono" title="Accendi il suono">
+    <svg class="suono__ico" viewBox="0 0 16 16" aria-hidden="true">
+      <path d="M1.5 5.5h3l4-3v11l-4-3h-3z" />
+      <path class="suono__no" d="M11 6l4 4M15 6l-4 4" />
+      <path class="suono__si" d="M11 5.5a3.5 3.5 0 0 1 0 5M13 3.5a6.3 6.3 0 0 1 0 9" />
+    </svg>
+  </button>
 </div>
-<svg class="matita-volo" data-matita-volo viewBox="0 0 16 16" aria-hidden="true"><path d="M11.3 1.3a1 1 0 0 1 1.4 0l2 2a1 1 0 0 1 0 1.4L5.4 14 1 15l1-4.4z" /></svg>
-
 <style>
   /* la finestra sul tavolo: niente scroll (overflow: clip non si scorre nemmeno da script, col fuoco da tastiera)
      e niente gesti del browser, li fa scripts/tavolo/gesti.ts */
@@ -111,7 +118,7 @@ const projects = cells.filter(c => c.type === 'project').length;
   /* carta: quadretti e crocini (ogni 4 quadretti, sul modulo della griglia di prima). Uno strato più grande
      della finestra di un modulo per lato, che si sposta solo del resto rispetto al modulo: le linee sembrano
      infinite e il browser non ridisegna nulla. Senza JavaScript il centro del tavolo è al centro della finestra.
-     Colori dalle variabili: seguono la luce spenta e il contrasto alto */
+     Colori dalle variabili: seguono l'inversione e il contrasto alto */
   .tavolo__carta {
     --modulo: calc(var(--q) * 4);
     --carta-ink: color-mix(in srgb, var(--inchiostro) 22%, transparent);
@@ -135,8 +142,8 @@ const projects = cells.filter(c => c.type === 'project').length;
     mask: var(--crocini-forma) 0 0 / var(--modulo) var(--modulo) repeat;
   }
   /* intro: la carta compare a giri quadrati dal centro del tavolo (--ox, --oy: lo scrive scripts/tavolo/vista.ts),
-     un modulo per giro (o più, --passo-giro, se la finestra è grande). Stessa maschera dei crocini delle pagine
-     (global.css): il giro n sfuma mentre --giro va da n a n+1, e a intro finita --giro torna a coprire tutto */
+     un modulo per giro (o più, --passo-giro, se la finestra è grande): il giro n sfuma mentre --giro va da n
+     a n+1 (crocini-in, global.css), e a intro finita --giro torna a coprire tutto */
   :global(.is-intro) .tavolo__carta {
     --ox: 50%; --oy: 50%;
     --giro: 1000;
@@ -172,8 +179,15 @@ const projects = cells.filter(c => c.type === 'project').length;
   :global(html.js) .tavolo:not(.is-vivo) .tavolo__mondo { visibility: hidden; animation: tavolo-attesa 0s 1.5s both; }
   @keyframes tavolo-attesa { to { visibility: visible; } }
 
-  /* lati in quadretti per il filo dell'intro: 4 quadretti = 1 unità, quindi il tempo per quadretto è un quarto */
-  .pezzo > :global(.cell) { position: absolute; inset: 0; --cw: var(--qw); --ch: var(--qh); --t-draw-u: 17.5ms; }
+  /* celle nascoste sotto un'altra (grid-types, `sotto`: Woberto sotto la R): sotto tutte finché non si prendono
+     (scripts/tavolo/pezzi.ts, z −1), e invisibili nell'intro, per non rivelarsi */
+  .pezzo[data-sotto] { z-index: -1; }
+  :global(.is-intro) .pezzo[data-sotto] { visibility: hidden; }
+
+  /* lati in quadretti per il filo dell'intro: 4 quadretti = 1 unità, quindi il tempo per quadretto è un quarto.
+     Sul pezzo (tempo della caduta) e sulla cella, che altrimenti li prende dalle sue unità */
+  .pezzo, .pezzo > :global(.cell) { --cw: var(--qw); --ch: var(--qh); --t-draw-u: 17.5ms; }
+  .pezzo > :global(.cell) { position: absolute; inset: 0; }
   /* il marchio senza filo sta direttamente sulla carta */
   .pezzo > :global(.cell--bare) { background: transparent; }
   /* ombra della cella sollevata: retino di puntini pieni (il contrario del retino a fori sotto la cella aperta) */
@@ -181,8 +195,27 @@ const projects = cells.filter(c => c.type === 'project').length;
     position: absolute; inset: 0;
     background: radial-gradient(circle at 2px 2px, var(--inchiostro) 0 1.15px, transparent 1.4px) 0 0 / 4px 4px;
   }
-  /* nell'intro le celle sono trasparenti finché il filo non ha fatto il giro: l'ombra sotto si vedrebbe */
-  :global(.is-intro) .pezzo__ombra { visibility: hidden; }
+  /* intro, atterraggio (variante A "Secco" di tools/pages/atterraggio.html): il filo si disegna con la cella
+     sollevata come in mano (misure di prendi(), scripts/tavolo/pezzi.ts); a filo finito entra il fondo, poi l'ombra
+     (prima si vedrebbe attraverso la cella ancora trasparente), un attimo sospesa e giù di colpo: l'ombra rientra.
+     Tempi da quando il filo ha fatto il giro: ombra +160ms, caduta +260ms per 180ms (scripts/cells.ts aspetta la fine).
+     Il pezzo non si scala lui: GSAP, toccandolo la prima volta, leggerebbe `scale` e lo terrebbe per sempre. Il pezzo
+     anima solo --su (1 = in mano, 0 = posata), cella e ombra lo leggono */
+  :global(.is-intro) .pezzo {
+    animation: pezzo-atterra 180ms cubic-bezier(0.32, 0, 0.67, 0) calc(var(--i, 0) * 30ms + var(--t-draw) + 260ms) backwards;
+  }
+  :global(.is-intro) .pezzo > :global(.cell) { scale: calc(1 + var(--su) * 0.035); }
+  :global(.is-intro) .pezzo__ombra {
+    scale: calc(1 + var(--su) * 0.035);
+    translate: calc(var(--su) * var(--q) * 0.55) calc(var(--su) * var(--q) * 0.55);
+    animation: ombra-compare 160ms step-end calc(var(--i, 0) * 30ms + var(--t-draw)) backwards;
+  }
+  @property --su { syntax: '<number>'; inherits: true; initial-value: 0; }
+  @keyframes pezzo-atterra { from { --su: 1; } to { --su: 0; } }
+  @keyframes ombra-compare { from, to { visibility: hidden; } }
+  @media (prefers-reduced-motion: reduce) {
+    :global(.is-intro) :is(.pezzo, .pezzo__ombra) { animation: none; }
+  }
 
   .attrezzi {
     position: fixed; z-index: 40;
@@ -213,16 +246,19 @@ const projects = cells.filter(c => c.type === 'project').length;
   .segni--tavolo { inset: auto; left: 0; top: 0; width: 1px; height: 1px; overflow: visible; }
   .segni :global(path) { fill: none; stroke: var(--nero); stroke-width: 0.12; stroke-linecap: round; stroke-linejoin: round; }
   .attrezzi__matita { display: inline-flex; align-items: center; gap: 8px; }
+  /* solo icona, quadrato: alto quanto la matita (icona 16px + padding) */
+  .attrezzi .attrezzi__suono { display: inline-grid; place-items: center; padding: 10px; }
+  .suono__ico { width: 16px; height: 16px; overflow: visible; fill: none; stroke: currentColor; stroke-width: var(--line); stroke-linejoin: miter; }
+  .suono__ico path { vector-effect: non-scaling-stroke; }
+  .attrezzi__suono[aria-pressed="true"] .suono__no, .attrezzi__suono[aria-pressed="false"] .suono__si { display: none; }
   .matita__ico { width: 16px; height: 16px; overflow: visible; }
-  .matita__ico path, .matita-volo path { fill: var(--nero); stroke: var(--bianco); stroke-width: 0.9; paint-order: stroke; }
+  .matita__ico path { fill: var(--nero); stroke: var(--bianco); stroke-width: 0.9; paint-order: stroke; }
   .matita__ico.is-vuota path { fill: url(#matita-retino); }
   .matita__ico circle { fill: var(--inchiostro); }
-  /* la matita in volo tra la scatolina e il puntatore; poi diventa il cursore vero (nessun ritardo dietro al mouse) */
-  .matita-volo { position: fixed; left: 0; top: 0; width: 24px; height: 24px; z-index: 60; pointer-events: none; visibility: hidden; overflow: visible; }
+  /* presa, la matita è subito il cursore vero (niente volo, niente ritardo dietro al mouse) */
   :global(html.matita-in-mano), :global(html.matita-in-mano *) {
     cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 16 16'%3E%3Cpath d='M11.3 1.3a1 1 0 0 1 1.4 0l2 2a1 1 0 0 1 0 1.4L5.4 14 1 15l1-4.4z' fill='%231c1a17' stroke='%23f5f3f0' stroke-width='.9' paint-order='stroke'/%3E%3C/svg%3E") 1 22, crosshair !important;
   }
-  :global(html.matita-in-volo), :global(html.matita-in-volo *) { cursor: none !important; }
   /* sul touch la matita non diventa un cursore: il tavolo col dito disegna */
   .tavolo:global(.is-matita) { cursor: crosshair; }
 </style>

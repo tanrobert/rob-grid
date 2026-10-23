@@ -10,8 +10,8 @@ const { value, caption, countUp = false, heading } = Astro.props;
 
 <div class="stat">
   {heading && <h1 class="sr-only">{heading}</h1>}
-  <p class="value" style={`--len:${Math.max(2, value.length)}`} data-part="num" data-countup={countUp ? '' : undefined}>{value}</p>
-  <p class="mono" data-part="note">{caption}</p>
+  <p class="value" style={`--len:${Math.max(2, value.length)}`} data-countup={countUp ? '' : undefined}>{value}</p>
+  <p class="mono">{caption}</p>
 </div>
 
 <style>
@@ -21,7 +21,6 @@ const { value, caption, countUp = false, heading } = Astro.props;
     padding: var(--pad);
   }
   .value {
-    /* largo quanto il testo: nell'espansione il numero cresce senza deformarsi (morph.ts) */
     align-self: flex-start;
     font-weight: 500;
     font-size: min(58cqb, calc(124cqi / var(--len)));

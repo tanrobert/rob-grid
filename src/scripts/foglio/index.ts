@@ -20,6 +20,7 @@ import { gsap } from 'gsap';
 import { tavolo } from '../tavolo';
 import { T } from '../tavolo/tempi';
 import { initCells } from '../cells';
+import { suona } from '../suono';
 import { homeTitle } from '../../data/site';
 import { carica, stili, anticipa, eFoglio } from './carica';
 
@@ -135,6 +136,7 @@ function tavoloVivo(vivo: boolean) {
  */
 async function entra(f: Foglio, { da = null as HTMLElement | null, sostituito = null as Foglio | null, retinoPieno = false, fuoco = false } = {}) {
   occupato = true;
+  suona('foglio');
   const liv = pila.indexOf(f);
   const sotto = liv > 0 ? pila[liv - 1] : null;
   await fotoPronta(f.hero);
@@ -191,6 +193,7 @@ async function esce() {
   const f = pila.at(-1);
   if (!f) return;
   occupato = true;
+  suona('foglio', 0.6, true);
   const sotto = pila.at(-2) ?? null;
   const v = copia(f.hero, f.hero.getBoundingClientRect());
   gsap.set(f.hero, { visibility: 'hidden' });

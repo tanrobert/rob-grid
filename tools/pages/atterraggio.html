@@ -1,0 +1,210 @@
+<!doctype html>
+<!--
+  Laboratorio: intro del tavolo con l'atterraggio. Le celle si contornano come oggi (filo a velocità costante,
+  le piccole finiscono prima), poi compaiono sollevate con l'ombra a retino e ricadono sul tavolo.
+  Celle e posizioni della home a 1440 px, in quadretti. Solo sviluppo: il sito non cambia.
+    npx astro build && npm run vt:serve → /_vt/atterraggio.html (il font lo serve dist/fonts)
+-->
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Atterraggio lab</title>
+<style>
+  @font-face { font-family: 'Schibsted Grotesk'; src: url('/fonts/schibsted-grotesk.woff2') format('woff2'); font-weight: 400 900; font-display: block; }
+  @font-face { font-family: 'Logotipo'; src: url('/fonts/roberto-grafica-black.woff2') format('woff2'); font-display: block; }
+  :root { --rosso: #f03f24; --chiaro: #f5f3f0; --ink: var(--rosso); --paper: var(--chiaro); --q: 25px; --line: 1px; }
+  @media (max-width: 899px) { :root { --q: 18px; } }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { height: 100%; overflow: hidden; }
+  body { background: var(--paper); color: var(--ink); font: 500 16px/1.2 'Schibsted Grotesk', sans-serif; }
+  .mono { font-size: 11px; font-weight: 400; letter-spacing: 0.08em; text-transform: uppercase; font-variant-numeric: tabular-nums; }
+
+  header { position: fixed; z-index: 50; top: 10px; left: 10px; right: 10px; display: flex; flex-wrap: wrap; gap: 6px; pointer-events: none; }
+  header > * { pointer-events: auto; }
+  header .sep { flex: 1; }
+  button { font: inherit; font-size: 11px; font-weight: 400; letter-spacing: .08em; text-transform: uppercase; padding: 9px 11px;
+    border: var(--line) solid var(--ink); background: var(--paper); color: var(--ink); cursor: pointer; touch-action: manipulation; }
+  button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+  .nota { position: fixed; z-index: 50; left: 10px; bottom: 10px; max-width: 46ch; background: var(--paper); border: var(--line) solid var(--ink); padding: 8px 10px; font-size: 13px; line-height: 1.3; }
+
+  /* carta a quadretti con i crocini ogni 4 */
+  .tavolo { position: fixed; inset: 0;
+    background-image:
+      linear-gradient(to right, color-mix(in srgb, var(--ink) 22%, transparent) 1px, transparent 1px),
+      linear-gradient(to bottom, color-mix(in srgb, var(--ink) 22%, transparent) 1px, transparent 1px);
+    background-size: var(--q) var(--q);
+    background-position: calc(50vw) calc(50vh); }
+  .mondo { position: absolute; left: 50%; top: 50%; }
+
+  .pezzo { position: absolute; left: 0; top: 0; }
+  .ombra { position: absolute; inset: 0; visibility: hidden;
+    background: radial-gradient(circle at 2px 2px, var(--ink) 0 1.15px, transparent 1.4px) 0 0 / 4px 4px; }
+  .cella { position: absolute; inset: 0; overflow: hidden; }
+  .fondo { position: absolute; inset: 0; background: var(--paper); }
+  .rossa .fondo { background: var(--ink); }
+  .rossa { color: var(--paper); }
+  .dentro { position: absolute; inset: 0; padding: 8px 10px; display: flex; flex-direction: column; justify-content: space-between; }
+  .filo { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+  .filo path { fill: none; stroke: var(--ink); stroke-width: var(--line); }
+  .rossa .filo path { stroke: var(--ink); }
+
+  /* contenuti finti ma riconoscibili */
+  .big { font-size: calc(var(--q) * 3.4); font-weight: 500; line-height: .85; letter-spacing: -.02em; }
+  .tit { font-size: calc(var(--q) * 1.45); line-height: 1.05; }
+  .logo { font-family: 'Logotipo', sans-serif; font-size: calc(var(--q) * 3.2); line-height: 1; text-align: center; margin: auto; }
+  .r { position: absolute; inset: 0; width: 100%; height: 100%; color: var(--ink); }
+  .foto { position: absolute; inset: 0; background: linear-gradient(135deg, #8a6a4a, #c9b49a 45%, #6b4b33); }
+  .foto + .dentro { color: var(--chiaro); }
+  .nastro { position: absolute; left: 50%; top: 50%; translate: -50% -50%; rotate: -90deg;
+    font-family: 'Logotipo', sans-serif; font-size: calc(var(--q) * 2.6); line-height: 1; white-space: nowrap; }
+</style>
+</head>
+<body>
+<div class="tavolo"><div class="mondo" id="mondo"></div></div>
+
+<header>
+  <button data-v="oggi">0 · Oggi</button>
+  <button data-v="secco" aria-pressed="true">A · Secco</button>
+  <button data-v="rimbalzo">B · Rimbalzo</button>
+  <button data-v="raddrizza">C · Si raddrizza</button>
+  <span class="sep"></span>
+  <button id="alto" aria-pressed="false">Più in alto</button>
+  <button id="lento" aria-pressed="false">Lento ×4</button>
+  <button id="via">↻ Riparti</button>
+</header>
+<p class="nota" id="nota"></p>
+
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+<script>
+// le celle della home a 1440 px: posizione e misura in quadretti dal centro del tavolo (lib/tavolo.ts, pack)
+const CELLE = [
+  { id: 'logo',     x: -4,  y: -4,  w: 8,  h: 8,  senzaFilo: true, html: `<svg class="r" viewBox="0 0 618.181818 618.181818"><g fill="currentColor">
+    <path d="M0,0 L236.363636,0 L236.363636,618.181818 L0,618.181818 Z"/><path d="M45.454545,0 L354.545455,618.181818 L618.181818,618.181818 L309.090909,0 Z"/>
+    <path d="M219.007696,0 L418.594757,0 C471.528537,0 522.294287,21.027862 559.724121,58.457697 C597.153956,95.887531 618.181818,146.653281 618.181818,199.587061 C618.181818,238.129972 607.02181,275.848432 586.049868,308.186236 C565.077926,340.524041 535.191248,366.097749 500,381.818182 C474.386213,393.260226 446.648036,399.174122 418.594757,399.174122 C365.660977,399.174122 314.895227,378.14626 277.465393,340.716425 C240.035558,303.286591 219.007696,252.520841 219.007696,199.587061 Z"/></g></svg>` },
+  { id: 'nome',     x: -10, y: -9,  w: 20, h: 4,  html: '<div class="dentro"><span class="mono">02</span><div class="logo">ROBERTO</div></div>' },
+  { id: 'intro',    x: -21, y: -4,  w: 16, h: 10, html: '<div class="dentro"><span class="mono">03 · Graphic designer · dal 2018</span><div class="tit">Progetto identità visive e punti di contatto fisici e digitali.</div></div>' },
+  { id: 'kiale',    x: 5,   y: -4,  w: 16, h: 12, html: '<div class="foto"></div><div class="dentro"><span class="mono">04</span><span>Kiale food service</span></div>' },
+  { id: 'archivio', x: -4,  y: 5,   w: 8,  h: 8,  html: '<div class="dentro"><span class="mono">05</span><span class="big">14</span><span class="mono">Progetti in archivio</span></div>' },
+  { id: 'bio',      x: -13, y: 7,   w: 8,  h: 8,  rossa: true, html: '<div class="dentro"><span class="mono">06 · Chi sono</span><span class="tit">Bio</span></div>' },
+  { id: 'tag',      x: -8,  y: -18, w: 16, h: 8,  html: '<div class="dentro"><span class="mono">07 · Tag / 09</span><span>Logo · Branding · Print · Web · Imprese</span></div>' },
+  { id: 'metodo',   x: -27, y: -13, w: 16, h: 8,  html: '<div class="dentro"><span class="mono">08</span><span class="tit">Essenziale, accessibile, chiara.</span></div>' },
+  { id: 'extra',    x: 11,  y: -13, w: 8,  h: 8,  html: '<div class="dentro"><span class="mono">09</span><span class="big">06</span><span class="mono">Celle extra</span></div>' },
+  { id: 'contatti', x: 5,   y: 9,   w: 12, h: 8,  html: '<div class="dentro"><span class="mono">10 · Nuovi progetti</span><span class="tit">Scrivimi_</span></div>' },
+  { id: 'nastro',   x: 22,  y: -12, w: 4,  h: 24, html: '<div><span class="nastro">ROBERTO · PROGETTAZIONE VISIVA</span></div>' },
+  { id: 'recapiti', x: -31, y: 7,   w: 16, h: 8,  rossa: true, html: '<div class="dentro"><span>info@robertotanasi.it</span><span class="mono">P.IVA · Portfolio modulare</span></div>' },
+];
+
+const NOTE = {
+  oggi: 'Com’è oggi: filo, poi fondo e contenuto sfumano. Niente ombra.',
+  secco: 'Il filo si disegna con la cella già sollevata; finito il giro compaiono fondo e ombra, poi cade di colpo e l’ombra rientra (accelera fino al tavolo).',
+  rimbalzo: 'Come A, ma toccato il tavolo si risolleva appena e si riposa: un piccolo rimbalzo di carta.',
+  raddrizza: 'Sollevata e un po’ storta (±2,5°, a caso): cadendo si raddrizza con la stessa oscillazione di quando la lasci dopo averla spostata.',
+};
+
+const mondo = document.getElementById('mondo');
+const q = () => parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--q'));
+let variante = 'secco', alto = false, tl;
+
+// ordine dell'intro: per distanza dal marchio (come --i in scripts/tavolo)
+CELLE.forEach(c => c.d = Math.hypot(c.x + c.w / 2, c.y + c.h / 2));
+[...CELLE].sort((a, b) => a.d - b.d).forEach((c, i) => c.i = i);
+
+function costruisci() {
+  const Q = q();
+  mondo.innerHTML = '';
+  for (const c of CELLE) {
+    const W = c.w * Q, H = c.h * Q;
+    const el = document.createElement('div');
+    el.className = 'pezzo' + (c.rossa ? ' rossa' : '');
+    el.style.cssText = `left:${c.x * Q}px;top:${c.y * Q}px;width:${W}px;height:${H}px`;
+    // il filo parte da un vertice a caso e fa il giro in senso orario (data-from nel sito)
+    const v = [[0.5, 0.5], [W - 0.5, 0.5], [W - 0.5, H - 0.5], [0.5, H - 0.5]];
+    const k = Math.floor(Math.random() * 4);
+    const giro = [0, 1, 2, 3, 4].map(n => v[(k + n) % 4]);
+    el.innerHTML = `<div class="ombra"></div><div class="cella"><div class="fondo"></div>${c.html}</div>` +
+      (c.senzaFilo ? '' : `<svg class="filo" viewBox="0 0 ${W} ${H}"><path pathLength="1" stroke-dasharray="1 1" d="M${giro.map(p => p.join(' ')).join('L')}" /></svg>`);
+    mondo.append(el);
+    c.el = el;
+  }
+}
+
+function intro() {
+  tl?.kill();
+  costruisci();
+  const Q = q();
+  const sollevata = variante !== 'oggi';
+  const S = alto ? 1.07 : 1.035, D = Q * (alto ? 1 : 0.55);
+  tl = gsap.timeline();
+  for (const c of CELLE) {
+    const { el } = c;
+    const ombra = el.querySelector('.ombra'), cella = el.querySelector('.cella'), filo = el.querySelector('.filo path');
+    const fondo = cella.querySelector('.fondo'), resto = [...cella.children].filter(x => x !== fondo);
+    // filo a velocità costante: 17,5 ms per quadretto di perimetro, tetto 900 ms (global.css + Tavolo.astro)
+    const td = Math.min(2 * (c.w + c.h) * 0.0175, 0.9);
+    const t0 = c.i * 0.03, tf = t0 + td;
+    const storta = variante === 'raddrizza' ? gsap.utils.random(-2.5, 2.5) : 0;
+
+    gsap.set(el, { transformOrigin: '50% 50%', scale: sollevata ? S : 1, rotation: storta });
+    gsap.set([fondo, ...resto], { opacity: 0 });
+    gsap.set(ombra, { x: sollevata ? D : 0, y: sollevata ? D : 0, visibility: 'hidden' });
+    if (filo) tl.fromTo(filo, { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: td, ease: 'power3.inOut' }, t0);
+    else tl.to({}, { duration: td }, t0);
+
+    if (!sollevata) {
+      tl.to([fondo, ...resto], { opacity: 1, duration: 0.4, ease: 'power3.out' }, tf);
+      continue;
+    }
+    // fondo pieno in fretta, così l'ombra non si vede attraverso la cella; poi l'ombra
+    tl.to(fondo, { opacity: 1, duration: 0.14, ease: 'power1.out' }, tf);
+    tl.set(ombra, { visibility: 'visible' }, tf + 0.14);
+    tl.to(resto, { opacity: 1, duration: 0.3, ease: 'power3.out' }, tf + 0.08);
+    const giu = tf + 0.14 + 0.12;  // un attimo sospesa
+    const cade = alto ? 0.24 : 0.18;
+    if (variante === 'secco') {
+      tl.to(el, { scale: 1, duration: cade, ease: 'power2.in' }, giu);
+      tl.to(ombra, { x: 0, y: 0, duration: cade, ease: 'power2.in' }, giu);
+    } else if (variante === 'rimbalzo') {
+      const r = (S - 1) * 0.22;
+      tl.to(el, { scale: 1, duration: cade, ease: 'power2.in' }, giu)
+        .to(el, { scale: 1 + r, duration: 0.09, ease: 'power1.out' }, giu + cade)
+        .to(el, { scale: 1, duration: 0.11, ease: 'power1.in' }, giu + cade + 0.09);
+      tl.to(ombra, { x: 0, y: 0, duration: cade, ease: 'power2.in' }, giu)
+        .to(ombra, { x: D * 0.22, y: D * 0.22, duration: 0.09, ease: 'power1.out' }, giu + cade)
+        .to(ombra, { x: 0, y: 0, duration: 0.11, ease: 'power1.in' }, giu + cade + 0.09);
+    } else {
+      // come lascia() in scripts/tavolo/pezzi.ts: si posa in 180 ms e si raddrizza con l'elastico
+      tl.to(el, { scale: 1, duration: cade, ease: 'power2.inOut' }, giu);
+      tl.to(ombra, { x: 0, y: 0, duration: cade, ease: 'power2.inOut' }, giu);
+      tl.to(el, { rotation: 0, duration: 0.7, ease: 'elastic.out(1, .55)' }, giu);
+    }
+  }
+}
+
+// ---------- comandi ----------
+const nota = document.getElementById('nota');
+const bottoni = document.querySelectorAll('[data-v]');
+function scegli(v) {
+  variante = v;
+  bottoni.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === v)));
+  nota.textContent = NOTE[v];
+  intro();
+}
+bottoni.forEach(b => b.onclick = () => scegli(b.dataset.v));
+document.getElementById('via').onclick = intro;
+const bAlto = document.getElementById('alto');
+bAlto.onclick = () => { alto = !alto; bAlto.setAttribute('aria-pressed', String(alto)); intro(); };
+const bLento = document.getElementById('lento');
+bLento.onclick = () => {
+  const l = bLento.getAttribute('aria-pressed') !== 'true';
+  bLento.setAttribute('aria-pressed', String(l));
+  gsap.globalTimeline.timeScale(l ? 0.25 : 1);
+  intro();
+};
+let misura = innerWidth;
+addEventListener('resize', () => { if ((innerWidth < 900) !== (misura < 900)) { misura = innerWidth; intro(); } });
+// il logotipo si scarica solo quando serve: lo chiedo prima, se no il primo giro esce col font di ripiego
+Promise.all([document.fonts.load('1em Logotipo'), document.fonts.ready]).finally(() => scegli('secco'));
+</script>
+</body>
+</html>

@@ -4,47 +4,10 @@
  * rimaste scivolano al nuovo posto (solo transform: fluido anche su Firefox per Android, dove le View
  * Transitions che cambiano misura scattano), quelle nuove entrano sfumando.
  * Un archivio per foglio: nella pila dei fogli (scripts/foglio) ce ne possono essere due, ognuno col suo filtro.
- * Nel foglio i buchi lasciano vedere il retino; in una griglia con i vuoti (Grid.astro) si ricalcolano qui.
  */
 import { gsap } from 'gsap';
 import { Flip } from 'gsap/Flip';
-import { BREAKPOINTS, COLS, findVoids } from '../lib/grid';
 import { pad2 } from '../lib/format';
-import { fillSheet } from './fill';
-
-type Bp = keyof typeof COLS;
-
-// stesse soglie delle media query di global.css
-const MQ = {
-  sm: `(max-width: ${BREAKPOINTS.md - 1}px)`,
-  md: `(max-width: ${BREAKPOINTS.lg - 1}px)`,
-};
-
-const breakpoint = (): Bp =>
-  matchMedia(MQ.sm).matches ? 'sm' : matchMedia(MQ.md).matches ? 'md' : 'lg';
-
-/** Stesso calcolo del build, sulle caselle visibili adesso */
-function layoutVoids(grid: HTMLElement) {
-  // nel foglio sopra il tavolo i buchi lasciano vedere il retino: niente vuoti
-  if (grid.hasAttribute('data-senza-vuoti')) return;
-  grid.querySelectorAll(':scope > .void:not(.void--fill)').forEach(v => v.remove());
-  const bp = breakpoint();
-  const suffix = bp === 'lg' ? '' : `-${bp}`;
-  const spans = [...grid.querySelectorAll<HTMLElement>(':scope > .cell')]
-    .filter(c => !c.hidden && !c.classList.contains(`hide-${bp}`))
-    .map(c => ({
-      w: Number(c.style.getPropertyValue(`--w${suffix}`)),
-      h: Number(c.style.getPropertyValue(`--h${suffix}`)),
-    }));
-  for (const v of findVoids(spans, COLS[bp])) {
-    const el = document.createElement('div');
-    el.className = 'void void--live';
-    el.setAttribute('aria-hidden', 'true');
-    el.style.gridArea = `${v.row} / ${v.col} / span ${v.h} / span ${v.w}`;
-    grid.append(el);
-  }
-  fillSheet();  // la griglia ha cambiato altezza
-}
 
 export function initArchive(signal: AbortSignal) {
   document.querySelectorAll<HTMLElement>('.grid[data-filterable]').forEach(grid => initGrid(grid, signal));
@@ -74,7 +37,6 @@ function initGrid(grid: HTMLElement, signal: AbortSignal) {
       cell.hidden = !on;
       if (on) n++;
     }
-    layoutVoids(grid);
     for (const b of buttons) b.setAttribute('aria-pressed', String(b.dataset.tag === tag));
     if (count) count.textContent = pad2(n);
     if (noun) noun.textContent = n === 1 ? 'Progetto' : 'Progetti';
@@ -136,9 +98,4 @@ function initGrid(grid: HTMLElement, signal: AbortSignal) {
     // ricliccare il tag attivo lo azzera
     apply(tag && tag === active ? '' : tag);
   }, { signal });
-
-  // cambio di breakpoint: colonne diverse, vuoti diversi
-  for (const q of Object.values(MQ)) {
-    matchMedia(q).addEventListener('change', () => layoutVoids(grid), { signal });
-  }
 }

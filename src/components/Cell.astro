@@ -45,7 +45,7 @@ const linkAttrs = href
   {...attrs}
 >
   {showLabel && <span class="cell__label mono" aria-hidden="true"><span>{n}</span></span>}
-  {href && <span class="cell__go" aria-hidden="true" data-part="go"><span><Arrow /></span></span>}
-  {!href && hero && <a href="/" class="cell__go" aria-label="Chiudi e torna al tavolo" data-close data-part="go"><span><Close /></span></a>}
+  {href && <span class="cell__go" aria-hidden="true"><span><Arrow /></span></span>}
+  {!href && hero && <a href="/" class="cell__go" aria-label="Chiudi e torna al tavolo" data-close><span><Close /></span></a>}
   <slot />
 </Tag>

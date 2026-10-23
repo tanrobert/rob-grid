@@ -9,8 +9,8 @@ const { total } = Astro.props;
 
 <div class="head">
   <h1 class="sr-only">Archivio progetti</h1>
-  <p class="value" style={`--len:${pad2(total).length}`} data-count data-part="num">{pad2(total)}</p>
-  <p class="mono caption" aria-live="polite" data-part="note">
+  <p class="value" style={`--len:${pad2(total).length}`} data-count>{pad2(total)}</p>
+  <p class="mono caption" aria-live="polite">
     <span data-count-noun>{total === 1 ? 'Progetto' : 'Progetti'}</span><span>Tag: <b data-current>tutti</b></span>
   </p>
 </div>
@@ -22,7 +22,6 @@ const { total } = Astro.props;
     padding: var(--pad-label) var(--pad) var(--pad);
   }
   .value {
-    /* largo quanto il testo: nell'espansione il numero cresce senza deformarsi (morph.ts) */
     align-self: flex-start;
     font-weight: 500;
     /* come StatCell: con 3 cifre il numero si stringe per restare nella cella */
