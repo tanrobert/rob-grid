@@ -11,6 +11,8 @@ interface Props {
   tavolo?: boolean;
   /** la pagina è il tavolo con un foglio aperto sopra (components/foglio): scorre il foglio */
   foglio?: boolean;
+  /** pagina vera nel nuovo stile (components/foglio con `pagina`, oggi solo la 404): scorre la pagina */
+  pagina?: boolean;
 }
 
 const {
@@ -19,13 +21,14 @@ const {
   canonical: withCanonical = true,
   tavolo = false,
   foglio = false,
+  pagina = false,
 } = Astro.props;
 
 const canonical = new URL(Astro.url.pathname, Astro.site);
 ---
 
 <!doctype html>
-<html lang="it" class:list={[tavolo && 'is-tavolo', foglio && 'ha-foglio']}>
+<html lang="it" class:list={[tavolo && 'is-tavolo', foglio && 'ha-foglio', pagina && 'ha-pagina']}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />

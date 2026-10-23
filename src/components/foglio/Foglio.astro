@@ -3,6 +3,8 @@
 // sugli stessi quadretti del tavolo (una cella di w unità è larga 4w − 1 quadretti, a un quadretto l'una
 // dall'altra), sopra il retino che lascia intravedere il tavolo. Il foglio scorre con la pagina, il tavolo
 // resta fermo dietro. Apertura e chiusura: scripts/foglio. In fondo i recapiti, come sul tavolo.
+// Con `pagina` è una pagina vera (oggi solo la 404): niente tavolo né retino, il foglio sta sulla carta a quadretti
+// e scripts/foglio non lo tocca (niente data-foglio).
 import type { Cell } from '../../data/grid-types';
 import Grid from '../Grid.astro';
 
@@ -10,13 +12,15 @@ interface Props {
   cells: Cell[];
   /** Archivio: i progetti ricevono data-tags per i filtri */
   filterable?: boolean;
+  /** pagina vera, da usare con la prop `pagina` del Layout */
+  pagina?: boolean;
 }
-const { cells, filterable = false } = Astro.props;
+const { cells, filterable = false, pagina = false } = Astro.props;
 const recapiti: Cell = { id: 'recapiti', type: 'contatti', w: 4, h: 2, tone: 'red' };
 ---
 
-<div class="retino" data-retino aria-hidden="true"></div>
-<main id="main" class="foglio" data-foglio>
+{!pagina && <div class="retino" data-retino aria-hidden="true"></div>}
+<main id="main" class:list={['foglio', pagina && 'foglio--pagina']} data-foglio={pagina ? undefined : ''}>
   <slot />
   <Grid cells={[...cells, recapiti]} filterable={filterable} vuoti={false} />
 </main>
@@ -25,7 +29,7 @@ const recapiti: Cell = { id: 'recapiti', type: 'contatti', w: 4, h: 2, tone: 're
   /* quadretto del foglio: il più grande con cui le colonne della pagina (12, 8, 4) stanno nella finestra con un
      quadretto di margine per lato, fino a 36px (≈ la vecchia cella più grande). Passo della griglia = 4 quadretti:
      ci si allineano anche il righello e la ghiera della cella registro (--ruler-step) */
-  :global(html.ha-foglio body) {
+  :global(html:is(.ha-foglio, .ha-pagina) body) {
     --qf: round(down, min(100vw / (var(--cols) * 4 + 1), 36px), 1px);
     --ruler-step: calc(var(--qf) * 4);
   }
@@ -39,6 +43,30 @@ const recapiti: Cell = { id: 'recapiti', type: 'contatti', w: 4, h: 2, tone: 're
   }
   /* niente crocini della griglia: li fa il retino */
   .foglio :global(.grid::before) { display: none; }
+
+  /* pagina vera: la carta del tavolo (quadretti e crocini ogni 4) agganciata al foglio, che riempie almeno la
+     finestra. La carta sborda ai lati di un numero intero di moduli: le linee cadono sui bordi delle celle e i
+     crocini sui moduli, senza calcoli sulla larghezza della finestra (lo scroll orizzontale lo taglia html) */
+  .foglio--pagina { min-height: 100dvh; isolation: isolate; }
+  .foglio--pagina::before, .foglio--pagina::after {
+    content: '';
+    position: absolute; z-index: -1;
+    top: 0; bottom: 0; left: calc(var(--qf) * -400); right: calc(var(--qf) * -400);
+    pointer-events: none;
+  }
+  .foglio--pagina::before {
+    --carta-ink: color-mix(in srgb, var(--inchiostro) 22%, transparent);
+    background-image:
+      linear-gradient(to right, var(--carta-ink) var(--line-dp), transparent var(--line-dp)),
+      linear-gradient(to bottom, var(--carta-ink) var(--line-dp), transparent var(--line-dp));
+    background-size: var(--qf) var(--qf);
+  }
+  .foglio--pagina::after {
+    background: var(--inchiostro);
+    mask: var(--crocini-forma) 0 0 / calc(var(--qf) * 4) calc(var(--qf) * 4) repeat;
+  }
+  /* la cella d'errore ha i suoi quadretti (global.css): qui sono quelli della carta, allineati */
+  .foglio--pagina :global(.cell--error) { --carta-step: var(--qf); background-position: 0 0; }
 
   /* carta piena con un foro ogni 4px: si intravede il tavolo, ma senza mezze tinte (niente rosa) */
   .retino {

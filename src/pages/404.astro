@@ -1,19 +1,16 @@
 ---
 import type { Cell } from '../data/grid-types';
 import Layout from '../layouts/Layout.astro';
-import Grid from '../components/Grid.astro';
-import SiteFooter from '../components/SiteFooter.astro';
+import Foglio from '../components/foglio/Foglio.astro';
 import { site, pageTitle } from '../data/site';
 
-// Una sola cella, a tutta larghezza, con la carta a quadretti dei vuoti. Vercel serve dist/404.html da solo.
+// Pagina vera (non un foglio sopra il tavolo): una sola cella a tutta larghezza sulla carta a quadretti, sotto i
+// recapiti. Vercel serve dist/404.html da solo.
 const cells: Cell[] = [
   { id: 'errore', type: 'error', w: 12, h: 4, sm: { h: 5 }, code: '404', title: 'Pagina non trovata' },
 ];
 ---
 
-<Layout canonical={false} titolo={pageTitle('Pagina non trovata')} descrizione={`La pagina che cercavi non esiste o è stata spostata. Torna all'indice del portfolio di ${site.name}, graphic designer.`}>
-  <main id="main" class="sheet">
-    <Grid cells={cells} />
-    <SiteFooter />
-  </main>
+<Layout pagina canonical={false} titolo={pageTitle('Pagina non trovata')} descrizione={`La pagina che cercavi non esiste o è stata spostata. Torna all'indice del portfolio di ${site.name}, graphic designer.`}>
+  <Foglio pagina cells={cells} />
 </Layout>

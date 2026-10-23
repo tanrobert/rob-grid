@@ -14,15 +14,15 @@ src/
   content.config.ts         schema dei progetti (collection `progetti`), con le celle ammesse nelle pagine progetto
   content/progetti/<slug>/  un progetto per cartella: index.md (dati + testo), copertina.png|jpg, materiali
   layouts/Layout.astro      <head> (niente ClientRouter dalla fase 3a: ogni pagina è un caricamento vero), script inline (intro solo se non si arriva dal sito, `in-arrivo`, --dp, luce), import degli script; prop `tavolo` (home) e `foglio`
-  pages/                    index (il tavolo) · archivio · info · extra · progetti/[slug] = tavolo (`<Tavolo sotto>`, inerte, senza h1) + foglio aperto (`<Foglio>`) · 404 (griglia e footer di prima, una cella `error`)
+  pages/                    index (il tavolo) · archivio · info · extra · progetti/[slug] = tavolo (`<Tavolo sotto>`, inerte, senza h1) + foglio aperto (`<Foglio>`) · 404 (pagina vera: `<Foglio pagina>` sulla carta a quadretti, una cella `error` e i recapiti)
   components/
     Grid.astro              griglia delle pagine: le celle + i "vuoti" per ogni breakpoint
-    foglio/Foglio.astro     FOGLIO APERTO SOPRA IL TAVOLO: retino fisso (fori ogni 4px) + <main> con la griglia della pagina sui quadretti (--qf, cella = 4w−1 quadretti, gap 1 quadretto, niente vuoti) + cella `recapiti` in fondo. Scorre con la pagina, il tavolo resta fermo
+    foglio/Foglio.astro     (con `pagina` + prop `pagina` del Layout: pagina vera sulla carta del tavolo, senza retino né data-foglio, oggi solo la 404) FOGLIO APERTO SOPRA IL TAVOLO: retino fisso (fori ogni 4px) + <main> con la griglia della pagina sui quadretti (--qf, cella = 4w−1 quadretti, gap 1 quadretto, niente vuoti) + cella `recapiti` in fondo. Scorre con la pagina, il tavolo resta fermo
     CellContent.astro       una cella completa (guscio + contenuto del suo tipo): lo usano griglia e tavolo
     tavolo/Tavolo.astro     TAVOLO DELLA HOME: carta quadrettata, celle in involucri .pezzo (posizione, ombra a retino), Riordina/Torna al centro
     Cell.astro              guscio di ogni casella: <a> se cliccabile, <div> altrimenti; linguetta + freccia/✕ (solo testo, senza riquadro).
                             Tutte le hero sono celle della griglia con `heroOf`: stesso tipo della cella di partenza, al doppio (progetti: forma ×2; info, extra, archivio: 2×2 → 4×4, su mobile 4×2)
-    SiteFooter.astro        footer, ormai solo nella 404 (tavolo e fogli hanno la cella `recapiti`, ContattiCell)
+    SiteFooter.astro        footer di prima, non più usato (tutte le pagine hanno la cella `recapiti`, ContattiCell): via nella fase 7
     SvgAsset.astro          rende un SVG dal registro
     TagButtons.astro        pulsanti filtro (casella tags + barra mobile dell'archivio)
     cells/*Cell.astro       un componente per ogni tipo di cella
@@ -52,7 +52,7 @@ src/
     morph.ts                NON PIÙ IMPORTATO dalla fase 3a (espansione con le View Transitions del ClientRouter); dalla 3b non serve nemmeno `photoReady`. Si cancella nella fase 7
     foglio/index.ts         PILA DI FOGLI SOPRA IL TAVOLO. Ogni voce della cronologia ha { livello, origine } (tavolo = −1, link diretto = 0); `segui()` porta la pila al livello dell'indirizzo un passo alla volta (sopra → scarica, `monta` nascosto in cima ed `entra`; sotto → `esce`, i livelli in mezzo via subito; stesso livello → sostituisce). Clic su una cella del tavolo o del foglio in cima → pushState; `data-replace` (prec/succ) → replaceState. `entra`: quello che c'è sotto sfuma (il foglio sotto si nasconde col suo scroll), la copia della hero (`currentSrc`) vola dalla cella cliccata. `esce`: il contrario, verso la cella d'origine (nel foglio sotto o sul tavolo). ✕, Esc, clic sulla hero o fuori = un livello (history.back se aperto qui); celle "Indice" = tutta la pila (history.go). id `main` al foglio in cima
     foglio/carica.ts        pagine dei fogli scaricate (fetch + DOMParser, cache per percorso, foto della hero in anticipo), anticipate quando il browser è libero e al passaggio del puntatore; `stili()` aggiunge i <style>/<link> della pagina che mancano (ogni pagina ha i suoi inline). Se lo scaricamento fallisce: caricamento vero
-    fill.ts                 (solo 404) pagine corte: il foglio è alto almeno quanto la finestra, sotto la griglia un vuoto a righe intere (.void--fill) e il footer si allunga del resto di riga (.sheet.is-corta). Al caricamento, al resize e dopo i filtri
+    fill.ts                 (non più usato dalla fase 6, via nella fase 7) pagine corte: il foglio è alto almeno quanto la finestra, sotto la griglia un vuoto a righe intere (.void--fill) e il footer si allunga del resto di riga (.sheet.is-corta). Al caricamento, al resize e dopo i filtri
     ruler.ts                righello al posto della scrollbar: indicatore + percentuale, trascinamento e click
     globe.ts                casella terra: giro d'ingresso, tempo reale, trascinamento e ritorno (import dinamico da cells.ts)
     ink.ts                  interruttore della luce: luce spenta = rosso e bianco scambiati (data-inchiostro="bianco", localStorage), cerchio dall'icona

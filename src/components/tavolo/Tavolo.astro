@@ -132,7 +132,7 @@ const projects = cells.filter(c => c.type === 'project').length;
     content: '';
     position: absolute; inset: 0;
     background: var(--inchiostro);
-    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='5' height='1'/%3E%3Crect width='1' height='5'/%3E%3Crect x='100%25' width='4' height='1' transform='translate(-4 0)'/%3E%3Crect y='100%25' width='1' height='4' transform='translate(0 -4)'/%3E%3C/svg%3E") 0 0 / var(--modulo) var(--modulo) repeat;
+    mask: var(--crocini-forma) 0 0 / var(--modulo) var(--modulo) repeat;
   }
   /* intro: la carta compare a giri quadrati dal centro del tavolo (--ox, --oy: lo scrive scripts/tavolo/vista.ts),
      un modulo per giro (o più, --passo-giro, se la finestra è grande). Stessa maschera dei crocini delle pagine
