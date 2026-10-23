@@ -72,6 +72,8 @@ const projects = cells.filter(c => c.type === 'project').length;
   </div>
 </Radice>
 
+{/* ROBERTO piccolo in alto a sinistra: solo segno (il nome lo dice già la cella `nome`) */}
+<span class="firma logotipo" aria-hidden="true">Roberto</span>
 <div class="attrezzi" role="group" aria-label="Tavolo" data-attrezzi hidden>
   {/* "Cancella tutto" c'è solo quando ci sono segni: spento sarebbe un rosso a metà (rosa) */}
   <button type="button" class="mono" data-cancella hidden>Cancella tutto</button>
@@ -217,9 +219,10 @@ const projects = cells.filter(c => c.type === 'project').length;
     :global(.is-intro) :is(.pezzo, .pezzo__ombra) { animation: none; }
   }
 
+  /* i bottoni in basso a destra, a filo del bordo (con la stessa distanza di ROBERTO in alto a sinistra) */
   .attrezzi {
     position: fixed; z-index: 40;
-    top: max(var(--gap), env(safe-area-inset-top));
+    bottom: max(var(--gap), env(safe-area-inset-bottom));
     right: max(var(--gap), env(safe-area-inset-right));
     /* sul telefono, con "Cancella tutto", vanno a capo allineati a destra */
     left: max(var(--gap), env(safe-area-inset-left));
@@ -228,8 +231,17 @@ const projects = cells.filter(c => c.type === 'project').length;
   }
   .attrezzi > * { pointer-events: auto; }
   .attrezzi[hidden], .attrezzi [hidden] { display: none; }
+  /* ROBERTO piccolo (maiuscole ~12px) in alto a sinistra. Non si prende: sotto si trascina il tavolo */
+  .firma {
+    position: fixed; z-index: 40;
+    top: max(var(--gap), env(safe-area-inset-top));
+    left: max(var(--gap), env(safe-area-inset-left));
+    font-size: 18px;
+    color: var(--inchiostro);
+    pointer-events: none;
+  }
   /* col foglio aperto i comandi del tavolo non servono */
-  :global(html.ha-foglio:not(.is-tavolo)) .attrezzi { display: none; }
+  :global(html.ha-foglio:not(.is-tavolo)) :is(.attrezzi, .firma) { display: none; }
   .attrezzi button {
     appearance: none; margin: 0;
     padding: 10px 12px;

@@ -38,12 +38,6 @@ function projectCell(id: string, slug: string): Cell {
 export const tavolo: Cell[] = [
   // al centro: la R è l'interruttore Inverti, premuta scambia rosso e bianco del sito
   { id: 'logo',     type: 'svg',      w: 2, h: 2, svg: 'logo-r', fit: 'bleed', label: false, frame: false, ink: true },
-  // primo easter egg: sotto la R, dietro la sua asta, il marchio di Woberto (la R girata, nera). Si scopre
-  // spostando la R; premuto cambia la tinta del sito (scripts/ink.ts)
-  {
-    id: 'woberto', type: 'svg', w: 1, h: 1, q: { w: 2, h: 2 }, svg: 'logo-r', fit: 'bleed', label: false, frame: false,
-    tinta: true, sotto: { id: 'logo', x: 1, y: 1 },
-  },
   { id: 'nome',     type: 'logotipo', w: 5, h: 1, q: { w: 20, h: 4 } },
   {
     id: 'intro', type: 'text', w: 4, h: 3, q: { w: 16, h: 10 }, as: 'h1', size: 'l',
@@ -72,4 +66,11 @@ export const tavolo: Cell[] = [
   { id: 'nastro',   type: 'marquee',  w: 1, h: 6, text: 'Roberto · progettazione visiva ·', speed: 155, ruotato: true },
   // il footer di oggi, come cella: email, luogo, P.IVA, versione
   { id: 'recapiti', type: 'contatti', w: 4, h: 2, tone: 'red' },
+  // primo easter egg: sotto la R, dietro la sua asta, il marchio di Woberto (la R girata, nera). Si scopre
+  // spostando la R; premuto porta il nero (scripts/ink.ts). Ultimo nell'elenco: non sposta i numeri delle
+  // altre celle, ed è l'ultimo nella lettura
+  {
+    id: 'woberto', type: 'svg', w: 1, h: 1, q: { w: 2, h: 2 }, svg: 'logo-r', fit: 'bleed', label: false, frame: false,
+    tinta: true, sotto: { id: 'logo', x: 1, y: 1 },
+  },
 ];
