@@ -142,11 +142,7 @@ console.log(`${browser} — ${BASE}`);
   const s4 = await state(p);
   check(grid(s4) === grid(s3) && s4.q === s3.q && Math.abs(s4.ox - s3.ox) < 1, 'ricarica: tavolo com\'era');
 
-  // torna al centro, poi riordina: la disposizione di partenza
-  await p.click('[data-centro]');
-  await sleep(1000);
-  const s5 = await state(p);
-  check(Math.abs(s5.ox - Math.round(s5.vw / 2)) < 1 && Math.abs(s5.oy - Math.round(s5.vh / 2)) < 1, 'torna al centro');
+  // riordina: la disposizione di partenza ("Torna al centro" tolto per ora, Tavolo.astro)
   // al quadretto di partenza, se no la disposizione si fa per lo zoom di adesso
   await forget(p);
   await p.reload({ waitUntil: 'networkidle0' });

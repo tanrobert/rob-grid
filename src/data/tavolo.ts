@@ -40,12 +40,12 @@ export const tavolo: Cell[] = [
   { id: 'logo',     type: 'svg',      w: 2, h: 2, svg: 'logo-r', fit: 'bleed', label: false, frame: false, ink: true },
   { id: 'nome',     type: 'logotipo', w: 5, h: 1, q: { w: 20, h: 4 } },
   {
-    id: 'intro', type: 'text', w: 4, h: 3, q: { w: 16, h: 10 }, as: 'h1', size: 'l',
+    id: 'intro', type: 'text', w: 5, h: 3, q: { w: 20, h: 10 }, as: 'h1', size: 'l',
     eyebrow: `Graphic designer · dal ${firstYear}`,
     title: 'Progetto identità visive e punti di contatto fisici e digitali.',
   },
   // progetti sul tavolo: Kiale, quello su cui si lavora, ed Eurofish col video del mare (il caso più pesante,
-  // tenuto apposta per misurare il tavolo). Gli altri sono in archivio
+  // tenuto apposta per misurare il tavolo). Gli altri progetti del tavolo più in giù, gli altri ancora in archivio
   projectCell('kiale', 'kiale'),
   projectCell('eurofish', 'eurofish'),
   { id: 'archivio', type: 'stat',     w: 2, h: 2, href: '/archivio', value: pad2(projects.length), caption: 'Progetti in archivio', countUp: true },
@@ -61,6 +61,12 @@ export const tavolo: Cell[] = [
     id: 'contatti', type: 'text', w: 3, h: 2, q: { w: 12, h: 8 }, size: 'm', href: '/info',
     eyebrow: 'Nuovi progetti', title: 'Scrivimi_',
   },
+  // dal 25/10/2026 di nuovo Purple Piper, G&A e La Torre Rossa, e Cardogna col video del sito: dopo le celle
+  // che portano in giro (archivio, Bio, tag, extra), così quelle restano attorno al marchio
+  projectCell('purple', 'purple-piper'),
+  projectCell('gea', 'gea'),
+  projectCell('torre', 'la-torre-rossa'),
+  projectCell('cardogna', 'cardogna'),
   // il nastro "Roberto · progettazione visiva" girato in verticale, col font del logotipo. speed = secondi per giro:
   // il testo è lungo ~31 maiuscole, 155s = stessa velocità del vecchio logo (22,5 in 112s)
   { id: 'nastro',   type: 'marquee',  w: 1, h: 6, text: 'Roberto · progettazione visiva ·', speed: 155, ruotato: true },

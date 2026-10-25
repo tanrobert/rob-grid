@@ -8,6 +8,7 @@ import type { Cell } from '../../data/grid-types';
 import CellContent from '../CellContent.astro';
 import { inQuadretti, pack, FINESTRE, Q, versione } from '../../lib/tavolo';
 import { BREAKPOINTS } from '../../lib/grid';
+import { svgs } from '../../data/svgs';
 
 interface Props {
   cells: Cell[];
@@ -40,10 +41,15 @@ const lontano = (i: number) => Math.hypot(centro(i).x - centro(0).x, centro(i).y
 const turni = new Map(cells.map((_, i) => i).sort((a, b) => lontano(a) - lontano(b)).map((i, n) => [i, n]));
 const firstProject = cells.findIndex(c => c.type === 'project');
 const projects = cells.filter(c => c.type === 'project').length;
+/** sagoma dell'ombra: le celle senza filo fatte da un SVG (la R, Woberto) fanno l'ombra del disegno, non del riquadro */
+const sagoma = (c: Cell) => (c.frame === false && c.type === 'svg' ? svgs[c.svg].component.src : undefined);
 ---
 
 <Radice id={sotto ? undefined : 'main'} class="tavolo" data-tavolo data-versione={versione(misure)} inert={sotto} style={`--q-lg:${Q.lg}px;--q-sm:${Q.sm}px`}>
   <div class="tavolo__carta" data-carta aria-hidden="true"></div>
+  {/* bordo del foglio (lib/tavolo.ts, confine): un quadretto di carta liscia, poi solo inchiostro.
+      Bande sopra, sotto, a sinistra, a destra, e il margine */}
+  <div class="tavolo__bordo" data-bordo aria-hidden="true"><div></div><div></div><div></div><div></div><div class="tavolo__margine"></div></div>
   <div class="tavolo__mondo" data-mondo>
     {/* segni della matita sul tavolo (scripts/tavolo/matita.ts): sotto le celle, in quadretti (il gruppo scala con lo zoom) */}
     <svg class="segni segni--tavolo" aria-hidden="true"><g data-segni-tavolo></g></svg>
@@ -59,7 +65,14 @@ const projects = cells.filter(c => c.type === 'project').length;
           data-sotto={cell.sotto ? `${cell.sotto.id} ${cell.sotto.x} ${cell.sotto.y}` : undefined}
           style={`--qw:${w};--qh:${h};--x:${lg.x};--y:${lg.y};--x-md:${md.x};--y-md:${md.y};--x-sm:${sm.x};--y-sm:${sm.y}`}
         >
-          {cell.frame !== false && <div class="pezzo__ombra" data-ombra aria-hidden="true"></div>}
+          {cell.frame !== false ? <div class="pezzo__ombra" data-ombra aria-hidden="true"></div>
+            : sagoma(cell) && (
+              <div class="pezzo__ombra pezzo__ombra--sagoma" data-ombra aria-hidden="true">
+                {/* la maschera sta nel figlio: GSAP sposta il pezzo__ombra, il figlio gira con Woberto.
+                    url tra virgolette: in dev il percorso ha spazi ("WEB ASTRO") e senza la maschera salta (ombra quadrata) */}
+                <div class:list={['ombra__sagoma', { 'ombra__sagoma--girata': cell.type === 'svg' && cell.tinta }]} style={`--sagoma:url("${sagoma(cell)}")`}></div>
+              </div>
+            )}
           <CellContent
             cell={cell} index={i} turno={turni.get(i)} priority={i === firstProject} projects={projects}
             sizes={`(max-width: ${BREAKPOINTS.md - 1}px) ${w * Q.sm}px, ${w * Q.lg}px`}
@@ -86,9 +99,10 @@ const projects = cells.filter(c => c.type === 'project').length;
     Matita
   </button>
   <button type="button" class="mono" data-riordina>Riordina</button>
-  <button type="button" class="mono" data-centro>Torna al centro</button>
-  {/* suono (scripts/suono.ts): spento di base; altoparlante con una ✕ da spento, con le onde da acceso */}
-  <button type="button" class="attrezzi__suono" data-suono aria-pressed="false" aria-label="Suono" title="Accendi il suono">
+  {/* "Torna al centro" tolto per ora (25/10/2026, Roberto; Riordina riporta già la vista al centro). Per rimetterlo:
+      <button type="button" class="mono" data-centro>Torna al centro</button> */}
+  {/* suono (scripts/suono.ts): acceso di base; altoparlante con una ✕ da spento, con le onde da acceso */}
+  <button type="button" class="attrezzi__suono" data-suono aria-pressed="true" aria-label="Suono" title="Spegni il suono">
     <svg class="suono__ico" viewBox="0 0 16 16" aria-hidden="true">
       <path d="M1.5 5.5h3l4-3v11l-4-3h-3z" />
       <path class="suono__no" d="M11 6l4 4M15 6l-4 4" />
@@ -158,6 +172,22 @@ const projects = cells.filter(c => c.type === 'project').length;
     mask-composite: intersect;
     animation: crocini-in 960ms linear backwards;
   }
+  /* fuori dal foglio: bande di inchiostro grandi quanto la finestra, accostate al bordo da scripts/tavolo/vista.ts.
+     Solo col JavaScript (senza, il tavolo non si sposta e il bordo non serve) */
+  .tavolo__bordo { display: none; }
+  .tavolo.is-vivo .tavolo__bordo { display: block; }
+  .tavolo__bordo > div {
+    position: absolute; inset: 0;
+    background: var(--inchiostro);
+    will-change: transform;
+    pointer-events: none;
+  }
+  /* margine: grande quanto la griglia, l'outline copre il quadretto attorno (carta senza linee né crocini) */
+  .tavolo__bordo > .tavolo__margine {
+    inset: auto; left: 0; top: 0;
+    background: none;
+    outline: var(--q) solid var(--bianco);
+  }
   .tavolo__mondo {
     position: absolute; left: 0; top: 0;
     translate: round(50vw, 1px) round(50dvh, 1px);
@@ -193,10 +223,14 @@ const projects = cells.filter(c => c.type === 'project').length;
   /* il marchio senza filo sta direttamente sulla carta */
   .pezzo > :global(.cell--bare) { background: transparent; }
   /* ombra della cella sollevata: retino di puntini pieni (il contrario del retino a fori sotto la cella aperta) */
-  .pezzo__ombra {
+  .pezzo__ombra, .ombra__sagoma {
     position: absolute; inset: 0;
     background: radial-gradient(circle at 2px 2px, var(--inchiostro) 0 1.15px, transparent 1.4px) 0 0 / 4px 4px;
   }
+  /* ombra a sagoma (cella svg senza filo): lo stesso retino, ritagliato dal disegno usato come maschera */
+  .pezzo__ombra--sagoma { background: none; }
+  .ombra__sagoma { mask: var(--sagoma) center / 100% 100% no-repeat; }
+  .ombra__sagoma--girata { rotate: 180deg; }
   /* intro, atterraggio (variante A "Secco" di tools/pages/atterraggio.html): il filo si disegna con la cella
      sollevata come in mano (misure di prendi(), scripts/tavolo/pezzi.ts); a filo finito entra il fondo, poi l'ombra
      (prima si vedrebbe attraverso la cella ancora trasparente), un attimo sospesa e giù di colpo: l'ombra rientra.
@@ -255,6 +289,8 @@ const projects = cells.filter(c => c.type === 'project').length;
      quadretti: con lo zoom il segno cresce insieme alla carta. Ogni cella ha il suo foglio di segni, tagliato
      sul suo bordo ── */
   .segni { position: absolute; inset: 0; width: 100%; height: 100%; overflow: hidden; pointer-events: none; }
+  /* sopra il filo della cella (.cell::after, z 3) e la linguetta (z 2): la matita scrive anche sul bordo */
+  .pezzo > .segni { z-index: 4; }
   .segni--tavolo { inset: auto; left: 0; top: 0; width: 1px; height: 1px; overflow: visible; }
   .segni :global(path) { fill: none; stroke: var(--nero); stroke-width: 0.12; stroke-linecap: round; stroke-linejoin: round; }
   .attrezzi__matita { display: inline-flex; align-items: center; gap: 8px; }

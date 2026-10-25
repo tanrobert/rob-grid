@@ -5,7 +5,7 @@
 import { gsap } from 'gsap';
 import { InertiaPlugin } from 'gsap/InertiaPlugin';
 import { pack } from '../../lib/tavolo';
-import { applica } from './vista';
+import { applica, sulFoglio } from './vista';
 import { T, REDUCED, LANCIO } from './tempi';
 import { suona } from '../suono';
 import type { Tavolo } from './index';
@@ -95,8 +95,10 @@ export function porta(pr: Presa, dx: number, dy: number, vx: number, vy: number)
 
 /** Lascia la cella: se va veloce vola e si ferma da sola, poi si aggancia ai quadretti e si posa */
 export function lascia(t: Tavolo, pr: Presa, vx: number, vy: number) {
-  const { p } = pr, { el } = p, q = t.v.q;
-  const snap = (n: number) => Math.round(n / q) * q;
+  const { p } = pr, { el } = p, q = t.v.q, f = t.v.foglio;
+  // si posa sui quadretti, dentro il foglio: lasciata o lanciata oltre il bordo, scivola dentro
+  const snapX = (n: number) => sulFoglio(Math.round(n / q), p.w, f.x) * q;
+  const snapY = (n: number) => sulFoglio(Math.round(n / q), p.h, f.y) * q;
   // lanciata forte, ricade più forte
   const forza = Math.min(1, Math.hypot(vx, vy) / 2000);
   const land = () => {
@@ -113,12 +115,12 @@ export function lascia(t: Tavolo, pr: Presa, vx: number, vy: number) {
   gsap.to(el, { rotation: 0, skewX: 0, duration: T(0.7), ease: 'elastic.out(1, .55)' });
   if (!REDUCED && Math.hypot(vx, vy) > LANCIO) {
     gsap.to(el, {
-      inertia: { x: { velocity: 'auto', end: snap }, y: { velocity: 'auto', end: snap }, resistance: 1400 },
+      inertia: { x: { velocity: 'auto', end: snapX }, y: { velocity: 'auto', end: snapY }, resistance: 1400 },
       duration: { min: 0.25, max: 0.9 }, onComplete: land,
     });
   } else {
     gsap.to(el, {
-      x: snap(Number(gsap.getProperty(el, 'x'))), y: snap(Number(gsap.getProperty(el, 'y'))),
+      x: snapX(Number(gsap.getProperty(el, 'x'))), y: snapY(Number(gsap.getProperty(el, 'y'))),
       duration: T(0.34), ease: 'back.out(1.8)', onComplete: land,
     });
   }
@@ -128,6 +130,7 @@ export function lascia(t: Tavolo, pr: Presa, vx: number, vy: number) {
 export function riordina(t: Tavolo) {
   const q = t.v.q;
   disponi(t);
+  t.confina();
   t.pezzi.forEach(p => alza(p, zBase(p)));
   t.zTop = 0;
   [...t.pezzi].sort((a, b) => Math.hypot(a.gx, a.gy) - Math.hypot(b.gx, b.gy)).forEach((p, i) => {

@@ -7,8 +7,8 @@
 import { gsap } from 'gsap';
 import { InertiaPlugin } from 'gsap/InertiaPlugin';
 import { BREAKPOINTS } from '../../lib/grid';
-import { Q, PER_UNITA } from '../../lib/tavolo';
-import { creaVista, scala, applica, aPixel, clampQ, ox, oy, type Vista } from './vista';
+import { Q, PER_UNITA, pack, confine } from '../../lib/tavolo';
+import { creaVista, scala, applica, aPixel, clampQ, ox, oy, limita, sulFoglio, type Vista } from './vista';
 import { leggiPezzi, posa, alza, disponi, riordina, type Pezzo } from './pezzi';
 import { initGesti, vai } from './gesti';
 import { leggi, scrivi } from './memoria';
@@ -25,6 +25,8 @@ export interface Tavolo {
   signal: AbortSignal;
   /** la matita (matita.ts), presa o posata */
   matita?: Matita;
+  /** il foglio per la finestra di adesso (lib/tavolo.ts, confine): celle e vista tornano dentro */
+  confina(): void;
   /** tutte le celle al loro posto alla misura del quadretto di adesso */
   posaTutti(): void;
   /** zoom finito: le foto ingrandite si ricaricano più grandi */
@@ -62,6 +64,16 @@ function initTavolo(el: HTMLElement): Tavolo {
 
   const t: Tavolo = {
     v, pezzi, zTop: 0, signal: ac.signal,
+    confina: () => {
+      // in quadretti di base, con la disposizione pensata per questa finestra: lo zoom non cambia il foglio
+      const finestra = { vw: v.vw, vh: v.vh, q: v.vw < BREAKPOINTS.md ? Q.sm : Q.lg };
+      v.foglio = confine(pezzi, pack(pezzi, finestra), finestra);
+      for (const p of pezzi) {
+        p.gx = sulFoglio(p.gx, p.w, v.foglio.x);
+        p.gy = sulFoglio(p.gy, p.h, v.foglio.y);
+      }
+      limita(v);
+    },
     posaTutti: () => pezzi.forEach(p => posa(p, v.q)),
     nitide: () => {
       // `sizes` dice al browser quanto è larga la foto: allo zoom cresce, mai più piccolo di com'era
@@ -95,6 +107,7 @@ function initTavolo(el: HTMLElement): Tavolo {
       t.zTop = Math.max(t.zTop, p.z);
     }
   } else disponi(t);
+  t.confina();
 
   // da qui le posizioni sono quelle di GSAP (transform), non più quelle del build
   el.classList.add('is-vivo');

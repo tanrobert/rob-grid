@@ -10,7 +10,7 @@
  * arriva alla fine di un gesto invece si ferma, se no lasciando una cella si aprirebbe.
  */
 import { gsap } from 'gsap';
-import { applica, aPixel, clampQ, sulTavolo, zoomTo } from './vista';
+import { applica, aPixel, clampQ, sulTavolo, zoomTo, limita, limiti, elastico } from './vista';
 import { prendi, porta, lascia, type Pezzo, type Presa } from './pezzi';
 import { T, REDUCED, LONG, SLOP, QUIETE } from './tempi';
 import type { Posto } from '../../lib/tavolo';
@@ -70,6 +70,7 @@ export function initGesti(t: Tavolo) {
   // ── Zoom ────────────────────────────────────────────────
   const zoomAt = (q: number, fx: number, fy: number) => {
     zoomTo(v, q, fx, fy, sulTavolo(v, fx, fy));
+    limita(v);
     t.posaTutti();
     applica(v);
   };
@@ -85,6 +86,7 @@ export function initGesti(t: Tavolo) {
     p.m = mid(a, b);
     // le dita che si allargano zoomano, quelle che si spostano insieme portano il tavolo
     zoomTo(v, clampQ(p.q0 * Math.hypot(a.x - b.x, a.y - b.y) / p.d0), p.m.x, p.m.y, p.w);
+    limita(v);
     t.posaTutti();
     applica(v);
   };
@@ -158,7 +160,7 @@ export function initGesti(t: Tavolo) {
         capture(g.id);
       }
     }
-    if (g.mode === 'pan') { v.pan.x = g.pan0!.x + dx; v.pan.y = g.pan0!.y + dy; applica(v); }
+    if (g.mode === 'pan') { elastico(v, g.pan0!.x + dx, g.pan0!.y + dy); applica(v); }
     if (g.mode === 'drag') porta(g.presa!, dx, dy, g.vx, g.vy);
   });
 
@@ -175,8 +177,13 @@ export function initGesti(t: Tavolo) {
     fermo = performance.now();
     el.classList.remove('is-panning');
     if (a.mode === 'drag') { lascia(t, a.presa!, a.vx, a.vy); return; }
-    if (REDUCED) { t.salva(); return; }
-    gsap.to(v.pan, { inertia: { x: 'auto', y: 'auto', resistance: 900 }, onUpdate: () => applica(v), onComplete: t.salva });
+    // lasciato oltre il bordo, torna sul foglio; l'inerzia si ferma al bordo
+    const l = limiti(v);
+    if (REDUCED) { limita(v); applica(v); t.salva(); return; }
+    gsap.to(v.pan, {
+      inertia: { x: { velocity: 'auto', min: -l.x, max: l.x }, y: { velocity: 'auto', min: -l.y, max: l.y }, resistance: 900 },
+      onUpdate: () => applica(v), onComplete: t.salva,
+    });
   };
   on('pointerup', end);
   on('pointercancel', end);
@@ -211,6 +218,7 @@ export function initGesti(t: Tavolo) {
     const k = e.deltaMode === 1 ? 16 : 1;
     v.pan.x -= e.deltaX * k;
     v.pan.y -= e.deltaY * k;
+    limita(v);
     applica(v);
     wheelEnd = window.setTimeout(t.salva, 160);
   }, { passive: false });
@@ -224,11 +232,14 @@ export function initGesti(t: Tavolo) {
     vai(t, -(p.gx + p.w / 2) * v.q, -(p.gy + p.h / 2) * v.q, 0.5);
   });
 
-  addEventListener('resize', () => { v.vw = innerWidth; v.vh = innerHeight; applica(v); }, { signal });
+  addEventListener('resize', () => { v.vw = innerWidth; v.vh = innerHeight; t.confina(); t.posaTutti(); applica(v); }, { signal });
 }
 
 /** La vista scivola allo spostamento (x, y) in px */
 export function vai(t: Tavolo, x: number, y: number, duration: number) {
   gsap.killTweensOf(t.v.pan);
+  const l = limiti(t.v);
+  x = Math.min(l.x, Math.max(-l.x, x));
+  y = Math.min(l.y, Math.max(-l.y, y));
   gsap.to(t.v.pan, { x, y, duration: T(duration), ease: 'power3.inOut', onUpdate: () => applica(t.v), onComplete: t.salva });
 }

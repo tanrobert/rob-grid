@@ -15,10 +15,10 @@
      Unico colore di ruolo: tutto ciò che è "rosso" nel sito usa questo, non --rosso */
   --inchiostro: var(--rosso);
 
-  /* un solo font, Schibsted Grotesk variabile (fonts.css), con due ruoli: testo, e numeri per linguette,
-     didascalie, orologio e righello (.mono). Non è monospaziato: dove le cifre cambiano, tabular-nums */
-  --font-testo:  'Schibsted Grotesk', 'Helvetica Neue', Arial, sans-serif;
-  --font-numeri: var(--font-testo);
+  /* due font (fonts.css): Archivo variabile per titoli e testi (in prova dal 25/10/2026 al posto di Schibsted Grotesk),
+     JetBrains Mono per numeri ed etichette: linguette, occhielli, didascalie, orologio, righello (.mono), cifre delle celle stat */
+  --font-testo:  'Archivo', 'Helvetica Neue', Arial, sans-serif;
+  --font-numeri: 'JetBrains Mono', ui-monospace, 'Cascadia Mono', Menlo, monospace;
   /* logotipo ROBERTO (classe .logotipo) */
   --font-logo:   'Roberto Grafica', var(--font-testo);
   /* ROBERTO nel font del logotipo, in em: largo 5,21 (inchiostro, senza i margini delle lettere), maiuscole alte 0,68 */
@@ -179,7 +179,7 @@ p { text-wrap: pretty; }
   font-family: var(--font-numeri);
   font-size: 11px;
   line-height: 1.2;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.02em;  /* JetBrains Mono è già arioso: 0.08em (col font proporzionale) staccava troppo */
   text-transform: uppercase;
   font-variant-numeric: tabular-nums;
 }
@@ -207,7 +207,7 @@ p { text-wrap: pretty; }
 .skip-link {
   position: absolute; top: -100%; left: var(--gap); z-index: 9999;
   padding: 8px 20px; background: var(--inchiostro); color: var(--bianco);
-  font-family: var(--font-numeri); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+  font-family: var(--font-numeri); font-size: 11px; letter-spacing: 0.02em; text-transform: uppercase;
   transition: top 0.2s;
 }
 .skip-link:focus { top: var(--gap); }

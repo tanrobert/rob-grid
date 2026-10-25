@@ -2,7 +2,8 @@
  * Suoni del tavolo: solo dove c'è un gesto (presa, ricaduta, foglio, inverti), mai su hover o scroll.
  * Sintetizzati con Web Audio (rumore filtrato e oscillatori), nessun file: le 4 varianti scelte nel laboratorio
  * tools/pages/suoni.html. Ogni colpo varia un poco tono e volume, così non suona mai uguale.
- * Spento di base: lo accende l'icona nella barra del tavolo (Tavolo.astro), scelta in localStorage.
+ * Acceso di base (prova del 25/10/2026): lo spegne l'icona nella barra del tavolo (Tavolo.astro), scelta in localStorage.
+ * Il contesto audio si sveglia ai gesti e dorme dopo 1,5 s di quiete.
  */
 
 export type Momento = 'presa' | 'ricaduta' | 'foglio' | 'inverti';
@@ -11,14 +12,12 @@ const KEY = 'suono';
 /** volume generale (60 nel laboratorio, al quadrato) e di ogni momento (70) */
 const MASTER = 0.6 ** 2, VOL = 0.7 ** 2;
 
-let acceso = false;
-try { acceso = localStorage.getItem(KEY) === 'si'; } catch {}
+let acceso = true;
+try { acceso = localStorage.getItem(KEY) !== 'no'; } catch {}
 
-let ctx: AudioContext | undefined, out: GainNode, rumore: AudioBuffer;
+let ctx: AudioContext | undefined, out: GainNode, rumore: AudioBuffer, riposo: ReturnType<typeof setTimeout> | undefined;
 
-/** L'audio nasce al primo suono, quindi sempre dentro un gesto (i browser lo richiedono) */
-function avvia() {
-  if (ctx) { if (ctx.state !== 'running') ctx.resume(); return ctx; }
+function crea() {
   ctx = new AudioContext();
   out = ctx.createGain();
   out.gain.value = MASTER;
@@ -29,6 +28,27 @@ function avvia() {
   for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
   return ctx;
 }
+
+/**
+ * L'audio si sveglia a un gesto vero (pointerdown, pointerup, tasto): la presa arriva dopo, in un pointermove o nel timer
+ * della pressione lunga, dove i browser non lo lascerebbero partire.
+ */
+function sveglia() {
+  if (!acceso) return;
+  const c = ctx ?? crea();
+  if (c.state === 'suspended') c.resume().catch(() => {});
+  dormi();
+}
+// anche al rilascio: un trascinamento lungo lo avrebbe già addormentato prima della ricaduta
+for (const e of ['pointerdown', 'pointerup', 'keydown']) addEventListener(e, sveglia, { capture: true, passive: true });
+
+/** Fermo da un po' (o pagina nascosta): l'audio dorme, il dispositivo si libera e nessun suono resta appeso */
+function dormi(dopo = 1500) {
+  clearTimeout(riposo);
+  riposo = setTimeout(() => { if (ctx?.state === 'running') ctx.suspend(); }, dopo);
+}
+addEventListener('visibilitychange', () => { if (document.hidden) dormi(0); });
+addEventListener('pagehide', () => dormi(0));
 
 /** variazione casuale ±f */
 const vari = (f: number) => 1 + (Math.random() * 2 - 1) * f;
@@ -90,9 +110,17 @@ const RICETTE: Record<Momento, (c: AudioContext, t: number, p: number, dest: Aud
 /** Suona un momento, se il suono è acceso */
 export function suona(id: Momento, k = 0.6, chiude = false) {
   if (!acceso) return;
-  const c = avvia();
-  const g = c.createGain(); g.gain.value = VOL * vari(0.15); g.connect(out);
-  RICETTE[id](c, c.currentTime + 0.005, vari(0.06), g, k, chiude);
+  const c = ctx ?? crea();
+  const play = () => {
+    const g = c.createGain(); g.gain.value = VOL * vari(0.15); g.connect(out);
+    RICETTE[id](c, c.currentTime + 0.005, vari(0.06), g, k, chiude);
+    dormi();
+  };
+  if (c.state === 'running') return play();
+  // addormentato: suona appena sveglio, ma solo se è subito; un suono rimasto in attesa (browser che aspetta
+  // un gesto) partirebbe dopo, ammucchiato con gli altri
+  const t0 = performance.now();
+  c.resume().then(() => { if (performance.now() - t0 < 150) play(); }, () => {});
 }
 
 /** L'icona della barra del tavolo: accende e spegne, acceso suona subito l'interruttore come conferma */
@@ -108,6 +136,7 @@ export function initSuono(signal: AbortSignal) {
     acceso = !acceso;
     try { localStorage.setItem(KEY, acceso ? 'si' : 'no'); } catch {}
     sync();
-    suona('inverti');
+    if (acceso) suona('inverti');
+    else dormi(0);
   }, { signal });
 }

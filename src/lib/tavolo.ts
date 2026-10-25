@@ -55,7 +55,7 @@ export function pack(pezzi: Array<Span & { id?: string; sotto?: Sotto }>, finest
   });
 }
 
-interface Finestra { vw: number; vh: number; q: number }
+export interface Finestra { vw: number; vh: number; q: number }
 
 function spirale(pezzi: Span[], { vw, vh, q }: Finestra): Posto[] {
   const ax = vw / q, ay = (vh / q) * (vw < BREAKPOINTS.md ? 2.6 : 1);
@@ -81,6 +81,29 @@ function spirale(pezzi: Span[], { vw, vh, q }: Finestra): Posto[] {
     placed.push({ ...best, w, h });
     return best;
   });
+}
+
+/** Foglio rispetto alla finestra, al minimo: mezza finestra in più per lato, da esplorare */
+const FOGLIO_MIN = 2;
+/** Carta libera attorno alle celle, in quadretti: due moduli */
+const ATTORNO = 2 * PER_UNITA;
+
+/**
+ * Confine del tavolo: il foglio quadrettato, oltre il quale c'è solo inchiostro. Stesse proporzioni della
+ * finestra, grande almeno FOGLIO_MIN finestre e abbastanza da tenere le celle (`posti`) più ATTORNO:
+ * più celle ci sono, più è grande. Misure in quadretti di base (`q`), quindi lo zoom non lo cambia.
+ * Restituisce le metà dei lati, arrotondate al modulo: il bordo cade su una fila di crocini.
+ */
+export function confine(pezzi: Span[], posti: Posto[], { vw, vh, q }: Finestra): Posto {
+  let x = 0, y = 0;
+  pezzi.forEach(({ w, h }, i) => {
+    x = Math.max(x, -posti[i].x, posti[i].x + w);
+    y = Math.max(y, -posti[i].y, posti[i].y + h);
+  });
+  const fx = vw / 2 / q, fy = vh / 2 / q;
+  const k = Math.max(FOGLIO_MIN, (x + ATTORNO) / fx, (y + ATTORNO) / fy);
+  const modulo = (n: number) => Math.ceil(n / PER_UNITA) * PER_UNITA;
+  return { x: modulo(fx * k), y: modulo(fy * k) };
 }
 
 /** Finestre tipo della disposizione scritta al build (senza JavaScript), una per breakpoint */

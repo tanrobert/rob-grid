@@ -1,0 +1,132 @@
+<!doctype html>
+<!--
+  Laboratorio: Schibsted Grotesk contro Archivo e Mona Sans, ognuno sotto il logotipo (Roberto Grafica Black).
+  Schibsted e logotipo dai file del sito (/fonts/), Archivo e Mona Sans da Google Fonts. Solo sviluppo: il sito non cambia.
+    npx astro build && npm run vt:serve  →  http://localhost:4400/_vt/font.html  (anche dal telefono)
+-->
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Font · laboratorio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=Mona+Sans:ital,wdth,wght@0,75..125,200..900;1,75..125,200..900&display=swap">
+<style>
+  @font-face { font-family: 'Roberto Grafica'; src: url('/fonts/roberto-grafica-black.woff2') format('woff2'); font-weight: 900; font-display: block; }
+  @font-face { font-family: 'Schibsted Grotesk'; src: url('/fonts/schibsted-grotesk.woff2') format('woff2'); font-weight: 400 900; font-display: block; }
+  @font-face { font-family: 'Schibsted Grotesk'; src: url('/fonts/schibsted-grotesk-italic.woff2') format('woff2'); font-weight: 400 900; font-style: italic; font-display: block; }
+
+  :root {
+    --rosso: #e8432a; --chiaro: #f5f3f0; --nero: #1c1a17;
+    --inchiostro: var(--rosso); --bianco: var(--chiaro);
+    --m: 10px; --gap: var(--m); --pad: 20px; --line: 1px;
+    --peso: 500; --larghezza: 100;
+  }
+  html[data-inchiostro="bianco"] { --inchiostro: var(--chiaro); --bianco: var(--rosso); }
+  html[data-inchiostro="nero"] { --inchiostro: var(--nero); }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { background: var(--bianco); color: var(--inchiostro); -webkit-font-smoothing: antialiased; }
+  body { font-family: 'Schibsted Grotesk', sans-serif; }
+
+  /* barra dei comandi */
+  .bar { position: sticky; top: 0; z-index: 10; display: flex; flex-wrap: wrap; align-items: center; gap: var(--gap) calc(var(--gap) * 2);
+    padding: var(--gap); background: var(--bianco); border-bottom: var(--line) solid var(--inchiostro);
+    font: 500 11px/1.2 'Schibsted Grotesk', sans-serif; letter-spacing: .08em; text-transform: uppercase; }
+  .bar label { display: flex; align-items: center; gap: 8px; }
+  .bar input[type="range"] { accent-color: var(--inchiostro); width: 140px; }
+  .bar output { font-variant-numeric: tabular-nums; min-width: 3ch; }
+  .bar button { font: inherit; letter-spacing: inherit; text-transform: inherit; padding: 6px 10px; cursor: pointer;
+    border: var(--line) solid var(--inchiostro); background: var(--bianco); color: var(--inchiostro); }
+  .bar button[aria-pressed="true"] { background: var(--inchiostro); color: var(--bianco); }
+
+  /* un blocco per font */
+  .prova { padding: calc(var(--pad) * 2) var(--pad); border-bottom: var(--line) solid var(--inchiostro); container-type: inline-size; }
+  .prova__nome { font: 500 11px/1.2 'Schibsted Grotesk', sans-serif; letter-spacing: .08em; text-transform: uppercase; margin-bottom: var(--pad);
+    display: flex; justify-content: space-between; gap: var(--gap); }
+  .f { font-family: var(--f); font-weight: var(--peso); font-variation-settings: 'wdth' var(--larghezza); }
+
+  /* logotipo e font a confronto, stessa altezza delle maiuscole circa */
+  .logotipo { font-family: 'Roberto Grafica', sans-serif; font-weight: 900; font-size: 16cqi; line-height: .8; letter-spacing: 0; }
+  .titolone { font-size: 16cqi; line-height: .9; letter-spacing: -.02em; text-transform: uppercase; margin-top: .1em; }
+  .coppia { margin-top: calc(var(--pad) * 1.5); display: grid; grid-template-columns: auto 1fr; gap: 0 var(--pad); align-items: baseline; }
+  .coppia .logotipo { font-size: 6cqi; }
+  .coppia .f { font-size: 6cqi; line-height: 1; letter-spacing: -.01em; }
+
+  .campioni { margin-top: calc(var(--pad) * 2); display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: calc(var(--pad) * 1.5); }
+  .h { font-size: clamp(28px, 4cqi, 56px); line-height: 1.02; letter-spacing: -.02em; text-wrap: balance; }
+  .p { font-size: 17px; line-height: 1.4; max-width: 46ch; }
+  .p em { font-style: italic; }
+  .mono { font-size: 11px; line-height: 1.2; letter-spacing: .08em; text-transform: uppercase; }
+  .cifre { font-size: clamp(32px, 4.5cqi, 64px); word-break: break-all; line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
+  .stack > * + * { margin-top: 12px; }
+  .alfabeto { margin-top: calc(var(--pad) * 1.5); font-size: 22px; line-height: 1.35; word-break: break-word; }
+  [contenteditable]:focus-visible { outline: var(--line) dashed var(--inchiostro); outline-offset: 4px; }
+</style>
+</head>
+<body>
+<div class="bar">
+  <label>Peso <input type="range" id="peso" min="400" max="900" step="10" value="500"><output for="peso">500</output></label>
+  <label>Larghezza <input type="range" id="larghezza" min="75" max="125" step="1" value="100"><output for="larghezza">100</output></label>
+  <span>(solo Archivo e Mona Sans)</span>
+  <button type="button" data-ink="bianco" aria-pressed="false">Inverti</button>
+  <button type="button" data-ink="nero" aria-pressed="false">Nero</button>
+  <span>I testi si possono scrivere</span>
+</div>
+
+<template id="tpl">
+  <section class="prova">
+    <div class="prova__nome"><span class="nome"></span><span class="nota"></span></div>
+    <div class="logotipo" aria-hidden="true">ROBERTO</div>
+    <div class="f titolone" contenteditable spellcheck="false">Roberto</div>
+    <div class="coppia">
+      <span class="logotipo">ROBERTO</span>
+      <span class="f" contenteditable spellcheck="false">Tanasi · graphic designer</span>
+    </div>
+    <div class="campioni">
+      <div class="stack">
+        <p class="f mono">03 · Identità visiva</p>
+        <p class="f h" contenteditable spellcheck="false">Progetto identità per ristoranti, hotel e piccole aziende</p>
+      </div>
+      <div class="stack">
+        <p class="f mono">Info</p>
+        <p class="f p" contenteditable spellcheck="false">Disegno marchi, cataloghi e siti a Itri, tra Formia e Latina. <em>Ogni progetto parte da un foglio a quadretti</em>, poi diventa un sistema: caratteri, colori, regole.</p>
+      </div>
+      <div class="stack">
+        <p class="f mono">Dal 2016 · 42 progetti</p>
+        <p class="f cifre">0123456789</p>
+        <p class="f mono">ore 14:07 · 41,2° N · v.1.5.61</p>
+      </div>
+    </div>
+    <p class="f alfabeto" contenteditable spellcheck="false">ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz àèéìòù € &amp; @ ? ! → ←</p>
+  </section>
+</template>
+
+<script>
+  const font = [
+    { nome: 'Schibsted Grotesk', f: "'Schibsted Grotesk'", nota: 'quello di oggi · 400–900, senza larghezza' },
+    { nome: 'Archivo', f: "'Archivo'", nota: 'Google Fonts · 100–900, larghezza 62–125' },
+    { nome: 'Mona Sans', f: "'Mona Sans'", nota: 'Google Fonts · 200–900, larghezza 75–125' },
+  ];
+  const tpl = document.getElementById('tpl');
+  for (const { nome, f, nota } of font) {
+    const s = tpl.content.firstElementChild.cloneNode(true);
+    s.style.setProperty('--f', f);
+    s.querySelector('.nome').textContent = nome;
+    s.querySelector('.nota').textContent = nota;
+    document.body.append(s);
+  }
+  for (const id of ['peso', 'larghezza']) {
+    const r = document.getElementById(id), o = r.nextElementSibling;
+    r.addEventListener('input', () => { document.documentElement.style.setProperty('--' + id, r.value); o.value = r.value; });
+  }
+  const ink = document.querySelectorAll('[data-ink]');
+  for (const b of ink) b.addEventListener('click', () => {
+    const on = b.getAttribute('aria-pressed') !== 'true';
+    for (const x of ink) x.setAttribute('aria-pressed', 'false');
+    b.setAttribute('aria-pressed', String(on));
+    if (on) document.documentElement.dataset.inchiostro = b.dataset.ink; else delete document.documentElement.dataset.inchiostro;
+  });
+</script>
+</body>
+</html>
