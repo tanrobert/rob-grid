@@ -1,10 +1,15 @@
 ---
 // Recapiti come cella (il footer di prima, ridotto ai dati), sul tavolo, in fondo ai fogli e nella 404:
-// email e luogo in alto, P.IVA, informativa, anno e versione in basso
-import { siteVersion } from '../../lib/version';
+// email e luogo in alto, P.IVA, informativa, anno e versione in basso. Sul tavolo senza le scritte in basso
+// (`piede: false`): lì stanno nel box in basso a sinistra (Tavolo.astro)
 import { site } from '../../data/site';
+import { piede as scritte } from '../../data/piede';
 
-const year = new Date().getFullYear();
+interface Props {
+  piede?: boolean;
+}
+const { piede = true } = Astro.props;
+const [piva, privacy, anno, versione] = scritte;
 ---
 
 <div class="contatti">
@@ -12,10 +17,12 @@ const year = new Date().getFullYear();
     <li><a href={`mailto:${site.email}`} class="link-peso">{site.email}</a></li>
     <li>{site.place}</li>
   </ul>
-  <div class="contatti__piede mono">
-    <p><span>P.IVA {site.piva}</span><span>Informativa privacy</span></p>
-    <p><span>© {year} {site.name}</span><span>Portfolio modulare v.{siteVersion}</span></p>
-  </div>
+  {piede && (
+    <div class="contatti__piede mono">
+      <p><span>{piva}</span><span>{privacy}</span></p>
+      <p><span>{anno}</span><span>{versione}</span></p>
+    </div>
+  )}
 </div>
 
 <style>

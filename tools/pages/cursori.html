@@ -1,0 +1,146 @@
+<!doctype html>
+<!--
+  Laboratorio: cursori a pixel. Freccia e manina di Windows (tools/pages/cursori/*.svg, separate dal file trovato
+  da Roberto in src/assets), più mano aperta e chiusa disegnate nella stessa serie (tools/cursori-mani.mjs).
+  Solo sviluppo: il sito non cambia.
+    npx astro build && npm run vt:serve  →  http://localhost:4400/_vt/cursori.html
+-->
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cursori · laboratorio</title>
+<style>
+  @font-face { font-family: 'Archivo'; src: url('/fonts/archivo.woff2') format('woff2'); font-weight: 400 900; font-display: block; }
+  @font-face { font-family: 'JetBrains Mono'; src: url('/fonts/jetbrains-mono.woff2') format('woff2'); font-weight: 400 800; font-display: block; }
+  :root {
+    --rosso: #e8432a; --chiaro: #f5f3f0; --nero: #1c1a17;
+    --inchiostro: var(--rosso); --bianco: var(--chiaro);
+    --q: 25px; --line: 1px; --gap: 10px;
+  }
+  html[data-inverti] { --inchiostro: var(--chiaro); --bianco: var(--rosso); }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { background: var(--bianco); color: var(--inchiostro); font: 500 16px/1.3 'Archivo', sans-serif; -webkit-font-smoothing: antialiased; }
+  body { min-height: 100vh; cursor: var(--c-freccia, default); }
+  .mono { font: 400 11px/1.2 'JetBrains Mono', monospace; letter-spacing: .02em; text-transform: uppercase; }
+
+  .bar { position: sticky; top: 0; z-index: 10; display: flex; flex-wrap: wrap; align-items: center; gap: var(--gap);
+    padding: var(--gap); background: var(--bianco); border-bottom: var(--line) solid var(--inchiostro); }
+  .gruppo { display: flex; gap: var(--line); align-items: center; }
+  .gruppo > span { margin-right: 6px; }
+  .bar button { font: 400 11px/1 'JetBrains Mono', monospace; letter-spacing: .02em; text-transform: uppercase; padding: 8px 10px;
+    border: var(--line) solid var(--inchiostro); background: var(--bianco); color: var(--inchiostro); cursor: var(--c-mano, pointer); }
+  .bar button[aria-pressed="true"] { background: var(--inchiostro); color: var(--bianco); }
+
+  /* figure ingrandite: un pixel = 8 px, con la griglia dei pixel */
+  .figure { display: flex; flex-wrap: wrap; gap: calc(var(--q) * 2); padding: var(--q); }
+  figure { display: grid; gap: 8px; justify-items: start; }
+  .ingrandita { position: relative; image-rendering: pixelated; background:
+      linear-gradient(to right, color-mix(in srgb, var(--inchiostro) 22%, transparent) 1px, transparent 1px) 0 0 / 8px 8px,
+      linear-gradient(to bottom, color-mix(in srgb, var(--inchiostro) 22%, transparent) 1px, transparent 1px) 0 0 / 8px 8px; }
+  .ingrandita img { display: block; image-rendering: pixelated; }
+
+  /* zone di prova sulla carta quadrettata */
+  .carta { min-height: 70vh; padding: calc(var(--q) * 2); display: flex; flex-wrap: wrap; gap: var(--q); align-items: flex-start;
+    background-image:
+      linear-gradient(to right, color-mix(in srgb, var(--inchiostro) 22%, transparent) var(--line), transparent var(--line)),
+      linear-gradient(to bottom, color-mix(in srgb, var(--inchiostro) 22%, transparent) var(--line), transparent var(--line));
+    background-size: var(--q) var(--q); }
+  .cella { width: calc(var(--q) * 8); height: calc(var(--q) * 8); border: var(--line) solid var(--inchiostro); background: var(--bianco);
+    padding: 20px; display: flex; flex-direction: column; justify-content: space-between; color: inherit; text-decoration: none; }
+  a.cella, a { cursor: var(--c-mano, pointer); color: inherit; }
+  .cella strong { font-size: 32px; line-height: 1; letter-spacing: -.02em; }
+  .tavolo-prova { cursor: var(--c-mano-aperta, grab); user-select: none; }
+  .tavolo-prova:active { cursor: var(--c-mano-chiusa, grabbing); }
+  .matita-prova { cursor: var(--c-matita, crosshair); }
+  .testo { width: calc(var(--q) * 12); background: var(--bianco); border: var(--line) solid var(--inchiostro); padding: 20px; }
+  .testo p + p { margin-top: 10px; }
+  .nota { max-width: 70ch; padding: 0 var(--q) var(--q); font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="bar mono">
+  <div class="gruppo" data-gruppo="scala"><span>Misura</span>
+    <button type="button" data-v="1" aria-pressed="true">1× · come nel 95</button>
+    <button type="button" data-v="2" aria-pressed="false">2×</button>
+  </div>
+  <div class="gruppo" data-gruppo="colori"><span>Colori</span>
+    <button type="button" data-v="originali" aria-pressed="false">Originali</button>
+    <button type="button" data-v="palette" aria-pressed="false">Nero e carta</button>
+    <button type="button" data-v="rosso" aria-pressed="true">Rosso e carta</button>
+  </div>
+  <button type="button" data-inverti-btn aria-pressed="false">Inverti</button>
+</div>
+
+<div class="figure">
+  <figure><div class="ingrandita" data-figura="freccia"></div><figcaption class="mono">Freccia · 12×19</figcaption></figure>
+  <figure><div class="ingrandita" data-figura="mano"></div><figcaption class="mono">Manina · 17×22</figcaption></figure>
+  <figure><div class="ingrandita" data-figura="mano-aperta"></div><figcaption class="mono">Aperta · 17×22</figcaption></figure>
+  <figure><div class="ingrandita" data-figura="mano-chiusa"></div><figcaption class="mono">Chiusa · 17×22</figcaption></figure>
+  <figure><div class="ingrandita" data-figura="matita"></div><figcaption class="mono">Matita · 22×22</figcaption></figure>
+</div>
+
+<div class="carta">
+  <div class="testo">
+    <p class="mono">Fondo · freccia</p>
+    <p>Qui il cursore è la freccia. Passa sulla cella accanto o sui bottoni in alto: diventa la manina.</p>
+    <p>Un <a href="#">link nel testo</a> fa lo stesso.</p>
+  </div>
+  <a class="cella" href="#"><span class="mono">04</span><strong>Cella</strong><span class="mono">Link · manina</span></a>
+  <div class="cella tavolo-prova"><span class="mono">Tavolo</span><strong>Afferra</strong><span class="mono">Aperta · premi: chiusa</span></div>
+  <div class="cella matita-prova"><span class="mono">Matita</span><strong>Disegna</strong><span class="mono">Cursore della matita</span></div>
+  <a class="cella" href="#" style="background: var(--inchiostro); color: var(--bianco)"><span class="mono">05</span><strong>Piena</strong><span class="mono">Link su fondo pieno</span></a>
+</div>
+<p class="nota">Freccia e manina di Windows 95; mano aperta e chiusa disegnate nella stessa serie (tools/cursori-mani.mjs): stesse colonne delle dita, stesso pollice e stessa pancia della manina.</p>
+
+<script type="module">
+  // punta di ogni cursore, in pixel del disegno
+  const PUNTE = { freccia: [0, 0], mano: [5, 0], 'mano-aperta': [8, 11], 'mano-chiusa': [8, 11], matita: [0, 0] };
+  const RISERVA = { freccia: 'default', mano: 'pointer', 'mano-aperta': 'grab', 'mano-chiusa': 'grabbing', matita: 'crosshair' };
+  const COLORI = { originali: ['#000', '#fff'], palette: ['#1c1a17', '#f5f3f0'], rosso: ['#f03f24', '#f5f3f0'] };
+  const sorgenti = Object.fromEntries(await Promise.all(Object.keys(PUNTE).map(async n => [n, await (await fetch(`cursori/${n}.svg`)).text()])));
+  const stato = { scala: 1, colori: 'rosso' };
+
+  // stesso disegno, colori e misura scelti: il primo percorso è il contorno, quello con fill="#fff" il riempimento
+  function svg(nome, scala) {
+    const [segno, fondo] = COLORI[stato.colori];
+    return sorgenti[nome]
+      .replace(/<!--[\s\S]*?-->/g, '')
+      .replace(/width="(\d+)" height="(\d+)"/, (_, w, h) => `width="${w * scala}" height="${h * scala}"`)
+      .replace('<path d=', `<path fill="${segno}" d=`)
+      .replace('fill="#fff"', `fill="${fondo}"`);
+  }
+  const url = s => `url("data:image/svg+xml,${encodeURIComponent(s)}")`;
+
+  function applica() {
+    const root = document.documentElement.style;
+    for (const [nome, [px, py]] of Object.entries(PUNTE))
+      root.setProperty(`--c-${nome}`, `${url(svg(nome, stato.scala))} ${px * stato.scala} ${py * stato.scala}, ${RISERVA[nome]}`);
+    for (const nome of Object.keys(PUNTE)) {
+      const box = document.querySelector(`[data-figura="${nome}"]`);
+      const s = svg(nome, 8);
+      const [w, h] = s.match(/width="(\d+)" height="(\d+)"/).slice(1).map(Number);
+      box.style.width = `${w}px`; box.style.height = `${h}px`;
+      box.innerHTML = `<img alt="" width="${w}" height="${h}" src="data:image/svg+xml,${encodeURIComponent(s)}">`;
+    }
+  }
+
+  for (const g of document.querySelectorAll('[data-gruppo]')) {
+    g.addEventListener('click', e => {
+      const b = e.target.closest('button'); if (!b) return;
+      for (const x of g.querySelectorAll('button')) x.setAttribute('aria-pressed', String(x === b));
+      stato[g.dataset.gruppo] = g.dataset.gruppo === 'scala' ? Number(b.dataset.v) : b.dataset.v;
+      applica();
+    });
+  }
+  const inv = document.querySelector('[data-inverti-btn]');
+  inv.addEventListener('click', () => {
+    const on = inv.getAttribute('aria-pressed') !== 'true';
+    inv.setAttribute('aria-pressed', String(on));
+    document.documentElement.toggleAttribute('data-inverti', on);
+  });
+  for (const a of document.querySelectorAll('a[href="#"]')) a.addEventListener('click', e => e.preventDefault());
+  applica();
+</script>
+</body>
+</html>

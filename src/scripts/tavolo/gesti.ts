@@ -64,6 +64,7 @@ export function initGesti(t: Tavolo) {
     a.press?.kill();
     a.press = undefined;
     a.presa = prendi(t, a.pezzo!, a.sx, a.sy, a.touch);
+    el.classList.add('is-panning');  // mano chiusa anche portando una cella (Tavolo.astro)
     capture(a.id);
   };
 

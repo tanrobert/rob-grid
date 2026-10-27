@@ -75,7 +75,7 @@ export type Cell = CellBase & (
   /** pagina d'errore: codice grande con glitch, titolo (h1) e link all'indice, su carta a quadretti */
   | { type: 'error'; code: string; title: string }
   /** recapiti (email, luogo, P.IVA, versione): cella del tavolo e dei fogli */
-  | { type: 'contatti' }
+  | { type: 'contatti'; /** `false` = senza le scritte in basso (sul tavolo stanno nel box in basso a sinistra) */ piede?: false }
   // solo archivio
   | { type: 'archive-head'; total: number }
   | { type: 'tags'; tags: TagCount[] }

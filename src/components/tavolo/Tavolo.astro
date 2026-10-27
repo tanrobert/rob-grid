@@ -9,6 +9,8 @@ import CellContent from '../CellContent.astro';
 import { inQuadretti, pack, FINESTRE, Q, versione } from '../../lib/tavolo';
 import { BREAKPOINTS } from '../../lib/grid';
 import { svgs } from '../../data/svgs';
+import { piede } from '../../data/piede';
+import Matita from '../../assets/matita.svg';
 
 interface Props {
   cells: Cell[];
@@ -87,16 +89,29 @@ const sagoma = (c: Cell) => (c.frame === false && c.type === 'svg' ? svgs[c.svg]
 
 {/* ROBERTO piccolo in alto a sinistra: solo segno (il nome lo dice già la cella `nome`) */}
 <span class="firma logotipo" aria-hidden="true">Roberto</span>
+{/* la barra in basso: a sinistra le scritte piccole dei recapiti (P.IVA, informativa, anno, versione), a destra i
+    bottoni del tavolo. Se le scritte non ci stanno scorrono (scripts/tavolo/piede.ts): due serie uguali, la striscia
+    si sposta di una (50%) e riparte senza stacco; la seconda serie e lo stacco servono solo quando scorre */}
+<div class="barra">
+  <p class="piede mono" data-piede>
+    <span class="piede__nastro">
+      {[0, 1].map(n => (
+        <span class:list={['piede__serie', n === 1 && 'piede__copia']} aria-hidden={n === 1 ? 'true' : undefined}>
+          {piede.join(' · ')}<span class="piede__stacco" aria-hidden="true">{' · '}</span>
+        </span>
+      ))}
+    </span>
+  </p>
 <div class="attrezzi" role="group" aria-label="Tavolo" data-attrezzi hidden>
   {/* "Cancella tutto" c'è solo quando ci sono segni: spento sarebbe un rosso a metà (rosa) */}
   <button type="button" class="mono" data-cancella hidden>Cancella tutto</button>
-  {/* la scatolina: dentro la matita; presa, ne resta la sagoma a retino */}
-  <button type="button" class="mono attrezzi__matita" data-matita aria-pressed="false">
-    <svg class="matita__ico" viewBox="0 0 16 16" aria-hidden="true">
-      <defs><pattern id="matita-retino" width="2" height="2" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="0.68" /></pattern></defs>
-      <path d="M11.3 1.3a1 1 0 0 1 1.4 0l2 2a1 1 0 0 1 0 1.4L5.4 14 1 15l1-4.4z" />
+  {/* la scatolina: dentro la matita, la penna di Windows 95 a pixel (tools/cursori.mjs, come il cursore); presa, ne
+      resta la sagoma a retino */}
+  <button type="button" class="attrezzi__matita" data-matita aria-pressed="false" aria-label="Matita" title="Matita">
+    <svg class="matita__retino" aria-hidden="true">
+      <defs><pattern id="matita-retino" width="2" height="2" patternUnits="userSpaceOnUse"><rect width="1" height="1" /></pattern></defs>
     </svg>
-    Matita
+    <Matita class="matita__ico" aria-hidden="true" />
   </button>
   <button type="button" class="mono" data-riordina>Riordina</button>
   {/* "Torna al centro" tolto per ora (25/10/2026, Roberto; Riordina riporta già la vista al centro). Per rimetterlo:
@@ -110,6 +125,7 @@ const sagoma = (c: Cell) => (c.frame === false && c.type === 'svg' ? svgs[c.svg]
     </svg>
   </button>
 </div>
+</div>
 <style>
   /* la finestra sul tavolo: niente scroll (overflow: clip non si scorre nemmeno da script, col fuoco da tastiera)
      e niente gesti del browser, li fa scripts/tavolo/gesti.ts */
@@ -119,7 +135,7 @@ const sagoma = (c: Cell) => (c.frame === false && c.type === 'svg' ? svgs[c.svg]
     overflow: clip;
     background: var(--bianco);
     touch-action: none;
-    cursor: grab;
+    cursor: var(--cursore-aperta);
     user-select: none; -webkit-user-select: none;
     -webkit-touch-callout: none;
   }
@@ -129,7 +145,8 @@ const sagoma = (c: Cell) => (c.frame === false && c.type === 'svg' ? svgs[c.svg]
     --pad-label: calc(var(--pad) + 22px * var(--zoom, 1));
   }
   @media (max-width: 599px) { .tavolo { --q: var(--q-sm); --pad: calc(var(--m) * 1.4 * var(--zoom, 1)); } }
-  .tavolo.is-panning { cursor: grabbing; }
+  /* mano chiusa mentre si porta il tavolo o una cella (gesti.ts), anche sopra le celle-link (se no la manina) */
+  .tavolo.is-panning, .tavolo.is-panning :global(*) { cursor: var(--cursore-chiusa); }
 
   /* carta: quadretti e crocini (ogni 4 quadretti, sul modulo della griglia di prima). Uno strato più grande
      della finestra di un modulo per lato, che si sposta solo del resto rispetto al modulo: le linee sembrano
@@ -150,11 +167,11 @@ const sagoma = (c: Cell) => (c.frame === false && c.type === 'svg' ? svgs[c.svg]
     pointer-events: none;
   }
   /* crocini: la forma è una maschera (un SVG senza colore, centrato sull'angolo di ogni modulo: i bracci escono
-     dai bordi e rientrano dal lato opposto), il colore è l'inchiostro */
+     dai bordi e rientrano dal lato opposto), il colore è l'inchiostro schiarito (--crocini-ink, global.css) */
   .tavolo__carta::after {
     content: '';
     position: absolute; inset: 0;
-    background: var(--inchiostro);
+    background: var(--crocini-ink);
     mask: var(--crocini-forma) 0 0 / var(--modulo) var(--modulo) repeat;
   }
   /* intro: la carta compare a giri quadrati dal centro del tavolo (--ox, --oy: lo scrive scripts/tavolo/vista.ts),
@@ -253,17 +270,37 @@ const sagoma = (c: Cell) => (c.frame === false && c.type === 'svg' ? svgs[c.svg]
     :global(.is-intro) :is(.pezzo, .pezzo__ombra) { animation: none; }
   }
 
-  /* i bottoni in basso a destra, a filo del bordo (con la stessa distanza di ROBERTO in alto a sinistra) */
-  .attrezzi {
+  /* la barra in basso, a filo del bordo (con la stessa distanza di ROBERTO in alto a sinistra): scritte a sinistra,
+     bottoni a destra, sempre sulla stessa riga: se manca spazio le scritte si stringono e scorrono */
+  .barra {
     position: fixed; z-index: 40;
     bottom: max(var(--gap), env(safe-area-inset-bottom));
     right: max(var(--gap), env(safe-area-inset-right));
-    /* sul telefono, con "Cancella tutto", vanno a capo allineati a destra */
     left: max(var(--gap), env(safe-area-inset-left));
-    display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--gap);
+    display: flex; align-items: flex-end; gap: var(--gap);
     pointer-events: none;
   }
+  /* sul telefono, con "Cancella tutto", vanno a capo allineati a destra */
+  /* i bottoni non si stringono (lo fanno le scritte); a capo solo se non lasciano nemmeno il minimo alle scritte */
+  .attrezzi {
+    flex: none; max-width: calc(100% - 6rem - var(--gap));
+    display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--gap); margin-left: auto;
+  }
   .attrezzi > * { pointer-events: auto; }
+  /* le scritte: una striscia bassa piena d'inchiostro, senza filo, a filo del fondo dei bottoni; larga quanto il
+     testo e mai più dello spazio che resta (poi scorre) */
+  .piede {
+    flex: 0 1 auto; min-width: 6rem;  /* 6rem: anche in .attrezzi */
+    display: flex; align-items: center; overflow: hidden;
+    padding: 3px 8px;
+    background: var(--inchiostro);
+    color: var(--bianco);
+    white-space: nowrap;
+  }
+  .piede__nastro { display: flex; }
+  .piede:not(.is-scorre) :is(.piede__copia, .piede__stacco) { display: none; }
+  .piede.is-scorre .piede__nastro { animation: piede-scorre var(--durata, 30s) linear infinite; }
+  @keyframes piede-scorre { to { transform: translate3d(-50%, 0, 0); } }
   .attrezzi[hidden], .attrezzi [hidden] { display: none; }
   /* ROBERTO piccolo (maiuscole ~12px) in alto a sinistra. Non si prende: sotto si trascina il tavolo */
   .firma {
@@ -275,14 +312,14 @@ const sagoma = (c: Cell) => (c.frame === false && c.type === 'svg' ? svgs[c.svg]
     pointer-events: none;
   }
   /* col foglio aperto i comandi del tavolo non servono */
-  :global(html.ha-foglio:not(.is-tavolo)) :is(.attrezzi, .firma) { display: none; }
+  :global(html.ha-foglio:not(.is-tavolo)) :is(.barra, .firma) { display: none; }
   .attrezzi button {
     appearance: none; margin: 0;
     padding: 10px 12px;
     background: var(--bianco);
     color: var(--inchiostro);
     border: var(--line) solid var(--inchiostro);
-    cursor: pointer;
+    cursor: var(--cursore-mano);
   }
 
   /* ── Matita (scripts/tavolo/matita.ts): segni neri, la mano di chi visita (il rosso è la stampa). Spessore in
@@ -293,19 +330,21 @@ const sagoma = (c: Cell) => (c.frame === false && c.type === 'svg' ? svgs[c.svg]
   .pezzo > .segni { z-index: 4; }
   .segni--tavolo { inset: auto; left: 0; top: 0; width: 1px; height: 1px; overflow: visible; }
   .segni :global(path) { fill: none; stroke: var(--nero); stroke-width: 0.12; stroke-linecap: round; stroke-linejoin: round; }
-  .attrezzi__matita { display: inline-flex; align-items: center; gap: 8px; }
-  /* solo icona, quadrato: alto quanto la matita (icona 16px + padding) */
+  /* solo icona, quadrati e alti come gli altri: suono 16px + 10 di padding, matita 22px (1 pixel della penna = 1px) + 7 */
   .attrezzi .attrezzi__suono { display: inline-grid; place-items: center; padding: 10px; }
+  .attrezzi .attrezzi__matita { display: inline-grid; place-items: center; padding: 7px; }
+  /* la penna è un componente SVG (src/assets): le regole scoped non la prendono, da qui :global */
+  .attrezzi__matita :global(.matita__ico) { display: block; width: 22px; height: 22px; color: var(--nero); }
+  .attrezzi__matita :global(.matita__ico.is-vuota path) { fill: url(#matita-retino); }
+  .matita__retino { position: absolute; width: 0; height: 0; }
+  .matita__retino rect { fill: var(--nero); }
   .suono__ico { width: 16px; height: 16px; overflow: visible; fill: none; stroke: currentColor; stroke-width: var(--line); stroke-linejoin: miter; }
   .suono__ico path { vector-effect: non-scaling-stroke; }
   .attrezzi__suono[aria-pressed="true"] .suono__no, .attrezzi__suono[aria-pressed="false"] .suono__si { display: none; }
-  .matita__ico { width: 16px; height: 16px; overflow: visible; }
-  .matita__ico path { fill: var(--nero); stroke: var(--bianco); stroke-width: 0.9; paint-order: stroke; }
-  .matita__ico.is-vuota path { fill: url(#matita-retino); }
-  .matita__ico circle { fill: var(--inchiostro); }
-  /* presa, la matita è subito il cursore vero (niente volo, niente ritardo dietro al mouse) */
+  /* presa, la matita è subito il cursore vero (niente volo, niente ritardo dietro al mouse): a pixel come gli altri
+     cursori (tools/cursori.mjs), la penna di Windows 95, sempre nera come i suoi segni; punta in alto a sinistra */
   :global(html.matita-in-mano), :global(html.matita-in-mano *) {
-    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 16 16'%3E%3Cpath d='M11.3 1.3a1 1 0 0 1 1.4 0l2 2a1 1 0 0 1 0 1.4L5.4 14 1 15l1-4.4z' fill='%231c1a17' stroke='%23f5f3f0' stroke-width='.9' paint-order='stroke'/%3E%3C/svg%3E") 1 22, crosshair !important;
+    cursor: url("/cursori/matita-nero-carta.svg") 0 0, crosshair !important;
   }
   /* sul touch la matita non diventa un cursore: il tavolo col dito disegna */
   .tavolo:global(.is-matita) { cursor: crosshair; }

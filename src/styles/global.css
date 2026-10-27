@@ -36,12 +36,23 @@
   /* --line agganciato ai pixel reali, per le linee disegnate con i gradienti (vedi @supports sotto) */
   --line-dp: var(--line);
 
+  /* cursori a pixel di Windows 95 (public/cursori, dal 26/10/2026), misura 1×: freccia di base, manina su ciò che
+     si clicca. Contorno = inchiostro, riempimento = carta: un file per coppia di colori (un SVG da cursore non legge
+     le variabili), ridefiniti sotto con Inverti, Woberto e contrasto alto. Numeri = punta del cursore in pixel */
+  --cursore:      url("/cursori/freccia-rosso-carta.svg") 0 0, default;
+  --cursore-mano: url("/cursori/mano-rosso-carta.svg") 5 0, pointer;
+  --cursore-aperta: url("/cursori/mano-aperta-rosso-carta.svg") 8 11, grab;
+  --cursore-chiusa: url("/cursori/mano-chiusa-rosso-carta.svg") 8 11, grabbing;
+
   /* colonne delle pagine (12, 8, 4): il foglio (components/foglio) ne ricava quadretto e unità */
   --cols: 12;
   /* crocini di registro, come maschera (il colore lo dà var(--inchiostro)): uno per tile, all'angolo in alto a
      sinistra (i bracci escono dai bordi e rientrano dal lato opposto). SVG senza viewBox: le coordinate restano in
      px qualunque sia la misura del tile. Carta del tavolo e della pagina vera */
   --crocini-forma: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='5' height='1'/%3E%3Crect width='1' height='5'/%3E%3Crect x='100%25' width='4' height='1' transform='translate(-4 0)'/%3E%3Crect y='100%25' width='1' height='4' transform='translate(0 -4)'/%3E%3C/svg%3E");
+  /* colore dei crocini: un po' più leggeri dell'inchiostro pieno (27/10/2026), più vicini alle linee dei quadretti
+     (22%) ma ancora riconoscibili sopra di esse */
+  --crocini-ink: color-mix(in srgb, var(--inchiostro) 55%, transparent);
 
   --ease-out:   cubic-bezier(0.22, 1, 0.36, 1);
   --ease-morph: cubic-bezier(0.72, 0, 0.18, 1);  /* filo dell'intro e cerchio di Inverti */
@@ -52,23 +63,43 @@
   --t-ink:      960ms;  /* cambio d'inchiostro: il nuovo colore si allarga dall'interruttore */
 
   color-scheme: light;
+  cursor: var(--cursore);
 }
+a[href], button, [role="button"], [role="switch"], label[for], summary, select { cursor: var(--cursore-mano); }
 /* colori invertiti: rosso e bianco si scambiano, inchiostro chiaro su carta rossa. data-inchiostro su <html>
    (Layout.astro, prima del primo disegno) */
 :root[data-inchiostro="bianco"] {
   --inchiostro: var(--chiaro);
   --bianco: var(--rosso);
+  --cursore:      url("/cursori/freccia-carta-rosso.svg") 0 0, default;
+  --cursore-mano: url("/cursori/mano-carta-rosso.svg") 5 0, pointer;
+  --cursore-aperta: url("/cursori/mano-aperta-carta-rosso.svg") 8 11, grab;
+  --cursore-chiusa: url("/cursori/mano-chiusa-carta-rosso.svg") 8 11, grabbing;
 }
 /* tinta nera (Woberto, il marchio nascosto sotto la R: scripts/ink.ts): il rosso diventa nero, e Inverti
    scambia nero e bianco. data-tinta su <html>, solo per la visita (Layout.astro) */
-:root[data-tinta="nero"] { --inchiostro: var(--nero); }
+:root[data-tinta="nero"] {
+  --inchiostro: var(--nero);
+  --cursore:      url("/cursori/freccia-nero-carta.svg") 0 0, default;
+  --cursore-mano: url("/cursori/mano-nero-carta.svg") 5 0, pointer;
+  --cursore-aperta: url("/cursori/mano-aperta-nero-carta.svg") 8 11, grab;
+  --cursore-chiusa: url("/cursori/mano-chiusa-nero-carta.svg") 8 11, grabbing;
+}
 :root[data-tinta="nero"][data-inchiostro="bianco"] {
   --inchiostro: var(--chiaro);
   --bianco: var(--nero);
+  --cursore:      url("/cursori/freccia-carta-nero.svg") 0 0, default;
+  --cursore-mano: url("/cursori/mano-carta-nero.svg") 5 0, pointer;
+  --cursore-aperta: url("/cursori/mano-aperta-carta-nero.svg") 8 11, grab;
+  --cursore-chiusa: url("/cursori/mano-chiusa-carta-nero.svg") 8 11, grabbing;
 }
 /* chi chiede più contrasto al sistema, a colori non invertiti: inchiostro nero (rosso su bianco è 3,5:1, nero ~15,7:1) */
 @media (prefers-contrast: more) { :root:not([data-inchiostro]) {
   --inchiostro: var(--nero);
+  --cursore:      url("/cursori/freccia-nero-carta.svg") 0 0, default;
+  --cursore-mano: url("/cursori/mano-nero-carta.svg") 5 0, pointer;
+  --cursore-aperta: url("/cursori/mano-aperta-nero-carta.svg") 8 11, grab;
+  --cursore-chiusa: url("/cursori/mano-chiusa-nero-carta.svg") 8 11, grabbing;
 } }
 @supports (width: round(down, 1px, 1px)) {
   :root { --line-dp: max(var(--dp), round(down, var(--line), var(--dp))); }
@@ -131,7 +162,7 @@ body {
 .ruler {
   position: fixed; top: 0; right: 0; bottom: 0; z-index: 50;
   width: var(--gap);
-  cursor: pointer;
+  cursor: var(--cursore-mano);
 }
 .ruler__thumb {
   --thumb-h: 32px;
@@ -141,7 +172,7 @@ body {
   /* rettangolo rosso con la percentuale bianca; la posizione è agganciata ai pixel da ruler.ts */
   background: var(--inchiostro);
   color: var(--bianco);
-  cursor: grab;
+  cursor: var(--cursore-aperta);
   touch-action: none;
 }
 /* area di presa più grande della linea: sopra, sotto e verso le caselle */
@@ -160,7 +191,7 @@ body {
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
-html.is-ruling, html.is-ruling * { cursor: grabbing !important; user-select: none; }
+html.is-ruling, html.is-ruling * { cursor: var(--cursore-chiusa) !important; user-select: none; }
 /* su touch è solo un indicatore: si scorre col dito */
 @media (pointer: coarse) { .ruler { pointer-events: none; } }
 
@@ -302,7 +333,7 @@ p { text-wrap: pretty; }
 
 /* ✕ di chiusura delle hero (progetti, archivio, extra, info): tutta la hero chiude il foglio (scripts/foglio) */
 @media (hover: hover) and (pointer: fine) {
-  .cell[data-hero] { cursor: pointer; }
+  .cell[data-hero] { cursor: var(--cursore-mano); }
 }
 
 .cell:has(> .duo) > :is(.cell__label, .cell__go, .caption) { color: var(--bianco); }

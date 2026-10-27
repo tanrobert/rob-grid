@@ -61,17 +61,20 @@ export const tavolo: Cell[] = [
     id: 'contatti', type: 'text', w: 3, h: 2, q: { w: 12, h: 8 }, size: 'm', href: '/info',
     eyebrow: 'Nuovi progetti', title: 'Scrivimi_',
   },
-  // dal 25/10/2026 di nuovo Purple Piper, G&A e La Torre Rossa, e Cardogna col video del sito: dopo le celle
+  // dal 25/10/2026 di nuovo Purple Piper, G&A e La Torre Rossa, e Cardogna col video del sito
+  // (dal 26/10/2026 anche Luca Lebone): dopo le celle
   // che portano in giro (archivio, Bio, tag, extra), così quelle restano attorno al marchio
   projectCell('purple', 'purple-piper'),
   projectCell('gea', 'gea'),
   projectCell('torre', 'la-torre-rossa'),
   projectCell('cardogna', 'cardogna'),
+  projectCell('luca', 'luca-lebone'),
   // il nastro "Roberto · progettazione visiva" girato in verticale, col font del logotipo. speed = secondi per giro:
   // il testo è lungo ~31 maiuscole, 155s = stessa velocità del vecchio logo (22,5 in 112s)
   { id: 'nastro',   type: 'marquee',  w: 1, h: 6, text: 'Roberto · progettazione visiva ·', speed: 155, ruotato: true },
-  // il footer di oggi, come cella: email, luogo, P.IVA, versione
-  { id: 'recapiti', type: 'contatti', w: 4, h: 2, tone: 'red' },
+  // il footer di oggi, come cella: email e luogo. P.IVA, informativa, anno e versione (27/10/2026) nel box in basso
+  // a sinistra, nello stile dei bottoni del tavolo (Tavolo.astro)
+  { id: 'recapiti', type: 'contatti', w: 4, h: 2, tone: 'red', piede: false },
   // primo easter egg: sotto la R, dietro la sua asta, il marchio di Woberto (la R girata, nera). Si scopre
   // spostando la R; premuto porta il nero (scripts/ink.ts). Ultimo nell'elenco: non sposta i numeri delle
   // altre celle, ed è l'ultimo nella lettura

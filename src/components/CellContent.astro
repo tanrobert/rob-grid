@@ -74,6 +74,6 @@ if (cell.type === 'project' && !p) throw new Error(`[grid] progetto non trovato:
     {cell.type === 'error' && <ErrorCell code={cell.code} title={cell.title} />}
     {cell.type === 'archive-head' && <ArchiveHeadCell total={cell.total} />}
     {cell.type === 'tags' && <TagsCell tags={cell.tags} total={projects} />}
-    {cell.type === 'contatti' && <ContattiCell />}
+    {cell.type === 'contatti' && <ContattiCell piede={cell.piede !== false} />}
   </Cell>
 )}

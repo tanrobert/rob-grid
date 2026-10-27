@@ -14,6 +14,7 @@ import { initGesti, vai } from './gesti';
 import { leggi, scrivi } from './memoria';
 import { initMatita, type Matita } from './matita';
 import { initSuono } from '../suono';
+import { initPiede } from './piede';
 
 gsap.registerPlugin(InertiaPlugin);
 
@@ -127,6 +128,7 @@ function initTavolo(el: HTMLElement): Tavolo {
     attrezzi.querySelector('[data-centro]')?.addEventListener('click', () => vai(t, 0, 0, 0.6), { signal: ac.signal });
     initSuono(ac.signal);
   }
+  initPiede(ac.signal);
 
   // uscendo dalla pagina (anche verso la cache del browser, per tornare con indietro): il tavolo com'è adesso,
   // anche a metà inerzia
