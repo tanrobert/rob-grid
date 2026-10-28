@@ -6,8 +6,7 @@ import Tavolo from '../../components/tavolo/Tavolo.astro';
 import Foglio from '../../components/foglio/Foglio.astro';
 import { tavolo } from '../../data/tavolo';
 import { projects } from '../../data/projects';
-import { tagSlug } from '../../lib/tags';
-import { projectYear, projectsByYear } from '../../lib/projects';
+import { projectsByYear } from '../../lib/projects';
 import { scaleShape } from '../../lib/grid';
 import { pageTitle } from '../../data/site';
 
@@ -16,7 +15,6 @@ export const getStaticPaths = (() =>
 ) satisfies GetStaticPaths;
 
 const { project: p } = Astro.props;
-const year = String(projectYear(p) || '—');
 
 // hero = forma del progetto ×1, come in archivio: cresce solo di quanto il quadretto del foglio è più grande di
 // quello del tavolo; senza forma, quadrato come in archivio.
@@ -36,8 +34,6 @@ const siblingCell = (id: string, label: string, step: number): Cell => {
 const cells: Cell[] = [
   { id: 'hero', type: 'media', ...heroSpan, heroOf: `/progetti/${p.slug}`, image: p.image, video: p.video, alt: `${p.title} · ${p.description}` },
   { id: 'progetto', type: 'text', w: 4, h: 2, as: 'h1', size: 's', eyebrow: 'Progetto', title: p.title, body: [p.description, marchio].filter(Boolean).join(' ') },
-  { id: 'tag', type: 'list', w: 4, h: 2, title: 'Tag', items: p.tags.map(t => ({ label: t, href: `/archivio?tag=${tagSlug(t)}` })) },
-  { id: 'anno', type: 'stat', w: 2, h: 2, value: year, caption: p.period },
   { id: 'indietro', type: 'text', w: 2, h: 2, tone: 'red', href: '/', as: 'p', size: 'm', eyebrow: 'Chiudi', title: 'Indice' },
   // celle proprie del progetto (cells in index.md); finché non ci sono, il segnaposto
   ...(p.cells ?? [{ id: 'nota', type: 'text', w: 4, h: 2, size: 's', title: 'Contenuto segnaposto: qui andranno immagini, processo e risultati.' }]),

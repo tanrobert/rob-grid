@@ -11,6 +11,8 @@
  *   ad area attorno al puntatore, 900 al centro e 500 al bordo (raggio = RAGGIO corpi). Gli a capo si
  *   bloccano alla prima passata (righe a filo, nowrap), se no le parole che ingrassano cambiano riga.
  *   Solo con mouse, mai con prefers-reduced-motion.
+ * - Titoli a righe fisse (data-righe="2", es. il telefono di Kiale, 29/10/2026): il corpo più grande con cui il
+ *   titolo sta in quelle righe, a tutta larghezza ("più riempitivo"). Niente lente.
  */
 
 const SELECTOR = '.cell > .text--l > .title';
@@ -20,7 +22,10 @@ const RAGGIO = 2.5;          // raggio della lente, in corpi del titolo
 const SMORZA = 70;           // ms: quanto in fretta il peso insegue il puntatore
 const ATTESA = 150;          // ms senza cambi di misura prima di rimisurare
 
+const RIGHE = '.cell [data-righe]';
+
 const titles = () => [...document.querySelectorAll<HTMLElement>(SELECTOR)];
+const aRighe = () => [...document.querySelectorAll<HTMLElement>(RIGHE)];
 
 // ── Misura ────────────────────────────────────────────────
 
@@ -50,7 +55,36 @@ function fit(title: HTMLElement) {
   title.style.transition = '';
 }
 
-export const fitTitles = () => titles().forEach(fit);
+/** Il corpo più grande con cui il titolo sta in data-righe righe, senza parole che escono */
+function fitRighe(title: HTMLElement) {
+  const righe = Number(title.dataset.righe) || 2;
+  title.style.transition = 'none';
+  let lo = MIN, hi = MAX;
+  for (let n = 0; n < 9; n++) {
+    const mid = (lo + hi) / 2;
+    title.style.fontSize = `${mid}px`;
+    const riga = parseFloat(getComputedStyle(title).lineHeight);
+    if (title.scrollWidth <= title.clientWidth && title.offsetHeight <= riga * righe + 1) lo = mid; else hi = mid;
+  }
+  const cella = title.closest<HTMLElement>('.cell')?.clientWidth;
+  const px = Math.floor(lo * 0.98);
+  title.style.fontSize = cella ? `${(px / cella) * 100}cqi` : `${px}px`;
+  title.style.transition = '';
+}
+
+/** Un titolo in un foglio ancora nascosto (montato in attesa del volo, scripts/foglio) è largo 0: misurato lì
+    "ci starebbe" a qualsiasi corpo e uscirebbe al massimo. Si misura quando compare, prima che le celle entrino */
+const inAttesa = new ResizeObserver(entries => entries.forEach(({ target, contentRect }) => {
+  if (!contentRect.width) return;
+  inAttesa.unobserve(target);
+  misura(target as HTMLElement);
+}));
+function misura(title: HTMLElement) {
+  if (!title.clientWidth) { inAttesa.observe(title); return; }
+  if (title.matches(RIGHE)) fitRighe(title); else fit(title);
+}
+
+export const fitTitles = () => [...titles(), ...aRighe()].forEach(misura);
 
 // ── Lente ─────────────────────────────────────────────────
 
@@ -100,7 +134,8 @@ function unsplit(title: HTMLElement) {
 
 export function initTitoloni(signal: AbortSignal, reduced: boolean) {
   const list = titles();
-  if (!list.length) return;
+  const tutti = [...list, ...aRighe()];
+  if (!tutti.length) return;
 
   // resize, cambio di breakpoint: intanto il titolo scala con la cella (cqi), a misura ferma si rimisura.
   // Lo zoom del tavolo no: cambia la scala, non la forma, e il titolo scala con la cella come le altre. Rimisurato
@@ -119,7 +154,7 @@ export function initTitoloni(signal: AbortSignal, reduced: boolean) {
     clearTimeout(timer);
     timer = window.setTimeout(fitTitles, ATTESA);
   });
-  list.forEach(t => ro.observe(t.parentElement!));
+  tutti.forEach(t => ro.observe(t.parentElement!));
   signal.addEventListener('abort', () => { ro.disconnect(); clearTimeout(timer); });
 
   if (reduced || !matchMedia('(hover: hover) and (pointer: fine)').matches) return;

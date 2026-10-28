@@ -2,9 +2,8 @@
  * Cella "barattolo" (components/cells/BarattoloCell.astro): mockup veri, l'etichetta piatta avvolta sul cilindro
  * misurato nel PSD (tools/barattolo-mockup.py), che gira trascinando e si sfoglia con ‹ ›. Laboratorio:
  * tools/pages/barattolo.html, da cui viene questo codice.
- * - Ogni barattolo ha il suo vaso. Tutti alla stessa scala: un cm di etichetta è uguale su ogni vaso (le etichette
- *   sono larghe 14 cm, l'altezza vera viene dalle proporzioni del file); la scala la decide il vaso che ingombra di
- *   più, così sfogliando nulla si ridimensiona.
+ * - Ogni barattolo ha il suo vaso, il più grande che ci sta e centrato (29/10/2026, scelta di Roberto: alla stessa
+ *   scala del vaso alto i vasetti bassi restavano piccoli; ora sfogliando la misura può cambiare).
  * - Livelli dei vasi in public/barattolo/<mockup>/, scaricati quando la cella si avvicina allo schermo e solo per i
  *   vasi che servono; etichette a tre a tre (quella in vista e le vicine). Il modulo resta tra un foglio e l'altro:
  *   quello che è scaricato resta.
@@ -14,29 +13,32 @@
  * - Un solo rAF per cella, acceso solo quando qualcosa si muove e la cella è in vista; con riduci movimento
  *   non gira da solo e lo sfoglia non scorre (il trascinamento resta: è un gesto).
  * - Fondo del colore della cella: segue Inverti e la tinta di Woberto.
- * - Parola della linea (Confetture, Sughi…) in basso a sinistra, col colore del bordo: se resta la stessa cambia solo
+ * - Parola della linea (Confetture, Sughi…) girata in verticale sul lato sinistro (sul destro coi vasi alti),
+ *   appoggiata sopra la fascia del bordo, col colore del bordo: se resta la stessa cambia solo
  *   il colore, se cambia esce e rientra col barattolo.
  * - Ombra a terra nostra, una sola per tutti i vasi (quelle dei mockup non si usano): un'ellisse sfumata in una tela
  *   sua, ferma; sfogliando sparisce col barattolo che esce e torna con quello che entra.
- * - Bordo dell'etichetta (SVG del progetto) in grande sul lato destro della cella, in una tela sotto (`carta`): la
+ * - Bordo dell'etichetta (SVG del progetto) in grande in fondo alla cella, subito sopra la didascalia, coi tagli verso
+ *   l'alto (29/10/2026; prima in verticale sul lato destro), in una tela sotto (`carta`): la
  *   scena del barattolo ha il bordo dentro il fondo (si vede attraverso il vetro e l'ombra ci cade sopra) ed è
  *   ritagliata sulla sagoma del vaso, così fuori resta la carta. Cambiando barattolo il bordo cambia colore e forma:
  *   le due forme, sfocate, si fondono l'una nell'altra e si riaffilano.
  */
 
-type Geometria = { w: number; h: number; cx: number; cy: number; ang: number; r: number; t0: number; t1: number; e: number; piano: [number, number]; cima: number; largo: number; piede: number };
-type Voce = { nome: string; mockup: string; src: string; bordo?: string; parola?: string; alto: number; tipo: 'pezzi' | 'crema' | 'filetti'; dentro: string; pezzi?: string };
+type Geometria = { w: number; h: number; cx: number; cy: number; ang: number; r: number; t0: number; t1: number; e: number; piano: [number, number]; cima: number; largo: number; centro: number; piede: number };
+type Voce = { nome: string; mockup: string; src: string; bordo?: string; parola?: string; tipo: 'pezzi' | 'crema' | 'filetti'; dentro: string; pezzi?: string };
 type Dati = { mockup: Record<string, Geometria>; barattoli: Voce[] };
 /** [file, fusione, tinta?]: con la tinta il file è una maschera (grigio = quanto) da riempire di quel colore */
 type Livello = [string, GlobalCompositeOperation, string?];
 type Canvas = HTMLCanvasElement & { dx?: number; dy?: number; su?: number };
 type Immagine = CanvasImageSource & { width: number; height: number };
 
-const LARGA_CM = 14;             // larghezza delle etichette
 const OGNI_MS = 4500;            // da soli, il barattolo dopo ogni tanto…
 const PAUSA_MS = 10000;          // …e dopo un gesto aspettano un po' di più
 const COPERCHIO = '#8a5236';     // marrone dei coperchi Kiale
-const MOCKUP: Record<string, { fondo: Livello[]; sopra: Livello[] }> = {
+// `dalTitolo`: il vaso va dal titolo alla didascalia (i vasi alti, 29/10/2026); gli altri al centro, grandi RIEMPIE.
+// `parolaDestra`: la parola della linea sul lato destro (di base a sinistra)
+const MOCKUP: Record<string, { fondo: Livello[]; sopra: Livello[]; dalTitolo?: boolean; parolaDestra?: boolean }> = {
   // Food Jar Mockup 2: il contenuto ha un livello suo (maschera), il coperchio una maschera da colorare
   'vaso-basso': {
     fondo: [['vaso', 'source-over'], ['maschera-coperchio', 'multiply', COPERCHIO]],
@@ -46,6 +48,8 @@ const MOCKUP: Record<string, { fondo: Livello[]; sopra: Livello[] }> = {
   'vaso-alto': {
     fondo: [['vaso', 'source-over'], ['maschera-coperchio', 'source-over', COPERCHIO], ['coperchio-ombre', 'multiply']],
     sopra: [['luci', 'screen']],
+    dalTitolo: true,
+    parolaDestra: true,
   },
 };
 const ETICHETTA = ['etichetta-ombre', 'etichetta-luci', 'maschera-contenuto'];
@@ -53,8 +57,9 @@ const BORDO_QUOTA = 0.25;        // la fascia del bordo: 4 mm d'etichetta larghi
 const BORDO_4MM = 11.34;         // 4 mm in punti (le unità degli SVG da Illustrator); i bordi sono alti 11,3–12,6
 const BORDO_MAX = 13;            // la fascia più alta, in punti: larghezza delle maschere
 const BORDO_MS = 520;            // cambio di colore e forma
-const OMBRA = { y: 0.074, rx: 0.3, ry: 0.04 };   // ombra a terra, in larghezze della tela: dal fondo, raggi
-const BORDO_FUORI = 1.5;         // la fascia esce un poco dal lato destro della cella, in punti
+const OMBRA = { y: 0.02, rx: 0.62, ry: 0.08 };   // ombra a terra, in larghezze del vetro: sopra il fondo, raggi
+const RIEMPIE = 0.8;         // quanto dello spazio dei barattoli occupa il vaso (in larghezza il vetro, in altezza dalla cima al fondo)
+const BORDO_FUORI = 1.5;         // la fascia esce un poco dal fondo della cella, in punti
 
 const tela = (w = 0, h = 0): Canvas => Object.assign(document.createElement('canvas'), { width: w, height: h });
 const carica = (src: string) => new Promise<HTMLImageElement>((ok, ko) => {
@@ -115,25 +120,25 @@ function caricaBordo(src?: string) {
   return bordi.get(src)!;
 }
 
-// maschere di un bordo alla misura della carta: la fascia girata in verticale, il lato esterno dell'etichetta sul
-// bordo destro, un po' oltre (`BORDO_FUORI`), centrata in altezza (tagli uguali sopra e sotto). `netta` = copertura
-// (0–255); `morbida` = la stessa sfocata, per il cambio di forma. A destra e sopra si allunga prima di sfocare, così
-// la fascia non sbiadisce verso i bordi della cella
+// maschere di un bordo alla misura della carta: la fascia girata di 180°, il lato esterno dell'etichetta (dritto) in
+// basso, un po' oltre (`BORDO_FUORI`), i tagli verso l'alto, centrata in larghezza (tagli uguali a destra e a
+// sinistra). `netta` = copertura (0–255); `morbida` = la stessa sfocata, per il cambio di forma. Sotto si allunga prima
+// di sfocare, così la fascia non sbiadisce verso il fondo della cella
 type Maschere = { netta: Uint8ClampedArray; morbida: Uint8ClampedArray; chiave: string };
 const maschere = new WeakMap<Bordo, Maschere>();
-function maschera(b: Bordo, k: number, mw: number, alta: number): Maschere {
-  const chiave = `${k} ${mw} ${alta}`, m = maschere.get(b);
+function maschera(b: Bordo, k: number, larga: number, mh: number): Maschere {
+  const chiave = `${k} ${larga} ${mh}`, m = maschere.get(b);
   if (m?.chiave === chiave) return m;
-  const pad = Math.ceil(2 * k), c = tela(mw + pad, alta + 2 * pad), g = c.getContext('2d', { willReadFrequently: true })!;
-  g.translate(mw + BORDO_FUORI * k, pad); g.rotate(Math.PI / 2); g.drawImage(b.img, (alta - b.w * k) / 2, 0, b.w * k, b.h * k);
+  const pad = Math.ceil(2 * k), c = tela(larga + 2 * pad, mh + pad), g = c.getContext('2d', { willReadFrequently: true })!;
+  g.translate(pad + larga / 2, mh + BORDO_FUORI * k); g.rotate(Math.PI); g.drawImage(b.img, -b.w * k / 2, 0, b.w * k, b.h * k);
   g.setTransform(1, 0, 0, 1, 0, 0);
   const d = g.getImageData(0, 0, c.width, c.height), p = d.data;
   // nero = colore pieno, bianco = carta: copertura = trasparenza × scuro
   for (let i = 0; i < p.length; i += 4) { p[i + 3] = p[i + 3] * (255 - (p[i] + p[i + 1] + p[i + 2]) / 3) / 255; p[i] = p[i + 1] = p[i + 2] = 0; }
   g.putImageData(d, 0, 0);
-  g.drawImage(c, mw - 1, 0, 1, c.height, mw, 0, pad, c.height);
+  g.drawImage(c, 0, mh - 1, c.width, 1, 0, mh, c.width, pad);
   const leggi = (src: HTMLCanvasElement) => {
-    const a = src.getContext('2d', { willReadFrequently: true })!.getImageData(0, pad, mw, alta).data, out = new Uint8ClampedArray(mw * alta);
+    const a = src.getContext('2d', { willReadFrequently: true })!.getImageData(pad, 0, larga, mh).data, out = new Uint8ClampedArray(larga * mh);
     for (let i = 0; i < out.length; i++) out[i] = a[i * 4 + 3];
     return out;
   };
@@ -222,10 +227,6 @@ async function avvia(root: HTMLElement, signal: AbortSignal, reduced: boolean) {
   const didascalia = root.querySelector<HTMLElement>('.caption');
   const cella = root.closest<HTMLElement>('.cell') ?? root;
   const interni = voci.map(texturaInterno);
-  // unità del ritaglio per cm di etichetta, per vaso: la scala comune
-  const perCm: Record<string, number> = {};
-  for (const v of voci) { const [t0, t1] = fascia(dati.mockup[v.mockup]); perCm[v.mockup] ??= (t1 - t0) / (LARGA_CM * v.alto); }
-
   let at = 0, W = 0, H = 0, giro = 0, vel = 0, auto = !reduced, raf = 0, ultimo = 0, inVista = true;
   let presa: { x: number; y: number; t: number } | null = null;
   // vaso in vista: geometria, livelli, scala (pixel reali per unità del ritaglio), fascia dell'etichetta, etichetta
@@ -261,21 +262,22 @@ async function avvia(root: HTMLElement, signal: AbortSignal, reduced: boolean) {
     carta.width = ombra.width = Math.round(rc.width * dpr); carta.height = ombra.height = Math.round(rc.height * dpr);
     // posizione di layout (la vetrina sta a 0,0 della cella): il rettangolo vero includerebbe lo spostamento dello sfoglia
     ox = Math.round(cv.offsetLeft * dpr); oy = Math.round(cv.offsetTop * dpr);
-    // pixel reali per cm: il più grande con cui ogni vaso, appoggiato in basso, ci sta dalla sua cima in giù. Il canvas
-    // comincia a --aria-mockup dall'alto della cella: il vaso che arriva più in alto (quello alto) lo tocca.
-    // In larghezza conta solo il vetro (`largo`): l'ombra ai lati può uscire, sfuma nel colore della cella
-    const pxCm = Math.min(...Object.entries(dati.mockup).map(([m, g]) => Math.min(W / (g.largo / perCm[m]), H / ((g.h - g.cima) / perCm[m]))));
-    s = pxCm / perCm[voci[at].mockup];
+    // pixel reali per unità del ritaglio. Il canvas comincia sotto il titolo e finisce sulla didascalia. In larghezza
+    // conta solo il vetro (`largo`): l'ombra ai lati può uscire, sfuma nella cella. Il vaso dal titolo tocca il titolo
+    // e la didascalia; gli altri stanno al centro dello spazio sopra la fascia del bordo (fino alle punte), grandi RIEMPIE
+    const alto = G.piede - G.cima;
+    const punte = !M.dalTitolo && bordo.a ? (bordo.a.h - BORDO_FUORI) * carta.width * BORDO_QUOTA / BORDO_4MM : 0;
+    const libero = Math.max(1, H - punte);
+    s = (M.dalTitolo ? 1 : RIEMPIE) * Math.min(W / G.largo, libero / alto);
+    sy = Math.round((libero - alto * s) / 2 - G.cima * s);
     scena.width = fondo.width = sagoma.width = Math.round(G.w * s); scena.height = fondo.height = sagoma.height = Math.round(G.h * s);
-    // posata in basso al centro; i vasi col fondo del vetro più alto nel ritaglio salgono, così i fondi coincidono
-    const sotto = Math.max(...Object.entries(dati.mockup).map(([m, g]) => (g.h - g.piede) / perCm[m] * pxCm));
-    sx = Math.round((W - scena.width) / 2); sy = Math.round(H - scena.height - (sotto - (G.h - G.piede) * s));
+    sx = Math.round(W / 2 - G.centro * s);
     ritaglia();
     dipingiBordo(performance.now());
-    // ombra: sotto il centro della tela, vicino al fondo
-    const go = ombra.getContext('2d')!;
+    // ombra: sotto il fondo del vetro, in proporzione al vaso
+    const go = ombra.getContext('2d')!, vetro = G.largo * s;
     go.clearRect(0, 0, ombra.width, ombra.height);
-    go.setTransform(OMBRA.rx * W, 0, 0, OMBRA.ry * W, ox + W / 2, oy + H - OMBRA.y * W);
+    go.setTransform(OMBRA.rx * vetro, 0, 0, OMBRA.ry * vetro, ox + sx + G.centro * s, oy + sy + G.piede * s - OMBRA.y * vetro);
     const sfuma = go.createRadialGradient(0, 0, 0, 0, 0, 1);
     sfuma.addColorStop(0, 'rgba(28, 26, 23, .3)'); sfuma.addColorStop(0.5, 'rgba(28, 26, 23, .14)'); sfuma.addColorStop(1, 'rgba(28, 26, 23, 0)');
     go.fillStyle = sfuma; go.beginPath(); go.arc(0, 0, 1, 0, 2 * Math.PI); go.fill();
@@ -322,25 +324,28 @@ async function avvia(root: HTMLElement, signal: AbortSignal, reduced: boolean) {
   function dipingiBordo(adesso: number) {
     cc.clearRect(0, 0, carta.width, carta.height);
     const { da, a } = bordo, dpr = carta.width / Math.max(1, root.clientWidth);
-    const alta = carta.height - Math.round((didascalia?.offsetHeight ?? 0) * dpr);
-    const k = carta.width * BORDO_QUOTA / BORDO_4MM, mw = Math.min(carta.width, Math.ceil(BORDO_MAX * k));
-    if ((a || da) && alta > 0 && mw > 0) {
+    // sopra la didascalia, che resta sulla carta
+    const larga = carta.width, sotto = Math.round((didascalia?.offsetHeight ?? 0) * dpr);
+    const k = carta.width * BORDO_QUOTA / BORDO_4MM, mh = Math.min(carta.height - sotto, Math.ceil(BORDO_MAX * k));
+    // quanto sale la fascia sopra la didascalia (fino alle punte), in px CSS: la parola ci si appoggia sopra
+    if (a) root.style.setProperty('--bordo-alto', `${((a.h - BORDO_FUORI) * k / dpr).toFixed(1)}px`);
+    if ((a || da) && larga > 0 && mh > 0) {
       const p = da ? Math.min(1, (adesso - bordo.t) / BORDO_MS) : 1, e = p < 0.5 ? 2 * p * p : 1 - (-2 * p + 2) ** 2 / 2;
-      const A = da && maschera(da, k, mw, alta), B = a && maschera(a, k, mw, alta);
+      const A = da && maschera(da, k, larga, mh), B = a && maschera(a, k, larga, mh);
       // sciolta: quanto le forme sono sfocate (zero agli estremi; zero sempre se la forma è la stessa: cambia solo il
       // colore); netto: la soglia che le tiene col contorno pulito
       const sciolta = A && B && !simili(A.netta, B.netta) ? Math.sin(Math.PI * e) : 0, netto = Math.min(1, 4 * sciolta);
       const ca = (da ?? a)!.colore, cb = (a ?? da)!.colore, col = ca.map((v, j) => v + (cb[j] - v) * e);
-      if (pixel?.width !== mw || pixel.height !== alta) pixel = cc.createImageData(mw, alta);
+      if (pixel?.width !== larga || pixel.height !== mh) pixel = cc.createImageData(larga, mh);
       const q = pixel.data;
-      for (let i = 0, j = 0; i < mw * alta; i++, j += 4) {
+      for (let i = 0, j = 0; i < larga * mh; i++, j += 4) {
         const fa = A ? A.netta[i] + (A.morbida[i] - A.netta[i]) * sciolta : 0;
         const fb = B ? B.netta[i] + (B.morbida[i] - B.netta[i]) * sciolta : 0;
         const f = (fa + (fb - fa) * e) / 255;
         const x = Math.min(1, Math.max(0, (f - 0.42) / 0.16)), soglia = x * x * (3 - 2 * x);
         q[j] = col[0]; q[j + 1] = col[1]; q[j + 2] = col[2]; q[j + 3] = 255 * (f + (soglia - f) * netto);
       }
-      cc.putImageData(pixel, carta.width - mw, 0);
+      cc.putImageData(pixel, 0, carta.height - sotto - mh);
       if (p >= 1) bordo.da = null;
     }
     bordoFermo = !bordo.da;
@@ -486,6 +491,7 @@ async function avvia(root: HTMLElement, signal: AbortSignal, reduced: boolean) {
     if (src) parola.style.setProperty('--parola', `url("${src}")`);
     if (c) parola.style.setProperty('--parola-colore', `rgb(${c.join(' ')})`);
     parola.style.opacity = src && c ? '1' : '0';
+    parola.classList.toggle('parola--destra', !!M.parolaDestra);
   }
   async function sfoglia(p: number, daSolo = false) {
     if (!daSolo) programma(PAUSA_MS);

@@ -28,11 +28,13 @@
   /* modulo: tutto è multiplo di 10px */
   --m:    10px;
   --gap:  var(--m);
-  --pad:  calc(var(--m) * 2);
-  /* padding superiore delle celle: lascia spazio alla linguetta (~22px) */
-  --pad-label: calc(var(--pad) + 22px);
-  /* aria sopra i mockup che stanno sotto un testo (barattoli, telefono): dalla linguetta in giù, in proporzione alla cella */
-  --aria-mockup: calc(var(--pad-label) + 12cqh);
+  /* margine interno delle celle, uguale sui quattro lati: numero, occhiello, freccia/✕, testi e didascalie
+     partono tutti alla stessa distanza dal bordo (28/10/2026, scelta di Roberto) */
+  --pad:  var(--m);
+  /* riga di testa delle celle (numero · occhiello, freccia/✕): alta quanto il corpo .mono */
+  --riga-label: 11px;
+  /* padding superiore del contenuto: sotto la riga di testa, con lo stesso margine */
+  --pad-label: calc(var(--pad) * 2 + var(--riga-label));
   --line: 1px;
   --dp:   1px;  /* 1 pixel reale dello schermo: aggiornato da Layout.astro */
   /* --line agganciato ai pixel reali, per le linee disegnate con i gradienti (vedi @supports sotto) */
@@ -108,7 +110,7 @@ a[href], button, [role="button"], [role="switch"], label[for], summary, select {
 }
 
 @media (max-width: 1023px) { :root { --cols: 8; } }
-@media (max-width: 599px)  { :root { --cols: 4; --pad: calc(var(--m) * 1.4); } }
+@media (max-width: 599px)  { :root { --cols: 4; } }
 
 /* ── Base ─────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -314,21 +316,27 @@ p { text-wrap: pretty; }
 
 .cell--red { background: var(--inchiostro); color: var(--bianco); }
 
-/* Linguetta (indice · nome), freccia/✕ e didascalia dei progetti: solo testo, senza fondo né filo.
-   Sulle foto in bianco */
+/* Riga di testa (numero · occhiello), freccia/✕ e didascalia dei progetti: solo testo, senza fondo né filo,
+   a --pad dai bordi come il contenuto. Sulle foto in bianco */
 .cell__label {
-  position: absolute; top: 0; left: 0; z-index: 2;
+  position: absolute; top: var(--pad); left: var(--pad); z-index: 2;
   display: flex; gap: 8px;
-  padding: 6px 8px 5px;
+  /* l'occhiello lungo si taglia prima della freccia */
+  max-width: calc(100% - 2 * var(--pad) - var(--riga-label) - var(--m));
+  line-height: var(--riga-label);
   white-space: nowrap;
 }
+.cell__label > :last-child { overflow: hidden; text-overflow: ellipsis; }
+.cell__label h2 { font: inherit; }
 
 /* freccia delle celle cliccabili */
 .cell__go {
-  position: absolute; top: 0; right: 0; z-index: 2;
+  position: absolute; top: var(--pad); right: var(--pad); z-index: 2;
   display: grid; place-items: center;
-  width: 30px; height: 30px;
+  width: var(--riga-label); height: var(--riga-label);
 }
+/* la ✕ si prende anche attorno al segno, come quando era un quadrato di 30px */
+.cell__go::before { content: ''; position: absolute; inset: calc(var(--pad) * -1); }
 .cell__go span { display: block; }
 /* freccia (src/assets/arrow.svg): il colore segue il testo */
 .cell__go svg { width: 11px; height: 11px; }

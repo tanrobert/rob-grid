@@ -9,13 +9,12 @@ interface Props {
   video?: string;
   alt: string;
   sizes: string;
-  /** Titolo e meta mostrati in basso, sulla foto */
+  /** Titolo mostrato in basso, sulla foto */
   title?: string;
-  meta?: string;
   /** Hero della pagina: caricata subito, deve esserci già quando la cella si espande */
   priority?: boolean;
 }
-const { image, video, alt, sizes, title, meta, priority = false } = Astro.props;
+const { image, video, alt, sizes, title, priority = false } = Astro.props;
 const poster = image && video ? await getImage({ src: image, width: 1280, format: 'webp' }) : undefined;
 // se accanto all'mp4 (H.264, per tutti) c'è lo stesso nome in .webm (AV1, molto più leggero), chi lo sa leggere usa quello
 const webm = video?.replace(/\.mp4$/, '.webm');
@@ -36,23 +35,20 @@ const conWebm = !!webm && webm !== video && fs.existsSync(path.join(process.cwd(
 {title && (
   <div class="caption">
     <span class="caption__title">{title}</span>
-    {meta && <span class="mono">{meta}</span>}
   </div>
 )}
 
 <style>
   .caption {
     position: absolute; left: 0; right: 0; bottom: 0; z-index: 2;
-    display: flex; justify-content: space-between; align-items: baseline; gap: 2px var(--m);
-    /* se titolo e data non stanno su una riga (celle strette, titoli lunghi) la data sale sopra, come un occhiello */
-    flex-wrap: wrap-reverse;
-    padding: 8px 12px 7px;
+    display: flex;
+    padding: var(--pad);
   }
   .caption__title {
     font-weight: 500;
     font-size: 15px;
+    line-height: 1;
     letter-spacing: -0.01em;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
-  .caption .mono { flex-shrink: 0; }
 </style>

@@ -141,10 +141,10 @@ const sagoma = (c: Cell) => (c.frame === false && c.type === 'svg' ? svgs[c.svg]
   }
   /* margini interni delle celle (global.css) in scala con lo zoom: --zoom = quadretto / quadretto di base (vista.ts) */
   .tavolo {
-    --pad: calc(var(--m) * 2 * var(--zoom, 1));
-    --pad-label: calc(var(--pad) + 22px * var(--zoom, 1));
+    --pad: calc(var(--m) * var(--zoom, 1));
+    --pad-label: calc(var(--pad) * 2 + var(--riga-label));
   }
-  @media (max-width: 599px) { .tavolo { --q: var(--q-sm); --pad: calc(var(--m) * 1.4 * var(--zoom, 1)); } }
+  @media (max-width: 599px) { .tavolo { --q: var(--q-sm); } }
   /* mano chiusa mentre si porta il tavolo o una cella (gesti.ts), anche sopra le celle-link (se no la manina) */
   .tavolo.is-panning, .tavolo.is-panning :global(*) { cursor: var(--cursore-chiusa); }
 

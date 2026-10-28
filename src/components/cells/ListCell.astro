@@ -2,14 +2,12 @@
 import { pad2 } from '../../lib/format';
 
 interface Props {
-  title: string;
   items: Array<string | { label: string; href: string }>;
 }
-const { title, items } = Astro.props;
+const { items } = Astro.props;
 ---
 
 <div class="list">
-  <h2 class="mono">{title} <span>/ {pad2(items.length)}</span></h2>
   <ol>
     {items.map((item, i) => {
       const n = <span class="mono">{pad2(i + 1)}</span>;
@@ -23,10 +21,9 @@ const { title, items } = Astro.props;
 <style>
   .list {
     position: absolute; inset: 0;
-    display: flex; flex-direction: column; justify-content: space-between;
+    display: flex; flex-direction: column; justify-content: flex-end;
     padding: var(--pad-label) var(--pad) var(--pad);
   }
-  h2 { font-weight: 400; }
   ol {
     list-style: none;
     display: grid;

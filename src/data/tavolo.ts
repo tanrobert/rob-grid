@@ -1,7 +1,5 @@
 import type { Cell } from './grid-types';
 import { projects, getProject } from './projects';
-import { allTags } from '../lib/tags';
-import { firstYear } from '../lib/projects';
 import { pad2 } from '../lib/format';
 import { extraCells } from './extra';
 
@@ -24,11 +22,7 @@ import { extraCells } from './extra';
  * ─────────────────────────────────────────────────────────────────────
  */
 
-// i 9 tag più usati, ognuno apre l'archivio già filtrato
-const topTags = [...allTags].sort((a, b) => b.count - a.count).slice(0, 9)
-  .map(t => ({ label: t.tag, href: `/archivio?tag=${t.slug}` }));
-
-// cella progetto: la misura è la forma del progetto (uguale in archivio, ×2 nella hero)
+// cella progetto: la misura è la forma del progetto (uguale in archivio e nella hero)
 function projectCell(id: string, slug: string): Cell {
   const shape = getProject(slug)?.shape;
   if (!shape) throw new Error(`[tavolo] il progetto "${slug}" non ha una forma (shape nel suo index.md)`);
@@ -41,7 +35,7 @@ export const tavolo: Cell[] = [
   { id: 'nome',     type: 'logotipo', w: 5, h: 1, q: { w: 20, h: 4 } },
   {
     id: 'intro', type: 'text', w: 5, h: 3, q: { w: 20, h: 10 }, as: 'h1', size: 'l',
-    eyebrow: `Graphic designer · dal ${firstYear}`,
+    eyebrow: 'Graphic designer',
     title: 'Progetto identità visive e punti di contatto fisici e digitali.',
   },
   // progetti sul tavolo: Kiale, quello su cui si lavora, ed Eurofish col video del mare (il caso più pesante,
@@ -50,7 +44,6 @@ export const tavolo: Cell[] = [
   projectCell('eurofish', 'eurofish'),
   { id: 'archivio', type: 'stat',     w: 2, h: 2, href: '/archivio', value: pad2(projects.length), caption: 'Progetti in archivio', countUp: true },
   { id: 'info',     type: 'text',     w: 2, h: 2, tone: 'red', href: '/info', title: 'Bio', as: 'p', size: 'm', eyebrow: 'Chi sono' },
-  { id: 'tag',      type: 'list',     w: 4, h: 2, title: 'Tag', items: topTags },
   {
     id: 'metodo', type: 'text', w: 4, h: 2, size: 's',
     title: 'Essenziale, accessibile, chiara.',

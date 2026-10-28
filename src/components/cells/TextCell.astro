@@ -1,19 +1,17 @@
 ---
 interface Props {
-  eyebrow?: string;
   title: string;
   body?: string | string[];
   as?: 'h1' | 'h2' | 'p';
   size?: 's' | 'm' | 'l';
 }
-const { eyebrow, title, body, as: Tag = 'h2', size = 'm' } = Astro.props;
+const { title, body, as: Tag = 'h2', size = 'm' } = Astro.props;
 // un "_" finale diventa un cursore lampeggiante
 const caret = title.endsWith('_');
 const text = caret ? title.slice(0, -1) : title;
 ---
 
 <div class:list={['text', `text--${size}`]}>
-  {eyebrow && <p class="eyebrow mono">{eyebrow}</p>}
   <Tag class="title">{text}{caret && <span class="caret loop" aria-hidden="true">_</span>}</Tag>
   {typeof body === 'string' && <p class="body">{body}</p>}
   {Array.isArray(body) && <ul class="body body--list">{body.map(line => <li>{line}</li>)}</ul>}
@@ -26,7 +24,6 @@ const text = caret ? title.slice(0, -1) : title;
     gap: var(--m);
     padding: var(--pad-label) var(--pad) var(--pad);
   }
-  .eyebrow { margin-bottom: auto; }
 
   .title {
     font-family: var(--font-testo);
