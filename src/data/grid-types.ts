@@ -93,6 +93,9 @@ export type Cell = CellBase & (
   | { type: 'globe' }
   /** barattoli col mockup vero (public/barattolo/<mockup>) e l'etichetta piatta avvolta, da girare e sfogliare; testo in alto a sinistra */
   | { type: 'barattolo'; barattoli: Barattolo[]; eyebrow?: string; title?: string; body?: string | string[] }
+  /** mano col telefono (public/telefono) e una registrazione dello schermo che scorre dentro (mp4 in public, .webm e poster .webp accanto); testo sopra.
+   *  `logo`: SVG del cliente (testo in tracciati) in basso a sinistra, sopra la mano, con la sua descrizione `logoAlt` */
+  | { type: 'telefono'; video: string; alt: string; eyebrow?: string; title?: string; body?: string | string[]; logo?: ImageMetadata; logoAlt?: string }
   /** pagina d'errore: codice grande con glitch, titolo (h1) e link all'indice, su carta a quadretti */
   | { type: 'error'; code: string; title: string }
   /** recapiti (email, luogo, P.IVA, versione): cella del tavolo e dei fogli */

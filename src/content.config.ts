@@ -59,6 +59,11 @@ const progetti = defineCollection({
           pezzi: z.string().regex(colore, 'colore esadecimale, es. "#c8202a"').optional(),
         })).min(1),
       }),
+      // mano col telefono e registrazione dello schermo dentro (video in public, .webm e poster .webp accanto)
+      z.strictObject({
+        ...base, type: z.literal('telefono'), video: z.string(), alt: z.string(), logo: image().optional(), logoAlt: z.string().optional(),
+        eyebrow: z.string().optional(), title: z.string().optional(), body: z.union([z.string(), z.array(z.string())]).optional(),
+      }),
     ]);
 
     return z.strictObject({

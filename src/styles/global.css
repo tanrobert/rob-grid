@@ -31,6 +31,8 @@
   --pad:  calc(var(--m) * 2);
   /* padding superiore delle celle: lascia spazio alla linguetta (~22px) */
   --pad-label: calc(var(--pad) + 22px);
+  /* aria sopra i mockup che stanno sotto un testo (barattoli, telefono): dalla linguetta in giù, in proporzione alla cella */
+  --aria-mockup: calc(var(--pad-label) + 12cqh);
   --line: 1px;
   --dp:   1px;  /* 1 pixel reale dello schermo: aggiornato da Layout.astro */
   /* --line agganciato ai pixel reali, per le linee disegnate con i gradienti (vedi @supports sotto) */
@@ -243,11 +245,12 @@ p { text-wrap: pretty; }
 }
 .skip-link:focus { top: var(--gap); }
 
-/* ── Griglia delle pagine (components/foglio: --u e --gap in quadretti) ── */
+/* ── Griglia delle pagine (components/foglio: --u e --gap in quadretti, larghezza = un numero intero di colonne,
+   almeno --cols: auto-fill le conta) ── */
 .grid {
   position: relative;
   display: grid;
-  grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fill, var(--u));
   grid-auto-rows: var(--u);
   grid-auto-flow: row dense;
   gap: var(--gap);

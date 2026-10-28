@@ -15,7 +15,7 @@ const FEATURED = { w: 4, h: 4 };
 const REGULAR = { w: 2, h: 2 };
 
 const cells: Cell[] = [
-  { id: 'archivio', type: 'archive-head', w: 4, h: 4, sm: { h: 2 }, heroOf: '/archivio', total: projectsByYear.length },
+  { id: 'archivio', type: 'archive-head', w: 2, h: 2, heroOf: '/archivio', total: projectsByYear.length },
   { id: 'tag', type: 'tags', w: 8, h: 4, md: { w: 4 }, hideOn: ['sm'], tags: allTags },
   ...projectsByYear.map((p): Cell => ({
     id: `p-${p.slug}`,

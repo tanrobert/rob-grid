@@ -30,15 +30,28 @@ cells:
       - { nome: "Pasta e fagioli · sugo pronto", mockup: vaso-basso, etichetta: ./etichette/sugo-pasta-fagioli.webp, bordo: ./etichette/sugo-pasta-fagioli.svg, parola: ./etichette/parola-paste.svg, tipo: pezzi, dentro: "#b8502e", pezzi: "#e8c8a0" }
       - { nome: "Vellutata di carote, patate e piselli", mockup: vaso-alto, etichetta: ./etichette/vellutata-carote-patate-piselli.webp, bordo: ./etichette/vellutata-carote-patate-piselli.svg, parola: ./etichette/parola-vellutate.svg, tipo: crema, dentro: "#ffa83c" }
       - { nome: "Vellutata di zucca e patate", mockup: vaso-alto, etichetta: ./etichette/vellutata-zucca-patate.webp, bordo: ./etichette/vellutata-zucca-patate.svg, parola: ./etichette/parola-vellutate.svg, tipo: crema, dentro: "#ffb83a" }
-  # etichette a striscia delle vaschette termosaldate (135×45 mm), una sotto l'altra su fondo trasparente (la carta
-  # della cella): python tools/strisce.py src/content/progetti/kiale/strisce.webp sorgenti/kiale/striscia-*.pdf
-  # (grigliate, ripassato, tielle). Il mockup della vaschetta (tools/vaschetta-mockup.py) è per ora messo da parte
+  # canale WhatsApp: registrazione dello schermo (tema chiaro, primi 11 secondi: ffmpeg -t 11) con un margine bianco attorno (gli angoli tondi
+  # non tagliano ora e tasti), messa in prospettiva nello schermo del telefono da tools/telefono-mockup.py ("mockup tel 3.psd"
+  # → public/telefono e public/media/kiale-canale). Cella stretta come i barattoli, testo sopra il telefono. Testo: bozza
+  - type: telefono
+    w: 4
+    h: 6
+    md: { w: 4, h: 6 }
+    sm: { w: 4, h: 6 }
+    eyebrow: "Social · canale WhatsApp"
+    title: "Il menù del giorno, ogni giorno sul telefono"
+    body: "Per il canale WhatsApp di Kiale una card fissa per il menù del giorno: primi, secondi e contorni, con lo stesso stile delle etichette. Cambiano i piatti, la pagina resta riconoscibile."
+    video: /media/kiale-canale.mp4
+    # logo del canale (da Illustrator, già espanso: "Risorsa 7.svg")
+    logo: ./menu-giornaliero.svg
+    logoAlt: "Kiale food service · canale WhatsApp · menù giornaliero"
+    alt: "Il canale WhatsApp Kiale Food Service scorre sul telefono: una card del menù del giorno dopo l'altra"
+  # poster estivo nel mockup (foto intera, ridotta a 2000 px da "kiale poster 1.png")
   - type: media
     w: 4
-    h: 4
-    md: { w: 4, h: 4 }
-    sm: { w: 4, h: 4 }
-    label: false
-    image: ./strisce.webp
-    alt: "Tre etichette a striscia Kiale per le vaschette: Grigliate al forno, Ripassato in padella, Tielle della tradizione"
+    h: 5
+    md: { w: 4, h: 5 }
+    sm: { w: 4, h: 5 }
+    image: ./poster.jpg
+    alt: "Poster Kiale tenuto in mano: Welcome, prima di andare al mare passa da noi; prima colazione, food delivery e prenotazioni"
 ---

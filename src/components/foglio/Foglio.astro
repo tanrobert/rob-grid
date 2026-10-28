@@ -26,18 +26,22 @@ const recapiti: Cell = { id: 'recapiti', type: 'contatti', w: 4, h: 2, tone: 're
 </main>
 
 <style>
-  /* quadretto del foglio: il più grande con cui le colonne della pagina (12, 8, 4) stanno nella finestra con un
-     quadretto di margine per lato, fino a 36px (≈ la vecchia cella più grande). Passo della griglia = 4 quadretti:
-     ci si allineano anche il righello e la ghiera della cella registro (--ruler-step) */
+  /* quadretto del foglio: il più grande con cui le colonne minime della pagina (12, 8, 4) stanno nella finestra con
+     un quadretto di margine per lato, ma da 600px in su mai più grande di quello del tavolo (Q.lg di lib/tavolo.ts, QF_MAX di lib/grid.ts per le foto):
+     oltre, la finestra si riempie con colonne in più (il foglio è largo un numero intero di colonne, la griglia
+     le conta da sola con auto-fill). Sul telefono restano 4 colonne a tutta larghezza.
+     Passo della griglia = 4 quadretti: ci si allineano anche il righello e la ghiera della cella registro (--ruler-step) */
   :global(html:is(.ha-foglio, .ha-pagina) body) {
-    --qf: round(down, min(100vw / (var(--cols) * 4 + 1), 36px), 1px);
+    --qf: round(down, min(100vw / (var(--cols) * 4 + 1), var(--qf-max)), 1px);
+    --qf-max: 25px;
     --ruler-step: calc(var(--qf) * 4);
   }
+  @media (max-width: 599px) { :global(html:is(.ha-foglio, .ha-pagina) body) { --qf-max: 100vw; } }
   .foglio {
     --gap: var(--qf);
     --u: calc(var(--qf) * 3);
     position: relative;
-    width: calc(var(--qf) * (var(--cols) * 4 + 1));
+    width: calc(round(down, 100vw - var(--qf), var(--qf) * 4) + var(--qf));
     margin-inline: auto;
     padding: var(--qf);
   }

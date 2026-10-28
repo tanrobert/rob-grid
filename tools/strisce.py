@@ -2,7 +2,7 @@
 # che segue Inverti), nella proporzione della cella. Solo sviluppo. Serve: pip install --user pymupdf pillow
 #   python tools/strisce.py <uscita.webp> a.pdf b.pdf … [--cella 1:1] [--larga 0.8] [--spazio 0.035] [--px 2000]
 #   --larga: larghezza delle strisce sulla cella; --spazio: spazio fra due strisce, sulla larghezza della cella
-#   --sparse <seme>: flatlay, le strisce appoggiate alla rinfusa, più larghe della cella (--larga 1.1): posizione,
+#   --sparse <seme> [--inclina 7] [--sposta 0.15] [--copre 0.97]: flatlay, le strisce appoggiate alla rinfusa, più larghe della cella (--larga 1.1): posizione,
 #   inclinazione, lato e ordine sopra/sotto a caso, ma nessuna copre le scritte di un'altra (controllato sui pixel: si
 #   può coprire solo la carta vuota e la riga di 200 grammi e logo) e insieme coprono la cella. Prova molte posizioni per
 #   striscia e tiene la prima che va; stesso seme = stessa disposizione
@@ -12,7 +12,7 @@ import fitz
 from PIL import Image, ImageFilter
 
 args = sys.argv[1:]
-opz = {'--cella': '1:1', '--larga': '0.8', '--spazio': '0.035', '--px': '2000', '--sparse': '', '--copre': '0.97'}
+opz = {'--cella': '1:1', '--larga': '0.8', '--spazio': '0.035', '--px': '2000', '--sparse': '', '--copre': '0.97', '--inclina': '7', '--sposta': '0.15'}
 if '--sparse' in args and '--larga' not in args: opz['--larga'] = '1.1'
 for k in list(opz):
     if k in args:
@@ -29,7 +29,7 @@ for f in pdf:
     strisce.append(Image.frombytes('RGB', (pix.width, pix.height), pix.samples))
 if opz['--sparse']:
     import numpy as np
-    INCLINA, SPOSTA, K = 9.0, 0.2, 8                  # gradi, frazione della cella, riduzione per i controlli
+    INCLINA, SPOSTA, K = float(opz['--inclina']), float(opz['--sposta']), 8   # gradi, frazione della cella, riduzione per i controlli
     n, h = len(strisce), strisce[0].height
     w8, h8 = W // K, H // K
 

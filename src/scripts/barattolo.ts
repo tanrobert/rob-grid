@@ -262,7 +262,7 @@ async function avvia(root: HTMLElement, signal: AbortSignal, reduced: boolean) {
     // posizione di layout (la vetrina sta a 0,0 della cella): il rettangolo vero includerebbe lo spostamento dello sfoglia
     ox = Math.round(cv.offsetLeft * dpr); oy = Math.round(cv.offsetTop * dpr);
     // pixel reali per cm: il più grande con cui ogni vaso, appoggiato in basso, ci sta dalla sua cima in giù. Il canvas
-    // comincia dove comincia il testo: il vaso che arriva più in alto (quello alto) tocca il margine alto del testo.
+    // comincia a --aria-mockup dall'alto della cella: il vaso che arriva più in alto (quello alto) lo tocca.
     // In larghezza conta solo il vetro (`largo`): l'ombra ai lati può uscire, sfuma nel colore della cella
     const pxCm = Math.min(...Object.entries(dati.mockup).map(([m, g]) => Math.min(W / (g.largo / perCm[m]), H / ((g.h - g.cima) / perCm[m]))));
     s = pxCm / perCm[voci[at].mockup];

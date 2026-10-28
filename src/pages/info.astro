@@ -7,10 +7,10 @@ import { tavolo } from '../data/tavolo';
 import { site, pageTitle } from '../data/site';
 
 // In testa l'arrivo dell'espansione della cella "info" della home: stessa cella (testo rosso,
-// occhiello e titolo della stessa misura relativa) al doppio, come Extra e Archivio.
+// occhiello e titolo della stessa misura relativa) alla stessa misura, come Extra e Archivio.
 // Testi segnaposto: da sostituire con la bio vera.
 const cells: Cell[] = [
-  { id: 'info', type: 'text', w: 4, h: 4, sm: { h: 2 }, tone: 'red', heroOf: '/info', as: 'h1', size: 'm', eyebrow: 'Chi sono', title: 'Bio' },
+  { id: 'info', type: 'text', w: 2, h: 2, tone: 'red', heroOf: '/info', as: 'h1', size: 'm', eyebrow: 'Chi sono', title: 'Bio' },
   {
     id: 'bio', type: 'text', w: 8, h: 4, as: 'p', size: 'l',
     title: 'Disegno sistemi visivi: marchi, confezioni, siti. Parto da una griglia e da poche regole, poi le applico con rigore.',
