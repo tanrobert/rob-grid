@@ -9,3 +9,6 @@ firefox_*.png
 
 # risultati degli strumenti di verifica (tools/)
 tools/out/
+
+# file sorgente pesanti (PSD dei mockup, PDF di stampa dei clienti): solo in locale
+sorgenti/

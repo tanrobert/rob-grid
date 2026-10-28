@@ -8,6 +8,25 @@ export interface Span {
   h: number;
 }
 
+/** Mockup dei barattoli (tools/barattolo-mockup.py → public/barattolo/<nome>/) */
+export type Mockup = 'vaso-basso' | 'vaso-alto';
+/** Un barattolo della cella `barattolo`: etichetta piatta e interno segnaposto (colori chiari: si moltiplicano sul vetro) */
+export interface Barattolo {
+  nome: string;
+  /** vaso-basso per le etichette 14×6, vaso-alto per le 14×9 */
+  mockup: Mockup;
+  /** larga 14 cm: l'altezza vera viene dalle proporzioni del file, e dà la scala comune tra i vasi */
+  etichetta: ImageMetadata;
+  /** bordo vettoriale dell'etichetta (SVG da Illustrator, un colore + bianco): decorazione sul lato destro della cella */
+  bordo?: ImageMetadata;
+  /** la parola della linea (Confetture, Sughi…: SVG a tinta unica, vettorializzato), in basso a sinistra col colore del bordo */
+  parola?: ImageMetadata;
+  /** pezzi = frutta o legumi nella confettura o nel sugo · crema = vellutata, sugo liscio · filetti = sott'olio */
+  tipo: 'pezzi' | 'crema' | 'filetti';
+  dentro: string;
+  pezzi?: string;
+}
+
 /** Colore di fondo della cella. */
 export type Tone = 'paper' | 'red';
 
@@ -72,6 +91,8 @@ export type Cell = CellBase & (
   | { type: 'eye' }
   /** globo orientato come la Terra adesso, trascinabile */
   | { type: 'globe' }
+  /** barattoli col mockup vero (public/barattolo/<mockup>) e l'etichetta piatta avvolta, da girare e sfogliare; testo in alto a sinistra */
+  | { type: 'barattolo'; barattoli: Barattolo[]; eyebrow?: string; title?: string; body?: string | string[] }
   /** pagina d'errore: codice grande con glitch, titolo (h1) e link all'indice, su carta a quadretti */
   | { type: 'error'; code: string; title: string }
   /** recapiti (email, luogo, P.IVA, versione): cella del tavolo e dei fogli */

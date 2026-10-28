@@ -1,0 +1,127 @@
+---
+// Barattoli col mockup vero: l'etichetta piatta avvolta sul cilindro misurato nel PSD (tools/barattolo-mockup.py,
+// livelli in public/barattolo/<mockup>), che si gira trascinando e si sfoglia con ‹ ›. Ogni barattolo ha il suo vaso;
+// tutti alla stessa scala (un cm di etichetta è uguale su ogni vaso), decisa dal più grande: sfogliando nulla si
+// ridimensiona. Disegnati da scripts/barattolo.ts, caricato solo se la cella c'è e quando si avvicina allo schermo.
+// In colonna: occhiello, titolo e testo in alto a sinistra, i barattoli sotto. Laboratorio: tools/pages/barattolo.html.
+import fs from 'node:fs';
+import path from 'node:path';
+import sharp from 'sharp';
+import type { Barattolo } from '../../data/grid-types';
+import { pad2 } from '../../lib/format';
+
+interface Props {
+  barattoli: Barattolo[];
+  eyebrow?: string;
+  title?: string;
+  body?: string | string[];
+}
+const { barattoli, eyebrow, title, body } = Astro.props;
+
+// geometria misurata dallo strumento: letta al build, così lo script non la deve scaricare
+// `largo`: quanto è largo il vetro (centrato), senza l'ombra che sfuma nella carta: in larghezza conta solo lui.
+// `piede`: il punto più basso del vetro, per posare tutti i vasi alla stessa altezza
+const geometria = async (m: string) => {
+  const cartella = path.join(process.cwd(), 'public', 'barattolo', m);
+  const G = JSON.parse(fs.readFileSync(path.join(cartella, 'geometria.json'), 'utf8'));
+  const { data, info } = await sharp(path.join(cartella, 'vaso.webp')).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  let x0 = info.width, x1 = 0, y1 = 0;
+  for (let i = 3; i < data.length; i += 4) if (data[i] > 8) { const x = ((i - 3) / 4) % info.width; x0 = Math.min(x0, x); x1 = Math.max(x1, x); y1 = Math.floor((i - 3) / 4 / info.width); }
+  const largo = 2 * Math.max(info.width / 2 - x0, x1 + 1 - info.width / 2) * G.w / info.width;
+  const piede = (y1 + 1) * G.h / info.height;
+  return { w: G.w, h: G.h, cx: G.cx, cy: G.cy, ang: G.ang, r: G.r, t0: G.t0, t1: G.t1, e: G.e, piano: G.piano, cima: G.cima, largo, piede };
+};
+const vasi = [...new Set(barattoli.map(b => b.mockup))];
+const dati = {
+  mockup: Object.fromEntries(await Promise.all(vasi.map(async m => [m, await geometria(m)]))),
+  barattoli: barattoli.map(b => ({
+    nome: b.nome, mockup: b.mockup, src: b.etichetta.src, bordo: b.bordo?.src, parola: b.parola?.src, alto: b.etichetta.height / b.etichetta.width,
+    tipo: b.tipo, dentro: b.dentro, pezzi: b.pezzi,
+  })),
+};
+const primo = barattoli[0].nome;
+---
+
+<div class="barattolo" data-barattolo={JSON.stringify(dati)}>
+  <canvas class="carta" data-carta aria-hidden="true"></canvas>
+  <canvas class="carta" data-ombra aria-hidden="true"></canvas>
+  <div class="vetrina">
+    <canvas class="tela" data-tela role="img" aria-label={`${primo}: trascina per girare il barattolo`}></canvas>
+    <div class="parola" data-parola aria-hidden="true"></div>
+    <div class="caption">
+      <span class="caption__title" data-nome aria-live="polite">{primo}</span>
+      {barattoli.length > 1 && (
+        <span class="sfoglia mono">
+          <button type="button" data-passo="-1" aria-label="Barattolo precedente">‹</button>
+          <span data-conta>{pad2(1)}/{pad2(barattoli.length)}</span>
+          <button type="button" data-passo="1" aria-label="Barattolo successivo">›</button>
+        </span>
+      )}
+    </div>
+  </div>
+  {(eyebrow || title || body) && (
+    <div class="testo">
+      {eyebrow && <p class="eyebrow mono">{eyebrow}</p>}
+      {title && <h2 class="titolo">{title}</h2>}
+      {typeof body === 'string' && <p class="body">{body}</p>}
+      {Array.isArray(body) && body.map(p => <p class="body">{p}</p>)}
+    </div>
+  )}
+</div>
+
+<style>
+  /* in colonna: testo in alto a sinistra, sopra; i barattoli sotto, nella parte medio-bassa (scripts/barattolo.ts),
+     e il vaso alto può passare un po' sotto il testo */
+  .barattolo { position: absolute; inset: 0; }
+  /* il bordo dell'etichetta sul lato destro, sotto il barattolo (scripts/barattolo.ts): la tela del barattolo è
+     trasparente fuori dalla sagoma del vaso. Sopra la carta, la tela dell'ombra a terra (stessa misura) */
+  .carta { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  .vetrina { position: absolute; inset: 0; }
+  .tela {
+    position: absolute; top: var(--pad-label); left: 0; width: 100%; height: calc(100% - var(--pad-label) - 40px);
+    cursor: var(--cursore-aperta);
+    /* col dito si gira e si sfoglia solo in orizzontale: il gesto verticale resta allo scroll della pagina */
+    touch-action: pan-y;
+    user-select: none;
+  }
+  .tela:active { cursor: var(--cursore-chiusa); }
+  /* la parola della linea (Confetture, Sughi…): l'SVG fa da maschera, il colore è quello del bordo del barattolo
+     (scripts/barattolo.ts); sopra il barattolo, in basso a sinistra, allineata al nome */
+  .parola {
+    position: absolute; left: 12px; right: 0; bottom: 40px; height: 15cqi;
+    background-color: var(--parola-colore, transparent);
+    mask: var(--parola) left bottom / auto 100% no-repeat;
+    opacity: 0; pointer-events: none;
+    transition: background-color 520ms cubic-bezier(.45, 0, .55, 1);
+  }
+  .caption {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    display: flex; justify-content: space-between; align-items: center; gap: var(--m);
+    padding: 0 6px 0 12px; min-height: 40px;
+  }
+  .caption__title {
+    font-weight: 500; font-size: 15px; letter-spacing: -0.01em;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .sfoglia { display: flex; align-items: center; flex-shrink: 0; font-variant-numeric: tabular-nums; }
+  .sfoglia button {
+    width: 30px; height: 30px; padding: 0;
+    border: 0; background: none; color: inherit; font: inherit; font-size: 15px;
+    touch-action: manipulation;
+  }
+
+  /* sopra il barattolo, ma non lo blocca: i gesti passano sotto */
+  .testo {
+    position: absolute; top: 0; left: 0; z-index: 1;
+    display: flex; flex-direction: column; gap: var(--m);
+    padding: var(--pad-label) var(--pad) 0;
+    /* libera la fascia del bordo (un quarto della cella, poco più per i bordi più alti) */
+    max-width: min(72%, 42ch);
+    pointer-events: none;
+  }
+  .titolo {
+    font-family: var(--font-testo); font-weight: 500; line-height: 1.02; letter-spacing: -0.025em;
+    font-size: clamp(20px, 6cqi, 36px);
+  }
+  .body { font-size: 14px; line-height: 1.35; }
+</style>

@@ -1,0 +1,20 @@
+{
+  "tipo": "vaso-basso",
+  "w": 1050,
+  "h": 968,
+  "cx": 452.6,
+  "cy": 539.38,
+  "ang": -0.20646,
+  "r": 301.87,
+  "t0": -224.58,
+  "t1": 113.18,
+  "e": 0.235,
+  "piano": [
+    -268.0,
+    154.0
+  ],
+  "cima": 55,
+  "luciEtichetta": "screen",
+  "opacitaLuci": 1.0,
+  "coincidenza": 0.9912
+}

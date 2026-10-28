@@ -24,6 +24,11 @@ export const projects: Project[] = (await getCollection('progetti')).map(({ id: 
   if (image && shape && (image.width !== shape.w * UNIT_PX || image.height !== shape.h * UNIT_PX)) {
     console.warn(`[progetti] ${slug}: copertina ${image.width}×${image.height}, la forma ${shape.w}×${shape.h} vuole ${shape.w * UNIT_PX}×${shape.h * UNIT_PX}`);
   }
+  // marchio e tag Logo devono dire la stessa cosa
+  const { marchio, tags } = data;
+  if (marchio && (marchio === 'mio') !== tags.includes('Logo')) {
+    console.warn(`[progetti] ${slug}: marchio ${marchio === 'mio' ? 'mio senza' : 'non mio con'} il tag Logo`);
+  }
   return {
     ...data,
     slug,

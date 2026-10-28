@@ -9,6 +9,8 @@ export interface Project {
   period: string;
   description: string;
   featured?: boolean;
+  /** Chi ha fatto il marchio: se non è mio, la pagina del progetto lo dice e il progetto non ha il tag Logo */
+  marchio?: 'mio' | 'cliente' | { di: string };
   /** Forma dell'immagine in unità (desktop): cella in home e archivio, ×2 nella hero.
       Tavola Photoshop: w×600 × h×600 px, margini 300 sopra/sotto e 200 ai lati. */
   shape?: Span;

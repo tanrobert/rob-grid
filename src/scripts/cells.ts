@@ -41,6 +41,10 @@ export function initCells() {
   if (document.querySelector('[data-globe]')) {
     import('./globe').then(m => signal.aborted || m.initGlobe(signal, reduced));
   }
+  // barattoli: lo script solo se la cella c'è (i livelli dei mockup quando si avvicina allo schermo)
+  if (document.querySelector('[data-barattolo]')) {
+    import('./barattolo').then(m => signal.aborted || m.initBarattoli(signal, reduced));
+  }
 
   // Intro finita: tolgo la classe, così nessuna casella che ricompare
   // (filtri, cambio di breakpoint) rifà l'animazione d'ingresso

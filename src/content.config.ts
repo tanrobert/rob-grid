@@ -10,11 +10,12 @@ import { z } from 'astro/zod';
  *
  * `cells`: le celle proprie della pagina progetto, in ordine, tra le celle fisse (hero, titolo,
  * tag, anno…) e precedente/successivo. Ogni progetto usa solo i tipi che gli servono.
- * Un tipo nuovo: componente in components/cells/, voce in grid-types.ts, caso in Grid.astro
+ * Un tipo nuovo: componente in components/cells/, voce in grid-types.ts, caso in CellContent.astro
  * e una voce in `cell` qui sotto.
  */
 
 const unit = z.number().int().positive();
+const colore = /^#[0-9a-f]{6}$/i;
 const span = { w: unit, h: unit };
 
 // campi comuni a tutte le celle (sottoinsieme di CellBase in data/grid-types.ts)
@@ -47,6 +48,17 @@ const progetti = defineCollection({
       z.strictObject({ ...base, type: z.literal('list'), title: z.string(), items: z.array(z.union([z.string(), z.strictObject({ label: z.string(), href: z.string() })])) }),
       // value anche numero in YAML (2024 senza virgolette)
       z.strictObject({ ...base, type: z.literal('stat'), value: z.union([z.string(), z.number()]).transform(String), caption: z.string() }),
+      // barattoli che girano, da sfogliare, ognuno sul suo mockup (public/barattolo/<mockup>), etichette piatte nel progetto;
+      // in colonna: occhiello, titolo e testo in alto a sinistra, i barattoli sotto
+      z.strictObject({
+        ...base, type: z.literal('barattolo'),
+        eyebrow: z.string().optional(), title: z.string().optional(), body: z.union([z.string(), z.array(z.string())]).optional(),
+        barattoli: z.array(z.strictObject({
+          nome: z.string(), mockup: z.enum(['vaso-basso', 'vaso-alto']), etichetta: image(), bordo: image().optional(), parola: image().optional(), tipo: z.enum(['pezzi', 'crema', 'filetti']),
+          dentro: z.string().regex(colore, 'colore esadecimale, es. "#a3141c"'),
+          pezzi: z.string().regex(colore, 'colore esadecimale, es. "#c8202a"').optional(),
+        })).min(1),
+      }),
     ]);
 
     return z.strictObject({
@@ -57,6 +69,8 @@ const progetti = defineCollection({
       period: z.string().regex(/\d{4}/, 'period deve contenere un anno, es. "dal 2024"'),
       description: z.string(),
       featured: z.boolean().optional(),
+      /** Chi ha fatto il marchio: `mio` (va col tag Logo), `cliente` (esistente) o `{ di: "Studio X" }`; senza = non detto */
+      marchio: z.union([z.literal('mio'), z.literal('cliente'), z.strictObject({ di: z.string() })]).optional(),
       /** Forma della copertina in unità: cella in home e archivio, ×2 nella hero. Tavola: 600 px per unità */
       shape: z.strictObject(span).optional(),
       /** Video in loop (percorso in /public), al posto della copertina, che gli fa da poster */

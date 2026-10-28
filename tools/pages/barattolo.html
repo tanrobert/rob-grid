@@ -1,0 +1,419 @@
+<!doctype html>
+<!--
+  Laboratorio: barattolo che gira, sui livelli veri di mockup Photoshop. Da ogni PSD (tools/barattolo-mockup.py):
+  vetro, coperchio, ombra sul piano, maschera del contenuto, luci e ombre dell'etichetta, e la geometria del
+  cilindro misurata sull'etichetta del mockup (geometria.json, letta da qui).
+    vaso-basso  vaso-basso.psd (Food Jar Mockup 2)        → etichette 14×6
+    vaso-alto   vaso-alto.psd (Large Honey Jar Mockup 3)  → etichette da 9 cm
+  Tutti e due di mockups-design.com: stessa luce, sospesi e inclinati, visti da sopra.
+  Nel canvas l'etichetta piatta (le vere di Kiale, dai PDF di stampa) si avvolge sul cilindro inclinato,
+  colonna per colonna in un canvas dritto, poi ruotato tutto insieme; luci e ombre del mockup restano ferme sopra
+  (vengono dalla stanza, non dal barattolo). Dentro il vetro, un foglio avvolto anche lui fa da contenuto.
+  Nessuna libreria: questo file è tutto il codice. Solo sviluppo: il sito non cambia.
+    npx astro build && npm run vt:serve → /_vt/barattolo.html (i font li serve dist/fonts)
+-->
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Barattolo lab</title>
+<style>
+  @font-face { font-family: 'Archivo'; src: url('/fonts/archivo.woff2') format('woff2'); font-weight: 400 900; font-display: block; }
+  @font-face { font-family: 'JetBrains Mono'; src: url('/fonts/jetbrains-mono.woff2') format('woff2'); font-weight: 400 800; font-display: block; }
+  :root { --rosso: #f03f24; --chiaro: #f5f3f0; --ink: var(--rosso); --paper: var(--chiaro); --q: 25px; --line: 1px; }
+  @media (max-width: 899px) { :root { --q: 18px; } }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { min-height: 100%; }
+  body { background: var(--paper); color: var(--ink); font: 500 16px/1.25 'Archivo', sans-serif;
+    background-image:
+      linear-gradient(to right, color-mix(in srgb, var(--ink) 22%, transparent) 1px, transparent 1px),
+      linear-gradient(to bottom, color-mix(in srgb, var(--ink) 22%, transparent) 1px, transparent 1px);
+    background-size: var(--q) var(--q);
+    padding: calc(var(--q) * 2) 16px; }
+  .mono { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 400; letter-spacing: 0.02em; text-transform: uppercase; font-variant-numeric: tabular-nums; }
+
+  main { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 4fr); gap: var(--q); }
+  @media (max-width: 760px) { main { grid-template-columns: minmax(0, 1fr); } }
+
+  .cella { position: relative; background: var(--paper); border: var(--line) solid var(--ink); }
+  .cella > .num { position: absolute; top: 8px; left: 10px; z-index: 2; }
+  .vetrina { padding: 28px 12px 12px; display: flex; flex-direction: column; gap: 10px; }
+  .scena { position: relative; overflow: hidden; }
+  canvas { display: block; width: 100%; max-height: 72vh; object-fit: contain; margin: 0 auto;
+    cursor: grab; touch-action: pan-y; user-select: none; -webkit-user-select: none; }
+  canvas.presa { cursor: grabbing; }
+  .comandi { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+  .comandi .sep { flex: 1; }
+  .didascalia { display: flex; justify-content: space-between; gap: 10px; font-size: 15px; }
+
+  button, label.bottone { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 400; letter-spacing: .02em; text-transform: uppercase;
+    padding: 9px 11px; border: var(--line) solid var(--ink); background: var(--paper); color: var(--ink); cursor: pointer; touch-action: manipulation; }
+  button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+  label.bottone input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+  label.bottone:focus-within, button:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+
+  .testo { padding: 28px 16px 16px; display: flex; flex-direction: column; gap: 12px; font-size: 14px; line-height: 1.4; }
+  .testo h1 { font-size: 28px; font-weight: 500; letter-spacing: -0.025em; line-height: 1.05; text-wrap: balance; }
+  .testo ul { padding-left: 1.1em; display: flex; flex-direction: column; gap: 4px; }
+  body.sopra .vetrina { outline: 2px dashed var(--ink); outline-offset: -8px; }
+</style>
+</head>
+<body>
+<main>
+  <section class="cella vetrina" aria-label="Barattolo che gira">
+    <span class="num mono">01</span>
+    <div class="scena"><canvas aria-label="Vasetto di confettura Kiale: trascina per girarlo" role="img"></canvas></div>
+    <div class="didascalia"><span data-nome>…</span><span class="mono" data-conta>1 / 7</span></div>
+    <div class="comandi">
+      <button data-passo="-1" aria-label="Barattolo precedente">‹</button>
+      <button data-passo="1" aria-label="Barattolo successivo">›</button>
+      <span class="sep"></span>
+      <button data-auto aria-pressed="true">Gira da solo</button>
+      <label class="bottone">Carica etichetta<input type="file" accept="image/*" data-file></label>
+      <label class="bottone">Carica interno<input type="file" accept="image/*" data-file-interno></label>
+    </div>
+  </section>
+
+  <section class="cella testo">
+    <span class="num mono">02</span>
+    <p class="mono">Laboratorio · barattolo</p>
+    <h1>Le etichette vere, sui mockup veri</h1>
+    <p>Trascina il vasetto per girarlo: lanciato, continua per inerzia. Con ‹ › si passa al barattolo dopo: confetture e filetti (14×6) sul vaso basso, vellutate (14×9) sul vaso alto. Le etichette sono alte quanto la parte piatta del vetro.</p>
+    <p>Vetro, luci e ombre sono i livelli dei PSD; le etichette sono i PDF di stampa, avvolte sul cilindro misurato nel mockup, alla loro misura vera. Luci e ombre restano ferme: vengono dalla stanza. <strong>Carica un'altra etichetta</strong> (o trascinala sulla pagina).</p>
+    <ul>
+      <li>Peso: ogni mockup ~120 KB, una volta sola; più un'etichetta per barattolo (~150 KB).</li>
+      <li>Il contenuto è un foglio avvolto dentro il vetro che gira col barattolo. <strong>Carica interno</strong>: un'immagine che si ripeta senza stacco ai lati, circa 2000×1000 px.</li>
+      <li>Un altro mockup: <span class="mono">python tools/barattolo-mockup.py file.psd nome</span>, si misura da solo.</li>
+    </ul>
+  </section>
+</main>
+
+<script>
+const cv = document.querySelector('canvas');
+const ctx = cv.getContext('2d');
+const riduci = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const CARTA = getComputedStyle(document.documentElement).getPropertyValue('--chiaro').trim();
+const DIR = 'barattolo/';      // etichette di prova del laboratorio (tools/pages/barattolo/etichette)
+const COPERCHIO = '#8a5236';      // marrone dei coperchi Kiale (moltiplicato sul coperchio del mockup)
+
+// i mockup: livelli sotto il contenuto (fondo, fermi), livelli sopra il contenuto, luci e ombre dell'etichetta.
+// [file, fusione, tinta?]: con la tinta il file è una maschera (grigio = quanto) da riempire di quel colore.
+// Le etichette sono alte quanto la parte piatta del vetro (misurata dallo strumento: G.piano), la larghezza segue.
+const MOCKUP = {
+  // Food Jar Mockup 2, per le 14×6: il contenuto ha un livello suo (maschera), il coperchio una maschera da colorare
+  'vaso-basso': {
+    fondo: [['maschera-ombra', 'multiply', '#534f3f'], ['vaso', 'source-over'], ['maschera-coperchio', 'multiply', COPERCHIO]],
+    sopra: [['luci', 'screen']],
+  },
+  // Large Honey Jar Mockup 3, per le 14×9: vetro reso neutro dallo strumento (il miele era dentro), coperchio = maschera colorata + le sue ombre
+  'vaso-alto': {
+    fondo: [['ombra', 'multiply'], ['vaso', 'source-over'], ['maschera-coperchio', 'source-over', COPERCHIO], ['coperchio-ombre', 'multiply']],
+    sopra: [['luci', 'screen']],
+  },
+};
+
+// tipo di interno: `frutta` (confettura con la frutta dentro), `crema` (vellutata), `filetti` (sott'olio). I colori sono
+// chiari apposta: moltiplicati sul vetro si scuriscono
+const barattoli = [
+  { nome: 'Confettura di fragole', mockup: 'vaso-basso', file: 'fragole', tipo: 'frutta', dentro: '#a3141c', pezzi: '#c8202a' },
+  { nome: 'Confettura di albicocche', mockup: 'vaso-basso', file: 'albicocche', tipo: 'frutta', dentro: '#e2741c', pezzi: '#f7a440' },
+  { nome: 'Confettura di prugne', mockup: 'vaso-basso', file: 'prugne', tipo: 'frutta', dentro: '#4a1238', pezzi: '#6e2a5a' },
+  { nome: 'Filetti di carote', mockup: 'vaso-basso', file: 'filetti-carote', tipo: 'filetti', dentro: '#f2c25a', pezzi: '#f0761a' },
+  { nome: 'Filetti di melanzane', mockup: 'vaso-basso', file: 'filetti-melanzane', tipo: 'filetti', dentro: '#c9a356', pezzi: '#6b4a2a' },
+  { nome: 'Vellutata di carote, patate e piselli', mockup: 'vaso-alto', file: 'vellutata', tipo: 'crema', dentro: '#ffa83c' },
+  { nome: 'Vellutata di zucca e patate', mockup: 'vaso-alto', file: 'vellutata-zucca', tipo: 'crema', dentro: '#ffb83a' },
+];
+
+// interno segnaposto, che si ripete senza stacco ai lati (ogni forma disegnata anche una larghezza prima e dopo)
+function texturaInterno({ tipo, dentro, pezzi }) {
+  const w = 1024, h = 512, c = document.createElement('canvas'); c.width = w; c.height = h;
+  const g = c.getContext('2d');
+  g.fillStyle = dentro; g.fillRect(0, 0, w, h);
+  let seme = 11; const caso = () => (seme = seme * 16807 % 2147483647) / 2147483647;
+  if (tipo === 'filetti') {
+    // strisce sottili e curve, in tutte le direzioni, nell'olio
+    g.lineCap = 'round';
+    for (let i = 0; i < 260; i++) {
+      const x = caso() * w, y = caso() * h, a = caso() * Math.PI, l = 40 + caso() * 90, curva = (caso() - 0.5) * 60;
+      g.strokeStyle = pezzi; g.globalAlpha = 0.55 + caso() * 0.45; g.lineWidth = 3 + caso() * 5;
+      for (const dx of [-w, 0, w]) {
+        const x0 = x + dx - Math.cos(a) * l / 2, y0 = y - Math.sin(a) * l / 2;
+        g.beginPath(); g.moveTo(x0, y0);
+        g.quadraticCurveTo(x + dx + Math.sin(a) * curva, y - Math.cos(a) * curva, x0 + Math.cos(a) * l, y0 + Math.sin(a) * l); g.stroke();
+      }
+    }
+    g.globalAlpha = 1;
+    return c;
+  }
+  const liscia = tipo === 'crema', [r0, r1] = liscia ? [60, 140] : [18, 34];
+  for (let i = 0; i < (liscia ? 40 : 90); i++) {
+    const x = caso() * w, y = caso() * h, r = r0 + caso() * (r1 - r0), chiara = caso() < 0.5;
+    for (const dx of [-w, 0, w]) {
+      const f = g.createRadialGradient(x + dx - r * 0.35, y - r * 0.35, r * 0.1, x + dx, y, r);
+      if (liscia) { f.addColorStop(0, chiara ? 'rgba(255,220,150,.22)' : 'rgba(90,40,0,.16)'); f.addColorStop(1, 'rgba(0,0,0,0)'); }
+      else { f.addColorStop(0, 'rgba(255,255,255,.55)'); f.addColorStop(0.25, pezzi); f.addColorStop(1, dentro); }
+      g.fillStyle = f; g.beginPath(); g.arc(x + dx, y, r, 0, 7); g.fill();
+    }
+  }
+  return c;
+}
+
+const carica = src => new Promise((ok, ko) => { const i = new Image(); i.onload = () => ok(i); i.onerror = ko; i.src = src; });
+
+// maschera (grigio) + colore → canvas col colore pieno e la maschera come trasparenza
+function tinta(maschera, colore, w, h) {
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  const g = c.getContext('2d');
+  g.drawImage(maschera, 0, 0, w, h);
+  const d = g.getImageData(0, 0, w, h), p = d.data;
+  const [r, gg, b] = colore.match(/\w\w/g).map(x => parseInt(x, 16));
+  for (let i = 0; i < p.length; i += 4) { p[i + 3] = p[i]; p[i] = r; p[i + 1] = gg; p[i + 2] = b; }
+  g.putImageData(d, 0, 0);
+  return c;
+}
+
+// riquadro di un canvas dove la trasparenza non è zero
+function riquadro(c) {
+  const p = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+  let x0 = c.width, y0 = c.height, x1 = 0, y1 = 0;
+  for (let y = 0; y < c.height; y++) for (let x = 0; x < c.width; x++)
+    if (p[(y * c.width + x) * 4 + 3] > 2) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+  return { x0, y0, x1: x1 + 1, y1: y1 + 1 };
+}
+
+// riquadro della fascia ruotata (con la curva e un margine): solo lì si ridisegna l'etichetta a ogni fotogramma
+function riquadroFascia(G, t0, t1) {
+  const pts = [];
+  for (const x of [-G.r, G.r]) for (const y of [t0 - Math.abs(G.e) * G.r, t1 + Math.abs(G.e) * G.r]) pts.push([x, y]);
+  const c = Math.cos(G.ang), s = Math.sin(G.ang);
+  const xs = pts.map(([x, y]) => G.cx + c * x - s * y), ys = pts.map(([x, y]) => G.cy + s * x + c * y);
+  return { x0: Math.max(0, Math.min(...xs) - 4), y0: Math.max(0, Math.min(...ys) - 4), x1: Math.min(G.w, Math.max(...xs) + 4), y1: Math.min(G.h, Math.max(...ys) + 4) };
+}
+
+// immagine portata una volta, con qualità alta, all'altezza in cui si disegna (avvolgi copia le colonne 1:1 in verticale).
+// Rifatta se cambia la misura.
+const scalate = new WeakMap();
+function scalata(img, alta) {
+  const h = Math.max(1, Math.round(alta)), c = scalate.get(img);
+  if (c?.height === h) return c;
+  if (img.height === h) return img;
+  const n = document.createElement('canvas'); n.width = Math.round(img.width * h / img.height); n.height = h;
+  const g = n.getContext('2d'); g.imageSmoothingQuality = 'high'; g.drawImage(img, 0, 0, n.width, h);
+  scalate.set(img, n);
+  return n;
+}
+
+let M, G, at = 0, s = 1, W, H;      // mockup e geometria del barattolo in vista
+const fondo = document.createElement('canvas'), strato = document.createElement('canvas'), forma = document.createElement('canvas'), interno = document.createElement('canvas');
+const dritto = { etichetta: document.createElement('canvas'), interno: document.createElement('canvas') };
+let giro = 0, vel = 0, auto = !riduci, presa = null, ultimo = 0, raf = 0;
+
+function misura() {
+  const r = cv.getBoundingClientRect(), dpr = Math.min(devicePixelRatio || 1, 2);
+  W = cv.width = Math.round(r.width * dpr); H = cv.height = Math.round(W * G.h / G.w);
+  s = W / G.w;
+  preparaFondo(); disegna();
+}
+
+// fascia dell'etichetta: alta quanto la parte piatta del vetro, meno un piccolo margine sopra e sotto
+function fasciaEtichetta() {
+  const m = 0.04 * G.r;
+  return [G.piano[0] + m, G.piano[1] - m];
+}
+
+function livelli(g, lista) {
+  for (const [nome, fusione] of lista) { g.globalCompositeOperation = fusione; g.drawImage(M.img[nome], 0, 0, G.w, G.h); }
+  g.globalCompositeOperation = 'source-over';
+}
+
+// tutto quello che non gira, una volta per misura e per mockup
+function preparaFondo() {
+  fondo.width = W; fondo.height = H;
+  const f = fondo.getContext('2d');
+  // carta su tutto il canvas, in pixel reali: l'ultima riga, coperta a metà, faceva passare il nero delle luci
+  f.fillStyle = CARTA; f.fillRect(0, 0, W, H);
+  f.setTransform(s, 0, 0, s, 0, 0);
+  livelli(f, M.fondo);
+  const box = (B, c) => {
+    const dx = Math.floor(B.x0 * s), dy = Math.floor(B.y0 * s);
+    c.width = Math.ceil(B.x1 * s) - dx; c.height = Math.ceil(B.y1 * s) - dy; c.dx = dx; c.dy = dy;
+  };
+  box(riquadroFascia(G, ...fasciaEtichetta()), strato);
+  forma.width = strato.width; forma.height = strato.height;
+  box(M.boxInterno, interno);
+}
+
+// avvolge un'immagine su un cilindro di raggio r (unità del ritaglio), in un canvas dritto (asse verticale) a pixel reali:
+// una colonna per pixel, alta quanto l'immagine (già ridotta a quell'altezza: niente ricampionamento in verticale),
+// spostata della curva dell'ellisse. Ruotato poi tutto insieme, una volta: le strisce ruotate una per una facevano righe.
+// `giri`: l'immagine si ripete tante volte attorno (interno); senza, copre `span` radianti centrati sulla fronte (etichetta).
+// Restituisce anche di quanto la curva sale sopra il bordo (ellisse col segno meno: si vede l'altra faccia).
+function avvolgi(c, img, r, { span, giri }) {
+  const R = r * s, cala = G.e * R, su = Math.max(0, -cala);
+  c.width = Math.ceil(2 * R); c.height = img.height + Math.ceil(Math.abs(cala)) + 1;
+  const g = c.getContext('2d');
+  const arco = giri ? 2 * Math.PI / giri : span;        // radianti coperti da una larghezza dell'immagine
+  const fronte = giri ? 0 : span / 2;
+  for (let i = 0; i < c.width; i++) {
+    const x = (i + 0.5 - R) / R;
+    const th = Math.asin(Math.max(-1, Math.min(1, x))), cos = Math.cos(th);
+    let a = (th - giro + fronte) % (2 * Math.PI); if (a < 0) a += 2 * Math.PI;
+    if (!giri && a >= span) continue;
+    const u = (a % arco) / arco * img.width;
+    const sw = Math.min(img.width - u, Math.max(0.5, img.width / arco / (R * Math.max(cos, 0.02))));
+    if (sw <= 0) continue;
+    g.drawImage(img, u, 0, sw, img.height, i, su + cala * cos, 1, img.height);
+  }
+  c.su = su;
+  return c;
+}
+// il canvas dritto al suo posto: centro dell'asse, inclinazione, bordo della fascia
+function posa(g, c, r, t0, dx, dy) {
+  g.setTransform(1, 0, 0, 1, -dx, -dy);
+  g.translate(G.cx * s, G.cy * s); g.rotate(G.ang);
+  g.drawImage(c, -r * s, t0 * s - c.su);
+}
+
+// il contenuto: la texture avvolta su un cilindro poco più stretto del vetro, che gira col barattolo,
+// ritagliata dalla maschera del contenuto; poi moltiplicata sul vetro. Sopra, i livelli che stanno sopra il contenuto.
+function disegnaInterno(tex) {
+  const ri = G.r * 0.96, ta = -2.4 * G.r, tb = 2.4 * G.r;      // fascia lungo l'asse: più del contenuto (anche il fondo visto da sotto), la maschera taglia
+  tex = scalata(tex, (tb - ta) * s);
+  const alta = (tb - ta) / Math.sqrt(1 - G.e * G.e);
+  const giri = Math.max(1, Math.round(2 * Math.PI * ri / (alta * tex.width / tex.height)));   // ripetizioni intere: il giro si chiude senza stacco
+  const g = interno.getContext('2d');
+  g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = 'source-over'; g.clearRect(0, 0, interno.width, interno.height);
+  posa(g, avvolgi(dritto.interno, tex, ri, { giri }), ri, ta, interno.dx, interno.dy);
+  g.setTransform(s, 0, 0, s, -interno.dx, -interno.dy);
+  g.globalCompositeOperation = 'destination-in'; g.drawImage(M.mascheraInterno, 0, 0);
+  ctx.globalCompositeOperation = 'multiply'; ctx.drawImage(interno, interno.dx, interno.dy);
+  ctx.setTransform(s, 0, 0, s, 0, 0); livelli(ctx, M.sopra);
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+}
+
+function disegna() {
+  if (!W || !M) return;
+  const b = barattoli[at], [t0, t1] = fasciaEtichetta(), lab = scalata(b.lab, (t1 - t0) * s);
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.drawImage(fondo, 0, 0);
+  disegnaInterno(b.interno);
+  const l = strato.getContext('2d'), m = forma.getContext('2d');
+  l.setTransform(1, 0, 0, 1, 0, 0); l.globalCompositeOperation = 'source-over'; l.clearRect(0, 0, strato.width, strato.height);
+  const alta = (t1 - t0) / Math.sqrt(1 - G.e * G.e);           // altezza vera, senza lo scorcio
+  const span = Math.min(2 * Math.PI, (lab.width / lab.height) * alta / G.r);
+  posa(l, avvolgi(dritto.etichetta, lab, G.r, { span }), G.r, t0, strato.dx, strato.dy);
+  // luci e ombre dell'etichetta del mockup, ferme, solo dove c'è etichetta; allungate lungo l'asse dalla fascia
+  // del mockup alla nostra, più alta (cambiano quasi solo attorno, non lungo l'asse)
+  m.globalCompositeOperation = 'copy'; m.drawImage(strato, 0, 0);
+  const k = (t1 - t0) / (G.t1 - G.t0);
+  l.setTransform(s, 0, 0, s, -strato.dx, -strato.dy);
+  l.translate(G.cx, G.cy); l.rotate(G.ang); l.translate(0, t0 - k * G.t0); l.scale(1, k); l.rotate(-G.ang); l.translate(-G.cx, -G.cy);
+  l.globalCompositeOperation = 'multiply'; l.drawImage(M.img['etichetta-ombre'], 0, 0, G.w, G.h);
+  l.globalAlpha = G.opacitaLuci; l.globalCompositeOperation = G.luciEtichetta; l.drawImage(M.img['etichetta-luci'], 0, 0, G.w, G.h);
+  l.globalAlpha = 1;
+  l.setTransform(1, 0, 0, 1, 0, 0);
+  l.globalCompositeOperation = 'destination-in'; l.drawImage(forma, 0, 0);
+  ctx.drawImage(strato, strato.dx, strato.dy);
+}
+
+// --- movimento: un solo rAF, acceso solo quando qualcosa si muove; passo scalato sul tempo ---
+function muovi() { if (!raf) { ultimo = performance.now(); raf = requestAnimationFrame(avanza); } }
+function avanza(t) {
+  const dt = Math.min(0.05, (t - ultimo) / 1000); ultimo = t;
+  if (!presa) {
+    if (Math.abs(vel) > 0.02) { giro += vel * dt; vel *= Math.exp(-2.5 * dt); }
+    else { vel = 0; if (auto) giro += 0.35 * dt; }
+  }
+  disegna();
+  raf = (presa || vel || auto) ? requestAnimationFrame(avanza) : 0;
+}
+
+cv.addEventListener('pointerdown', ev => {
+  presa = { x: ev.clientX, y: ev.clientY, t: ev.timeStamp }; vel = 0;
+  cv.setPointerCapture(ev.pointerId); cv.classList.add('presa'); muovi();
+});
+cv.addEventListener('pointermove', ev => {
+  if (!presa) return;
+  // il gesto lungo la circonferenza (perpendicolare all'asse inclinato): la superficie segue il dito al centro
+  const R = G.r * cv.clientWidth / G.w;
+  const d = ((ev.clientX - presa.x) * Math.cos(G.ang) + (ev.clientY - presa.y) * Math.sin(G.ang)) / R;
+  const dt = Math.max(0.008, (ev.timeStamp - presa.t) / 1000);
+  giro += d; vel = vel * 0.6 + (d / dt) * 0.4;
+  presa = { x: ev.clientX, y: ev.clientY, t: ev.timeStamp };
+});
+const lascia = ev => {
+  if (!presa) return;
+  if (ev.timeStamp - presa.t > 80) vel = 0;   // fermo prima di lasciare: niente lancio
+  presa = null; cv.classList.remove('presa'); muovi();
+};
+cv.addEventListener('pointerup', lascia);
+cv.addEventListener('pointercancel', lascia);
+
+const btnAuto = document.querySelector('[data-auto]');
+btnAuto.addEventListener('click', () => { auto = !auto; btnAuto.setAttribute('aria-pressed', String(auto)); muovi(); });
+
+// --- sfoglia tra barattoli (e mockup) ---
+const scena = document.querySelector('.scena');
+function mostra() {
+  const b = barattoli[at];
+  M = MOCKUP[b.mockup]; G = M.G;
+  cv.style.aspectRatio = `${G.w} / ${G.h}`;
+  document.querySelector('[data-nome]').textContent = b.nome;
+  document.querySelector('[data-conta]').textContent = `${at + 1} / ${barattoli.length}`;
+  misura();
+}
+async function sfoglia(p) {
+  const verso = p > 0 ? -1 : 1;
+  if (!riduci) await scena.animate([{ transform: 'none' }, { transform: `translateX(${verso * 60}%)` }], { duration: 220, easing: 'cubic-bezier(.5,0,.75,0)' }).finished;
+  at = (at + p + barattoli.length) % barattoli.length;
+  mostra();
+  if (!riduci) await scena.animate([{ transform: `translateX(${-verso * 60}%)` }, { transform: 'none' }], { duration: 320, easing: 'cubic-bezier(.2,.8,.2,1)' }).finished;
+}
+document.querySelectorAll('[data-passo]').forEach(b => b.addEventListener('click', () => sfoglia(+b.dataset.passo)));
+addEventListener('keydown', ev => { if (ev.key === 'ArrowLeft') sfoglia(-1); if (ev.key === 'ArrowRight') sfoglia(1); });
+
+// --- un'altra etichetta: dal bottone o trascinata sulla pagina, va sul barattolo in vista ---
+function prendi(file) {
+  if (!file || !file.type.startsWith('image/')) return;
+  carica(URL.createObjectURL(file)).then(img => { barattoli[at].lab = img; barattoli[at].nome = file.name; giro = 0; mostra(); });
+}
+document.querySelector('[data-file]').addEventListener('change', ev => prendi(ev.target.files[0]));
+// il foglio dentro il vetro: deve ripetersi senza stacco ai lati (gira tutto attorno)
+document.querySelector('[data-file-interno]').addEventListener('change', ev => {
+  const file = ev.target.files[0];
+  if (file?.type.startsWith('image/')) carica(URL.createObjectURL(file)).then(img => { barattoli[at].interno = img; disegna(); });
+});
+addEventListener('dragover', ev => { ev.preventDefault(); document.body.classList.add('sopra'); });
+addEventListener('dragleave', () => document.body.classList.remove('sopra'));
+addEventListener('drop', ev => { ev.preventDefault(); document.body.classList.remove('sopra'); prendi(ev.dataTransfer.files[0]); });
+
+// ?giro=1.2 per guardarlo da un altro lato, ?b=1 per partire da un altro barattolo (screenshot)
+const q = new URLSearchParams(location.search);
+if (q.has('giro')) { giro = +q.get('giro'); auto = false; }
+if (q.has('b')) at = +q.get('b') % barattoli.length;
+btnAuto.setAttribute('aria-pressed', String(auto));
+
+// ogni mockup: geometria e livelli; i file delle tinte diventano colore + maschera, la maschera del contenuto trasparenza
+async function caricaMockup(nome, m) {
+  const dir = '/barattolo/' + nome + '/';   // livelli dei mockup: public/barattolo (gli stessi del sito)
+  m.G = await (await fetch(dir + 'geometria.json')).json();
+  const nomi = new Set([...m.fondo, ...m.sopra].map(([f]) => f).concat('etichetta-ombre', 'etichetta-luci', 'maschera-contenuto'));
+  m.img = Object.fromEntries(await Promise.all([...nomi].map(async f => [f, await carica(dir + f + '.webp')])));
+  for (const l of [...m.fondo, ...m.sopra]) if (l[2]) { m.img[l[0] + '+'] = tinta(m.img[l[0]], l[2], m.G.w, m.G.h); l[0] += '+'; }
+  m.mascheraInterno = tinta(m.img['maschera-contenuto'], '#ffffff', m.G.w, m.G.h);
+  m.boxInterno = riquadro(m.mascheraInterno);
+}
+
+Promise.all([
+  ...[...new Set(barattoli.map(b => b.mockup))].map(n => caricaMockup(n, MOCKUP[n])),   // solo i mockup usati
+  ...barattoli.map(b => carica(DIR + 'etichette/' + b.file + '.webp').then(i => { b.lab = i; b.interno = texturaInterno(b); })),
+  // ?lab=/_out/prova.webp: un'etichetta di prova (es. quella originale del mockup, per confrontare col PSD), alta quanto la fascia
+  ...(q.has('lab') ? [carica(q.get('lab')).then(i => { barattoli[at].lab = i; })] : []),
+]).then(() => {
+  mostra();
+  new ResizeObserver(() => misura()).observe(cv);
+  muovi();
+});
+</script>
+</body>
+</html>
