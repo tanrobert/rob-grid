@@ -21,6 +21,7 @@ import EyeCell from './cells/EyeCell.astro';
 import GlobeCell from './cells/GlobeCell.astro';
 import BarattoloCell from './cells/BarattoloCell.astro';
 import TelefonoCell from './cells/TelefonoCell.astro';
+import StickerCell from './cells/StickerCell.astro';
 import ArchiveHeadCell from './cells/ArchiveHeadCell.astro';
 import TagsCell from './cells/TagsCell.astro';
 import ErrorCell from './cells/ErrorCell.astro';
@@ -75,6 +76,7 @@ if (cell.type === 'project' && !p) throw new Error(`[grid] progetto non trovato:
     {cell.type === 'globe' && <GlobeCell />}
     {cell.type === 'barattolo' && <BarattoloCell barattoli={cell.barattoli} title={cell.title} body={cell.body} />}
     {cell.type === 'telefono' && <TelefonoCell video={cell.video} alt={cell.alt} title={cell.title} body={cell.body} logo={cell.logo} logoAlt={cell.logoAlt} />}
+    {cell.type === 'sticker' && <StickerCell immagini={cell.immagini} alt={cell.alt} title={cell.title} body={cell.body} />}
     {cell.type === 'error' && <ErrorCell code={cell.code} title={cell.title} />}
     {cell.type === 'archive-head' && <ArchiveHeadCell total={cell.total} />}
     {cell.type === 'tags' && <TagsCell tags={cell.tags} total={projects} />}

@@ -58,7 +58,8 @@ const BORDO_4MM = 11.34;         // 4 mm in punti (le unità degli SVG da Illust
 const BORDO_MAX = 13;            // la fascia più alta, in punti: larghezza delle maschere
 const BORDO_MS = 520;            // cambio di colore e forma
 const OMBRA = { y: 0.02, rx: 0.62, ry: 0.08 };   // ombra a terra, in larghezze del vetro: sopra il fondo, raggi
-const RIEMPIE = 0.8;         // quanto dello spazio dei barattoli occupa il vaso (in larghezza il vetro, in altezza dalla cima al fondo)
+const RIEMPIE_ALTI = 0.95;    // i vasi dal titolo: quanto dell'altezza della tela, con la cima in alto
+const RIEMPIE = 0.85;        // quanto dello spazio dei barattoli occupa il vaso (in larghezza il vetro, in altezza dalla cima al fondo)
 const BORDO_FUORI = 1.5;         // la fascia esce un poco dal fondo della cella, in punti
 
 const tela = (w = 0, h = 0): Canvas => Object.assign(document.createElement('canvas'), { width: w, height: h });
@@ -225,6 +226,7 @@ async function avvia(root: HTMLElement, signal: AbortSignal, reduced: boolean) {
   const ombra = root.querySelector<HTMLCanvasElement>('[data-ombra]')!;
   const parola = root.querySelector<HTMLElement>('[data-parola]')!;
   const didascalia = root.querySelector<HTMLElement>('.caption');
+  const titolo = root.querySelector<HTMLElement>('.titolo');
   const cella = root.closest<HTMLElement>('.cell') ?? root;
   const interni = voci.map(texturaInterno);
   let at = 0, W = 0, H = 0, giro = 0, vel = 0, auto = !reduced, raf = 0, ultimo = 0, inVista = true;
@@ -262,14 +264,16 @@ async function avvia(root: HTMLElement, signal: AbortSignal, reduced: boolean) {
     carta.width = ombra.width = Math.round(rc.width * dpr); carta.height = ombra.height = Math.round(rc.height * dpr);
     // posizione di layout (la vetrina sta a 0,0 della cella): il rettangolo vero includerebbe lo spostamento dello sfoglia
     ox = Math.round(cv.offsetLeft * dpr); oy = Math.round(cv.offsetTop * dpr);
-    // pixel reali per unità del ritaglio. Il canvas comincia sotto il titolo e finisce sulla didascalia. In larghezza
-    // conta solo il vetro (`largo`): l'ombra ai lati può uscire, sfuma nella cella. Il vaso dal titolo tocca il titolo
-    // e la didascalia; gli altri stanno al centro dello spazio sopra la fascia del bordo (fino alle punte), grandi RIEMPIE
+    // pixel reali per unità del ritaglio. Il canvas comincia un poco dentro l'ultima riga del titolo (margine negativo)
+    // e finisce sulla didascalia. In larghezza conta solo il vetro (`largo`): l'ombra ai lati può uscire, sfuma nella
+    // cella. Il vaso dal titolo parte dalla cima della tela, alto RIEMPIE_ALTI; gli altri stanno al centro dello spazio tra il
+    // fondo del titolo e la fascia del bordo (fino alle punte), grandi RIEMPIE
     const alto = G.piede - G.cima;
+    const dentro = M.dalTitolo || !titolo ? 0 : Math.max(0, -parseFloat(getComputedStyle(titolo).marginBottom)) * dpr;
     const punte = !M.dalTitolo && bordo.a ? (bordo.a.h - BORDO_FUORI) * carta.width * BORDO_QUOTA / BORDO_4MM : 0;
-    const libero = Math.max(1, H - punte);
-    s = (M.dalTitolo ? 1 : RIEMPIE) * Math.min(W / G.largo, libero / alto);
-    sy = Math.round((libero - alto * s) / 2 - G.cima * s);
+    const libero = Math.max(1, H - dentro - punte);
+    s = (M.dalTitolo ? RIEMPIE_ALTI : RIEMPIE) * Math.min(W / G.largo, libero / alto);
+    sy = Math.round(M.dalTitolo ? -G.cima * s : dentro + (libero - alto * s) / 2 - G.cima * s);
     scena.width = fondo.width = sagoma.width = Math.round(G.w * s); scena.height = fondo.height = sagoma.height = Math.round(G.h * s);
     sx = Math.round(W / 2 - G.centro * s);
     ritaglia();

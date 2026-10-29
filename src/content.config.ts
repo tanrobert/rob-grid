@@ -64,6 +64,11 @@ const progetti = defineCollection({
         ...base, type: z.literal('telefono'), video: z.string(), alt: z.string(), logo: image().optional(), logoAlt: z.string().optional(),
         eyebrow: z.string().optional(), title: z.string().optional(), body: z.union([z.string(), z.array(z.string())]).optional(),
       }),
+      // sticker in un nastro infinito sotto un titolone (tools/sticker.mjs li prepara col bordo bianco)
+      z.strictObject({
+        ...base, type: z.literal('sticker'), immagini: z.array(image()).min(2), alt: z.string(),
+        eyebrow: z.string().optional(), title: z.string().optional(), body: z.string().optional(),
+      }),
     ]);
 
     return z.strictObject({

@@ -11,8 +11,9 @@
  *   ad area attorno al puntatore, 900 al centro e 500 al bordo (raggio = RAGGIO corpi). Gli a capo si
  *   bloccano alla prima passata (righe a filo, nowrap), se no le parole che ingrassano cambiano riga.
  *   Solo con mouse, mai con prefers-reduced-motion.
- * - Titoli a righe fisse (data-righe="2", es. il telefono di Kiale, 29/10/2026): il corpo più grande con cui il
- *   titolo sta in quelle righe, a tutta larghezza ("più riempitivo"). Niente lente.
+ * - Lente al contrario (29/10/2026, scelta di Roberto) sui titoloni delle celle coi mockup (data-lente="inversa":
+ *   barattoli, telefono, sticker): sono già Black, attorno al puntatore si assottigliano fino a 400. Non si misurano
+ *   (corpo fisso, --titolone); le lettere sottili sono più strette, quindi le righe bloccate non escono mai.
  */
 
 const SELECTOR = '.cell > .text--l > .title';
@@ -22,10 +23,11 @@ const RAGGIO = 2.5;          // raggio della lente, in corpi del titolo
 const SMORZA = 70;           // ms: quanto in fretta il peso insegue il puntatore
 const ATTESA = 150;          // ms senza cambi di misura prima di rimisurare
 
-const RIGHE = '.cell [data-righe]';
+const INVERSA = '.cell [data-lente="inversa"]';
 
 const titles = () => [...document.querySelectorAll<HTMLElement>(SELECTOR)];
-const aRighe = () => [...document.querySelectorAll<HTMLElement>(RIGHE)];
+/** peso fuori dalla lente e al suo centro */
+const pesi = (title: HTMLElement): [number, number] => (title.matches(INVERSA) ? [900, 400] : [500, 900]);
 
 // ── Misura ────────────────────────────────────────────────
 
@@ -55,23 +57,6 @@ function fit(title: HTMLElement) {
   title.style.transition = '';
 }
 
-/** Il corpo più grande con cui il titolo sta in data-righe righe, senza parole che escono */
-function fitRighe(title: HTMLElement) {
-  const righe = Number(title.dataset.righe) || 2;
-  title.style.transition = 'none';
-  let lo = MIN, hi = MAX;
-  for (let n = 0; n < 9; n++) {
-    const mid = (lo + hi) / 2;
-    title.style.fontSize = `${mid}px`;
-    const riga = parseFloat(getComputedStyle(title).lineHeight);
-    if (title.scrollWidth <= title.clientWidth && title.offsetHeight <= riga * righe + 1) lo = mid; else hi = mid;
-  }
-  const cella = title.closest<HTMLElement>('.cell')?.clientWidth;
-  const px = Math.floor(lo * 0.98);
-  title.style.fontSize = cella ? `${(px / cella) * 100}cqi` : `${px}px`;
-  title.style.transition = '';
-}
-
 /** Un titolo in un foglio ancora nascosto (montato in attesa del volo, scripts/foglio) è largo 0: misurato lì
     "ci starebbe" a qualsiasi corpo e uscirebbe al massimo. Si misura quando compare, prima che le celle entrino */
 const inAttesa = new ResizeObserver(entries => entries.forEach(({ target, contentRect }) => {
@@ -81,10 +66,10 @@ const inAttesa = new ResizeObserver(entries => entries.forEach(({ target, conten
 }));
 function misura(title: HTMLElement) {
   if (!title.clientWidth) { inAttesa.observe(title); return; }
-  if (title.matches(RIGHE)) fitRighe(title); else fit(title);
+  fit(title);
 }
 
-export const fitTitles = () => [...titles(), ...aRighe()].forEach(misura);
+export const fitTitles = () => titles().forEach(misura);
 
 // ── Lente ─────────────────────────────────────────────────
 
@@ -120,7 +105,7 @@ function split(title: HTMLElement): Lens {
       return riga;
     }),
   );
-  const lens = { text, letters, weights: new Float32Array(letters.length).fill(500) };
+  const lens = { text, letters, weights: new Float32Array(letters.length).fill(pesi(title)[0]) };
   lenses.set(title, lens);
   return lens;
 }
@@ -133,9 +118,8 @@ function unsplit(title: HTMLElement) {
 }
 
 export function initTitoloni(signal: AbortSignal, reduced: boolean) {
-  const list = titles();
-  const tutti = [...list, ...aRighe()];
-  if (!tutti.length) return;
+  const list = titles(), inverse = [...document.querySelectorAll<HTMLElement>(INVERSA)];
+  if (!list.length && !inverse.length) return;
 
   // resize, cambio di breakpoint: intanto il titolo scala con la cella (cqi), a misura ferma si rimisura.
   // Lo zoom del tavolo no: cambia la scala, non la forma, e il titolo scala con la cella come le altre. Rimisurato
@@ -152,15 +136,17 @@ export function initTitoloni(signal: AbortSignal, reduced: boolean) {
     if (first) { first = false; return; }
     if (!cambiate.length) return;
     clearTimeout(timer);
-    timer = window.setTimeout(fitTitles, ATTESA);
+    // i titoloni al contrario non si misurano: si sbloccano gli a capo, la lente li rifà alla prossima passata
+    timer = window.setTimeout(() => { fitTitles(); inverse.forEach(unsplit); }, ATTESA);
   });
-  tutti.forEach(t => ro.observe(t.parentElement!));
+  [...list, ...inverse].forEach(t => ro.observe(t.parentElement!));
   signal.addEventListener('abort', () => { ro.disconnect(); clearTimeout(timer); });
 
   if (reduced || !matchMedia('(hover: hover) and (pointer: fine)').matches) return;
 
-  for (const title of list) {
+  for (const title of [...list, ...inverse]) {
     const cell = title.closest<HTMLElement>('.cell')!;
+    const [base, centro] = pesi(title);
     let pointer: { x: number; y: number } | null = null, loop = 0, prev = 0;
 
     const frame = (now: number) => {
@@ -172,10 +158,10 @@ export function initTitoloni(signal: AbortSignal, reduced: boolean) {
       const rects = pointer ? lens.letters.map(el => el.getBoundingClientRect()) : null;
       let moving = false;
       lens.letters.forEach((el, i) => {
-        let target = 500;
+        let target = base;
         if (rects && pointer) {
           const r = rects[i], d = Math.hypot(r.left + r.width / 2 - pointer.x, r.top + r.height / 2 - pointer.y);
-          if (d < R) target = 500 + 400 * (0.5 + 0.5 * Math.cos((Math.PI * d) / R));
+          if (d < R) target = base + (centro - base) * (0.5 + 0.5 * Math.cos((Math.PI * d) / R));
         }
         lens.weights[i] += (target - lens.weights[i]) * (1 - Math.exp(-dt / SMORZA));
         if (Math.abs(lens.weights[i] - target) > 0.5) moving = true;

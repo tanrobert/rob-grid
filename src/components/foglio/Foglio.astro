@@ -35,6 +35,8 @@ const recapiti: Cell = { id: 'recapiti', type: 'contatti', w: 4, h: 2, tone: 're
     --qf: round(down, min(100vw / (var(--cols) * 4 + 1), var(--qf-max)), 1px);
     --qf-max: 25px;
     --ruler-step: calc(var(--qf) * 4);
+    /* titolone delle celle (global.css): qui, dove c'è --qf, se no varrebbe sempre il quadretto di base */
+    --titolone: calc(var(--qf) * 2.55);
   }
   @media (max-width: 599px) { :global(html:is(.ha-foglio, .ha-pagina) body) { --qf-max: 100vw; } }
   .foglio {

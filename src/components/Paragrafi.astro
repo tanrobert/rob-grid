@@ -1,0 +1,17 @@
+---
+// Il testo di una cella in paragrafi, con due segni nel testo: **concetto** = un po' più nero (600 sul 400 del
+// testo), riga vuota = paragrafo nuovo, staccato di una riga. Corpo e interlinea li dà chi lo usa (classe .body
+// sull'elemento attorno). Dove il testo non è HTML (meta, alt) i segni si tolgono con senzaSegni (lib/format.ts)
+interface Props {
+  testo: string;
+}
+const { testo } = Astro.props;
+const paragrafi = testo.split(/\n\s*\n/).map(p => p.trim().split('**'));
+---
+
+{paragrafi.map(pezzi => <p>{pezzi.map((t, i) => (i % 2 ? <strong>{t}</strong> : t))}</p>)}
+
+<style>
+  p + p { margin-top: 1lh; }
+  strong { font-weight: 600; }
+</style>

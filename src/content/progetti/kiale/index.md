@@ -2,19 +2,19 @@
 title: "Kiale food service"
 tags: [Ristorazione, Ospitalità, Branding, Print, Packaging]
 period: "dal 2024"
-description: "Sistema di brand per un format di ristorazione veloce con ingredienti locali."
+description: "Sistema di brand per un **format di ristorazione veloce** con **ingredienti locali**."
 featured: true
 marchio: cliente
 shape: { w: 4, h: 5 }
 cells:
   # barattoli che girano, tutti in una cella: etichette 14×6 sul vaso basso, vellutate 14×9 sul vaso alto, alla stessa
-  # scala (h 6: il vaso alto, limitato dall'altezza, arriva con la cima dove comincia il testo). Un terzo della larghezza, in colonna: testo in alto, barattoli sotto. Etichette in ./etichette (tools/barattolo-mockup.py --etichette).
+  # scala (h 7 dal 29/10/2026: col titolone il vasetto resta grande come prima). Un terzo della larghezza, in colonna: testo in alto, barattoli sotto. Etichette in ./etichette (tools/barattolo-mockup.py --etichette).
   # Colori dell'interno chiari: si moltiplicano sul vetro. Testo: bozza da rivedere
   - type: barattolo
     w: 4
-    h: 6
-    md: { w: 4, h: 6 }
-    sm: { w: 4, h: 6 }
+    h: 7
+    md: { w: 4, h: 7 }
+    sm: { w: 4, h: 7 }
     eyebrow: "Packaging · etichette"
     title: "Conserve diverse, etichette di famiglia."
     barattoli:
@@ -35,9 +35,9 @@ cells:
     h: 2
     size: s
     title: "Le etichette"
-    body: "Confetture, composte, sott'olio, sughi pronti e vellutate: per ogni prodotto la stessa struttura, con ingredienti a sinistra, nome al centro e valori nutrizionali a destra. Cambiano colori e illustrazione. Due formati: 14×6 cm per i vasetti, 14×9 per le vellutate."
+    body: "Confetture, composte, sott'olio, sughi pronti e vellutate: per ogni prodotto **la stessa struttura**, con ingredienti a sinistra, nome al centro e valori nutrizionali a destra.\n\nCambiano **colori e illustrazione**. Due formati: **14×6 cm** per i vasetti, **14×9** per le vellutate."
   # canale WhatsApp: registrazione dello schermo (tema chiaro, primi 11 secondi: ffmpeg -t 11) con un margine bianco attorno (gli angoli tondi
-  # non tagliano ora e tasti), messa in prospettiva nello schermo del telefono da tools/telefono-mockup.py ("mockup tel 3.psd"
+  # non tagliano ora e tasti), messa in prospettiva nello schermo del telefono da tools/telefono-mockup.py ("sorgenti/mockup/mockup-tel-3.psd"
   # → public/telefono e public/media/kiale-canale). Cella stretta come i barattoli, testo sopra il telefono. Testo: bozza
   - type: telefono
     w: 4
@@ -57,8 +57,33 @@ cells:
     h: 2
     size: s
     title: "Il canale WhatsApp"
-    body: "Per il canale WhatsApp di Kiale una card fissa per il menù del giorno: primi, secondi e contorni, con lo stesso stile delle etichette. Cambiano i piatti, la pagina resta riconoscibile."
-  # poster estivo nel mockup (foto intera, ridotta a 2000 px da "kiale poster 1.png")
+    body: "Per il canale WhatsApp di Kiale **una card fissa per il menù del giorno**: primi, secondi e contorni, con lo stesso stile delle etichette.\n\nCambiano i piatti, **la pagina resta riconoscibile**."
+  # sito web: i piatti di kiale.it come sticker in un nastro infinito, da destra a sinistra (foto scontornate del sito, kiale-astro/src/assets/img,
+  # passate da tools/sticker.mjs: bordo bianco, stessa superficie)
+  - type: sticker
+    w: 4
+    h: 5
+    md: { w: 4, h: 5 }
+    sm: { w: 4, h: 5 }
+    eyebrow: "Web · sito"
+    title: "Kiale.it, sul web come al banco"
+    # testo: bozza dal sito (pagine e descrizioni di kiale-astro)
+    body: "Per kiale.it un sito in **tre pagine**: la home, l'asporto con primi, secondi e contorni pronti ogni giorno, e i buffet per eventi e feste.\n\nUn sito web **in espansione** che raccoglie una parte delle preparazioni di Kiale food service. Ogni piatto **scontornato**, come sul banco."
+    alt: "I piatti del sito di Kiale, uno sull'altro come sticker: coppette, burger, pokè, fritti, pasta, dolci"
+    immagini:
+      - ./piatti/coppetta-polpo-patate.webp
+      - ./piatti/tris-mini-burger.webp
+      - ./piatti/poke.webp
+      - ./piatti/ciambella.webp
+      - ./piatti/fritti-misti.webp
+      - ./piatti/pomodori-ripieni-riso-patate.webp
+      - ./piatti/farfalle-pesto-pomodorini.webp
+      - ./piatti/cornetto-salato.webp
+      - ./piatti/coppetta-riso-zucchine-gamberi.webp
+      - ./piatti/mix-verdure-grigliate.webp
+      - ./piatti/tris-gamberi.webp
+      - ./piatti/pasticcini-crema.webp
+  # poster estivo nel mockup (foto intera, ridotta a 2000 px da sorgenti/kiale/kiale-poster-1.png)
   - type: media
     w: 4
     h: 5

@@ -9,6 +9,7 @@ import { projects } from '../../data/projects';
 import { projectsByYear } from '../../lib/projects';
 import { scaleShape } from '../../lib/grid';
 import { pageTitle } from '../../data/site';
+import { senzaSegni } from '../../lib/format';
 
 export const getStaticPaths = (() =>
   projects.map(p => ({ params: { slug: p.slug }, props: { project: p } }))
@@ -32,9 +33,8 @@ const siblingCell = (id: string, label: string, step: number): Cell => {
 };
 
 const cells: Cell[] = [
-  { id: 'hero', type: 'media', ...heroSpan, heroOf: `/progetti/${p.slug}`, image: p.image, video: p.video, alt: `${p.title} · ${p.description}` },
+  { id: 'hero', type: 'media', ...heroSpan, heroOf: `/progetti/${p.slug}`, image: p.image, video: p.video, alt: `${p.title} · ${senzaSegni(p.description)}` },
   { id: 'progetto', type: 'text', w: 4, h: 2, as: 'h1', size: 's', eyebrow: 'Progetto', title: p.title, body: [p.description, marchio].filter(Boolean).join(' ') },
-  { id: 'indietro', type: 'text', w: 2, h: 2, tone: 'red', href: '/', as: 'p', size: 'm', eyebrow: 'Chiudi', title: 'Indice' },
   // celle proprie del progetto (cells in index.md); finché non ci sono, il segnaposto
   ...(p.cells ?? [{ id: 'nota', type: 'text', w: 4, h: 2, size: 's', title: 'Contenuto segnaposto: qui andranno immagini, processo e risultati.' }]),
   siblingCell('prec', 'precedente', -1),
@@ -42,7 +42,7 @@ const cells: Cell[] = [
 ];
 ---
 
-<Layout foglio titolo={pageTitle(p.title)} descrizione={p.description}>
+<Layout foglio titolo={pageTitle(p.title)} descrizione={senzaSegni(p.description)}>
   <Tavolo cells={tavolo} sotto />
   <Foglio cells={cells} />
 </Layout>

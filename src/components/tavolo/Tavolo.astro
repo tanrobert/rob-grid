@@ -89,6 +89,8 @@ const sagoma = (c: Cell) => (c.frame === false && c.type === 'svg' ? svgs[c.svg]
 
 {/* ROBERTO piccolo in alto a sinistra: solo segno (il nome lo dice già la cella `nome`) */}
 <span class="firma logotipo" aria-hidden="true">Roberto</span>
+{/* zoom del tavolo in alto a destra (scripts/tavolo/vista.ts, scala): 1× = quadretto di base */}
+<span class="zoom mono" data-zoom aria-hidden="true">1×</span>
 {/* la barra in basso: a sinistra le scritte piccole dei recapiti (P.IVA, informativa, anno, versione), a destra i
     bottoni del tavolo. Se le scritte non ci stanno scorrono (scripts/tavolo/piede.ts): due serie uguali, la striscia
     si sposta di una (50%) e riparte senza stacco; la seconda serie e lo stacco servono solo quando scorre */}
@@ -311,8 +313,16 @@ const sagoma = (c: Cell) => (c.frame === false && c.type === 'svg' ? svgs[c.svg]
     color: var(--inchiostro);
     pointer-events: none;
   }
+  /* zoom in alto a destra, alla stessa distanza della firma */
+  .zoom {
+    position: fixed; z-index: 40;
+    top: max(var(--gap), env(safe-area-inset-top));
+    right: max(var(--gap), env(safe-area-inset-right));
+    color: var(--inchiostro);
+    pointer-events: none;
+  }
   /* col foglio aperto i comandi del tavolo non servono */
-  :global(html.ha-foglio:not(.is-tavolo)) :is(.barra, .firma) { display: none; }
+  :global(html.ha-foglio:not(.is-tavolo)) :is(.barra, .firma, .zoom) { display: none; }
   .attrezzi button {
     appearance: none; margin: 0;
     padding: 10px 12px;

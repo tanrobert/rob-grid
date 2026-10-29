@@ -33,6 +33,11 @@
   --pad:  var(--m);
   /* riga di testa delle celle (numero · occhiello, freccia/✕): alta quanto il corpo .mono */
   --riga-label: 11px;
+  /* titolone delle celle con un mockup (barattoli, telefono, sticker): corpo fisso, il testo va a capo dove capita
+     (29/10/2026, scelta di Roberto: "i testi si possono sempre cambiare"). Sul quadretto del foglio, non sulla cella:
+     uguale in celle di larghezza diversa (in una cella larga 4 = 17% della cella, 64px col quadretto da 25).
+     Calcolato dove nasce il quadretto (components/foglio, --qf): qui solo il valore col quadretto di base */
+  --titolone: 64px;
   /* padding superiore del contenuto: sotto la riga di testa, con lo stesso margine */
   --pad-label: calc(var(--pad) * 2 + var(--riga-label));
   --line: 1px;

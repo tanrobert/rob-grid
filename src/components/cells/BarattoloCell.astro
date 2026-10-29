@@ -2,8 +2,8 @@
 // Barattoli col mockup vero: l'etichetta piatta avvolta sul cilindro misurato nel PSD (tools/barattolo-mockup.py,
 // livelli in public/barattolo/<mockup>), che si gira trascinando e si sfoglia con ‹ ›. Ogni barattolo ha il suo vaso,
 // il più grande che ci sta e centrato (non più alla stessa scala degli altri). Disegnati da scripts/barattolo.ts, caricato solo se la cella c'è e quando si avvicina allo schermo.
-// In colonna: titolo grande in alto a sinistra (due righe), i barattoli sotto, che ci salgono sopra fin quasi a metà
-// dell'ultima riga. Laboratorio: tools/pages/barattolo.html.
+// In colonna: titolone in alto a sinistra (--titolone), i barattoli sotto. Laboratorio: tools/pages/barattolo.html.
+import Paragrafi from '../Paragrafi.astro';
 import fs from 'node:fs';
 import path from 'node:path';
 import sharp from 'sharp';
@@ -48,8 +48,8 @@ const primo = barattoli[0].nome;
   <div class="vetrina">
     {(title || body) && (
       <div class="testo">
-        {title && <h2 class="titolo" data-righe="3">{title}</h2>}
-        {typeof body === 'string' && <p class="body">{body}</p>}
+        {title && <h2 class="titolo" data-lente="inversa">{title}</h2>}
+        {typeof body === 'string' && <div class="body"><Paragrafi testo={body} /></div>}
         {Array.isArray(body) && body.map(p => <p class="body">{p}</p>)}
       </div>
     )}
@@ -91,18 +91,18 @@ const primo = barattoli[0].nome;
   /* la parola della linea (Confetture, Sughi…): l'SVG fa da maschera, il colore è quello del bordo del barattolo
      (scripts/barattolo.ts). Girata di 90° in senso antiorario sul lato sinistro (destro coi vasi alti: .parola--destra),
      appoggiata sopra la fascia del bordo (--bordo-alto, scritto dallo script) con un modulo d'aria: un riquadro lungo
-     quanto la cella e alto 17cqi, la parola all'inizio, girato attorno al suo centro e portato a --pad dal lato */
+     quanto la cella e alto 15,5cqi, la parola all'inizio, girato attorno al suo centro e portato a --pad dal lato */
   .parola {
     grid-row: 2; grid-column: 1; align-self: end; justify-self: start;
-    width: 100cqi; height: 17cqi; margin-left: var(--pad);
+    width: 100cqi; height: 15.5cqi; margin-left: var(--pad);
     --sopra: calc(var(--bordo-alto, 22cqi) + var(--m));
-    translate: calc(8.5cqi - 50cqi) calc(8.5cqi - 50cqi - var(--sopra)); rotate: -90deg;
+    translate: calc(7.75cqi - 50cqi) calc(7.75cqi - 50cqi - var(--sopra)); rotate: -90deg;
     background-color: var(--parola-colore, transparent);
     mask: var(--parola) left center / contain no-repeat;
     opacity: 0; pointer-events: none;
     transition: background-color 520ms cubic-bezier(.45, 0, .55, 1);
   }
-  .parola--destra { justify-self: end; margin: 0 var(--pad) 0 0; translate: calc(50cqi - 8.5cqi) calc(8.5cqi - 50cqi - var(--sopra)); }
+  .parola--destra { justify-self: end; margin: 0 var(--pad) 0 0; translate: calc(50cqi - 7.75cqi) calc(7.75cqi - 50cqi - var(--sopra)); }
   .caption {
     position: absolute; left: 0; right: 0; bottom: 0;
     display: flex; justify-content: space-between; align-items: center; gap: var(--m);
@@ -127,8 +127,10 @@ const primo = barattoli[0].nome;
   }
   .titolo {
     font-family: var(--font-testo); font-weight: 900; line-height: 0.85; letter-spacing: -0.05em;
-    /* corpo: il più grande con cui sta in tre righe (scripts/titoloni.ts); questo senza JavaScript */
-    font-size: 11cqi;
+    font-size: var(--titolone);
+    /* la tela comincia quasi mezza riga dentro il titolo: il vaso alto ci sale sopra (i vasetti contano dal fondo del
+       titolo, scripts/barattolo.ts) */
+    margin-bottom: -0.45em;
   }
   .body { font-size: 14px; line-height: 1.35; }
 </style>

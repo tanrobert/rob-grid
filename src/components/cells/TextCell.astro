@@ -1,4 +1,6 @@
 ---
+import Paragrafi from '../Paragrafi.astro';
+
 interface Props {
   title: string;
   body?: string | string[];
@@ -13,7 +15,7 @@ const text = caret ? title.slice(0, -1) : title;
 
 <div class:list={['text', `text--${size}`]}>
   <Tag class="title">{text}{caret && <span class="caret loop" aria-hidden="true">_</span>}</Tag>
-  {typeof body === 'string' && <p class="body">{body}</p>}
+  {typeof body === 'string' && <div class="body"><Paragrafi testo={body} /></div>}
   {Array.isArray(body) && <ul class="body body--list">{body.map(line => <li>{line}</li>)}</ul>}
 </div>
 

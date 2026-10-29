@@ -1,4 +1,4 @@
-# Mano col telefono dal PSD ("mockup tel 3.psd", serie "Hand Holding iPhone 17 Pro": scena fotografica con le maschere
+# Mano col telefono dal PSD ("sorgenti/mockup/mockup-tel-3.psd", serie "Hand Holding iPhone 17 Pro": scena fotografica con le maschere
 # Hand Mask e iPhone Mask, schermo nello smart object "PUT YOUR DESIGN HERE", deformato in prospettiva sui quattro angoli)
 # e registrazione dello schermo messa in prospettiva.
 # Scrive in public/telefono/ mano.webp (mano e telefono con lo schermo bucato, fondo trasparente: si vede la carta della

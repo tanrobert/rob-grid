@@ -110,11 +110,16 @@ export function applica(v: Vista) {
 export interface VistaEvento { y: number; q: number }
 
 /** Quadretto a `q`: lo leggono carta e celle (--q sul tavolo). --zoom = rispetto al quadretto di base: i margini
-    interni delle celle (--pad, Tavolo.astro) crescono e calano con lo zoom */
+    interni delle celle (--pad, Tavolo.astro) crescono e calano con lo zoom. Lo zoom si legge anche in alto a destra */
+let indicatore: HTMLElement | null | undefined;
 export function scala(v: Vista, q: number) {
   v.q = q;
+  const zoom = q / (v.vw < BREAKPOINTS.md ? Q.sm : Q.lg);
   v.el.style.setProperty('--q', `${q}px`);
-  v.el.style.setProperty('--zoom', String(q / (v.vw < BREAKPOINTS.md ? Q.sm : Q.lg)));
+  v.el.style.setProperty('--zoom', String(zoom));
+  indicatore ??= document.querySelector<HTMLElement>('[data-zoom]');
+  // come moltiplicatore, a un decimale con la virgola: 1×, 1,5×, 0,6×
+  if (indicatore) indicatore.textContent = `${(Math.round(zoom * 10) / 10).toLocaleString('it-IT')}×`;
 }
 
 /** Zoom a `q` tenendo il punto `w` del tavolo (in quadretti) sotto il punto (fx, fy) dello schermo */
