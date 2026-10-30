@@ -35,7 +35,7 @@ const vasi = [...new Set(barattoli.map(b => b.mockup))];
 const dati = {
   mockup: Object.fromEntries(await Promise.all(vasi.map(async m => [m, await geometria(m)]))),
   barattoli: barattoli.map(b => ({
-    nome: b.nome, mockup: b.mockup, src: b.etichetta.src, bordo: b.bordo?.src, parola: b.parola?.src,
+    nome: b.nome, mockup: b.mockup, src: b.etichetta.src, bordo: b.bordo?.src, parola: b.parola?.src, interno: b.interno?.src,
     tipo: b.tipo, dentro: b.dentro, pezzi: b.pezzi,
   })),
 };

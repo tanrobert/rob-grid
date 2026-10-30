@@ -17,6 +17,8 @@ export interface Project {
   image?: ImageMetadata;
   /** Video in loop (percorso in /public), mostrato al posto di `image`, che gli fa da poster */
   video?: string;
+  /** Foto di contesto (il posto, le persone): nella pagina progetto sotto titolo e descrizione, nella cella 02 */
+  contesto?: { foto: ImageMetadata; alt: string };
   /** Celle proprie della pagina progetto (cells in index.md), tra le celle fisse e precedente/successivo */
   cells?: Cell[];
 }

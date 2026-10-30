@@ -61,12 +61,14 @@ const schermo = `--x: ${G.left}%; --y: ${G.top}%; --w: ${G.width}%; --h: ${G.hei
     margin-bottom: -0.43em;
   }
   .body { font-size: 14px; line-height: 1.35; max-width: 42ch; }
-  /* mano e telefono centrati, posati sul lato basso (il polso esce dalla cella): tutta l'altezza che resta, più
-     mezza riga del titolo (margine negativo del titolo) */
+  /* mano e telefono posati sul lato basso (il polso esce dalla cella): tutta l'altezza che resta, più mezza riga
+     del titolo (margine negativo del titolo); spostati un poco a destra del centro, così a sinistra c'è posto per
+     il logo (30/10/2026, scelta di Roberto) */
   .mano {
     position: relative; z-index: 1;
     flex: 1; min-height: 0; align-self: center;
     aspect-ratio: var(--rapporto);
+    translate: 14% 0;
   }
   .mano video {
     position: absolute; left: var(--x); top: var(--y); width: var(--w); height: var(--h);
@@ -76,5 +78,5 @@ const schermo = `--x: ${G.left}%; --y: ${G.top}%; --w: ${G.width}%; --h: ${G.hei
   }
   .mano img { position: relative; display: block; width: 100%; height: 100%; }
   /* il logo del cliente in basso a sinistra, sopra la mano */
-  .logo { position: absolute; left: var(--pad); bottom: var(--pad); z-index: 2; width: 48%; height: auto; }
+  .logo { position: absolute; left: var(--pad); bottom: var(--pad); z-index: 2; width: 32%; height: auto; }
 </style>

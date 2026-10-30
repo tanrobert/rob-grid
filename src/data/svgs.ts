@@ -13,7 +13,7 @@ interface SvgEntry { component: typeof LogoR; label: string; gap?: number }
 
 const entries = {
   // il marchio esatto (22/10/2026): R su griglia Fibonacci, asta, gamba e pancia come forme separate.
-  // Originale con le misure commentate: "marchio esatto.svg" nella radice del progetto
+  // Originale con le misure commentate: sorgenti/roberto/marchio-esatto.svg (fuori da git)
   'logo-r':                    { component: LogoR,                   label: 'Logo R' },
   // spazio O→B del lettering: tra la O finale e la R iniziale si forma la stessa coppia tonda→asta
   'roberto':                   { component: Roberto,                 label: 'Roberto', gap: 29.1 / 123.6 },

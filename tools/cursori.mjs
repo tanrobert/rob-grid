@@ -65,7 +65,7 @@ function svg(righe, commento) {
 const COLORI = { rosso: '#f03f24', carta: '#f5f3f0', nero: '#1c1a17' };
 const COPPIE = [['rosso', 'carta'], ['carta', 'rosso'], ['nero', 'carta'], ['carta', 'nero']];
 
-// matita = la penna di Windows 95 (penna-win95.svg, portata da Roberto il 27/10/2026), pixel per pixel ma senza
+// matita = la penna di Windows 95 (sorgenti/roberto/penna-win95.svg, portata da Roberto il 27/10/2026), pixel per pixel ma senza
 // l'alone chiaro attorno (le altre icone non ce l'hanno): corpo nero, luce chiara dentro. Punta in alto a sinistra: 0 0
 const MATITA = [
   '#                     ',

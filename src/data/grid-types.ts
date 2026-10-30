@@ -21,11 +21,26 @@ export interface Barattolo {
   bordo?: ImageMetadata;
   /** la parola della linea (Confetture, Sughi…: SVG a tinta unica, vettorializzato), in basso a sinistra col colore del bordo */
   parola?: ImageMetadata;
+  /** foto del contenuto (che si ripete senza stacco ai lati), avvolta come un cartoncino dentro il vetro al posto del segnaposto */
+  interno?: ImageMetadata;
   /** pezzi = frutta o legumi nella confettura o nel sugo · crema = vellutata, sugo liscio · filetti = sott'olio */
   tipo: 'pezzi' | 'crema' | 'filetti';
   dentro: string;
   pezzi?: string;
 }
+
+/** Un'affissione della cella `affissione`: la foto e la stessa col solo cartellone scontornato (stessa misura, combaciano) */
+export interface Affissione {
+  foto: ImageMetadata;
+  scontornata: ImageMetadata;
+  alt: string;
+  /** titolino sopra il paragrafo */
+  subtitle?: string;
+  body?: string;
+}
+
+/** Bottone sotto il testo di una cella (components/Bottone.astro): un link esterno si apre in una scheda nuova */
+export interface Bottone { label: string; href: string }
 
 /** Colore di fondo della cella. */
 export type Tone = 'paper' | 'red';
@@ -98,7 +113,17 @@ export type Cell = CellBase & (
   | { type: 'telefono'; video: string; alt: string; eyebrow?: string; title?: string; body?: string | string[]; logo?: ImageMetadata; logoAlt?: string }
   /** sticker (WebP col bordo bianco, tools/sticker.mjs) in un nastro infinito sotto il titolone, da destra a
    *  sinistra (solo CSS), e un paragrafo in fondo. `alt` descrive l'insieme */
-  | { type: 'sticker'; immagini: ImageMetadata[]; alt: string; eyebrow?: string; title?: string; body?: string }
+  | { type: 'sticker'; immagini: ImageMetadata[]; alt: string; eyebrow?: string; title?: string; body?: string; button?: Bottone }
+  /** affissioni nella loro strada, una dopo l'altra (sfumano ogni tanto, il testo sotto cambia con loro): per ognuna la foto
+   *  intera e, sopra, la stessa col solo cartellone scontornato; passando sulla foto la strada si schiarisce (al tocco si
+   *  accende e si spegne). Titolone in alto, in fondo il paragrafo di ogni affissione col suo titolino `subtitle` */
+  | { type: 'affissione'; affissioni: Affissione[]; eyebrow?: string; title?: string }
+  /** un sottologo e le sue applicazioni: titolone, una vetrina dove si alternano il logo animato (`logo`: un nome di
+   *  data/loghi.ts, si compone ogni volta che torna) e le foto scontornate, paragrafo in fondo. `lato`: foto attaccata a
+   *  quel lato della cella (più grande, a filo del bordo), che entra ed esce scivolando da lì */
+  | { type: 'sottologo'; logo: string; immagini: Array<{ image: ImageMetadata; alt: string; lato?: 'sinistra' }>; eyebrow?: string; title?: string; body?: string }
+  /** cella 02 delle pagine progetto con la foto di contesto: titolo (h1) e descrizione, sotto la foto a tutta larghezza */
+  | { type: 'contesto'; eyebrow?: string; title: string; body?: string; image: ImageMetadata; alt: string }
   /** pagina d'errore: codice grande con glitch, titolo (h1) e link all'indice, su carta a quadretti */
   | { type: 'error'; code: string; title: string }
   /** recapiti (email, luogo, P.IVA, versione): cella del tavolo e dei fogli */

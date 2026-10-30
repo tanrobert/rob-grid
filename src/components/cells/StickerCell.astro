@@ -8,14 +8,17 @@
 import type { ImageMetadata } from 'astro';
 import { Image } from 'astro:assets';
 import Paragrafi from '../Paragrafi.astro';
+import Bottone from '../Bottone.astro';
 
 interface Props {
   immagini: ImageMetadata[];
   alt: string;
   title?: string;
   body?: string;
+  /** bottone sotto il paragrafo (es. Visita il sito) */
+  button?: { label: string; href: string };
 }
-const { immagini, alt, title, body } = Astro.props;
+const { immagini, alt, title, body, button } = Astro.props;
 
 const SCALA = 0.07;    // cqi per pixel dello sticker (uno sticker da 800 px è largo 56cqi)
 const SPAZIO = 3;      // tra un piatto e l'altro, cqi
@@ -39,7 +42,12 @@ const serie = piatti.reduce((s, p) => s + p.w + SPAZIO, 0);
       )))}
     </div>
   </div>
-  {body && <div class="body"><Paragrafi testo={body} /></div>}
+  {(body || button) && (
+    <div class="body">
+      {body && <Paragrafi testo={body} />}
+      {button && <div class="azione"><Bottone {...button} /></div>}
+    </div>
+  )}
 </div>
 
 <style>
@@ -59,6 +67,8 @@ const serie = piatti.reduce((s, p) => s + p.w + SPAZIO, 0);
     animation: sticker-scorre var(--durata) linear infinite;
   }
   .piatto { flex: none; height: auto; }
+  /* staccato dal paragrafo di una riga, come i paragrafi tra loro */
+  .azione { margin-top: 1lh; }
   .body { align-self: end; padding: 0 var(--pad) var(--pad); max-width: 44ch; font-size: 14px; line-height: 1.35; }
   @keyframes sticker-scorre { to { transform: translateX(calc(var(--serie) * -1)); } }
 </style>

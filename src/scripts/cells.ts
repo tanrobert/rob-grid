@@ -45,6 +45,44 @@ export function initCells() {
   if (document.querySelector('[data-barattolo]')) {
     import('./barattolo').then(m => signal.aborted || m.initBarattoli(signal, reduced));
   }
+  // sottologhi: il logo che si compone e le sue foto, solo se la cella c'è
+  if (document.querySelector('[data-sottologo]')) {
+    import('./sottologo').then(m => signal.aborted || m.initSottologhi(signal, reduced));
+  }
+  // affissioni: col mouse il velo sulla strada è un hover (CSS); al tocco si accende e si spegne.
+  // Con più affissioni la scena cambia ogni GIRO ms, insieme al suo testo; ferma fuori vista e col mouse sulla foto
+  const GIRO = 7000;
+  const mouse = matchMedia('(hover: hover) and (pointer: fine)').matches;
+  document.querySelectorAll<HTMLElement>('[data-affissioni]').forEach(cella => {
+    const foto = cella.querySelector<HTMLElement>('[data-affissione]')!;
+    if (!mouse) foto.addEventListener('click', () => foto.classList.toggle('is-velo'), { signal });
+    const scene = [...foto.querySelectorAll<HTMLElement>('.scena')];
+    const testi = [...cella.querySelectorAll<HTMLElement>('.sotto')];
+    if (scene.length < 2) return;
+    let i = 0, timer = 0, inVista = false, sopra = false;
+    const avanti = () => {
+      const prossima = (i + 1) % scene.length;
+      // la nuova parte da trasparente anche se era la scena piena sotto: niente salto
+      scene.forEach(s => s.classList.remove('is-prima'));
+      void foto.offsetWidth;
+      scene[i].classList.replace('is-attiva', 'is-prima');
+      scene[prossima].classList.add('is-attiva');
+      testi[i].classList.remove('is-attiva');
+      testi[prossima].classList.add('is-attiva');
+      i = prossima;
+    };
+    const aggiorna = () => {
+      clearInterval(timer);
+      timer = inVista && !sopra ? window.setInterval(avanti, GIRO) : 0;
+    };
+    if (mouse) {
+      foto.addEventListener('pointerenter', () => { sopra = true; aggiorna(); }, { signal });
+      foto.addEventListener('pointerleave', () => { sopra = false; aggiorna(); }, { signal });
+    }
+    const io = new IntersectionObserver(([e]) => { inVista = e.isIntersecting; aggiorna(); });
+    io.observe(cella);
+    teardown.push(() => { io.disconnect(); clearInterval(timer); });
+  });
 
   // Intro finita: tolgo la classe, così nessuna casella che ricompare
   // (filtri, cambio di breakpoint) rifà l'animazione d'ingresso

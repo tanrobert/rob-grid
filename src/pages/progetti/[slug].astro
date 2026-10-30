@@ -22,7 +22,8 @@ const { project: p } = Astro.props;
 // Celle informative in moduli da 2 e 4 colonne: si incastrano accanto a qualsiasi hero.
 // se il marchio non è mio, lo dico in chiaro sotto la descrizione
 const marchio = p.marchio === 'cliente' ? 'Marchio esistente, del cliente.' : typeof p.marchio === 'object' ? `Marchio di ${p.marchio.di}.` : '';
-const heroSpan = p.shape ? scaleShape(p.shape, 1) : p.featured ? { w: 4, h: 4 } : { w: 2, h: 2 };
+const descrizione = [p.description, marchio].filter(Boolean).join(' ');
+const heroSpan =p.shape ? scaleShape(p.shape, 1) : p.featured ? { w: 4, h: 4 } : { w: 2, h: 2 };
 
 // progetto precedente e successivo nell'ordine dell'archivio (dal più recente), in giro: dopo l'ultimo il primo
 const at = projectsByYear.findIndex(x => x.slug === p.slug);
@@ -34,7 +35,10 @@ const siblingCell = (id: string, label: string, step: number): Cell => {
 
 const cells: Cell[] = [
   { id: 'hero', type: 'media', ...heroSpan, heroOf: `/progetti/${p.slug}`, image: p.image, video: p.video, alt: `${p.title} · ${senzaSegni(p.description)}` },
-  { id: 'progetto', type: 'text', w: 4, h: 2, as: 'h1', size: 's', eyebrow: 'Progetto', title: p.title, body: [p.description, marchio].filter(Boolean).join(' ') },
+  // con la foto di contesto la cella si allunga: il testo e, sotto, la foto
+  p.contesto
+    ? { id: 'progetto', type: 'contesto', w: 4, h: 7, eyebrow: 'Contesto', title: p.title, body: descrizione, image: p.contesto.foto, alt: p.contesto.alt }
+    : { id: 'progetto', type: 'text', w: 4, h: 2, as: 'h1', size: 's', eyebrow: 'Progetto', title: p.title, body: descrizione },
   // celle proprie del progetto (cells in index.md); finché non ci sono, il segnaposto
   ...(p.cells ?? [{ id: 'nota', type: 'text', w: 4, h: 2, size: 's', title: 'Contenuto segnaposto: qui andranno immagini, processo e risultati.' }]),
   siblingCell('prec', 'precedente', -1),

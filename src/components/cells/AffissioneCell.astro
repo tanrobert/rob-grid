@@ -1,0 +1,79 @@
+---
+// Affissioni nella loro strada (Kiale: Zio Checco, Componi il tuo piatto): titolone in alto, la foto intera a tutta
+// larghezza, titolino e paragrafo in fondo. Ogni affissione è una scena: la foto, un velo color carta e sopra la stessa
+// foto col solo cartellone scontornato (le due combaciano pixel per pixel). Passando col mouse sulla foto la strada si
+// schiarisce e il cartellone resta pieno; al tocco (niente hover) il velo si accende e si spegne.
+// Con più affissioni, ogni tanto la scena sfuma nella successiva e il testo sotto cambia con lei (cells.ts): fermo
+// fuori vista e col mouse sulla foto. Senza JavaScript resta la prima.
+// Foto e scontornata hanno lo stesso object-fit e la stessa misura: il ritaglio è identico a ogni larghezza.
+import { Image } from 'astro:assets';
+import type { Affissione } from '../../data/grid-types';
+import Paragrafi from '../Paragrafi.astro';
+
+interface Props {
+  affissioni: Affissione[];
+  title?: string;
+  sizes: string;
+}
+const { affissioni, title, sizes } = Astro.props;
+const WIDTHS = [600, 1000, 1500];
+const attiva = (i: number) => (i === 0 ? 'is-attiva' : undefined);
+---
+
+<div class="affissione" data-affissioni>
+  {title && <div class="testo"><h2 class="titolo" data-lente="inversa">{title}</h2></div>}
+  <div class="foto" data-affissione>
+    {affissioni.map((a, i) => (
+      <div class:list={['scena', attiva(i)]}>
+        <Image src={a.foto} alt={a.alt} widths={WIDTHS} sizes={sizes} loading="lazy" decoding="async" />
+        <div class="velo" aria-hidden="true"></div>
+        <Image src={a.scontornata} alt="" widths={WIDTHS} sizes={sizes} loading="lazy" decoding="async" />
+      </div>
+    ))}
+  </div>
+  <div class="testi">
+    {affissioni.map((a, i) => (
+      <div class:list={['sotto', attiva(i)]}>
+        {a.subtitle && <h3 class="sottotitolo">{a.subtitle}</h3>}
+        {a.body && <div class="body"><Paragrafi testo={a.body} /></div>}
+      </div>
+    ))}
+  </div>
+</div>
+
+<style>
+  /* in colonna: titolone, la foto in tutto lo spazio che resta (a filo dei lati della cella), il testo in fondo */
+  .affissione { position: absolute; inset: 0; display: grid; grid-template: auto minmax(0, 1fr) auto / minmax(0, 1fr); }
+  .testo { padding: var(--pad-label) var(--pad) var(--pad); pointer-events: none; }
+  .titolo {
+    font-family: var(--font-testo); font-weight: 900; line-height: 0.85; letter-spacing: -0.05em;
+    font-size: var(--titolone);
+  }
+  .foto { position: relative; overflow: hidden; }
+  .scena, .scena img, .velo { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .scena img { object-fit: cover; }
+  /* cambio di scena: la nuova sfuma sopra la precedente, che resta piena sotto (niente carta che traspare a metà) */
+  .scena { opacity: 0; }
+  .scena.is-prima { opacity: 1; z-index: 1; }
+  .scena.is-attiva { opacity: 1; z-index: 2; transition: opacity 900ms ease; }
+  /* la carta vera (--chiaro): come la foto, il velo non si inverte */
+  .velo { background: var(--chiaro); opacity: 0; transition: opacity 320ms ease; }
+  .foto.is-velo .velo { opacity: 0.6; }
+  @media (hover: hover) and (pointer: fine) {
+    .foto:hover .velo { opacity: 0.6; }
+  }
+  /* i testi uno sopra l'altro, alti quanto il più lungo: cambiando non spostano la foto. Il vecchio esce, poi entra il nuovo */
+  .testi { display: grid; }
+  .sotto {
+    grid-area: 1 / 1; align-self: end;
+    display: flex; flex-direction: column; gap: var(--m); padding: var(--pad);
+    opacity: 0; transition: opacity 300ms ease;
+  }
+  .sotto.is-attiva { opacity: 1; transition-delay: 300ms; }
+  /* titolino e paragrafo come una cella di testo piccola (TextCell size 's') */
+  .sottotitolo {
+    font-family: var(--font-testo); font-weight: 500; line-height: 1; letter-spacing: -0.025em;
+    font-size: clamp(18px, 6.4cqi, 40px);
+  }
+  .body { max-width: 44ch; font-size: 14px; line-height: 1.35; }
+</style>

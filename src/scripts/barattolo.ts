@@ -9,7 +9,8 @@
  *   quello che è scaricato resta.
  * - L'etichetta si avvolge colonna per colonna in un canvas dritto, poi ruotato tutto insieme (le strisce ruotate
  *   una per una facevano righe); luci e ombre del mockup restano ferme sopra (vengono dalla stanza).
- * - Dentro il vetro un foglio avvolto anche lui fa da contenuto (segnaposto disegnato qui: pezzi, crema, filetti).
+ * - Dentro il vetro un foglio avvolto anche lui fa da contenuto: la foto del barattolo (`interno`, che si ripete senza
+ *   stacco ai lati: un cartoncino arrotolato), o un segnaposto disegnato qui (pezzi, crema, filetti).
  * - Un solo rAF per cella, acceso solo quando qualcosa si muove e la cella è in vista; con riduci movimento
  *   non gira da solo e lo sfoglia non scorre (il trascinamento resta: è un gesto).
  * - Fondo del colore della cella: segue Inverti e la tinta di Woberto.
@@ -26,7 +27,7 @@
  */
 
 type Geometria = { w: number; h: number; cx: number; cy: number; ang: number; r: number; t0: number; t1: number; e: number; piano: [number, number]; cima: number; largo: number; centro: number; piede: number };
-type Voce = { nome: string; mockup: string; src: string; bordo?: string; parola?: string; tipo: 'pezzi' | 'crema' | 'filetti'; dentro: string; pezzi?: string };
+type Voce = { nome: string; mockup: string; src: string; bordo?: string; parola?: string; interno?: string; tipo: 'pezzi' | 'crema' | 'filetti'; dentro: string; pezzi?: string };
 type Dati = { mockup: Record<string, Geometria>; barattoli: Voce[] };
 /** [file, fusione, tinta?]: con la tinta il file è una maschera (grigio = quanto) da riempire di quel colore */
 type Livello = [string, GlobalCompositeOperation, string?];
@@ -228,7 +229,8 @@ async function avvia(root: HTMLElement, signal: AbortSignal, reduced: boolean) {
   const didascalia = root.querySelector<HTMLElement>('.caption');
   const titolo = root.querySelector<HTMLElement>('.titolo');
   const cella = root.closest<HTMLElement>('.cell') ?? root;
-  const interni = voci.map(texturaInterno);
+  // il segnaposto subito; la foto, se c'è, quando è scaricata (applica)
+  const interni: Immagine[] = voci.map(texturaInterno), foto = voci.map(() => false);
   let at = 0, W = 0, H = 0, giro = 0, vel = 0, auto = !reduced, raf = 0, ultimo = 0, inVista = true;
   let presa: { x: number; y: number; t: number } | null = null;
   // vaso in vista: geometria, livelli, scala (pixel reali per unità del ritaglio), fascia dell'etichetta, etichetta
@@ -240,14 +242,17 @@ async function avvia(root: HTMLElement, signal: AbortSignal, reduced: boolean) {
   let sx = 0, sy = 0;   // scena dentro la tela
   const dritto = { etichetta: tela(), interno: tela() };
 
-  // scaricare (vaso ed etichetta) e applicare sono separati: lo stato cambia solo quando si può disegnare tutto
-  const scarica = (i: number) => Promise.all([caricaVaso(voci[i].mockup, dati.mockup[voci[i].mockup]), caricaEtichetta(voci[i].src), caricaBordo(voci[i].bordo)]);
-  function applica(i: number, [p, l, b]: Awaited<ReturnType<typeof scarica>>) {
+  // scaricare (vaso, etichetta, bordo, foto dell'interno) e applicare sono separati: lo stato cambia solo quando si può
+  // disegnare tutto. La foto dell'interno, se non arriva, lascia il segnaposto
+  const caricaInterno = (w: Voce) => (w.interno ? caricaEtichetta(w.interno).catch(() => null) : Promise.resolve(null));
+  const scarica = (i: number) => Promise.all([caricaVaso(voci[i].mockup, dati.mockup[voci[i].mockup]), caricaEtichetta(voci[i].src), caricaBordo(voci[i].bordo), caricaInterno(voci[i])]);
+  function applica(i: number, [p, l, b, f]: Awaited<ReturnType<typeof scarica>>) {
     at = i; G = dati.mockup[voci[i].mockup]; M = MOCKUP[voci[i].mockup]; P = p; lab = l; [t0, t1] = fascia(G);
+    if (f) { interni[i] = f; foto[i] = true; }
     // il bordo nuovo: di colpo la prima volta e con riduci movimento, se no si trasforma da quello in vista
     bordo = { da: reduced || !bordo.a ? null : bordo.a, a: b, t: performance.now() }; bordoFermo = !bordo.da;
     // le vicine in anticipo, quando il browser è libero
-    const dopo = () => [voci[(i + 1) % n], voci[(i - 1 + n) % n]].forEach(w => { caricaEtichetta(w.src); caricaVaso(w.mockup, dati.mockup[w.mockup]); caricaBordo(w.bordo); });
+    const dopo = () => [voci[(i + 1) % n], voci[(i - 1 + n) % n]].forEach(w => { caricaEtichetta(w.src); caricaVaso(w.mockup, dati.mockup[w.mockup]); caricaBordo(w.bordo); caricaInterno(w); });
     'requestIdleCallback' in window ? requestIdleCallback(dopo) : setTimeout(dopo, 300);
   }
 
@@ -386,8 +391,13 @@ async function avvia(root: HTMLElement, signal: AbortSignal, reduced: boolean) {
     if (!W) return;
     sc.setTransform(1, 0, 0, 1, 0, 0); sc.globalCompositeOperation = 'source-over';
     sc.drawImage(fondo, 0, 0);
-    // contenuto: il foglio avvolto su un cilindro poco più stretto del vetro, ritagliato dalla maschera, moltiplicato
-    const ri = G.r * 0.96, ia = -2.4 * G.r, ib = 2.4 * G.r;
+    // contenuto: il foglio avvolto su un cilindro poco più stretto del vetro, ritagliato dalla maschera, moltiplicato.
+    // Segnaposto: alto quasi 5 raggi, ripetuto a giri interi (si deforma un poco, non si vede). Foto: nelle sue
+    // proporzioni, un giro (o più, se resta alta abbastanza) = la sua larghezza, centrata sul contenuto del vaso
+    const ri = G.r * 0.96, giro1 = 2 * Math.PI * ri * Math.sqrt(1 - G.e * G.e) * interni[at].height / interni[at].width;
+    const B = P.boxInterno, alto = B.y1 - B.y0, mezzo = (B.y0 + B.y1) / 2 - G.cy;
+    const hf = foto[at] ? giro1 / Math.max(1, Math.floor(giro1 / alto)) : 4.8 * G.r;
+    const ia = foto[at] ? mezzo - hf / 2 : -2.4 * G.r, ib = ia + hf;
     const tex = scalata(interni[at], (ib - ia) * s);
     const giri = Math.max(1, Math.round(2 * Math.PI * ri / ((ib - ia) / Math.sqrt(1 - G.e * G.e) * tex.width / tex.height)));
     const gi = interno.getContext('2d')!;

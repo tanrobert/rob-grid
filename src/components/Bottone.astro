@@ -1,0 +1,26 @@
+---
+// Bottone del sito: striscia piena d'inchiostro con la scritta in carta (con la luce spenta si scambiano), corpo .mono,
+// stessa altezza dei bottoni del tavolo. Un link esterno si apre in una scheda nuova, con la freccia ↗.
+// Niente hover (scelta di Roberto): il fuoco da tastiera lo dà :focus-visible di global.css.
+interface Props {
+  href: string;
+  label: string;
+}
+const { href, label } = Astro.props;
+const esterno = /^https?:\/\//.test(href);
+---
+
+<a class="bottone mono" href={href} target={esterno ? '_blank' : undefined} rel={esterno ? 'noopener' : undefined}>
+  {label}{esterno && <span aria-hidden="true">↗</span>}
+</a>
+
+<style>
+  .bottone {
+    display: inline-flex; align-items: center; gap: 0.75em;
+    padding: 10px 12px;
+    background: var(--inchiostro);
+    color: var(--bianco);
+    border: var(--line) solid var(--inchiostro);
+    text-decoration: none;
+  }
+</style>
