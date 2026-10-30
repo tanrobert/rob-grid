@@ -2,9 +2,10 @@
 // Affissioni nella loro strada (Kiale: Zio Checco, Componi il tuo piatto): titolone in alto, la foto intera a tutta
 // larghezza, titolino e paragrafo in fondo. Ogni affissione è una scena: la foto, un velo color carta e sopra la stessa
 // foto col solo cartellone scontornato (le due combaciano pixel per pixel). Passando col mouse sulla foto la strada si
-// schiarisce e il cartellone resta pieno; al tocco (niente hover) il velo si accende e si spegne.
+// schiarisce e il cartellone resta pieno.
 // Con più affissioni, ogni tanto la scena sfuma nella successiva e il testo sotto cambia con lei (cells.ts): fermo
-// fuori vista e col mouse sulla foto. Senza JavaScript resta la prima.
+// fuori vista e col mouse sulla foto; un clic o un tocco sulla foto passa subito alla successiva. Con una sola, al
+// tocco (niente hover) il velo si accende e si spegne. Senza JavaScript resta la prima.
 // Foto e scontornata hanno lo stesso object-fit e la stessa misura: il ritaglio è identico a ogni larghezza.
 import { Image } from 'astro:assets';
 import type { Affissione } from '../../data/grid-types';
@@ -50,6 +51,7 @@ const attiva = (i: number) => (i === 0 ? 'is-attiva' : undefined);
     font-size: var(--titolone);
   }
   .foto { position: relative; overflow: hidden; }
+  .foto:global(.is-sfogliabile) { cursor: pointer; }
   .scena, .scena img, .velo { position: absolute; inset: 0; width: 100%; height: 100%; }
   .scena img { object-fit: cover; }
   /* cambio di scena: la nuova sfuma sopra la precedente, che resta piena sotto (niente carta che traspare a metà) */
@@ -73,7 +75,7 @@ const attiva = (i: number) => (i === 0 ? 'is-attiva' : undefined);
   /* titolino e paragrafo come una cella di testo piccola (TextCell size 's') */
   .sottotitolo {
     font-family: var(--font-testo); font-weight: 500; line-height: 1; letter-spacing: -0.025em;
-    font-size: clamp(18px, 6.4cqi, 40px);
+    font-size: var(--titoletto);
   }
-  .body { max-width: 44ch; font-size: 14px; line-height: 1.35; }
+  .body { max-width: 44ch; font-size: var(--paragrafo); line-height: 1.35; }
 </style>

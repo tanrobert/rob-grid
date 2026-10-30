@@ -49,16 +49,20 @@ export function initCells() {
   if (document.querySelector('[data-sottologo]')) {
     import('./sottologo').then(m => signal.aborted || m.initSottologhi(signal, reduced));
   }
-  // affissioni: col mouse il velo sulla strada è un hover (CSS); al tocco si accende e si spegne.
-  // Con più affissioni la scena cambia ogni GIRO ms, insieme al suo testo; ferma fuori vista e col mouse sulla foto
+  // affissioni: col mouse il velo sulla strada è un hover (CSS). Con più affissioni la scena cambia ogni GIRO ms,
+  // insieme al suo testo, ferma fuori vista e col mouse sulla foto; un clic (o un tocco) passa alla successiva.
+  // Con una sola il tocco accende e spegne il velo
   const GIRO = 7000;
   const mouse = matchMedia('(hover: hover) and (pointer: fine)').matches;
   document.querySelectorAll<HTMLElement>('[data-affissioni]').forEach(cella => {
     const foto = cella.querySelector<HTMLElement>('[data-affissione]')!;
-    if (!mouse) foto.addEventListener('click', () => foto.classList.toggle('is-velo'), { signal });
     const scene = [...foto.querySelectorAll<HTMLElement>('.scena')];
     const testi = [...cella.querySelectorAll<HTMLElement>('.sotto')];
-    if (scene.length < 2) return;
+    if (scene.length < 2) {
+      if (!mouse) foto.addEventListener('click', () => foto.classList.toggle('is-velo'), { signal });
+      return;
+    }
+    foto.classList.add('is-sfogliabile');
     let i = 0, timer = 0, inVista = false, sopra = false;
     const avanti = () => {
       const prossima = (i + 1) % scene.length;
@@ -75,6 +79,7 @@ export function initCells() {
       clearInterval(timer);
       timer = inVista && !sopra ? window.setInterval(avanti, GIRO) : 0;
     };
+    foto.addEventListener('click', () => { avanti(); aggiorna(); }, { signal });
     if (mouse) {
       foto.addEventListener('pointerenter', () => { sopra = true; aggiorna(); }, { signal });
       foto.addEventListener('pointerleave', () => { sopra = false; aggiorna(); }, { signal });

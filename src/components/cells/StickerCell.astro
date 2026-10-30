@@ -69,6 +69,6 @@ const serie = piatti.reduce((s, p) => s + p.w + SPAZIO, 0);
   .piatto { flex: none; height: auto; }
   /* staccato dal paragrafo di una riga, come i paragrafi tra loro */
   .azione { margin-top: 1lh; }
-  .body { align-self: end; padding: 0 var(--pad) var(--pad); max-width: 44ch; font-size: 14px; line-height: 1.35; }
+  .body { align-self: end; padding: 0 var(--pad) var(--pad); max-width: 44ch; font-size: var(--paragrafo); line-height: 1.35; }
   @keyframes sticker-scorre { to { transform: translateX(calc(var(--serie) * -1)); } }
 </style>

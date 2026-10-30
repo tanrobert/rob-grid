@@ -33,11 +33,9 @@
   --pad:  var(--m);
   /* riga di testa delle celle (numero · occhiello, freccia/✕): alta quanto il corpo .mono */
   --riga-label: 11px;
-  /* titolone delle celle con un mockup (barattoli, telefono, sticker): corpo fisso, il testo va a capo dove capita
-     (29/10/2026, scelta di Roberto: "i testi si possono sempre cambiare"). Sul quadretto del foglio, non sulla cella:
-     uguale in celle di larghezza diversa (in una cella larga 4 = 17% della cella, 64px col quadretto da 25).
-     Calcolato dove nasce il quadretto (components/foglio, --qf): qui solo il valore col quadretto di base */
-  --titolone: 64px;
+  /* quadretto su cui si misurano i testi (--titolone, --titoletto, --paragrafo, regola sotto): quello del foglio
+     (components/foglio) o quello di base del tavolo (components/tavolo); qui il quadretto di base */
+  --q-testo: 25px;
   /* padding superiore del contenuto: sotto la riga di testa, con lo stesso margine */
   --pad-label: calc(var(--pad) * 2 + var(--riga-label));
   --line: 1px;
@@ -73,6 +71,23 @@
 
   color-scheme: light;
   cursor: var(--cursore);
+}
+
+/* Tre livelli di testo nelle celle, tutti sul quadretto (30/10/2026, scelta di Roberto): stesse misure in celle di
+   larghezza diversa e quasi uguali a ogni finestra, tra un minimo e un massimo. Col quadretto da 25: 64 · 24 · 14.
+   - titolone: celle coi mockup (barattoli, telefono, sticker, affissioni, sottologo); va a capo dove capita
+     (29/10/2026: "i testi si possono sempre cambiare")
+   - titoletto: celle di testo piccole (TextCell 's'), contesto, titolino delle affissioni
+   - paragrafo: il testo di tutte le celle
+   Ricalcolati dove cambia il quadretto: nel foglio e sul tavolo, dove il clamp vale sul quadretto di base e poi tutto
+   segue lo zoom (--zoom, scripts/tavolo/vista.ts), anche sotto il minimo: rimpicciolire serve per vedere più tavolo.
+   I titoli che riempiono la cella (TextCell 'm' e 'l', logotipo, numeri, orologio) restano in proporzione alla cella */
+:root, .tavolo, html:is(.ha-foglio, .ha-pagina) body {
+  --titolone: calc(clamp(46px, var(--q-testo) * 2.55, 64px) * var(--zoom, 1));
+  --titoletto: calc(clamp(18px, var(--q-testo) * 0.96, 24px) * var(--zoom, 1));
+  --paragrafo: calc(clamp(13px, var(--q-testo) * 0.56, 15px) * var(--zoom, 1));
+  /* il quadretto vero, senza clamp: nel foglio --qf, sul tavolo quello di base × zoom (= --q) */
+  --quadretto: calc(var(--q-testo) * var(--zoom, 1));
 }
 a[href], button, [role="button"], [role="switch"], label[for], summary, select { cursor: var(--cursore-mano); }
 /* colori invertiti: rosso e bianco si scambiano, inchiostro chiaro su carta rossa. data-inchiostro su <html>
@@ -352,9 +367,27 @@ p { text-wrap: pretty; }
   .cell[data-hero] { cursor: var(--cursore-mano); }
 }
 
-.cell:has(> .duo) > :is(.cell__label, .cell__go, .caption) { color: var(--bianco); }
+.cell:has(> .duo) > :is(.cell__label, .cell__go) { color: var(--bianco); }
 /* colori invertiti: le scritte sulle foto restano chiare (rosse sulle foto non si leggevano) */
-:root[data-inchiostro="bianco"] .cell:has(> .duo) > :is(.cell__label, .cell__go, .caption) { color: var(--chiaro); }
+:root[data-inchiostro="bianco"] .cell:has(> .duo) > :is(.cell__label, .cell__go) { color: var(--chiaro); }
+
+/* Didascalia (titolo dei progetti, 30/10/2026, idea di Roberto): un rettangolo d'inchiostro grande quanto il testo,
+   attaccato sotto la cella a sinistra, fuori dalla cella (stacca dalla rigidità del quadrato). Alto un quadretto
+   (quello della carta: sul tavolo segue lo zoom): riempie lo spazio tra una cella e quella sotto (nel foglio e sul
+   tavolo le celle sono a un quadretto l'una dall'altra). Il testo parte al margine della cella, sotto il numero.
+   Sul tavolo la sua ombra è un rettangolo uguale nell'ombra della cella (components/tavolo) */
+.cell:has(> .caption) { overflow: visible; }
+.caption {
+  position: absolute; top: 100%; left: 0; z-index: 2;
+  display: flex; align-items: center;
+  max-width: 100%; height: var(--quadretto);
+  padding-inline: var(--pad);
+  background: var(--inchiostro); color: var(--bianco);
+}
+.caption__title {
+  font-weight: 500; font-size: min(var(--paragrafo), var(--quadretto) * 0.6); line-height: 1; letter-spacing: -0.01em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
 
 /* ── Media: foto piena ───────────────────────────────── */
 /* Solo la foto: niente effetti né hover (ottobre 2026). Niente filtri né blend mode: su mobile rendevano lo

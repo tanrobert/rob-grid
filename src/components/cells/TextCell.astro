@@ -37,15 +37,13 @@ const text = caret ? title.slice(0, -1) : title;
   }
   .text--l .title { font-size: clamp(24px, min(8.4cqi, 13cqb), 72px); line-height: 1.02; }
   .text--m .title { font-size: clamp(28px, min(22cqi, 34cqb), 128px); letter-spacing: -0.04em; }
-  .text--s .title { font-size: clamp(18px, min(6.4cqi, 13cqb), 40px); }
+  .text--s .title { font-size: var(--titoletto); }
 
   .body {
     max-width: 44ch;
-    font-size: 14px; line-height: 1.35;
+    font-size: var(--paragrafo); line-height: 1.35;
   }
   .body--list { list-style: none; }
-  /* casella bassa (es. 2×1 a 1024 o su tablet stretto): il testo sotto si stringe */
-  @container (max-height: 180px) { .body { font-size: 12px; line-height: 1.25; } }
 
   .caret { animation: caret-blink 1.1s steps(1) infinite; }
   @keyframes caret-blink { 50% { opacity: 0; } }

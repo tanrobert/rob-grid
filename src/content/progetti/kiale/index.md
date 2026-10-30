@@ -5,8 +5,9 @@ period: "dal 2024"
 description: "Sistema di brand per un **format di ristorazione veloce** con **ingredienti locali**."
 featured: true
 marchio: cliente
-# copertina: il poster estivo nel mockup (da sorgenti/kiale/kiale-poster-1.png, ritagliato a 4×5 e portato a 2400×3000)
-shape: { w: 4, h: 5 }
+# copertina: manifesti e volantini sparsi (da sorgenti/kiale/kiale-copertina-volantini.png, 4500×3000, portata a 3600×2400).
+# Prima era il poster estivo nel mockup (sorgenti/kiale/kiale-poster-1.png, 4×5)
+shape: { w: 6, h: 4 }
 # la foto che era la copertina (sorgenti/kiale/dsc5018.jpg): nella cella 02, sotto titolo e descrizione
 contesto:
   foto: ./contesto.jpg
@@ -36,7 +37,7 @@ cells:
   # il testo delle etichette, in una cella sua dopo i barattoli (il titolo dei barattoli è corto e grande)
   - type: text
     w: 4
-    h: 2
+    h: 3
     size: s
     title: "Le etichette"
     body: "Confetture, composte, sott'olio, sughi pronti e vellutate: per ogni prodotto **la stessa struttura**, con ingredienti a sinistra, nome al centro e valori nutrizionali a destra.\n\nCambiano **colori e illustrazione**. Due formati: **14×6 cm** per i vasetti, **14×9** per le vellutate."
@@ -58,7 +59,7 @@ cells:
   # il testo del canale, in una cella sua dopo il telefono (il titolo del telefono è corto e grande)
   - type: text
     w: 4
-    h: 2
+    h: 3
     size: s
     title: "Il canale WhatsApp"
     body: "Per il canale WhatsApp di Kiale **una card fissa per il menù del giorno**: primi, secondi e contorni, con lo stesso stile delle etichette.\n\nCambiano i piatti, **la pagina resta riconoscibile**."

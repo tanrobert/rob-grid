@@ -14,13 +14,15 @@ interface Props {
   filterable?: boolean;
   /** pagina vera, da usare con la prop `pagina` del Layout */
   pagina?: boolean;
+  /** Pagine progetto: le colonne rimaste vuote a destra si chiudono e le celle stanno al centro del foglio */
+  centrato?: boolean;
 }
-const { cells, filterable = false, pagina = false } = Astro.props;
+const { cells, filterable = false, pagina = false, centrato = false } = Astro.props;
 const recapiti: Cell = { id: 'recapiti', type: 'contatti', w: 4, h: 2, tone: 'red' };
 ---
 
 {!pagina && <div class="retino" data-retino aria-hidden="true"></div>}
-<main id="main" class:list={['foglio', pagina && 'foglio--pagina']} data-foglio={pagina ? undefined : ''}>
+<main id="main" class:list={['foglio', pagina && 'foglio--pagina', centrato && 'foglio--centrato']} data-foglio={pagina ? undefined : ''}>
   <slot />
   <Grid cells={[...cells, recapiti]} filterable={filterable} />
 </main>
@@ -35,8 +37,8 @@ const recapiti: Cell = { id: 'recapiti', type: 'contatti', w: 4, h: 2, tone: 're
     --qf: round(down, min(100vw / (var(--cols) * 4 + 1), var(--qf-max)), 1px);
     --qf-max: 25px;
     --ruler-step: calc(var(--qf) * 4);
-    /* titolone delle celle (global.css): qui, dove c'è --qf, se no varrebbe sempre il quadretto di base */
-    --titolone: calc(var(--qf) * 2.55);
+    /* i testi delle celle si misurano su questo quadretto (global.css) */
+    --q-testo: var(--qf);
   }
   @media (max-width: 599px) { :global(html:is(.ha-foglio, .ha-pagina) body) { --qf-max: 100vw; } }
   .foglio {
@@ -51,6 +53,9 @@ const recapiti: Cell = { id: 'recapiti', type: 'contatti', w: 4, h: 2, tone: 're
   /* pagina vera: la carta del tavolo (quadretti e crocini ogni 4) agganciata al foglio, che riempie almeno la
      finestra. La carta sborda ai lati di un numero intero di moduli: le linee cadono sui bordi delle celle e i
      crocini sui moduli, senza calcoli sulla larghezza della finestra (lo scroll orizzontale lo taglia html) */
+  /* colonne vuote chiuse (auto-fit) e quelle usate al centro: lo scarto è di mezze colonne, cioè quadretti interi.
+     Non nell'archivio: filtrando le colonne usate cambiano e tutta la griglia si sposterebbe */
+  .foglio--centrato :global(.grid) { grid-template-columns: repeat(auto-fit, var(--u)); justify-content: center; }
   .foglio--pagina { min-height: 100dvh; isolation: isolate; }
   .foglio--pagina::before, .foglio--pagina::after {
     content: '';

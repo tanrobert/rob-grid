@@ -4,8 +4,8 @@
  *   scontornate); un tocco passa alla scena dopo. Ferma fuori vista e col mouse sopra.
  * - Il logo si compone quando la cella entra in vista e ogni volta che torna: il cerchio si disegna, le lettere
  *   arrivano a timbro, il panino cade e la bandierina si apre, i raggi si disegnano dal panino verso fuori, poi le
- *   scritte dietro una penna dal bordo morbido inclinato come il corsivo, a velocità costante; puntino e accento
- *   dopo la loro parola. Le penne stanno nelle maschere del file, ferme a fine corsa: senza script, o con riduci
+ *   scritte dietro una penna dal bordo morbido inclinato come il corsivo, a velocità costante; il puntino della i
+ *   dopo la sua parola. Le penne stanno nelle maschere del file, ferme a fine corsa: senza script, o con riduci
  *   movimento, il logo è già composto. Scelto da Roberto nel laboratorio tools/pages/zio-checco.html (30/10/2026).
  */
 

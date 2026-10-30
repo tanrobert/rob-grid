@@ -32,9 +32,9 @@ const { title, body, image, alt, sizes } = Astro.props;
   .testo { display: flex; flex-direction: column; gap: var(--m); padding: var(--pad-label) var(--pad) var(--pad); }
   .titolo {
     font-family: var(--font-testo); font-weight: 500; line-height: 1; letter-spacing: -0.025em;
-    font-size: clamp(18px, 6.4cqi, 40px);
+    font-size: var(--titoletto);
   }
-  .body { max-width: 44ch; font-size: 14px; line-height: 1.35; }
+  .body { max-width: 44ch; font-size: var(--paragrafo); line-height: 1.35; }
   .foto { position: relative; overflow: hidden; }
   .foto img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 </style>

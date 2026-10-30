@@ -9,6 +9,7 @@ import CellContent from '../CellContent.astro';
 import { inQuadretti, pack, FINESTRE, Q, versione } from '../../lib/tavolo';
 import { BREAKPOINTS } from '../../lib/grid';
 import { svgs } from '../../data/svgs';
+import { getProject } from '../../data/projects';
 import { piede } from '../../data/piede';
 import Matita from '../../assets/matita.svg';
 
@@ -67,7 +68,12 @@ const sagoma = (c: Cell) => (c.frame === false && c.type === 'svg' ? svgs[c.svg]
           data-sotto={cell.sotto ? `${cell.sotto.id} ${cell.sotto.x} ${cell.sotto.y}` : undefined}
           style={`--qw:${w};--qh:${h};--x:${lg.x};--y:${lg.y};--x-md:${md.x};--y-md:${md.y};--x-sm:${sm.x};--y-sm:${sm.y}`}
         >
-          {cell.frame !== false ? <div class="pezzo__ombra" data-ombra aria-hidden="true"></div>
+          {/* i progetti hanno la didascalia fuori dalla cella: nell'ombra un rettangolo uguale (stesso testo, invisibile) */}
+          {cell.frame !== false ? (
+            <div class="pezzo__ombra" data-ombra aria-hidden="true">
+              {cell.type === 'project' && <span class="caption ombra__caption"><span class="caption__title">{getProject(cell.slug)?.title}</span></span>}
+            </div>
+          )
             : sagoma(cell) && (
               <div class="pezzo__ombra pezzo__ombra--sagoma" data-ombra aria-hidden="true">
                 {/* la maschera sta nel figlio: GSAP sposta il pezzo__ombra, il figlio gira con Woberto.
@@ -133,6 +139,8 @@ const sagoma = (c: Cell) => (c.frame === false && c.type === 'svg' ? svgs[c.svg]
      e niente gesti del browser, li fa scripts/tavolo/gesti.ts */
   .tavolo {
     --q: var(--q-lg);
+    /* i testi delle celle si misurano sul quadretto di base, poi seguono lo zoom (global.css) */
+    --q-testo: var(--q-lg);
     position: fixed; inset: 0;
     overflow: clip;
     background: var(--bianco);
@@ -146,7 +154,7 @@ const sagoma = (c: Cell) => (c.frame === false && c.type === 'svg' ? svgs[c.svg]
     --pad: calc(var(--m) * var(--zoom, 1));
     --pad-label: calc(var(--pad) * 2 + var(--riga-label));
   }
-  @media (max-width: 599px) { .tavolo { --q: var(--q-sm); } }
+  @media (max-width: 599px) { .tavolo { --q: var(--q-sm); --q-testo: var(--q-sm); } }
   /* mano chiusa mentre si porta il tavolo o una cella (gesti.ts), anche sopra le celle-link (se no la manina) */
   .tavolo.is-panning, .tavolo.is-panning :global(*) { cursor: var(--cursore-chiusa); }
 
@@ -250,6 +258,10 @@ const sagoma = (c: Cell) => (c.frame === false && c.type === 'svg' ? svgs[c.svg]
   .pezzo__ombra--sagoma { background: none; }
   .ombra__sagoma { mask: var(--sagoma) center / 100% 100% no-repeat; }
   .ombra__sagoma--girata { rotate: 180deg; }
+  .ombra__caption {
+    z-index: auto; color: transparent;
+    background: radial-gradient(circle at 2px 2px, var(--inchiostro) 0 1.15px, transparent 1.4px) 0 0 / 4px 4px;
+  }
   /* intro, atterraggio (variante A "Secco" di tools/pages/atterraggio.html): il filo si disegna con la cella
      sollevata come in mano (misure di prendi(), scripts/tavolo/pezzi.ts); a filo finito entra il fondo, poi l'ombra
      (prima si vedrebbe attraverso la cella ancora trasparente), un attimo sospesa e giù di colpo: l'ombra rientra.
