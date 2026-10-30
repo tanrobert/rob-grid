@@ -67,7 +67,7 @@ if (cell.type === 'project' && !p) throw new Error(`[grid] progetto non trovato:
     {cell.type === 'svg' && <SvgCell svg={cell.svg} fit={cell.fit} ink={cell.ink} tinta={cell.tinta} />}
     {cell.type === 'logotipo' && <LogotipoCell />}
     {cell.type === 'marquee' && <MarqueeCell svg={cell.svg} text={cell.text} speed={cell.speed} reverse={cell.reverse} vertical={cell.vertical} ruotato={cell.ruotato} />}
-    {cell.type === 'text' && <TextCell title={cell.title} body={cell.body} as={cell.as} size={cell.size} />}
+    {cell.type === 'text' && <TextCell title={cell.title} body={cell.body} as={cell.as} size={cell.size} immagini={cell.immagini} sizes={sizes} />}
     {cell.type === 'list' && <ListCell items={cell.items} />}
     {cell.type === 'stat' && <StatCell value={cell.value} caption={cell.caption} countUp={cell.countUp} heading={cell.heading} />}
     {cell.type === 'media' && <MediaCell image={cell.image} video={cell.video} alt={cell.alt} sizes={sizes} title={cell.caption} priority={!!cell.heroOf} />}

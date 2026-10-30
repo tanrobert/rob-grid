@@ -42,7 +42,22 @@ export function initMatita(t: Tavolo): Matita {
   const { v, signal } = t;
   const html = document.documentElement;
   const sulTavolo = v.mondo.querySelector<SVGGElement>('[data-segni-tavolo]')!;
-  const fogli = new Map(t.pezzi.map(p => [p, p.el.querySelector<SVGSVGElement>(':scope > [data-segni]')!]));
+  // dove si scrive: la cella (il suo svg) e, nei progetti, la didascalia attaccata sotto, che è dello stesso foglio.
+  // L'svg della didascalia ha le misure e le coordinate di quello della cella più la riga sotto, e la didascalia lo
+  // taglia sul suo rettangolo: un tratto ci passa sopra come sul resto del foglio, e segue la cella
+  type Foglio = { p: Pezzo; svg: SVGSVGElement; didascalia?: HTMLElement };
+  const fogli: Foglio[] = t.pezzi.map(p => ({ p, svg: p.el.querySelector<SVGSVGElement>(':scope > [data-segni]')! }));
+  const didascalie: Foglio[] = t.pezzi.flatMap(p => {
+    const didascalia = p.el.querySelector<HTMLElement>(':scope > .cell > .caption');
+    if (!didascalia) return [];
+    const svg = document.createElementNS(SVGNS, 'svg');
+    svg.setAttribute('class', 'segni segni--didascalia');
+    svg.setAttribute('viewBox', `0 0 ${p.w} ${p.h + 1}`);
+    svg.setAttribute('preserveAspectRatio', 'none');
+    svg.setAttribute('aria-hidden', 'true');
+    didascalia.append(svg);
+    return [{ p, svg, didascalia }];
+  });
   const pulsante = document.querySelector<HTMLButtonElement>('[data-matita]');
   const cancella = document.querySelector<HTMLButtonElement>('[data-cancella]');
   const scatolina = pulsante?.querySelector<SVGSVGElement>('.matita__ico');
@@ -53,27 +68,35 @@ export function initMatita(t: Tavolo): Matita {
   scala(v.q);
   document.addEventListener('tavolo:vista', e => scala((e as CustomEvent<VistaEvento>).detail.q), { signal });
 
-  /** il foglio sotto un punto del tavolo (in quadretti): la cella più in alto, o null = il tavolo */
+  /** dove cade un punto del tavolo (in quadretti) */
+  const dentro = ({ p, didascalia }: Foglio, x: number, y: number) => {
+    if (!didascalia) return x >= p.gx && x < p.gx + p.w && y >= p.gy && y < p.gy + p.h;
+    // la didascalia è larga quanto il titolo: misurata in quadretti (lo zoom cambia il quadretto, non scala il tavolo)
+    const y0 = p.gy + p.h;
+    return x >= p.gx && x < p.gx + didascalia.offsetWidth / v.q && y >= y0 && y < y0 + didascalia.offsetHeight / v.q;
+  };
+  /** il foglio sotto un punto del tavolo (in quadretti): la cella (o la sua didascalia) più in alto, o null = il tavolo */
   const foglioIn = (x: number, y: number) => {
-    let sopra: Pezzo | null = null, iSopra = -1;
-    t.pezzi.forEach((p, i) => {
-      if (x < p.gx || x >= p.gx + p.w || y < p.gy || y >= p.gy + p.h) return;
-      if (!sopra || p.z > sopra.z || (p.z === sopra.z && i > iSopra)) { sopra = p; iSopra = i; }
-    });
-    return sopra as Pezzo | null;
+    let sopra: Foglio | null = null, iSopra = -1;
+    for (const f of [...fogli, ...didascalie]) {
+      if (!dentro(f, x, y)) continue;
+      const i = t.pezzi.indexOf(f.p);
+      if (!sopra || f.p.z > sopra.p.z || (f.p.z === sopra.p.z && i > iSopra)) { sopra = f; iSopra = i; }
+    }
+    return sopra as Foglio | null;
   };
 
   // ── Il tratto in corso: un pezzo per ogni foglio attraversato ──
-  let tratto: { paths: SVGPathElement[]; ultimo: Posto; seg: { su: Pezzo | null; path: SVGPathElement; pts: Posto[] } } | null = null;
+  let tratto: { paths: SVGPathElement[]; ultimo: Posto; seg: { su: Foglio | null; path: SVGPathElement; pts: Posto[] } } | null = null;
   const punto = (sx: number, sy: number): Posto => ({ x: (sx - ox(v)) / v.q, y: (sy - oy(v)) / v.q });
   const aggiungi = (pt: Posto) => {
     const { seg } = tratto!;
-    seg.pts.push(seg.su ? { x: pt.x - seg.su.gx, y: pt.y - seg.su.gy } : pt);
+    seg.pts.push(seg.su ? { x: pt.x - seg.su.p.gx, y: pt.y - seg.su.p.gy } : pt);
     seg.path.setAttribute('d', pathD(seg.pts));
   };
-  const pezzoDiTratto = (su: Pezzo | null, pt: Posto) => {
+  const pezzoDiTratto = (su: Foglio | null, pt: Posto) => {
     const path = document.createElementNS(SVGNS, 'path');
-    (su ? fogli.get(su)! : sulTavolo).append(path);
+    (su ? su.svg : sulTavolo).append(path);
     tratto!.paths.push(path);
     tratto!.seg = { su, path, pts: [] };
     aggiungi(pt);

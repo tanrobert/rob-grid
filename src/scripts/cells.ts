@@ -6,6 +6,7 @@ import { initArchive } from './archive';
 import { initInk } from './ink';
 import { initRighe } from './righe';
 import { fitTitles, initTitoloni } from './titoloni';
+import { initMosaico } from './mosaico';
 import { pad2 } from '../lib/format';
 import type { VistaEvento } from './tavolo/vista';
 
@@ -89,6 +90,41 @@ export function initCells() {
     teardown.push(() => { io.disconnect(); clearInterval(timer); });
   });
 
+  // caroselli delle celle di testo: gira sempre, da destra a sinistra, una foto ogni CAROSELLO ms (fermo solo fuori
+  // vista); un clic passa alla dopo. In fondo al nastro una copia della prima: arrivati lì si torna all'inizio senza
+  // transizione, così il giro non si riavvolge all'indietro
+  const CAROSELLO = 4000;
+  document.querySelectorAll<HTMLElement>('[data-carosello]').forEach(car => {
+    const nastro = car.firstElementChild as HTMLElement;
+    const n = nastro.children.length;
+    const copia = nastro.firstElementChild!.cloneNode(true) as HTMLElement;
+    copia.setAttribute('aria-hidden', 'true');
+    copia.querySelector('img')!.alt = '';
+    nastro.append(copia);
+    let i = 0, timer = 0;
+    const vai = (j: number, salto = false) => {
+      nastro.classList.toggle('is-salto', salto);
+      if (salto) void nastro.offsetWidth;
+      nastro.style.setProperty('--i', String(i = j));
+      if (salto) { void nastro.offsetWidth; nastro.classList.remove('is-salto'); }
+    };
+    // initCells riparte (un foglio nuovo sopra): si riprende dalla foto dov'era
+    const era = Number(nastro.style.getPropertyValue('--i')) || 0;
+    vai(era < n ? era : 0, true);
+    const avanti = () => {
+      if (i === n) vai(0, true);  // la transizione verso la copia non è finita (scheda nascosta): riparto da capo
+      vai(i + 1);
+    };
+    nastro.addEventListener('transitionend', e => { if (e.target === nastro && i === n) vai(0, true); }, { signal });
+    car.addEventListener('click', () => { avanti(); clearInterval(timer); timer = window.setInterval(avanti, CAROSELLO); }, { signal });
+    const io = new IntersectionObserver(([e]) => {
+      clearInterval(timer);
+      timer = e.isIntersecting ? window.setInterval(avanti, CAROSELLO) : 0;
+    });
+    io.observe(car);
+    teardown.push(() => { io.disconnect(); clearInterval(timer); copia.remove(); });
+  });
+
   // Intro finita: tolgo la classe, così nessuna casella che ricompare
   // (filtri, cambio di breakpoint) rifà l'animazione d'ingresso
   const html = document.documentElement;
@@ -97,6 +133,8 @@ export function initCells() {
   initTitoloni(signal, reduced);
   document.fonts.ready.then(() => {
     if (signal.aborted) return;
+    // celle allungate dove il testo non ci sta (col font vero), prima dei titoloni e delle righe dell'intro
+    initMosaico(signal);
     fitTitles();
     if (intro) initRighe(signal);
   });

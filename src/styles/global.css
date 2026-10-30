@@ -74,18 +74,19 @@
 }
 
 /* Tre livelli di testo nelle celle, tutti sul quadretto (30/10/2026, scelta di Roberto): stesse misure in celle di
-   larghezza diversa e quasi uguali a ogni finestra, tra un minimo e un massimo. Col quadretto da 25: 64 · 24 · 14.
+   larghezza diversa e quasi uguali a ogni finestra, tra un minimo e un massimo. Col quadretto da 25: 64 · 24 · 16.
    - titolone: celle coi mockup (barattoli, telefono, sticker, affissioni, sottologo); va a capo dove capita
      (29/10/2026: "i testi si possono sempre cambiare")
    - titoletto: celle di testo piccole (TextCell 's'), contesto, titolino delle affissioni
-   - paragrafo: il testo di tutte le celle
+   - paragrafo: il testo di tutte le celle, 16 (la misura di base del browser) e 15 sul telefono (dal 30/10/2026,
+     prima 14 e 13). Se non ci sta, nei fogli la cella si allunga da sola (scripts/mosaico.ts)
    Ricalcolati dove cambia il quadretto: nel foglio e sul tavolo, dove il clamp vale sul quadretto di base e poi tutto
    segue lo zoom (--zoom, scripts/tavolo/vista.ts), anche sotto il minimo: rimpicciolire serve per vedere più tavolo.
    I titoli che riempiono la cella (TextCell 'm' e 'l', logotipo, numeri, orologio) restano in proporzione alla cella */
 :root, .tavolo, html:is(.ha-foglio, .ha-pagina) body {
   --titolone: calc(clamp(46px, var(--q-testo) * 2.55, 64px) * var(--zoom, 1));
   --titoletto: calc(clamp(18px, var(--q-testo) * 0.96, 24px) * var(--zoom, 1));
-  --paragrafo: calc(clamp(13px, var(--q-testo) * 0.56, 15px) * var(--zoom, 1));
+  --paragrafo: calc(clamp(15px, var(--q-testo) * 0.64, 16px) * var(--zoom, 1));
   /* il quadretto vero, senza clamp: nel foglio --qf, sul tavolo quello di base × zoom (= --q) */
   --quadretto: calc(var(--q-testo) * var(--zoom, 1));
 }
@@ -282,7 +283,8 @@ p { text-wrap: pretty; }
 .cell {
   position: relative;
   grid-column: span var(--w);
-  grid-row: span var(--h);
+  /* --piu: righe aggiunte da scripts/mosaico.ts se il testo non ci sta */
+  grid-row: span calc(var(--h) + var(--piu, 0));
   container-type: size;
   overflow: clip;
   /* stesso colore della pagina: la casella non ha un fondo suo, ma copre i crocini della griglia */
@@ -290,7 +292,7 @@ p { text-wrap: pretty; }
   color: var(--inchiostro);
   /* lati in unità al breakpoint corrente: servono al disegno del filo nell'intro */
   --cw: var(--w, 1);
-  --ch: var(--h, 1);
+  --ch: calc(var(--h, 1) + var(--piu, 0));
 }
 
 /* ── Cella della 404 (dopo .cell, che ha il suo fondo): la carta a quadretti della pagina vera, coi quadretti
@@ -306,8 +308,8 @@ p { text-wrap: pretty; }
 }
 /* colore registrato: nell'intro i quadretti sfumano col fondo (fill-in) invece di comparire di colpo */
 @property --carta-ink { syntax: '<color>'; inherits: false; initial-value: transparent; }
-@media (max-width: 1023px) { .cell { grid-column: span var(--w-md); grid-row: span var(--h-md); --cw: var(--w-md, 1); --ch: var(--h-md, 1); } }
-@media (max-width: 599px)  { .cell { grid-column: span var(--w-sm); grid-row: span var(--h-sm); --cw: var(--w-sm, 1); --ch: var(--h-sm, 1); } }
+@media (max-width: 1023px) { .cell { grid-column: span var(--w-md); grid-row: span calc(var(--h-md) + var(--piu, 0)); --cw: var(--w-md, 1); --ch: calc(var(--h-md, 1) + var(--piu, 0)); } }
+@media (max-width: 599px)  { .cell { grid-column: span var(--w-sm); grid-row: span calc(var(--h-sm) + var(--piu, 0)); --cw: var(--w-sm, 1); --ch: calc(var(--h-sm, 1) + var(--piu, 0)); } }
 @media (min-width: 1024px) { .cell.hide-lg { display: none; } }
 @media (min-width: 600px) and (max-width: 1023px) { .cell.hide-md { display: none; } }
 @media (max-width: 599px) { .cell.hide-sm { display: none; } }

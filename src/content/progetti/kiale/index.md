@@ -34,13 +34,23 @@ cells:
       - { nome: "Pasta e fagioli · sugo pronto", mockup: vaso-basso, etichetta: ./etichette/sugo-pasta-fagioli.webp, bordo: ./etichette/sugo-pasta-fagioli.svg, parola: ./etichette/parola-paste-e-sughi.svg, interno: ./etichette/interno-pasta-fagioli.webp, tipo: pezzi, dentro: "#b8502e", pezzi: "#e8c8a0" }
       - { nome: "Vellutata di carote, patate e piselli", mockup: vaso-alto, etichetta: ./etichette/vellutata-carote-patate-piselli.webp, bordo: ./etichette/vellutata-carote-patate-piselli.svg, parola: ./etichette/parola-vellutate.svg, interno: ./etichette/interno-carote-patate-piselli.webp, tipo: crema, dentro: "#ffa83c" }
       - { nome: "Vellutata di zucca e patate", mockup: vaso-alto, etichetta: ./etichette/vellutata-zucca-patate.webp, bordo: ./etichette/vellutata-zucca-patate.svg, parola: ./etichette/parola-vellutate.svg, interno: ./etichette/interno-zucca-patate.webp, tipo: crema, dentro: "#ffb83a" }
-  # il testo delle etichette, in una cella sua dopo i barattoli (il titolo dei barattoli è corto e grande)
+  # il testo delle etichette, in una cella sua dopo i barattoli (il titolo dei barattoli è corto e grande), con le foto
+  # dei vasetti veri sotto il paragrafo, in un carosello che gira da solo (originali in sorgenti/kiale/foto-etichette, ridotte a 1600 px)
   - type: text
     w: 4
-    h: 3
+    h: 5
     size: s
     title: "Le etichette"
     body: "Confetture, composte, sott'olio, sughi pronti e vellutate: per ogni prodotto **la stessa struttura**, con ingredienti a sinistra, nome al centro e valori nutrizionali a destra.\n\nCambiano **colori e illustrazione**. Due formati: **14×6 cm** per i vasetti, **14×9** per le vellutate."
+    immagini:
+      - image: ./etichette-scaffale.jpg
+        alt: "Vasetti di confettura di Kiale sullo scaffale: albicocche, uva fragola, prugne e fragole"
+      - image: ./etichette-confetture.jpg
+        alt: "Confetture di fragole e di albicocche di Kiale tra pigne e nastri di Natale, accanto ai biscotti artigianali"
+      - image: ./etichette-sughi.jpg
+        alt: "Pomodoro fresco in bottiglia e in vasetto e filetti di melanzane sott'olio di Kiale, in una confezione regalo di Natale"
+      - image: ./etichette-cesto.jpg
+        alt: "Una scatola regalo con i vasetti di Kiale: filetti di melanzane e di carote, pomodoro fresco e confettura di albicocche"
   # canale WhatsApp: registrazione dello schermo (tema chiaro, primi 11 secondi: ffmpeg -t 11) con un margine bianco attorno (gli angoli tondi
   # non tagliano ora e tasti), messa in prospettiva nello schermo del telefono da tools/telefono-mockup.py ("sorgenti/mockup/mockup-tel-3.psd"
   # → public/telefono e public/media/kiale-canale). Cella stretta come i barattoli, testo sopra il telefono. Testo: bozza

@@ -94,6 +94,8 @@ export type Cell = CellBase & (
       type: 'text'; eyebrow?: string; title: string;
       /** Testo sotto il titolo: una stringa = paragrafo, un array = elenco di righe */
       body?: string | string[]; as?: 'h1' | 'h2' | 'p'; size?: 's' | 'm' | 'l';
+      /** foto sotto il paragrafo, in un carosello che gira da solo */
+      immagini?: Array<{ image: ImageMetadata; alt: string }>;
     }
   | { type: 'list'; title: string; items: Array<string | { label: string; href: string }> }
   | { type: 'stat'; value: string; caption: string; /** il numero sale da 0 quando la cella entra in vista */ countUp?: boolean; /** h1 nascosto: la cella fa da hero di una pagina */ heading?: string }

@@ -351,7 +351,19 @@ const sagoma = (c: Cell) => (c.frame === false && c.type === 'svg' ? svgs[c.svg]
   /* sopra il filo della cella (.cell::after, z 3) e la linguetta (z 2): la matita scrive anche sul bordo */
   .pezzo > .segni { z-index: 4; }
   .segni--tavolo { inset: auto; left: 0; top: 0; width: 1px; height: 1px; overflow: visible; }
-  .segni :global(path) { fill: none; stroke: var(--nero); stroke-width: 0.12; stroke-linecap: round; stroke-linejoin: round; }
+  .segni :global(path), .pezzo :global(.segni--didascalia path) {
+    fill: none; stroke: var(--nero); stroke-width: 0.12; stroke-linecap: round; stroke-linejoin: round;
+  }
+  /* anche sulla didascalia dei progetti, che è dello stesso foglio: l'svg (messo da matita.ts) ha le coordinate di
+     quello della cella più la riga sotto, e la didascalia lo taglia sul suo rettangolo */
+  .pezzo :global(.cell > .caption) { overflow: clip; }
+  .pezzo :global(.segni--didascalia) {
+    position: absolute; left: 0; top: calc(var(--qh) * var(--q) * -1);
+    width: calc(var(--qw) * var(--q)); height: calc((var(--qh) + 1) * var(--q));
+    /* più largo della didascalia: senza, la regola generale degli svg (max-width 100%) lo stringe e i segni slittano */
+    max-width: none;
+    pointer-events: none;
+  }
   /* solo icona, quadrati e alti come gli altri: suono 16px + 10 di padding, matita 22px (1 pixel della penna = 1px) + 7 */
   .attrezzi .attrezzi__suono { display: inline-grid; place-items: center; padding: 10px; }
   .attrezzi .attrezzi__matita { display: inline-grid; place-items: center; padding: 7px; }

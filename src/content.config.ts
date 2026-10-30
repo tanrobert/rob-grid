@@ -46,6 +46,8 @@ const progetti = defineCollection({
         ...base, type: z.literal('text'), eyebrow: z.string().optional(), title: z.string(),
         body: z.union([z.string(), z.array(z.string())]).optional(),
         as: z.enum(['h2', 'p']).optional(), size: z.enum(['s', 'm', 'l']).optional(),
+        // foto sotto il paragrafo, in un carosello che gira da solo
+        immagini: z.array(z.strictObject({ image: image(), alt: z.string() })).min(2).optional(),
       }),
       z.strictObject({ ...base, type: z.literal('list'), title: z.string(), items: z.array(z.union([z.string(), z.strictObject({ label: z.string(), href: z.string() })])) }),
       // value anche numero in YAML (2024 senza virgolette)
