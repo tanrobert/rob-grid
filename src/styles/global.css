@@ -26,10 +26,6 @@
   /* modulo di base */
   --m:    10px;
   --gap:  var(--m);
-  /* corpo delle scritte .mono (linguette, occhielli, didascalie) e riga di testa delle celle (numero · occhiello,
-     freccia/✕), alta quanto lui */
-  --corpo-mono: 11px;
-  --riga-label: var(--corpo-mono);
   /* quadretto su cui si misurano i testi (--titolone, --titoletto, --paragrafo, regola sotto): quello del foglio
      (components/foglio) o quello di base del tavolo (components/tavolo); qui il quadretto di base */
   --q-testo: 25px;
@@ -98,6 +94,12 @@
   --pad-disegno: calc(var(--pad) + 12px);
   /* inizio del contenuto, sotto la riga di testa (2 margini + 11px col quadretto da 25): anche lui in proporzione */
   --pad-label: calc(var(--quadretto) * 1.24);
+  /* corpo delle scritte .mono (linguette, occhielli, didascalie) e riga di testa delle celle (numero · occhiello,
+     freccia/✕), alta quanto lui: 11px, sul tavolo × zoom (1/11/2026) come margini e testi, così rimpicciolendo
+     numero e occhiello restano in proporzione alla cella. La barra, la firma e lo zoom stanno fuori da .tavolo:
+     restano a 11px */
+  --corpo-mono: calc(11px * var(--zoom, 1));
+  --riga-label: var(--corpo-mono);
 }
 .titolone { font-family: var(--font-testo); font-weight: 900; line-height: 0.85; letter-spacing: -0.05em; font-size: var(--titolone); }
 .titoletto { font-family: var(--font-testo); font-weight: 500; line-height: 1; letter-spacing: -0.025em; font-size: var(--titoletto); }
@@ -367,7 +369,7 @@ p { text-wrap: pretty; }
    a --pad dai bordi come il contenuto. Sulle foto in bianco */
 .cell__label {
   position: absolute; top: var(--pad); left: var(--pad); z-index: 2;
-  display: flex; gap: 8px;
+  display: flex; gap: calc(8px * var(--zoom, 1));
   /* l'occhiello lungo si taglia prima della freccia */
   max-width: calc(100% - 2 * var(--pad) - var(--riga-label) - var(--m));
   line-height: var(--riga-label);

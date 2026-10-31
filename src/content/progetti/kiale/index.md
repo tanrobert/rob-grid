@@ -2,7 +2,7 @@
 title: "Kiale food service"
 tags: [Ristorazione, Ospitalità, Branding, Print, Packaging]
 period: "dal 2024"
-description: "Sistema di brand per un **format di ristorazione veloce** con **ingredienti locali**."
+description: "Kiale Food Service è una cucina artigianale specializzata in piatti pronti da asporto e servizi buffet per ogni tipo di occasione. Ogni preparazione parte da ingredienti freschi selezionati, lavorati ogni giorno con la stessa cura di una cucina di casa."
 featured: true
 marchio: cliente
 # copertina: manifesti e volantini sparsi (da sorgenti/kiale/kiale-copertina-volantini.png, 4500×3000, portata a 3600×2400).
