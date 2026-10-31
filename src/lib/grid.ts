@@ -19,7 +19,7 @@ export function resolveSpans(cell: Cell): Record<keyof typeof COLS, Span> {
   return { lg, md, sm };
 }
 
-/** Forma di un progetto scalata per ogni breakpoint (×1 sul tavolo, in archivio e nella hero).
+/** Forma di un progetto scalata per ogni breakpoint (×1 sul tavolo e in archivio, ×2 nella hero).
     Se non ci sta nelle colonne va a tutta larghezza con lo stesso rapporto: l'immagine non si deforma. */
 export function scaleShape(shape: Span, factor: number): Span & { md: Span; sm: Span } {
   const fit = (cols: number): Span => {

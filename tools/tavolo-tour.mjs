@@ -122,16 +122,21 @@ console.log(`${browser} — ${BASE}`);
   const shift = s2.cells.logo.x - s1.cells.logo.x;
   check(shift < -120 && grid(s2) === grid(s1), 'pan dal fondo', `${Math.round(shift)}px, celle ferme sul tavolo`);
 
-  // zoom con la rotella: il quadretto cambia, il punto sotto il cursore resta fermo, a fine gesto pixel interi
+  // zoom con la rotella (solo indietro: si parte da 1×, il massimo): uno scatto = 0,25, il punto sotto il cursore
+  // resta fermo, a fine gesto pixel interi
   const f = center(s2.cells.kiale);
   const before = { x: (f.x - s2.ox) / s2.q, y: (f.y - s2.oy) / s2.q };
   await p.mouse.move(f.x, f.y);
   await p.mouse.wheel({ deltaY: -100 });
   await sleep(500);
+  const vietato = await state(p);
+  check(vietato.q === s2.q, 'rotella in avanti a 1×: niente zoom', `quadretto ${s2.q} → ${vietato.q}px`);
+  await p.mouse.wheel({ deltaY: 100 });
+  await sleep(500);
   const s3 = await state(p);
   const after = { x: (f.x - s3.ox) / s3.q, y: (f.y - s3.oy) / s3.q };
   const drift = Math.hypot(after.x - before.x, after.y - before.y) * s3.q;
-  check(s3.q > s2.q, 'rotella: zoom', `quadretto ${s2.q} → ${s3.q}px`);
+  check(Math.abs(s3.q - s2.q * 0.75) < 1, 'rotella: zoom indietro di uno scatto (0,75×)', `quadretto ${s2.q} → ${s3.q}px`);
   check(drift < 2, 'punto sotto il cursore fermo', `${drift.toFixed(2)}px`);
   check(Math.abs(s3.q * s3.dpr - Math.round(s3.q * s3.dpr)) < 1e-6, 'quadretto su pixel interi a fine gesto');
   check(grid(s3) === grid(s2), 'celle ferme sul tavolo dopo lo zoom');
@@ -576,7 +581,7 @@ const segni = p => p.evaluate(() => {
   check(m.celle[id] >= 1, 'la cella spostata si porta dietro i suoi segni');
   // zoom: i segni del tavolo scalano col quadretto
   await p.mouse.move(bg.x, bg.y);
-  await p.mouse.wheel({ deltaY: -100 });
+  await p.mouse.wheel({ deltaY: 100 });
   await sleep(500);
   st = await state(p);
   m = await segni(p);
@@ -614,15 +619,15 @@ if (chrome) {
   const s1 = await state(p);
   check(n >= 1 && s1.ox === s0.ox && s1.path === '/', 'dito con la matita: disegna, il tavolo resta fermo', `${n} tratti`);
   const mid = { x: 206, y: 430 };
-  await touch('touchStart', [{ x: mid.x - 40, y: mid.y }]);
+  await touch('touchStart', [{ x: mid.x - 100, y: mid.y }]);
   await sleep(30);
-  await touch('touchStart', [{ x: mid.x - 40, y: mid.y }, { x: mid.x + 40, y: mid.y }]);
-  for (let i = 1; i <= 10; i++) { await touch('touchMove', [{ x: mid.x - 40 - i * 6, y: mid.y }, { x: mid.x + 40 + i * 6, y: mid.y }]); await sleep(25); }
+  await touch('touchStart', [{ x: mid.x - 100, y: mid.y }, { x: mid.x + 100, y: mid.y }]);
+  for (let i = 1; i <= 10; i++) { await touch('touchMove', [{ x: mid.x - 100 + i * 6, y: mid.y }, { x: mid.x + 100 - i * 6, y: mid.y }]); await sleep(25); }
   await touch('touchEnd', []);
   await sleep(500);
   m = await segni(p);
   const n2 = m.tavolo + Object.values(m.celle).reduce((a, b) => a + b, 0);
-  check(n2 === n && (await state(p)).q > s1.q, 'due dita con la matita: zoom, nessun segno in più', `${n} → ${n2} tratti`);
+  check(n2 === n && (await state(p)).q < s1.q, 'due dita con la matita: zoom, nessun segno in più', `${n} → ${n2} tratti`);
   await p.close();
 }
 
@@ -692,15 +697,15 @@ if (chrome) {
   await sleep(1200);
   check((await state(p)).path === '/', 'pressione lunga e via: non apre');
 
-  // due dita che si allargano: zoom
+  // due dita che si avvicinano: zoom indietro, fino a 0,5×
   const s3 = await state(p);
   const m = { x: 206, y: 430 };
-  await touch('touchStart', [{ x: m.x - 40, y: m.y }, { x: m.x + 40, y: m.y }]);
-  for (let i = 1; i <= 12; i++) { await touch('touchMove', [{ x: m.x - 40 - i * 6, y: m.y }, { x: m.x + 40 + i * 6, y: m.y }]); await sleep(25); }
+  await touch('touchStart', [{ x: m.x - 120, y: m.y }, { x: m.x + 120, y: m.y }]);
+  for (let i = 1; i <= 12; i++) { await touch('touchMove', [{ x: m.x - 120 + i * 6, y: m.y }, { x: m.x + 120 - i * 6, y: m.y }]); await sleep(25); }
   await touch('touchEnd', []);
   await sleep(500);
   const s4 = await state(p);
-  check(s4.q > s3.q * 1.5 && grid(s4) === grid(s3) && s4.path === '/', 'due dita: zoom', `quadretto ${s3.q} → ${s4.q}px`);
+  check(Math.abs(s4.q - s3.q * 0.5) < 1 && grid(s4) === grid(s3) && s4.path === '/', 'due dita: zoom indietro fino a 0,5×', `quadretto ${s3.q} → ${s4.q}px`);
 
   await p.close();
 

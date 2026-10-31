@@ -2,7 +2,7 @@
  * La vista sul tavolo: spostamento (pan) e zoom. Lo zoom cambia il quadretto (--q): il tavolo si ridisegna
  * alla misura nuova, fili e testi restano netti. Tutto agganciato ai pixel reali dello schermo.
  */
-import { PER_UNITA, QMIN, QMAX, Q } from '../../lib/tavolo';
+import { PER_UNITA, ZOOM_MIN, Q } from '../../lib/tavolo';
 import { BREAKPOINTS } from '../../lib/grid';
 import type { Posto } from '../../lib/tavolo';
 
@@ -36,7 +36,10 @@ export const creaVista = (el: HTMLElement): Vista => ({
 
 /** px agganciati ai pixel reali (Windows al 125%: passi da 0.8px), se no i fili da 1px cadono tra due pixel */
 export const aPixel = (n: number) => Math.round(n * devicePixelRatio) / devicePixelRatio;
-export const clampQ = (q: number) => Math.min(QMAX, Math.max(QMIN, q));
+/** Quadretto di base (zoom 1×): computer o telefono */
+export const base = (v: Vista) => (v.vw < BREAKPOINTS.md ? Q.sm : Q.lg);
+/** Quadretto dentro lo zoom ammesso: da ZOOM_MIN a 1× */
+export const clampQ = (v: Vista, q: number) => Math.min(base(v), Math.max(base(v) * ZOOM_MIN, q));
 const mod = (a: number, n: number) => ((a % n) + n) % n;
 
 /** Origine del tavolo sullo schermo: centro della finestra più lo spostamento */
@@ -109,17 +112,17 @@ export function applica(v: Vista) {
 /** Spostamento verticale della vista e quadretto, in px */
 export interface VistaEvento { y: number; q: number }
 
-/** Quadretto a `q`: lo leggono carta e celle (--q sul tavolo). --zoom = rispetto al quadretto di base: i margini
-    interni delle celle (--pad, Tavolo.astro) crescono e calano con lo zoom. Lo zoom si legge anche in alto a destra */
+/** Quadretto a `q`: lo leggono carta e celle (--q sul tavolo). --zoom = rispetto al quadretto di base: i testi e i
+    margini interni delle celle (--pad, global.css) crescono e calano con lo zoom. Lo zoom si legge anche in alto a destra */
 let indicatore: HTMLElement | null | undefined;
 export function scala(v: Vista, q: number) {
   v.q = q;
-  const zoom = q / (v.vw < BREAKPOINTS.md ? Q.sm : Q.lg);
+  const zoom = q / base(v);
   v.el.style.setProperty('--q', `${q}px`);
   v.el.style.setProperty('--zoom', String(zoom));
   indicatore ??= document.querySelector<HTMLElement>('[data-zoom]');
-  // come moltiplicatore, a un decimale con la virgola: 1×, 1,5×, 0,6×
-  if (indicatore) indicatore.textContent = `${(Math.round(zoom * 10) / 10).toLocaleString('it-IT')}×`;
+  // come moltiplicatore, al ventesimo con la virgola: 1×, 0,75×, 0,5× (il quadretto intero lo sposta di poco)
+  if (indicatore) indicatore.textContent = `${(Math.round(zoom * 20) / 20).toLocaleString('it-IT')}×`;
 }
 
 /** Zoom a `q` tenendo il punto `w` del tavolo (in quadretti) sotto il punto (fx, fy) dello schermo */

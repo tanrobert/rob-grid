@@ -17,20 +17,20 @@ export const getStaticPaths = (() =>
 
 const { project: p } = Astro.props;
 
-// hero = forma del progetto ×1, come in archivio: cresce solo di quanto il quadretto del foglio è più grande di
-// quello del tavolo; senza forma, quadrato come in archivio.
+// hero = forma del progetto ×2 (31/10/2026, scelta di Roberto: più grande, in proporzione; ×1,5 darebbe mezze unità);
+// tutta larghezza con lo stesso rapporto se non ci sta. Senza forma, il quadrato dell'archivio ×2.
 // Celle informative in moduli da 2 e 4 colonne: si incastrano accanto a qualsiasi hero.
 // se il marchio non è mio, lo dico in chiaro sotto la descrizione
 const marchio = p.marchio === 'cliente' ? 'Marchio esistente, del cliente.' : typeof p.marchio === 'object' ? `Marchio di ${p.marchio.di}.` : '';
 const descrizione = [p.description, marchio].filter(Boolean).join(' ');
-const heroSpan =p.shape ? scaleShape(p.shape, 1) : p.featured ? { w: 4, h: 4 } : { w: 2, h: 2 };
+const heroSpan = scaleShape(p.shape ?? (p.featured ? { w: 4, h: 4 } : { w: 2, h: 2 }), 2);
 
 // progetto precedente e successivo nell'ordine dell'archivio (dal più recente), in giro: dopo l'ultimo il primo
 const at = projectsByYear.findIndex(x => x.slug === p.slug);
 const sibling = (step: number) => projectsByYear[(at + step + projectsByYear.length) % projectsByYear.length];
 const siblingCell = (id: string, label: string, step: number): Cell => {
   const s = sibling(step);
-  return { id, type: 'text', w: 4, h: 1, size: 's', as: 'p', href: `/progetti/${s.slug}`, replace: true, eyebrow: `Progetto ${label}`, title: s.title };
+  return { id, type: 'text', w: 4, h: 1, size: 's', as: 'p', href: `/progetti/${s.slug}`, replace: true, coda: true, eyebrow: `Progetto ${label}`, title: s.title };
 };
 
 const cells: Cell[] = [

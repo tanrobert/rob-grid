@@ -18,7 +18,7 @@ interface Props {
   centrato?: boolean;
 }
 const { cells, filterable = false, pagina = false, centrato = false } = Astro.props;
-const recapiti: Cell = { id: 'recapiti', type: 'contatti', w: 4, h: 2, tone: 'red' };
+const recapiti: Cell = { id: 'recapiti', type: 'contatti', w: 4, h: 2, tone: 'red', coda: true };
 ---
 
 {!pagina && <div class="retino" data-retino aria-hidden="true"></div>}
@@ -45,17 +45,20 @@ const recapiti: Cell = { id: 'recapiti', type: 'contatti', w: 4, h: 2, tone: 're
     --gap: var(--qf);
     --u: calc(var(--qf) * 3);
     position: relative;
-    width: calc(round(down, 100vw - var(--qf), var(--qf) * 4) + var(--qf));
+    /* colonne in più fino a --cols-max (31/10/2026, prova di Roberto): oltre, ai lati si vede il tavolo */
+    --cols-max: 16;
+    width: calc(min(round(down, 100vw - var(--qf), var(--qf) * 4), var(--qf) * 4 * var(--cols-max)) + var(--qf));
     margin-inline: auto;
     padding: var(--qf);
   }
 
-  /* pagina vera: la carta del tavolo (quadretti e crocini ogni 4) agganciata al foglio, che riempie almeno la
-     finestra. La carta sborda ai lati di un numero intero di moduli: le linee cadono sui bordi delle celle e i
-     crocini sui moduli, senza calcoli sulla larghezza della finestra (lo scroll orizzontale lo taglia html) */
   /* colonne vuote chiuse (auto-fit) e quelle usate al centro: lo scarto è di mezze colonne, cioè quadretti interi.
      Non nell'archivio: filtrando le colonne usate cambiano e tutta la griglia si sposterebbe */
   .foglio--centrato :global(.grid) { grid-template-columns: repeat(auto-fit, var(--u)); justify-content: center; }
+
+  /* pagina vera: la carta del tavolo (quadretti e crocini ogni 4) agganciata al foglio, che riempie almeno la
+     finestra. La carta sborda ai lati di un numero intero di moduli: le linee cadono sui bordi delle celle e i
+     crocini sui moduli, senza calcoli sulla larghezza della finestra (lo scroll orizzontale lo taglia html) */
   .foglio--pagina { min-height: 100dvh; isolation: isolate; }
   .foglio--pagina::before, .foglio--pagina::after {
     content: '';

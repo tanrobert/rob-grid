@@ -147,4 +147,19 @@ cells:
       - image: ./zio-checco-busta.webp
         lato: sinistra
         alt: "Una mano regge una busta arancione da asporto col timbro I panini di Zio Checco da Kiale e la scritta Pronti da gustare"
+  # cella riempitiva: i tre adesivi del banco in colonna (sorgenti/kiale/adesivi.png, 600×1200, allargato con margini
+  # trasparenti alla proporzione della cella 2×3, 7:11 quadretti: la foto va in cover e così non si taglia). Ultima: la
+  # griglia dense la infila nel primo buco libero. Senza numero: sulle immagini la linguetta è bianca e non si leggerebbe
+  - type: media
+    w: 2
+    h: 3
+    label: false
+    image: ./adesivi.png
+    alt: "Tre adesivi di Kiale: Cucina tradizionale come a casa, L'antispreco Kiale e Prodotti artigianali"
+  # foto della tavolata (sorgenti/kiale/dsc1827-tavolata.jpg, 5324×3642, ridotta a 1600): circa 3:2 come la 4×3
+  - type: media
+    w: 4
+    h: 3
+    image: ./tavolata.jpg
+    alt: "Una tavolata da Kiale: piatti di spaghetti, pane nel cestino, peperoncino e amici che mangiano"
 ---

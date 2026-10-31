@@ -68,10 +68,12 @@ const gap = svg ? svgs[svg].gap ?? 0 : 0;
   .marquee--ruotato .half :global(.item) { --h: calc(100cqi - 2 * var(--pad)); }
 
   /* testo: maiuscole alte quanto il logo. Riquadro senza rifilo (i margini delle lettere fanno parte del ritmo)
-     e dopo ogni copia uno spazio, così tra "·" e la R c'è lo stesso stacco che c'è dentro il testo */
+     e dopo ogni copia uno spazio, così tra "·" e la R c'è lo stesso stacco che c'è dentro il testo.
+     Sul tavolo non più grandi di ROBERTO nella cella del nome (--corpo-logotipo, Tavolo.astro): riquadro alto
+     quanto le maiuscole (non quanto il logo), così il nastro lo centra nella striscia */
   .half .logotipo.item {
-    width: auto;
-    font-size: calc(var(--h) / var(--maiuscole));
+    width: auto; height: auto;
+    font-size: min(var(--h) / var(--maiuscole), var(--corpo-logotipo, 100vmax));
     margin-inline: 0 0.22em;
   }
 

@@ -6,9 +6,8 @@
  */
 import { gsap } from 'gsap';
 import { InertiaPlugin } from 'gsap/InertiaPlugin';
-import { BREAKPOINTS } from '../../lib/grid';
-import { Q, PER_UNITA, pack, confine } from '../../lib/tavolo';
-import { creaVista, scala, applica, aPixel, clampQ, ox, oy, limita, sulFoglio, type Vista } from './vista';
+import { PER_UNITA, pack, confine } from '../../lib/tavolo';
+import { creaVista, scala, applica, aPixel, base, clampQ, ox, oy, limita, sulFoglio, type Vista } from './vista';
 import { leggiPezzi, posa, alza, disponi, riordina, type Pezzo } from './pezzi';
 import { initGesti, vai } from './gesti';
 import { leggi, scrivi } from './memoria';
@@ -30,8 +29,6 @@ export interface Tavolo {
   confina(): void;
   /** tutte le celle al loro posto alla misura del quadretto di adesso */
   posaTutti(): void;
-  /** zoom finito: le foto ingrandite si ricaricano più grandi */
-  nitide(): void;
   salva(): void;
 }
 
@@ -67,7 +64,7 @@ function initTavolo(el: HTMLElement): Tavolo {
     v, pezzi, zTop: 0, signal: ac.signal,
     confina: () => {
       // in quadretti di base, con la disposizione pensata per questa finestra: lo zoom non cambia il foglio
-      const finestra = { vw: v.vw, vh: v.vh, q: v.vw < BREAKPOINTS.md ? Q.sm : Q.lg };
+      const finestra = { vw: v.vw, vh: v.vh, q: base(v) };
       v.foglio = confine(pezzi, pack(pezzi, finestra), finestra);
       for (const p of pezzi) {
         p.gx = sulFoglio(p.gx, p.w, v.foglio.x);
@@ -76,18 +73,6 @@ function initTavolo(el: HTMLElement): Tavolo {
       limita(v);
     },
     posaTutti: () => pezzi.forEach(p => posa(p, v.q)),
-    nitide: () => {
-      // `sizes` dice al browser quanto è larga la foto: allo zoom cresce, mai più piccolo di com'era
-      const base = v.vw < BREAKPOINTS.md ? Q.sm : Q.lg;
-      for (const p of pezzi) {
-        const px = Math.ceil(p.w * v.q);
-        p.el.querySelectorAll<HTMLImageElement>('img[sizes]').forEach(img => {
-          if (px <= Math.max(p.w * base, Number(img.dataset.px) || 0)) return;
-          img.dataset.px = String(px);
-          img.sizes = `${px}px`;
-        });
-      }
-    },
     salva: () => {
       mosso = true;
       scrivi({
@@ -98,7 +83,7 @@ function initTavolo(el: HTMLElement): Tavolo {
   };
 
   const saved = leggi(versione);
-  scala(v, aPixel(clampQ(saved?.q ?? (v.vw < BREAKPOINTS.md ? Q.sm : Q.lg))));
+  scala(v, aPixel(clampQ(v, saved?.q ?? base(v))));
   if (saved) {
     v.pan.x = saved.pan[0] * v.q;
     v.pan.y = saved.pan[1] * v.q;
@@ -116,7 +101,6 @@ function initTavolo(el: HTMLElement): Tavolo {
   applica(v);
   turni(pezzi);
   giri(v);
-  t.nitide();
   InertiaPlugin.track(v.pan, 'x,y');
   t.matita = initMatita(t);
   initGesti(t);

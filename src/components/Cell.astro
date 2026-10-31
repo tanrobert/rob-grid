@@ -45,6 +45,7 @@ const linkAttrs = href
   style={`${spanStyle(cell)};--i:${turno}`}
   data-cell={cell.type}
   data-id={cell.id}
+  data-coda={cell.coda ? '' : undefined}
   {...linkAttrs}
   {...attrs}
 >

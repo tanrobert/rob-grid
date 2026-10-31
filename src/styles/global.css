@@ -28,16 +28,11 @@
   /* modulo: tutto è multiplo di 10px */
   --m:    10px;
   --gap:  var(--m);
-  /* margine interno delle celle, uguale sui quattro lati: numero, occhiello, freccia/✕, testi e didascalie
-     partono tutti alla stessa distanza dal bordo (28/10/2026, scelta di Roberto) */
-  --pad:  var(--m);
   /* riga di testa delle celle (numero · occhiello, freccia/✕): alta quanto il corpo .mono */
   --riga-label: 11px;
   /* quadretto su cui si misurano i testi (--titolone, --titoletto, --paragrafo, regola sotto): quello del foglio
      (components/foglio) o quello di base del tavolo (components/tavolo); qui il quadretto di base */
   --q-testo: 25px;
-  /* padding superiore del contenuto: sotto la riga di testa, con lo stesso margine */
-  --pad-label: calc(var(--pad) * 2 + var(--riga-label));
   --line: 1px;
   --dp:   1px;  /* 1 pixel reale dello schermo: aggiornato da Layout.astro */
   /* --line agganciato ai pixel reali, per le linee disegnate con i gradienti (vedi @supports sotto) */
@@ -89,6 +84,12 @@
   --paragrafo: calc(clamp(15px, var(--q-testo) * 0.64, 16px) * var(--zoom, 1));
   /* il quadretto vero, senza clamp: nel foglio --qf, sul tavolo quello di base × zoom (= --q) */
   --quadretto: calc(var(--q-testo) * var(--zoom, 1));
+  /* margine interno delle celle, uguale sui quattro lati: numero, occhiello, freccia/✕, testi e didascalie partono
+     tutti alla stessa distanza dal bordo (28/10/2026). In proporzione al quadretto (31/10/2026, scelta di Roberto):
+     10px col quadretto da 25, e allargando la finestra o lo zoom del tavolo le cose non si spostano nella cella */
+  --pad: calc(var(--quadretto) * 0.4);
+  /* inizio del contenuto, sotto la riga di testa (2 margini + 11px col quadretto da 25): anche lui in proporzione */
+  --pad-label: calc(var(--quadretto) * 1.24);
 }
 a[href], button, [role="button"], [role="switch"], label[for], summary, select { cursor: var(--cursore-mano); }
 /* colori invertiti: rosso e bianco si scambiano, inchiostro chiaro su carta rossa. data-inchiostro su <html>
@@ -284,7 +285,8 @@ p { text-wrap: pretty; }
   position: relative;
   grid-column: span var(--w);
   /* --piu: righe aggiunte da scripts/mosaico.ts se il testo non ci sta */
-  grid-row: span calc(var(--h) + var(--piu, 0));
+  /* --riga: solo le celle di coda, messa da scripts/mosaico.ts (prima riga sotto le altre) */
+  grid-row: var(--riga, auto) / span calc(var(--h) + var(--piu, 0));
   container-type: size;
   overflow: clip;
   /* stesso colore della pagina: la casella non ha un fondo suo, ma copre i crocini della griglia */
@@ -308,8 +310,8 @@ p { text-wrap: pretty; }
 }
 /* colore registrato: nell'intro i quadretti sfumano col fondo (fill-in) invece di comparire di colpo */
 @property --carta-ink { syntax: '<color>'; inherits: false; initial-value: transparent; }
-@media (max-width: 1023px) { .cell { grid-column: span var(--w-md); grid-row: span calc(var(--h-md) + var(--piu, 0)); --cw: var(--w-md, 1); --ch: calc(var(--h-md, 1) + var(--piu, 0)); } }
-@media (max-width: 599px)  { .cell { grid-column: span var(--w-sm); grid-row: span calc(var(--h-sm) + var(--piu, 0)); --cw: var(--w-sm, 1); --ch: calc(var(--h-sm, 1) + var(--piu, 0)); } }
+@media (max-width: 1023px) { .cell { grid-column: span var(--w-md); grid-row: var(--riga, auto) / span calc(var(--h-md) + var(--piu, 0)); --cw: var(--w-md, 1); --ch: calc(var(--h-md, 1) + var(--piu, 0)); } }
+@media (max-width: 599px)  { .cell { grid-column: span var(--w-sm); grid-row: var(--riga, auto) / span calc(var(--h-sm) + var(--piu, 0)); --cw: var(--w-sm, 1); --ch: calc(var(--h-sm, 1) + var(--piu, 0)); } }
 @media (min-width: 1024px) { .cell.hide-lg { display: none; } }
 @media (min-width: 600px) and (max-width: 1023px) { .cell.hide-md { display: none; } }
 @media (max-width: 599px) { .cell.hide-sm { display: none; } }

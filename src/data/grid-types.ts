@@ -58,6 +58,9 @@ interface CellBase extends Span {
   /** Il link sostituisce la pagina corrente nella history invece di aggiungerne una (progetto
       precedente/successivo: sfogliando, la ✕ torna comunque alla griglia di partenza). */
   replace?: boolean;
+  /** Fogli: la cella sta dopo tutte le altre, sulla prima riga libera sotto la composizione, non nei buchi
+      (precedente/successivo, recapiti; scripts/mosaico.ts) */
+  coda?: boolean;
   /** Linguetta in alto a sinistra: solo il numero della cella. `false` per nasconderla. */
   label?: false;
   /** `false` = cella senza filo (es. il logo a tutta cella). */

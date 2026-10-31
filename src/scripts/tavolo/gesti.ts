@@ -4,16 +4,16 @@
  * - cella col mouse: dopo pochi px diventa trascinamento (si può lanciare);
  * - cella col dito: muove il tavolo, a meno di tenerla premuta (pressione lunga = presa);
  * - con la matita presa (matita.ts) un dito o il mouse disegna; due dita spostano e zoomano;
- * - due dita: zoom, e insieme spostano il tavolo. Rotella del mouse e Ctrl + rotella (il pizzico del
- *   trackpad arriva così): zoom; il trackpad con due dita sposta.
+ * - due dita: zoom, e insieme spostano il tavolo. Rotella del mouse: zoom a scatti di ZOOM_PASSO; Ctrl + rotella
+ *   (il pizzico del trackpad arriva così): zoom continuo; il trackpad con due dita sposta. Mai oltre 1×.
  * Senza movimento il click resta al browser: le celle sono link veri e aprono le pagine. Il click che
  * arriva alla fine di un gesto invece si ferma, se no lasciando una cella si aprirebbe.
  */
 import { gsap } from 'gsap';
-import { applica, aPixel, clampQ, sulTavolo, zoomTo, limita, limiti, elastico } from './vista';
+import { applica, aPixel, base, clampQ, sulTavolo, zoomTo, limita, limiti, elastico } from './vista';
 import { prendi, porta, lascia, type Pezzo, type Presa } from './pezzi';
 import { T, REDUCED, LONG, SLOP, QUIETE } from './tempi';
-import type { Posto } from '../../lib/tavolo';
+import { ZOOM_PASSO, type Posto } from '../../lib/tavolo';
 import type { Tavolo } from './index';
 
 interface Attesa {
@@ -86,7 +86,7 @@ export function initGesti(t: Tavolo) {
     const [a, b] = [...pts.values()];
     p.m = mid(a, b);
     // le dita che si allargano zoomano, quelle che si spostano insieme portano il tavolo
-    zoomTo(v, clampQ(p.q0 * Math.hypot(a.x - b.x, a.y - b.y) / p.d0), p.m.x, p.m.y, p.w);
+    zoomTo(v, clampQ(v, p.q0 * Math.hypot(a.x - b.x, a.y - b.y) / p.d0), p.m.x, p.m.y, p.w);
     limita(v);
     t.posaTutti();
     applica(v);
@@ -94,7 +94,6 @@ export function initGesti(t: Tavolo) {
   // a gesto finito il quadretto si ferma su un numero intero di pixel: i fili da 1px restano netti
   const endPinch = (p: Pizzico) => {
     zoomAt(aPixel(v.q), p.m.x, p.m.y);
-    t.nitide();
     t.salva();
     fermo = performance.now();
     g = null;  // il dito rimasto giù non fa nulla finché non si alza
@@ -203,16 +202,31 @@ export function initGesti(t: Tavolo) {
 
   // ── Rotella e trackpad ──────────────────────────────────
   let wheelEnd = 0;
+  // scatti della rotella: il quadretto corre verso lo zoom `meta` (1×, 0,75×, 0,5×); scatti ravvicinati si sommano
+  const corsa = { q: 0 };
+  let meta = 1;
   on('wheel', e => {
     e.preventDefault();
     // rotella del mouse: scatti grandi e regolari, solo in verticale (il trackpad manda movimenti piccoli e continui)
     const mouse = e.deltaMode === 1 || (e.deltaX === 0 && Math.abs(e.deltaY) >= 50 && Number.isInteger(e.deltaY));
     clearTimeout(wheelEnd);
-    if (e.ctrlKey || mouse) {
-      // passo limitato: uno scatto della rotella ≈ ±35%, il pizzico del trackpad resta continuo
+    if (mouse && !e.ctrlKey) {
+      const b = base(v), fx = e.clientX, fy = e.clientY;
+      if (!gsap.isTweening(corsa)) meta = v.q / b;
+      meta = clampQ(v, (Math.round(meta / ZOOM_PASSO) - Math.sign(e.deltaY)) * ZOOM_PASSO * b) / b;
+      corsa.q = v.q;
+      gsap.to(corsa, {
+        q: meta * b, duration: T(0.22), ease: 'power2.out', overwrite: true,
+        onUpdate: () => zoomAt(corsa.q, fx, fy),
+        onComplete: () => { zoomAt(aPixel(v.q), fx, fy); t.salva(); },
+      });
+      return;
+    }
+    if (e.ctrlKey) {
+      // il pizzico del trackpad resta continuo, a passo limitato
       const d = gsap.utils.clamp(-40, 40, e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY);
-      zoomAt(clampQ(v.q * Math.exp(-d * 0.008)), e.clientX, e.clientY);
-      wheelEnd = window.setTimeout(() => { zoomAt(aPixel(v.q), e.clientX, e.clientY); t.nitide(); t.salva(); }, 160);
+      zoomAt(clampQ(v, v.q * Math.exp(-d * 0.008)), e.clientX, e.clientY);
+      wheelEnd = window.setTimeout(() => { zoomAt(aPixel(v.q), e.clientX, e.clientY); t.salva(); }, 160);
       return;
     }
     gsap.killTweensOf(v.pan);

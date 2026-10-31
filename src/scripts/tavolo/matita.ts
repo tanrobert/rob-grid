@@ -42,22 +42,9 @@ export function initMatita(t: Tavolo): Matita {
   const { v, signal } = t;
   const html = document.documentElement;
   const sulTavolo = v.mondo.querySelector<SVGGElement>('[data-segni-tavolo]')!;
-  // dove si scrive: la cella (il suo svg) e, nei progetti, la didascalia attaccata sotto, che è dello stesso foglio.
-  // L'svg della didascalia ha le misure e le coordinate di quello della cella più la riga sotto, e la didascalia lo
-  // taglia sul suo rettangolo: un tratto ci passa sopra come sul resto del foglio, e segue la cella
-  type Foglio = { p: Pezzo; svg: SVGSVGElement; didascalia?: HTMLElement };
+  // dove si scrive: ogni cella ha il suo svg di segni (didascalia dei progetti compresa, che sul tavolo sta dentro)
+  type Foglio = { p: Pezzo; svg: SVGSVGElement };
   const fogli: Foglio[] = t.pezzi.map(p => ({ p, svg: p.el.querySelector<SVGSVGElement>(':scope > [data-segni]')! }));
-  const didascalie: Foglio[] = t.pezzi.flatMap(p => {
-    const didascalia = p.el.querySelector<HTMLElement>(':scope > .cell > .caption');
-    if (!didascalia) return [];
-    const svg = document.createElementNS(SVGNS, 'svg');
-    svg.setAttribute('class', 'segni segni--didascalia');
-    svg.setAttribute('viewBox', `0 0 ${p.w} ${p.h + 1}`);
-    svg.setAttribute('preserveAspectRatio', 'none');
-    svg.setAttribute('aria-hidden', 'true');
-    didascalia.append(svg);
-    return [{ p, svg, didascalia }];
-  });
   const pulsante = document.querySelector<HTMLButtonElement>('[data-matita]');
   const cancella = document.querySelector<HTMLButtonElement>('[data-cancella]');
   const scatolina = pulsante?.querySelector<SVGSVGElement>('.matita__ico');
@@ -69,16 +56,11 @@ export function initMatita(t: Tavolo): Matita {
   document.addEventListener('tavolo:vista', e => scala((e as CustomEvent<VistaEvento>).detail.q), { signal });
 
   /** dove cade un punto del tavolo (in quadretti) */
-  const dentro = ({ p, didascalia }: Foglio, x: number, y: number) => {
-    if (!didascalia) return x >= p.gx && x < p.gx + p.w && y >= p.gy && y < p.gy + p.h;
-    // la didascalia è larga quanto il titolo: misurata in quadretti (lo zoom cambia il quadretto, non scala il tavolo)
-    const y0 = p.gy + p.h;
-    return x >= p.gx && x < p.gx + didascalia.offsetWidth / v.q && y >= y0 && y < y0 + didascalia.offsetHeight / v.q;
-  };
-  /** il foglio sotto un punto del tavolo (in quadretti): la cella (o la sua didascalia) più in alto, o null = il tavolo */
+  const dentro = ({ p }: Foglio, x: number, y: number) => x >= p.gx && x < p.gx + p.w && y >= p.gy && y < p.gy + p.h;
+  /** il foglio sotto un punto del tavolo (in quadretti): la cella più in alto, o null = il tavolo */
   const foglioIn = (x: number, y: number) => {
     let sopra: Foglio | null = null, iSopra = -1;
-    for (const f of [...fogli, ...didascalie]) {
+    for (const f of fogli) {
       if (!dentro(f, x, y)) continue;
       const i = t.pezzi.indexOf(f.p);
       if (!sopra || f.p.z > sopra.p.z || (f.p.z === sopra.p.z && i > iSopra)) { sopra = f; iSopra = i; }

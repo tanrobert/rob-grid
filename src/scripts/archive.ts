@@ -8,6 +8,7 @@
 import { gsap } from 'gsap';
 import { Flip } from 'gsap/Flip';
 import { pad2 } from '../lib/format';
+import { chiudiCoda } from './mosaico';
 
 export function initArchive(signal: AbortSignal) {
   document.querySelectorAll<HTMLElement>('.grid[data-filterable]').forEach(grid => initGrid(grid, signal));
@@ -41,6 +42,8 @@ function initGrid(grid: HTMLElement, signal: AbortSignal) {
     if (count) count.textContent = pad2(n);
     if (noun) noun.textContent = n === 1 ? 'Progetto' : 'Progetti';
     if (current) current.textContent = tag ? buttons.find(b => b.dataset.tag === tag)?.dataset.label ?? tag : 'tutti';
+    // i recapiti restano sotto i progetti rimasti
+    chiudiCoda(grid);
   };
 
   const apply = (tag: string) => {

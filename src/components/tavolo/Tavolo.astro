@@ -9,7 +9,6 @@ import CellContent from '../CellContent.astro';
 import { inQuadretti, pack, FINESTRE, Q, versione } from '../../lib/tavolo';
 import { BREAKPOINTS } from '../../lib/grid';
 import { svgs } from '../../data/svgs';
-import { getProject } from '../../data/projects';
 import { piede } from '../../data/piede';
 import Matita from '../../assets/matita.svg';
 
@@ -20,9 +19,10 @@ interface Props {
   sotto?: boolean;
 }
 const { sotto = false } = Astro.props;
-const cells = sotto
-  ? Astro.props.cells.map(c => (c.type === 'text' && c.as === 'h1' ? { ...c, as: 'p' as const } : c))
-  : Astro.props.cells;
+// sul tavolo il numero ce l'hanno solo i progetti (30/10/2026, scelta di Roberto): le altre celle tengono l'occhiello
+const cells = Astro.props.cells
+  .map(c => (c.type === 'project' ? c : { ...c, label: false as const }))
+  .map(c => (sotto && c.type === 'text' && c.as === 'h1' ? { ...c, as: 'p' as const } : c));
 const Radice = sotto ? 'div' : 'main';
 
 const ids = new Set<string>();
@@ -44,11 +44,15 @@ const lontano = (i: number) => Math.hypot(centro(i).x - centro(0).x, centro(i).y
 const turni = new Map(cells.map((_, i) => i).sort((a, b) => lontano(a) - lontano(b)).map((i, n) => [i, n]));
 const firstProject = cells.findIndex(c => c.type === 'project');
 const projects = cells.filter(c => c.type === 'project').length;
+/** numero dei progetti contati fra loro (01, 02…), non nell'ordine di tutte le celle */
+const numeri = new Map(cells.flatMap((c, i) => (c.type === 'project' ? [i] : [])).map((i, n) => [i, n]));
 /** sagoma dell'ombra: le celle senza filo fatte da un SVG (la R, Woberto) fanno l'ombra del disegno, non del riquadro */
+/** cella del nome (ROBERTO): il nastro scrive il suo testo allo stesso corpo (--corpo-logotipo, sotto) */
+const nome = misure[cells.findIndex(c => c.type === 'logotipo')];
 const sagoma = (c: Cell) => (c.frame === false && c.type === 'svg' ? svgs[c.svg].component.src : undefined);
 ---
 
-<Radice id={sotto ? undefined : 'main'} class="tavolo" data-tavolo data-versione={versione(misure)} inert={sotto} style={`--q-lg:${Q.lg}px;--q-sm:${Q.sm}px`}>
+<Radice id={sotto ? undefined : 'main'} class="tavolo" data-tavolo data-versione={versione(misure)} inert={sotto} style={`--q-lg:${Q.lg}px;--q-sm:${Q.sm}px${nome ? `;--nome-w:${nome.w};--nome-h:${nome.h}` : ''}`}>
   <div class="tavolo__carta" data-carta aria-hidden="true"></div>
   {/* bordo del foglio (lib/tavolo.ts, confine): un quadretto di carta liscia, poi solo inchiostro.
       Bande sopra, sotto, a sinistra, a destra, e il margine */}
@@ -68,11 +72,8 @@ const sagoma = (c: Cell) => (c.frame === false && c.type === 'svg' ? svgs[c.svg]
           data-sotto={cell.sotto ? `${cell.sotto.id} ${cell.sotto.x} ${cell.sotto.y}` : undefined}
           style={`--qw:${w};--qh:${h};--x:${lg.x};--y:${lg.y};--x-md:${md.x};--y-md:${md.y};--x-sm:${sm.x};--y-sm:${sm.y}`}
         >
-          {/* i progetti hanno la didascalia fuori dalla cella: nell'ombra un rettangolo uguale (stesso testo, invisibile) */}
           {cell.frame !== false ? (
-            <div class="pezzo__ombra" data-ombra aria-hidden="true">
-              {cell.type === 'project' && <span class="caption ombra__caption"><span class="caption__title">{getProject(cell.slug)?.title}</span></span>}
-            </div>
+            <div class="pezzo__ombra" data-ombra aria-hidden="true"></div>
           )
             : sagoma(cell) && (
               <div class="pezzo__ombra pezzo__ombra--sagoma" data-ombra aria-hidden="true">
@@ -82,7 +83,7 @@ const sagoma = (c: Cell) => (c.frame === false && c.type === 'svg' ? svgs[c.svg]
               </div>
             )}
           <CellContent
-            cell={cell} index={i} turno={turni.get(i)} priority={i === firstProject} projects={projects}
+            cell={cell} index={numeri.get(i) ?? i} turno={turni.get(i)} priority={i === firstProject} projects={projects}
             sizes={`(max-width: ${BREAKPOINTS.md - 1}px) ${w * Q.sm}px, ${w * Q.lg}px`}
           />
           {/* segni della matita su questo foglio: in quadretti, seguono la cella quando si sposta */}
@@ -149,10 +150,10 @@ const sagoma = (c: Cell) => (c.frame === false && c.type === 'svg' ? svgs[c.svg]
     user-select: none; -webkit-user-select: none;
     -webkit-touch-callout: none;
   }
-  /* margini interni delle celle (global.css) in scala con lo zoom: --zoom = quadretto / quadretto di base (vista.ts) */
   .tavolo {
-    --pad: calc(var(--m) * var(--zoom, 1));
-    --pad-label: calc(var(--pad) * 2 + var(--riga-label));
+    /* corpo di ROBERTO nella cella del nome (stessa misura di LogotipoCell, in quadretti): il nastro lo usa per le
+       sue maiuscole, così sono grandi uguali (30/10/2026, scelta di Roberto) */
+    --corpo-logotipo: min((var(--nome-w) * var(--q) - 2 * var(--pad)) / var(--roberto-w), (var(--nome-h) * var(--q) - 2 * var(--pad)) / var(--maiuscole));
   }
   @media (max-width: 599px) { .tavolo { --q: var(--q-sm); --q-testo: var(--q-sm); } }
   /* mano chiusa mentre si porta il tavolo o una cella (gesti.ts), anche sopra le celle-link (se no la manina) */
@@ -247,6 +248,9 @@ const sagoma = (c: Cell) => (c.frame === false && c.type === 'svg' ? svgs[c.svg]
      Sul pezzo (tempo della caduta) e sulla cella, che altrimenti li prende dalle sue unità */
   .pezzo, .pezzo > :global(.cell) { --cw: var(--qw); --ch: var(--qh); --t-draw-u: 17.5ms; }
   .pezzo > :global(.cell) { position: absolute; inset: 0; }
+  /* didascalia dei progetti: sul tavolo dentro la cella, nell'angolo in basso a sinistra (31/10/2026, scelta di
+     Roberto); nei fogli resta attaccata sotto la cella (global.css) */
+  .pezzo > :global(.cell > .caption) { top: auto; bottom: 0; }
   /* il marchio senza filo sta direttamente sulla carta */
   .pezzo > :global(.cell--bare) { background: transparent; }
   /* ombra della cella sollevata: retino di puntini pieni (il contrario del retino a fori sotto la cella aperta) */
@@ -258,10 +262,6 @@ const sagoma = (c: Cell) => (c.frame === false && c.type === 'svg' ? svgs[c.svg]
   .pezzo__ombra--sagoma { background: none; }
   .ombra__sagoma { mask: var(--sagoma) center / 100% 100% no-repeat; }
   .ombra__sagoma--girata { rotate: 180deg; }
-  .ombra__caption {
-    z-index: auto; color: transparent;
-    background: radial-gradient(circle at 2px 2px, var(--inchiostro) 0 1.15px, transparent 1.4px) 0 0 / 4px 4px;
-  }
   /* intro, atterraggio (variante A "Secco" di tools/pages/atterraggio.html): il filo si disegna con la cella
      sollevata come in mano (misure di prendi(), scripts/tavolo/pezzi.ts); a filo finito entra il fondo, poi l'ombra
      (prima si vedrebbe attraverso la cella ancora trasparente), un attimo sospesa e giù di colpo: l'ombra rientra.
@@ -351,18 +351,8 @@ const sagoma = (c: Cell) => (c.frame === false && c.type === 'svg' ? svgs[c.svg]
   /* sopra il filo della cella (.cell::after, z 3) e la linguetta (z 2): la matita scrive anche sul bordo */
   .pezzo > .segni { z-index: 4; }
   .segni--tavolo { inset: auto; left: 0; top: 0; width: 1px; height: 1px; overflow: visible; }
-  .segni :global(path), .pezzo :global(.segni--didascalia path) {
+  .segni :global(path) {
     fill: none; stroke: var(--nero); stroke-width: 0.12; stroke-linecap: round; stroke-linejoin: round;
-  }
-  /* anche sulla didascalia dei progetti, che è dello stesso foglio: l'svg (messo da matita.ts) ha le coordinate di
-     quello della cella più la riga sotto, e la didascalia lo taglia sul suo rettangolo */
-  .pezzo :global(.cell > .caption) { overflow: clip; }
-  .pezzo :global(.segni--didascalia) {
-    position: absolute; left: 0; top: calc(var(--qh) * var(--q) * -1);
-    width: calc(var(--qw) * var(--q)); height: calc((var(--qh) + 1) * var(--q));
-    /* più largo della didascalia: senza, la regola generale degli svg (max-width 100%) lo stringe e i segni slittano */
-    max-width: none;
-    pointer-events: none;
   }
   /* solo icona, quadrati e alti come gli altri: suono 16px + 10 di padding, matita 22px (1 pixel della penna = 1px) + 7 */
   .attrezzi .attrezzi__suono { display: inline-grid; place-items: center; padding: 10px; }
