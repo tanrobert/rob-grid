@@ -102,12 +102,12 @@ const COPERCHIO = '#8a5236';      // marrone dei coperchi Kiale (moltiplicato su
 const MOCKUP = {
   // Food Jar Mockup 2, per le 14×6: il contenuto ha un livello suo (maschera), il coperchio una maschera da colorare
   'vaso-basso': {
-    fondo: [['maschera-ombra', 'multiply', '#534f3f'], ['vaso', 'source-over'], ['maschera-coperchio', 'multiply', COPERCHIO]],
+    fondo: [['vaso', 'source-over'], ['maschera-coperchio', 'multiply', COPERCHIO]],
     sopra: [['luci', 'screen']],
   },
   // Large Honey Jar Mockup 3, per le 14×9: vetro reso neutro dallo strumento (il miele era dentro), coperchio = maschera colorata + le sue ombre
   'vaso-alto': {
-    fondo: [['ombra', 'multiply'], ['vaso', 'source-over'], ['maschera-coperchio', 'source-over', COPERCHIO], ['coperchio-ombre', 'multiply']],
+    fondo: [['vaso', 'source-over'], ['maschera-coperchio', 'source-over', COPERCHIO], ['coperchio-ombre', 'multiply']],
     sopra: [['luci', 'screen']],
   },
 };

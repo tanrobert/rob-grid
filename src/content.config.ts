@@ -5,11 +5,11 @@ import { z } from 'astro/zod';
 /*
  * Progetti: una cartella per progetto in src/content/progetti/<slug>/
  *   index.md               dati in alto (frontmatter), testo sotto
- *   copertina.png|jpg      foto della cella e della hero (la trova data/projects.ts per nome)
+ *   copertina.png|jpg|webp foto della cella e della hero (la trova data/projects.ts per nome)
  *   altre foto, video…     citati dalle celle con percorsi relativi (./foto.jpg)
  *
- * `cells`: le celle proprie della pagina progetto, in ordine, tra le celle fisse (hero, titolo,
- * tag, anno…) e precedente/successivo. Ogni progetto usa solo i tipi che gli servono.
+ * `cells`: le celle proprie della pagina progetto, in ordine, tra le celle fisse (hero, titolo
+ * o contesto) e precedente/successivo. Ogni progetto usa solo i tipi che gli servono.
  * Un tipo nuovo: componente in components/cells/, voce in grid-types.ts, caso in CellContent.astro
  * e una voce in `cell` qui sotto.
  */

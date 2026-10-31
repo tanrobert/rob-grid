@@ -20,7 +20,7 @@ const { cell, index, attrs = {}, turno = index } = Astro.props;
 const href = Astro.props.href ?? cell.href;
 const n = pad2(index + 1);
 
-const classes = ['cell', `cell--${cell.type}`, cell.tone === 'red' && 'cell--red', cell.frame === false && 'cell--bare', href && 'cell--link', ...(cell.hideOn ?? []).map(bp => `hide-${bp}`)];
+const classes = ['cell', `cell--${cell.type}`, cell.tone === 'red' && 'cell--red', cell.frame === false && 'cell--bare', ...(cell.hideOn ?? []).map(bp => `hide-${bp}`)];
 const isHome = href === '/';
 // riga di testa: il numero (label: false = niente numero) e, dopo, l'occhiello delle celle che ce l'hanno
 const showLabel = cell.label !== false;
@@ -43,7 +43,6 @@ const linkAttrs = href
 <Tag
   class:list={classes}
   style={`${spanStyle(cell)};--i:${turno}`}
-  data-cell={cell.type}
   data-id={cell.id}
   data-coda={cell.coda ? '' : undefined}
   {...linkAttrs}

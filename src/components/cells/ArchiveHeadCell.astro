@@ -9,7 +9,7 @@ const { total } = Astro.props;
 
 <div class="head">
   <h1 class="sr-only">Archivio progetti</h1>
-  <p class="value" style={`--len:${pad2(total).length}`} data-count>{pad2(total)}</p>
+  <p class="cifra" style={`--len:${pad2(total).length}`} data-count>{pad2(total)}</p>
   <p class="mono caption" aria-live="polite">
     <span data-count-noun>{total === 1 ? 'Progetto' : 'Progetti'}</span><span>Tag: <b data-current>tutti</b></span>
   </p>
@@ -20,16 +20,6 @@ const { total } = Astro.props;
     position: absolute; inset: 0;
     display: flex; flex-direction: column; justify-content: flex-end; gap: var(--m);
     padding: var(--pad-label) var(--pad) var(--pad);
-  }
-  .value {
-    align-self: flex-start;
-    font-weight: 500;
-    /* come StatCell: con 3 cifre il numero si stringe per restare nella cella */
-    font-size: min(58cqb, calc(124cqi / var(--len)));
-    line-height: 0.78;
-    letter-spacing: -0.06em;
-    font-variant-numeric: tabular-nums;
-    margin-left: -0.06em;
   }
   .caption { display: flex; justify-content: space-between; gap: var(--m); }
   .caption b { font-weight: 500; }

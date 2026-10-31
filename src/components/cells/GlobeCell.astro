@@ -4,7 +4,7 @@
 // all'ingresso e lo lascia trascinare: lasciato andare, torna all'orientamento reale.
 // Terre piene rosse; il reticolo è rosso sul mare e bianco sulle terre.
 // Reticolo e terre sono disegnati una volta (defs) e riusati con <use>.
-// Sotto, le coordinate dello studio (stessa riga della casella Ora).
+// Sotto, le coordinate dello studio (stessa riga della cella Ora).
 import { drawGlobe, realSpin } from '../../lib/globe';
 import { PLACE } from '../../data/place';
 import land from '../../data/land-110m.json';
@@ -35,7 +35,7 @@ const coord = (n: number, pos: string, neg: string) => `${Math.abs(n).toFixed(2)
   /* stesso riquadro dell'occhio (EyeCell): il globo ha la sua stessa misura */
   .sphere {
     position: absolute; inset: 0;
-    padding: calc(var(--pad) + 12px);
+    padding: var(--pad-disegno);
     cursor: var(--cursore-aperta);
     /* col dito si gira solo in orizzontale: il gesto verticale resta allo scroll della pagina */
     touch-action: pan-y;
@@ -49,7 +49,7 @@ const coord = (n: number, pos: string, neg: string) => `${Math.abs(n).toFixed(2)
   .grid--land { stroke: var(--bianco); }
   .land { fill: var(--inchiostro); }
   .rim { stroke: var(--inchiostro); }
-  /* coordinate nel margine in basso, come la riga della casella Ora: non tolgono spazio al globo */
+  /* coordinate nel margine in basso, come la riga della cella Ora: non tolgono spazio al globo */
   .meta {
     position: absolute; left: var(--pad); right: var(--pad); bottom: var(--pad);
     display: flex; justify-content: space-between;

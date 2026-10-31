@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="95 263 1511 1174" role="img" aria-label="I panini di Zio Chècco da Kiale" fill="currentColor" style="color: #d14520" data-logo-animato="">
-  <!-- I panini di Zio Chècco da Kiale (sottologo estivo). Dal file di Illustrator di Roberto (sorgenti/kiale), un solo colore; viewBox stretto sul disegno (cerchio e scritte, più lo spessore del tratto).
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="95 263 1511 1174" role="img" aria-label="I panini di Zio Checco da Kiale" fill="currentColor" style="color: #d14520" data-logo-animato="">
+  <!-- I panini di Zio Checco da Kiale (sottologo estivo). Dal file di Illustrator di Roberto (sorgenti/kiale), un solo colore; viewBox stretto sul disegno (cerchio e scritte, più lo spessore del tratto).
        Pezzi per l'animazione (scripts/sottologo.ts): data-cerchio, data-lettere, data-panino, data-bandiera, data-raggi,
        data-scritta (ordine in data-ordine) con la sua penna (data-penna) nella maschera, data-dopo = puntino della i (il tratto sopra la è di Chècco è il quinto raggio di destra).
        Gli aloni bianchi del file sono buchi: bucano tutto quello che nel file sta sotto, la loro parola compresa

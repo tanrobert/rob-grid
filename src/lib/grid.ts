@@ -1,8 +1,8 @@
 import type { Cell, Span } from '../data/grid-types';
 
-/** Colonne (minime: da 600px in su, se c'è posto, ce ne sono di più) e soglie per breakpoint — tenere allineati
+/** Colonne (minime: da 600px in su, se c'è posto, ce ne sono di più) e soglie per breakpoint: tenere allineati
     con --cols e le media query di global.css.
-    Unità piccola: la "casella base" quadrata è 2×2, le unità singole danno le forme intermedie. */
+    Unità piccola: la "cella base" quadrata è 2×2, le unità singole danno le forme intermedie. */
 export const COLS = { lg: 12, md: 8, sm: 4 } as const;
 export const BREAKPOINTS = { md: 600, lg: 1024 } as const;
 /** Quadretto massimo dei fogli da 600px in su: quello del tavolo (Q.lg in lib/tavolo.ts, --qf-max in Foglio.astro) */

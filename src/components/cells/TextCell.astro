@@ -20,8 +20,8 @@ const text = caret ? title.slice(0, -1) : title;
 
 <div class:list={['text', `text--${size}`, immagini && 'text--foto']}>
   <Tag class="title">{text}{caret && <span class="caret loop" aria-hidden="true">_</span>}</Tag>
-  {typeof body === 'string' && <div class="body"><Paragrafi testo={body} /></div>}
-  {Array.isArray(body) && <ul class="body body--list">{body.map(line => <li>{line}</li>)}</ul>}
+  {typeof body === 'string' && <div class="body paragrafo"><Paragrafi testo={body} /></div>}
+  {Array.isArray(body) && <ul class="body paragrafo body--list">{body.map(line => <li>{line}</li>)}</ul>}
   {immagini && (
     <div class="carosello" data-carosello>
       <div class="nastro">
@@ -53,10 +53,6 @@ const text = caret ? title.slice(0, -1) : title;
   .text--m .title { font-size: clamp(28px, min(22cqi, 34cqb), 128px); letter-spacing: -0.04em; }
   .text--s .title { font-size: var(--titoletto); }
 
-  .body {
-    max-width: 44ch;
-    font-size: var(--paragrafo); line-height: 1.35;
-  }
   .body--list { list-style: none; }
 
   /* con le foto: titolo e paragrafo in alto, il carosello in tutto lo spazio che resta, a filo della cella
@@ -65,13 +61,13 @@ const text = caret ? title.slice(0, -1) : title;
   .text--foto { justify-content: flex-start; }
   .carosello {
     flex: 1 0 0; min-height: 55cqi; margin: var(--m) calc(-1 * var(--pad)) calc(-1 * var(--pad));
-    position: relative; overflow: clip; cursor: pointer;
+    position: relative; overflow: clip; cursor: var(--cursore-mano);
   }
-  /* le foto in fila, attaccate, una per volta: cells.ts sposta il nastro di una foto con `--i` */
+  /* le foto in fila, attaccate, una per volta: cells.ts sposta il nastro di una foto con `--foto` */
   .nastro {
     position: absolute; inset: 0;
     display: flex;
-    translate: calc(var(--i, 0) * -100%) 0;
+    translate: calc(var(--foto, 0) * -100%) 0;
     transition: translate 700ms cubic-bezier(0.65, 0, 0.35, 1);
   }
   .nastro.is-salto { transition: none; }

@@ -11,7 +11,7 @@ interface Props {
   sizes: string;
   /** Titolo nella didascalia sotto la cella (global.css, .caption) */
   title?: string;
-  /** Hero della pagina: caricata subito, deve esserci già quando la cella si espande */
+  /** Hero della pagina: caricata subito, deve esserci già quando il foglio si apre */
   priority?: boolean;
 }
 const { image, video, alt, sizes, title, priority = false } = Astro.props;

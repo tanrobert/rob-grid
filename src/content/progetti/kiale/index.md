@@ -41,7 +41,7 @@ cells:
     h: 5
     size: s
     title: "Le etichette"
-    body: "Confetture, composte, sott'olio, sughi pronti e vellutate: per ogni prodotto **la stessa struttura**, con ingredienti a sinistra, nome al centro e valori nutrizionali a destra.\n\nCambiano **colori e illustrazione**. Due formati: **14×6 cm** per i vasetti, **14×9** per le vellutate."
+    body: "Confetture, composte, sott'olio, sughi pronti e vellutate: per ogni prodotto **la stessa struttura**, con ingredienti a sinistra, nome al centro e valori nutrizionali a destra.\n\nCambiano **colori e illustrazione**. Due formati: **14×6 cm** per i vasetti, **14×9 cm** per le vellutate."
     immagini:
       - image: ./etichette-scaffale.jpg
         alt: "Vasetti di confettura di Kiale sullo scaffale: albicocche, uva fragola, prugne e fragole"
@@ -65,7 +65,7 @@ cells:
     # logo del canale, versione verticale (da Illustrator, già espanso, 30/10/2026)
     logo: ./canale-whatsapp.svg
     logoAlt: "Kiale · canale WhatsApp · menù giornaliero"
-    alt: "Il canale WhatsApp Kiale Food Service scorre sul telefono: una card del menù del giorno dopo l'altra"
+    alt: "Il canale WhatsApp di Kiale food service scorre sul telefono: una card del menù del giorno dopo l'altra"
   # il testo del canale, in una cella sua dopo il telefono (il titolo del telefono è corto e grande)
   - type: text
     w: 4
@@ -111,7 +111,7 @@ cells:
     # testi: bozze dai manifesti
     affissioni:
       - subtitle: "Zio Checco · inaugurazione"
-        body: "Per l'estate Kiale apre **I Panini di Zio Checco**, una panineria serale da asporto, dal 15 giugno al 15 settembre.\n\nUn manifesto **da leggere al volo**: il marchio al centro, i panini in primo piano, orari, indirizzo e telefono grandi."
+        body: "Per l'estate Kiale apre **I panini di Zio Checco**, una panineria serale da asporto, dal 15 giugno al 15 settembre.\n\nUn manifesto **da leggere al volo**: il marchio al centro, i panini in primo piano, orari, indirizzo e telefono grandi."
         alt: "Il manifesto dei Panini di Zio Checco su un cartellone in una strada di Itri, accanto a una macchina parcheggiata"
         foto: ./affissione-zio-checco.webp
         scontornata: ./affissione-zio-checco-scontornata.webp
@@ -126,7 +126,7 @@ cells:
         foto: ./affissione-prima-del-mare.webp
         scontornata: ./affissione-prima-del-mare-scontornata.webp
       - subtitle: "Kiale · istituzionale"
-        body: "Il manifesto **di Kiale food service**: il marchio grande al centro e i tre servizi, gastronomia, buffet per eventi e pausa pranzo.\n\nAttorno, **le foto del banco e della cucina**; in basso indirizzo, telefono e QR."
+        body: "Il manifesto **di Kiale food service**: il marchio grande al centro e i tre servizi: gastronomia, buffet per eventi e pausa pranzo.\n\nAttorno, **le foto del banco e della cucina**; in basso indirizzo, telefono e QR."
         alt: "Il manifesto istituzionale di Kiale food service su un cartellone appeso a un muro di pietra"
         foto: ./affissione-istituzionale.webp
         scontornata: ./affissione-istituzionale-scontornata.webp

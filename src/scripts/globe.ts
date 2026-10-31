@@ -1,13 +1,14 @@
 /**
- * Casella "terra": il globo segue l'orientamento reale (lib/globe.ts).
+ * Cella "terra": il globo segue l'orientamento reale (lib/globe.ts).
  * - all'ingresso fa un giro veloce e frena fino all'orientamento reale (una volta per visita);
  * - si trascina col mouse in tutte le direzioni, col dito solo in orizzontale;
  * - lasciato andare con slancio continua a girare e frena (free-spin); fermo, dopo una breve pausa
  *   torna all'orientamento reale, che intanto si aggiorna.
- * Le terre (data/land-110m.json, ~20 KB) si caricano solo se la casella c'è.
+ * Le terre (data/land-110m.json, ~20 KB) si caricano solo se la cella c'è.
  */
 
 import { drawGlobe, realSpin, type Spin } from '../lib/globe';
+import { REDUCED } from './preferenze';
 
 let introDone = false;  // il modulo resta tra un foglio e l'altro (scripts/foglio): il giro d'ingresso una volta sola
 
@@ -23,7 +24,7 @@ const easeInOut = (k: number) => (k < 0.5 ? 4 * k ** 3 : 1 - (-2 * k + 2) ** 3 /
 /** differenza angolare più breve, in (-180, 180] */
 const wrap = (d: number) => ((((d + 180) % 360) + 360) % 360) - 180;
 
-export async function initGlobe(signal: AbortSignal, reduced: boolean) {
+export async function initGlobe(signal: AbortSignal) {
   const root = document.querySelector<HTMLElement>('[data-globe]');
   if (!root) return;
   const { default: land } = await import('../data/land-110m.json');
@@ -47,7 +48,7 @@ export async function initGlobe(signal: AbortSignal, reduced: boolean) {
       dλ = scarto di partenza in longitudine: di default la strada più breve, -360 per un giro intero */
   const tweenToReal = (from: Spin, ms: number, ease: (k: number) => number, dλ = wrap(from[0] - realSpin()[0])) => {
     stop();
-    if (reduced) { spin = realSpin(); paint(); return; }
+    if (REDUCED) { spin = realSpin(); paint(); return; }
     let t0 = 0;
     const step = (t: number) => {
       t0 ||= t;
@@ -64,7 +65,7 @@ export async function initGlobe(signal: AbortSignal, reduced: boolean) {
   signal.addEventListener('abort', stop);
 
   // ── ingresso: un giro intero che frena sull'orientamento reale ─
-  if (!introDone && !reduced) {
+  if (!introDone && !REDUCED) {
     // posa di partenza: inclinato di 30°, poi un giro intero che frena sul reale
     const start = (): Spin => [realSpin()[0], 30];
     spin = start();
@@ -149,7 +150,7 @@ export async function initGlobe(signal: AbortSignal, reduced: boolean) {
     if (!dragging) return;
     dragging = false;
     const speed = Math.hypot(vel[0], vel[1]);
-    if (reduced || e.type === 'pointercancel' || e.timeStamp - lastT > RELEASE_IDLE_MS || speed < MIN_SPEED * 5) {
+    if (REDUCED || e.type === 'pointercancel' || e.timeStamp - lastT > RELEASE_IDLE_MS || speed < MIN_SPEED * 5) {
       scheduleReturn();
       return;
     }

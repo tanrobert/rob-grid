@@ -7,6 +7,8 @@
 # deformato (.mp4 H.264, .webm AV1 e il poster .webp), un rettangolo da mettere sotto la mano, mascherato con schermo.png.
 # Il video d'ingresso deve avere la proporzione dello schermo (0,46). Solo sviluppo. Serve: pip install --user
 # psd-tools, ffmpeg (winget Gyan.FFmpeg).
+# Kiale (28/10/2026): registrazione Android (tema chiaro) rimpicciolita con un margine bianco attorno, così gli angoli
+# tondi dello schermo non tagliano ora e tasti: 530×1178 su 576×1252 (ffmpeg color + overlay). Isola tolta, niente tacca.
 #   python tools/telefono-mockup.py <mockup.psd> [--px 1100] [--colore f23e23] [--video schermo.mp4 public/media/<nome>.mp4]
 #   --colore: il telefono (nero) di quel colore: le luminanze della scocca diventano il colore, il nero del bordo
 #   attorno allo schermo resta nero, le luci schiariscono; dove le dita stanno davanti al telefono si tinge solo il grigio

@@ -1,5 +1,6 @@
 /**
- * Comportamenti delle celle "vive", del tavolo e del foglio. Si avvia una volta per pagina (Layout.astro).
+ * Comportamenti delle celle "vive". Si avvia al caricamento (Layout.astro) e riparte per ogni foglio montato
+ * (scripts/foglio): i comportamenti vecchi si fermano (cleanup) e ripartono su tutto il documento.
  */
 
 import { initArchive } from './archive';
@@ -8,12 +9,13 @@ import { initRighe } from './righe';
 import { fitTitles, initTitoloni } from './titoloni';
 import { initMosaico } from './mosaico';
 import { pad2 } from '../lib/format';
-import type { VistaEvento } from './tavolo/vista';
+import { REDUCED, FINE } from './preferenze';
+import { giraDaSola } from './giro';
 
 let cleanup: (() => void) | null = null;
 
 // animazioni d'ingresso (global.css): finite quando il filo ha chiuso il giro, il contenuto è entrato e i crocini sono comparsi
-const INTRO = ['frame-draw', 'fill-in', 'fade-in', 'carta-traccia', 'crocini-in', 'pezzo-atterra', 'ombra-compare'];
+const INTRO = ['frame-draw', 'fill-in', 'fade-in', 'crocini-in', 'pezzo-atterra', 'ombra-compare'];
 function introDone(cell?: Element) {
   const anims = (cell ? cell.getAnimations({ subtree: true }) : document.getAnimations())
     .filter(a => a instanceof CSSAnimation && INTRO.includes(a.animationName));
@@ -33,38 +35,36 @@ export function initCells() {
   const teardown: Array<() => void> = [() => ac.abort()];
   cleanup = () => { teardown.forEach(fn => fn()); cleanup = null; };
 
-  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const { signal } = ac;
 
   initArchive(signal);
-  initInk(signal, reduced);
-  // globo: d3-geo e le terre si caricano solo se la casella c'è
+  initInk(signal);
+  // globo: d3-geo e le terre si caricano solo se la cella c'è
   if (document.querySelector('[data-globe]')) {
-    import('./globe').then(m => signal.aborted || m.initGlobe(signal, reduced));
+    import('./globe').then(m => signal.aborted || m.initGlobe(signal));
   }
   // barattoli: lo script solo se la cella c'è (i livelli dei mockup quando si avvicina allo schermo)
   if (document.querySelector('[data-barattolo]')) {
-    import('./barattolo').then(m => signal.aborted || m.initBarattoli(signal, reduced));
+    import('./barattolo').then(m => signal.aborted || m.initBarattoli(signal));
   }
   // sottologhi: il logo che si compone e le sue foto, solo se la cella c'è
   if (document.querySelector('[data-sottologo]')) {
-    import('./sottologo').then(m => signal.aborted || m.initSottologhi(signal, reduced));
+    import('./sottologo').then(m => signal.aborted || m.initSottologhi(signal));
   }
-  // affissioni: col mouse il velo sulla strada è un hover (CSS). Con più affissioni la scena cambia ogni GIRO ms,
+  // affissioni: col mouse il velo sulla strada è un hover (CSS). Con più affissioni la scena cambia ogni 7 s,
   // insieme al suo testo, ferma fuori vista e col mouse sulla foto; un clic (o un tocco) passa alla successiva.
   // Con una sola il tocco accende e spegne il velo
-  const GIRO = 7000;
-  const mouse = matchMedia('(hover: hover) and (pointer: fine)').matches;
   document.querySelectorAll<HTMLElement>('[data-affissioni]').forEach(cella => {
     const foto = cella.querySelector<HTMLElement>('[data-affissione]')!;
     const scene = [...foto.querySelectorAll<HTMLElement>('.scena')];
     const testi = [...cella.querySelectorAll<HTMLElement>('.sotto')];
     if (scene.length < 2) {
-      if (!mouse) foto.addEventListener('click', () => foto.classList.toggle('is-velo'), { signal });
+      if (!FINE) foto.addEventListener('click', () => foto.classList.toggle('is-velo'), { signal });
       return;
     }
     foto.classList.add('is-sfogliabile');
-    let i = 0, timer = 0, inVista = false, sopra = false;
+    // initCells riparte (un foglio nuovo sopra): si riprende dalla scena dov'era
+    let i = Math.max(0, scene.findIndex(s => s.classList.contains('is-attiva')));
     const avanti = () => {
       const prossima = (i + 1) % scene.length;
       // la nuova parte da trasparente anche se era la scena piena sotto: niente salto
@@ -76,18 +76,7 @@ export function initCells() {
       testi[prossima].classList.add('is-attiva');
       i = prossima;
     };
-    const aggiorna = () => {
-      clearInterval(timer);
-      timer = inVista && !sopra ? window.setInterval(avanti, GIRO) : 0;
-    };
-    foto.addEventListener('click', () => { avanti(); aggiorna(); }, { signal });
-    if (mouse) {
-      foto.addEventListener('pointerenter', () => { sopra = true; aggiorna(); }, { signal });
-      foto.addEventListener('pointerleave', () => { sopra = false; aggiorna(); }, { signal });
-    }
-    const io = new IntersectionObserver(([e]) => { inVista = e.isIntersecting; aggiorna(); });
-    io.observe(cella);
-    teardown.push(() => { io.disconnect(); clearInterval(timer); });
+    giraDaSola(foto, 7000, avanti, signal, { fermaSopra: true });
   });
 
   // caroselli delle celle di testo: gira sempre, da destra a sinistra, una foto ogni CAROSELLO ms (fermo solo fuori
@@ -101,36 +90,31 @@ export function initCells() {
     copia.setAttribute('aria-hidden', 'true');
     copia.querySelector('img')!.alt = '';
     nastro.append(copia);
-    let i = 0, timer = 0;
+    let i = 0;
     const vai = (j: number, salto = false) => {
       nastro.classList.toggle('is-salto', salto);
       if (salto) void nastro.offsetWidth;
-      nastro.style.setProperty('--i', String(i = j));
+      nastro.style.setProperty('--foto', String(i = j));
       if (salto) { void nastro.offsetWidth; nastro.classList.remove('is-salto'); }
     };
     // initCells riparte (un foglio nuovo sopra): si riprende dalla foto dov'era
-    const era = Number(nastro.style.getPropertyValue('--i')) || 0;
+    const era = Number(nastro.style.getPropertyValue('--foto')) || 0;
     vai(era < n ? era : 0, true);
     const avanti = () => {
       if (i === n) vai(0, true);  // la transizione verso la copia non è finita (scheda nascosta): riparto da capo
       vai(i + 1);
     };
     nastro.addEventListener('transitionend', e => { if (e.target === nastro && i === n) vai(0, true); }, { signal });
-    car.addEventListener('click', () => { avanti(); clearInterval(timer); timer = window.setInterval(avanti, CAROSELLO); }, { signal });
-    const io = new IntersectionObserver(([e]) => {
-      clearInterval(timer);
-      timer = e.isIntersecting ? window.setInterval(avanti, CAROSELLO) : 0;
-    });
-    io.observe(car);
-    teardown.push(() => { io.disconnect(); clearInterval(timer); copia.remove(); });
+    giraDaSola(car, CAROSELLO, avanti, signal);
+    teardown.push(() => copia.remove());
   });
 
-  // Intro finita: tolgo la classe, così nessuna casella che ricompare
+  // Intro finita: tolgo la classe, così nessuna cella che ricompare
   // (filtri, cambio di breakpoint) rifà l'animazione d'ingresso
   const html = document.documentElement;
   const intro = html.classList.contains('is-intro');
   // titoloni: misurati col font vero, prima che le righe dell'intro ne leggano gli a capo
-  initTitoloni(signal, reduced);
+  initTitoloni(signal);
   document.fonts.ready.then(() => {
     if (signal.aborted) return;
     // celle allungate dove il testo non ci sta (col font vero), prima dei titoloni e delle righe dell'intro
@@ -140,9 +124,7 @@ export function initCells() {
   });
   if (intro) {
     // la durata del filo dipende dal perimetro di ogni cella: aspetto la fine delle animazioni vere
-    let live = true;
-    introDone().then(() => { if (live) html.classList.remove('is-intro'); });
-    teardown.push(() => { live = false; });
+    introDone().then(() => { if (!signal.aborted) html.classList.remove('is-intro'); });
   }
 
   // ── Pausa fuori schermo (loop CSS + video) ─────────────
@@ -151,7 +133,7 @@ export function initCells() {
       const el = e.target as HTMLElement;
       el.toggleAttribute('data-offscreen', !e.isIntersecting);
       const video = el.querySelector<HTMLVideoElement>('video[data-autoplay]');
-      if (!video || reduced) continue;
+      if (!video || REDUCED) continue;
       if (e.isIntersecting) video.play().catch(() => {});
       else video.pause();
     }
@@ -199,24 +181,17 @@ export function initCells() {
   // ── Registro: la ghiera gira con lo scroll, in sincrono col righello ─
   // un quarto di riga della griglia = una tacca (5°), come il righello (--ruler-step in global.css).
   // Scorrendo in giù le tacche a destra salgono, come quelle del righello.
-  // Sul tavolo gira col pan (scripts/tavolo/vista.ts): un quadretto = una tacca (il modulo è 4 quadretti);
-  // nel foglio sopra il tavolo con lo scroll
   const rings = [...document.querySelectorAll<SVGGElement>('[data-ring]')];
-  if (rings.length && !reduced) {
+  if (rings.length && !REDUCED) {
     let frame = 0;
     let tick = 25;
-    let tavolo: VistaEvento | null = null;
     const measure = () => { tick = (parseFloat(getComputedStyle(document.body).getPropertyValue('--ruler-step')) || 100) / 4; };
     const turn = () => {
       frame = 0;
-      const pan = tavolo ? (tavolo.y / tavolo.q) * 5 : 0, scroll = (-scrollY / tick) * 5;
-      for (const r of rings) {
-        if (r.closest('[data-offscreen]')) continue;
-        r.style.transform = `rotate(${r.closest('[data-tavolo]') ? pan : scroll}deg)`;
-      }
+      const gradi = (-scrollY / tick) * 5;
+      for (const r of rings) if (!r.closest('[data-offscreen]')) r.style.transform = `rotate(${gradi}deg)`;
     };
     addEventListener('scroll', () => { frame ||= requestAnimationFrame(turn); }, { passive: true, signal });
-    document.addEventListener('tavolo:vista', e => { tavolo = (e as CustomEvent<VistaEvento>).detail; frame ||= requestAnimationFrame(turn); }, { signal });
     addEventListener('resize', () => { measure(); frame ||= requestAnimationFrame(turn); }, { passive: true, signal });
     teardown.push(() => cancelAnimationFrame(frame));
     measure();
@@ -226,7 +201,7 @@ export function initCells() {
   // ── Contatore: sale da 0 al valore quando la cella è entrata in vista ─
   // Nell'HTML c'è già il numero finale (crawler, niente JS, riduci movimento).
   // Una volta sola per visita: tornando sulla pagina il numero resta quello finale.
-  if (!reduced) document.querySelectorAll<HTMLElement>('[data-countup]').forEach(el => {
+  if (!REDUCED) document.querySelectorAll<HTMLElement>('[data-countup]').forEach(el => {
     const text = el.textContent?.trim() ?? '';
     const target = Number(text);
     if (!text || !Number.isFinite(target)) return;
@@ -254,7 +229,8 @@ export function initCells() {
       introDone(el.closest('.cell') ?? el).then(() => { if (!signal.aborted) raf = requestAnimationFrame(step); });
     });
     io.observe(el);
-    teardown.push(() => { io.disconnect(); cancelAnimationFrame(raf); });
+    // ripartendo (foglio nuovo) il numero torna quello finale: fermo a metà, o a 0 se non era ancora in vista
+    teardown.push(() => { io.disconnect(); cancelAnimationFrame(raf); el.textContent = text; });
   });
 
   // ── Occhio: iride e pupilla seguono il puntatore ───────
@@ -264,7 +240,7 @@ export function initCells() {
     // escursione massima (unità del viewBox 100×100): la mandorla è più larga che alta
     const IRIS = { x: 14, y: 6 }, PUPIL = { x: 4, y: 3 };
 
-    // clic sulla casella: l'occhio si chiude e si riapre lentamente, poi torna al battito normale
+    // clic sulla cella: l'occhio si chiude e si riapre lentamente, poi torna al battito normale
     const lid = svg.querySelector<SVGGElement>('[data-lid]')!;
     svg.closest('.cell')?.addEventListener('click', () => {
       // già chiuso: resta chiuso, l'animazione non riparte
@@ -280,7 +256,7 @@ export function initCells() {
       // stessa velocità. Con "riduci movimento" va dritto al bersaglio
       const dt = last ? Math.min(now - last, 100) : 1000 / 60;
       last = now;
-      const k = reduced ? 1 : 1 - (1 - 0.18) ** (dt * 60 / 1000);
+      const k = REDUCED ? 1 : 1 - (1 - 0.18) ** (dt * 60 / 1000);
       x += (tx - x) * k; y += (ty - y) * k;
       iris.setAttribute('transform', `translate(${(x * IRIS.x).toFixed(2)} ${(y * IRIS.y).toFixed(2)})`);
       pupil.setAttribute('transform', `translate(${(x * PUPIL.x).toFixed(2)} ${(y * PUPIL.y).toFixed(2)})`);

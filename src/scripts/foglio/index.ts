@@ -18,7 +18,7 @@
  */
 import { gsap } from 'gsap';
 import { tavolo } from '../tavolo';
-import { T } from '../tavolo/tempi';
+import { T } from '../preferenze';
 import { initCells } from '../cells';
 import { suona } from '../suono';
 import { homeTitle } from '../../data/site';
@@ -185,8 +185,8 @@ async function entra(f: Foglio, { da = null as HTMLElement | null, sostituito = 
   const fine = f.hero.getBoundingClientRect();
   if (retino) gsap.to(retino, { opacity: 1, duration: T(0.3), ease: 'power1.out' });
   // i dettagli arrivano quando il foglio è quasi al suo posto, uno dopo l'altro
-  const q = parseFloat(getComputedStyle(f.el).getPropertyValue('--gap')) || 20;
-  gsap.fromTo(resto, { y: q * 0.5 }, {
+  const gap = parseFloat(getComputedStyle(f.el).getPropertyValue('--gap')) || 20;
+  gsap.fromTo(resto, { y: gap * 0.5 }, {
     opacity: 1, y: 0, duration: T(0.3), ease: 'power2.out', stagger: T(0.03), delay: T(daRect ? 0.32 : 0.05),
     clearProps: 'opacity,transform',
   });
@@ -235,7 +235,9 @@ async function esce() {
     document.title = sotto.titolo;
     scrollTo(0, sotto.scroll);
     verso = visibile(f.origine?.cella ?? null);
-    gsap.fromTo(altre(sotto, verso), { opacity: 0 }, { opacity: 1, duration: T(0.2), ease: 'power1.out', clearProps: 'opacity' });
+    // come in entra, al contrario: anche la hero del foglio sotto torna sfumando con le altre celle
+    const torna = [...altre(sotto, verso), ...(sotto.hero === verso ? [] : [sotto.hero])];
+    gsap.fromTo(torna, { opacity: 0 }, { opacity: 1, duration: T(0.2), ease: 'power1.out', clearProps: 'opacity' });
     if (verso) {
       gsap.set(verso, { visibility: 'hidden' });
       await vola(v, verso, verso.getBoundingClientRect(), 0.48);

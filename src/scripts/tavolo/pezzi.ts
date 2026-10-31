@@ -6,7 +6,8 @@ import { gsap } from 'gsap';
 import { InertiaPlugin } from 'gsap/InertiaPlugin';
 import { pack } from '../../lib/tavolo';
 import { applica, sulFoglio } from './vista';
-import { T, REDUCED, LANCIO } from './tempi';
+import { T, REDUCED } from '../preferenze';
+import { LANCIO } from './tempi';
 import { suona } from '../suono';
 import type { Tavolo } from './index';
 import type { Sotto } from '../../data/grid-types';
@@ -52,7 +53,7 @@ export function alza(p: Pezzo, z: number) {
   p.el.style.zIndex = z ? String(z) : '';
 }
 
-/** Disposizione pensata per la finestra e il quadretto di adesso (lib/tavolo.ts) */
+/** Disposizione pensata per la finestra di adesso (lib/tavolo.ts) */
 export function disponi(t: Tavolo) {
   pack(t.pezzi, t.v).forEach(({ x, y }, i) => { t.pezzi[i].gx = x; t.pezzi[i].gy = y; });
 }

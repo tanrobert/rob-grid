@@ -1,5 +1,5 @@
 ---
-// Pulsanti filtro: usati sia nella casella "tags" sia nella barra mobile.
+// Pulsanti filtro: usati sia nella cella "tags" sia nella barra mobile.
 import type { TagCount } from '../lib/tags';
 import { pad2 } from '../lib/format';
 
@@ -30,7 +30,6 @@ const { tags, total } = Astro.props;
     font: 500 clamp(13px, 1.1vw, 16px) / 1.2 var(--font-testo);
     letter-spacing: -0.01em;
     text-align: left;
-    cursor: var(--cursore-mano);
     white-space: nowrap;
     transition: background-color 200ms ease, color 200ms ease;
   }

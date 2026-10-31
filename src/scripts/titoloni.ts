@@ -2,9 +2,8 @@
  * Titoloni: i titoli delle celle di testo grandi (TextCell size 'l', es. "Progetto identità visive…" in
  * home, la bio in Info).
  * - Misura: il corpo più grande con cui il titolo sta nella sua cella, col font vero. Lo spazio in più
- *   (HEADROOM) serve alla lente, che allarga le lettere. Si calcola prima che la pagina si veda: dopo lo
- *   caricamento, prima delle righe dell'intro (righe.ts,
- *   che leggono gli a capo). Il corpo si scrive in cqi (larghezza della cella): allo zoom del tavolo e al resize
+ *   (HEADROOM) serve alla lente, che allarga le lettere. Si calcola col font caricato, prima delle righe
+ *   dell'intro (righe.ts, che leggono gli a capo). Il corpo si scrive in cqi (larghezza della cella): allo zoom del tavolo e al resize
  *   il titolo scala con la cella, e la misura esatta si rifà a misura ferma (ATTESA), ma sul tavolo solo se cambia
  *   la forma della cella (lo zoom ne cambia solo la scala).
  * - Lente (idea di Roberto, ottobre 2026, provata in tools/pages/cinetica.html): col mouse il peso cresce
@@ -12,9 +11,12 @@
  *   bloccano alla prima passata (righe a filo, nowrap), se no le parole che ingrassano cambiano riga.
  *   Solo con mouse, mai con prefers-reduced-motion.
  * - Lente al contrario (29/10/2026, scelta di Roberto) sui titoloni delle celle coi mockup (data-lente="inversa":
- *   barattoli, telefono, sticker): sono già Black, attorno al puntatore si assottigliano fino a 400. Non si misurano
+ *   barattoli, telefono, sticker, affissioni, sottologo): sono già Black, attorno al puntatore si assottigliano fino a 400. Non si misurano
  *   (corpo fisso, --titolone); le lettere sottili sono più strette, quindi le righe bloccate non escono mai.
  */
+
+import { REDUCED, FINE } from './preferenze';
+import { righeDi } from './righe';
 
 const SELECTOR = '.cell > .text--l > .title';
 const MIN = 20, MAX = 220;   // px
@@ -52,8 +54,8 @@ function fit(title: HTMLElement) {
     if (fits(title)) lo = mid; else hi = mid;
   }
   // in cqi: la cella (container) è il riquadro più vicino con container-type
-  const cella = title.closest<HTMLElement>('.cell')?.clientWidth;
-  title.style.fontSize = cella ? `${(Math.floor(lo * HEADROOM) / cella) * 100}cqi` : `${Math.floor(lo * HEADROOM)}px`;
+  const cella = title.closest<HTMLElement>('.cell')!.clientWidth;
+  title.style.fontSize = `${(Math.floor(lo * HEADROOM) / cella) * 100}cqi`;
   title.style.transition = '';
 }
 
@@ -79,15 +81,7 @@ const lenses = new WeakMap<HTMLElement, Lens>();
 /** Titolo in lettere, con gli a capo di adesso bloccati. Il testo vero resta per gli screen reader */
 function split(title: HTMLElement): Lens {
   const text = title.textContent ?? '';
-  const words = text.trim().split(/\s+/);
-  const probe = words.map(w => Object.assign(document.createElement('span'), { textContent: w }));
-  title.replaceChildren(...probe.flatMap((s, i) => (i ? [' ', s] : [s])));
-  const rows: string[][] = [];
-  let top: number | null = null;
-  for (const s of probe) {
-    if (s.offsetTop !== top) { rows.push([]); top = s.offsetTop; }
-    rows.at(-1)!.push(s.textContent!);
-  }
+  const rows = righeDi(title, text);
   const letters: HTMLElement[] = [];
   title.replaceChildren(
     Object.assign(document.createElement('span'), { className: 'sr-only', textContent: text }),
@@ -117,7 +111,7 @@ function unsplit(title: HTMLElement) {
   lenses.delete(title);
 }
 
-export function initTitoloni(signal: AbortSignal, reduced: boolean) {
+export function initTitoloni(signal: AbortSignal) {
   const list = titles(), inverse = [...document.querySelectorAll<HTMLElement>(INVERSA)];
   if (!list.length && !inverse.length) return;
 
@@ -142,7 +136,7 @@ export function initTitoloni(signal: AbortSignal, reduced: boolean) {
   [...list, ...inverse].forEach(t => ro.observe(t.parentElement!));
   signal.addEventListener('abort', () => { ro.disconnect(); clearTimeout(timer); });
 
-  if (reduced || !matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+  if (REDUCED || !FINE) return;
 
   for (const title of [...list, ...inverse]) {
     const cell = title.closest<HTMLElement>('.cell')!;

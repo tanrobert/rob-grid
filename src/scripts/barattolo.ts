@@ -12,7 +12,7 @@
  * - Dentro il vetro un foglio avvolto anche lui fa da contenuto: la foto del barattolo (`interno`, che si ripete senza
  *   stacco ai lati: un cartoncino arrotolato), o un segnaposto disegnato qui (pezzi, crema, filetti).
  * - Un solo rAF per cella, acceso solo quando qualcosa si muove e la cella è in vista; con riduci movimento
- *   non gira da solo e lo sfoglia non scorre (il trascinamento resta: è un gesto).
+ *   non gira da solo e sfogliando non scorre (il trascinamento resta: è un gesto).
  * - Fondo del colore della cella: segue Inverti e la tinta di Woberto.
  * - Parola della linea (Confetture, Sughi…) girata in verticale sul lato sinistro (sul destro coi vasi alti),
  *   appoggiata sopra la fascia del bordo, col colore del bordo: se resta la stessa cambia solo
@@ -25,6 +25,9 @@
  *   ritagliata sulla sagoma del vaso, così fuori resta la carta. Cambiando barattolo il bordo cambia colore e forma:
  *   le due forme, sfocate, si fondono l'una nell'altra e si riaffilano.
  */
+
+import { REDUCED } from './preferenze';
+import { pad2 } from '../lib/format';
 
 type Geometria = { w: number; h: number; cx: number; cy: number; ang: number; r: number; t0: number; t1: number; e: number; piano: [number, number]; cima: number; largo: number; centro: number; piede: number };
 type Voce = { nome: string; mockup: string; src: string; bordo?: string; parola?: string; interno?: string; tipo: 'pezzi' | 'crema' | 'filetti'; dentro: string; pezzi?: string };
@@ -206,20 +209,20 @@ function scalata(img: Immagine, alta: number): Immagine {
 // fascia dell'etichetta: alta quanto la parte piatta del vetro, meno un piccolo margine sopra e sotto
 const fascia = (G: Geometria): [number, number] => [G.piano[0] + 0.04 * G.r, G.piano[1] - 0.04 * G.r];
 
-export function initBarattoli(signal: AbortSignal, reduced: boolean) {
+export function initBarattoli(signal: AbortSignal) {
   document.querySelectorAll<HTMLElement>('[data-barattolo]').forEach(root => {
     // scarica e prepara solo quando la cella si avvicina allo schermo
     const vicino = new IntersectionObserver(([e]) => {
       if (!e.isIntersecting) return;
       vicino.disconnect();
-      avvia(root, signal, reduced);
+      avvia(root, signal);
     }, { rootMargin: '400px' });
     vicino.observe(root);
     signal.addEventListener('abort', () => vicino.disconnect());
   });
 }
 
-async function avvia(root: HTMLElement, signal: AbortSignal, reduced: boolean) {
+async function avvia(root: HTMLElement, signal: AbortSignal) {
   const dati: Dati = JSON.parse(root.dataset.barattolo!);
   const voci = dati.barattoli, n = voci.length;
   const cv = root.querySelector<HTMLCanvasElement>('[data-tela]')!, ctx = cv.getContext('2d')!;
@@ -231,7 +234,7 @@ async function avvia(root: HTMLElement, signal: AbortSignal, reduced: boolean) {
   const cella = root.closest<HTMLElement>('.cell') ?? root;
   // il segnaposto subito; la foto, se c'è, quando è scaricata (applica)
   const interni: Immagine[] = voci.map(texturaInterno), foto = voci.map(() => false);
-  let at = 0, W = 0, H = 0, giro = 0, vel = 0, auto = !reduced, raf = 0, ultimo = 0, inVista = true;
+  let at = 0, W = 0, H = 0, giro = 0, vel = 0, auto = !REDUCED, raf = 0, ultimo = 0, inVista = true;
   let presa: { x: number; y: number; t: number } | null = null;
   // vaso in vista: geometria, livelli, scala (pixel reali per unità del ritaglio), fascia dell'etichetta, etichetta
   let G: Geometria, M: (typeof MOCKUP)[string], P: Pronti, s = 1, t0 = 0, t1 = 0, lab: HTMLImageElement;
@@ -250,7 +253,7 @@ async function avvia(root: HTMLElement, signal: AbortSignal, reduced: boolean) {
     at = i; G = dati.mockup[voci[i].mockup]; M = MOCKUP[voci[i].mockup]; P = p; lab = l; [t0, t1] = fascia(G);
     if (f) { interni[i] = f; foto[i] = true; }
     // il bordo nuovo: di colpo la prima volta e con riduci movimento, se no si trasforma da quello in vista
-    bordo = { da: reduced || !bordo.a ? null : bordo.a, a: b, t: performance.now() }; bordoFermo = !bordo.da;
+    bordo = { da: REDUCED || !bordo.a ? null : bordo.a, a: b, t: performance.now() }; bordoFermo = !bordo.da;
     // le vicine in anticipo, quando il browser è libero
     const dopo = () => [voci[(i + 1) % n], voci[(i - 1 + n) % n]].forEach(w => { caricaEtichetta(w.src); caricaVaso(w.mockup, dati.mockup[w.mockup]); caricaBordo(w.bordo); caricaInterno(w); });
     'requestIdleCallback' in window ? requestIdleCallback(dopo) : setTimeout(dopo, 300);
@@ -267,7 +270,7 @@ async function avvia(root: HTMLElement, signal: AbortSignal, reduced: boolean) {
     W = cv.width = Math.round(r.width * dpr); H = cv.height = Math.round(r.height * dpr);
     const rc = root.getBoundingClientRect();
     carta.width = ombra.width = Math.round(rc.width * dpr); carta.height = ombra.height = Math.round(rc.height * dpr);
-    // posizione di layout (la vetrina sta a 0,0 della cella): il rettangolo vero includerebbe lo spostamento dello sfoglia
+    // posizione di layout (la vetrina sta a 0,0 della cella): il rettangolo vero includerebbe lo spostamento dello sfogliare
     ox = Math.round(cv.offsetLeft * dpr); oy = Math.round(cv.offsetTop * dpr);
     // pixel reali per unità del ritaglio. Il canvas comincia un poco dentro l'ultima riga del titolo (margine negativo)
     // e finisce sulla didascalia. In larghezza conta solo il vetro (`largo`): l'ombra ai lati può uscire, sfuma nella
@@ -484,7 +487,7 @@ async function avvia(root: HTMLElement, signal: AbortSignal, reduced: boolean) {
   let timer = 0, sopra = false, fuoco = false;
   function programma(ms = OGNI_MS) {
     clearTimeout(timer);
-    if (reduced || n < 2) return;
+    if (REDUCED || n < 2) return;
     timer = window.setTimeout(() => {
       if (inVista && !presa && !sopra && !fuoco && !document.hidden) sfoglia(1, true);
       programma();
@@ -497,8 +500,13 @@ async function avvia(root: HTMLElement, signal: AbortSignal, reduced: boolean) {
 
   // sfoglia: il barattolo esce di lato e il prossimo entra (di colpo con riduci movimento); conta l'ultimo clic
   const nome = root.querySelector('[data-nome]'), conta = root.querySelector('[data-conta]');
-  const due = (x: number) => String(x).padStart(2, '0');
   let turno = 0, voluto = 0;
+  function scriviNome() {
+    // solo se cambia: il nome sta in una regione aria-live
+    if (nome && nome.textContent !== voci[at].nome) nome.textContent = voci[at].nome;
+    if (conta) conta.textContent = `${pad2(at + 1)}/${pad2(n)}`;
+    cv.setAttribute('aria-label', `${voci[at].nome}: trascina per girare il barattolo`);
+  }
   // la parola del barattolo in vista: maschera e colore del bordo (il colore passa da solo, con la transizione CSS)
   function scriviParola() {
     const src = voci[at].parola, c = bordo.a?.colore;
@@ -515,27 +523,25 @@ async function avvia(root: HTMLElement, signal: AbortSignal, reduced: boolean) {
     const pronto = scarica(i).catch(() => null);
     cv.getAnimations().forEach(a => a.cancel()); ombra.getAnimations().forEach(a => a.cancel()); parola.getAnimations().forEach(a => a.cancel());
     // l'uscita resta ferma alla fine (fill) finché il barattolo nuovo non è pronto, poi si toglie
-    const fuori = reduced ? null : cv.animate([{ transform: 'none', opacity: 1 }, { transform: `translateX(${verso * 30}%)`, opacity: 0 }], { duration: 200, easing: 'cubic-bezier(.5,0,.75,0)', fill: 'forwards' });
+    const fuori = REDUCED ? null : cv.animate([{ transform: 'none', opacity: 1 }, { transform: `translateX(${verso * 30}%)`, opacity: 0 }], { duration: 200, easing: 'cubic-bezier(.5,0,.75,0)', fill: 'forwards' });
     // l'ombra non scivola: sparisce in fretta e torna col barattolo nuovo
-    const via = reduced ? null : ombra.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 140, easing: 'ease-out', fill: 'forwards' });
+    const via = REDUCED ? null : ombra.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 140, easing: 'ease-out', fill: 'forwards' });
     // la parola esce solo se cambia (Confetture → Sughi); se è la stessa cambia solo colore
     const cambia = voci[i].parola !== voci[at].parola;
-    const parolaVia = reduced || !cambia || !voci[at].parola ? null : parola.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 140, easing: 'ease-out', fill: 'forwards' });
+    const parolaVia = REDUCED || !cambia || !voci[at].parola ? null : parola.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 140, easing: 'ease-out', fill: 'forwards' });
     const [cose] = await Promise.all([pronto, fuori?.finished.catch(() => {})]);
     if (mio !== turno || signal.aborted) return;
     if (cose) applica(i, cose);
-    if (nome) nome.textContent = voci[at].nome;
-    if (conta) conta.textContent = `${due(at + 1)}/${due(n)}`;
-    cv.setAttribute('aria-label', `${voci[at].nome}: trascina per girare il barattolo`);
+    scriviNome();
     prepara();
     muovi();
     if (cambia) parola.style.transition = 'none';     // parola nuova: già del suo colore quando rientra
     scriviParola();
     if (cambia) { parola.offsetWidth; parola.style.transition = ''; }
     fuori?.cancel(); via?.cancel(); parolaVia?.cancel();
-    if (!reduced) cv.animate([{ transform: `translateX(${-verso * 30}%)`, opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 300, easing: 'cubic-bezier(.2,.8,.2,1)' });
-    if (!reduced) ombra.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 260, delay: 60, easing: 'ease-out', fill: 'backwards' });
-    if (!reduced && cambia && voci[at].parola) parola.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 260, delay: 60, easing: 'ease-out', fill: 'backwards' });
+    if (!REDUCED) cv.animate([{ transform: `translateX(${-verso * 30}%)`, opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 300, easing: 'cubic-bezier(.2,.8,.2,1)' });
+    if (!REDUCED) ombra.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 260, delay: 60, easing: 'ease-out', fill: 'backwards' });
+    if (!REDUCED && cambia && voci[at].parola) parola.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 260, delay: 60, easing: 'ease-out', fill: 'backwards' });
   }
   root.querySelectorAll<HTMLElement>('[data-passo]').forEach(b => b.addEventListener('click', () => sfoglia(+b.dataset.passo!), opz));
 
@@ -546,6 +552,8 @@ async function avvia(root: HTMLElement, signal: AbortSignal, reduced: boolean) {
   ro.observe(cv);
   const mo = new MutationObserver(() => requestAnimationFrame(prepara));
   mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-inchiostro', 'data-tinta'] });
+  // initCells riparte (un foglio nuovo sopra): si ricomincia dal primo barattolo, anche nella didascalia
+  scriviNome();
   programma();
   signal.addEventListener('abort', () => { io.disconnect(); ro.disconnect(); mo.disconnect(); cancelAnimationFrame(raf); clearTimeout(timer); });
 }

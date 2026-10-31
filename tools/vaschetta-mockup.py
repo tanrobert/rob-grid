@@ -5,6 +5,10 @@
 #   es. python tools/vaschetta-mockup.py sorgenti/mockup/vaschetta.png sorgenti/kiale/striscia-polpette.pdf \
 #         src/content/progetti/kiale/vaschetta-polpette.webp
 # --larga-mm: larghezza vera della vaschetta (la scala della striscia); --cella: w:h della cella in quadretti (4×6 = 15:23)
+# Foto vera del fornitore in prospettiva (28/10/2026, messa da parte): sorgenti/mockup/vaschetta-ag50t.avif (600 px; se
+# arriva più grande, rifarla), prima convertita in png con sharp, poi
+#   python tools/vaschetta-mockup.py <foto.png> sorgenti/kiale/striscia-polpette.pdf <uscita.webp> --angoli "13,203 293,400 590,253 213,120" --cella 1:1
+#   (angoli del bordo sinistra · davanti · destra · dietro; vaschetta 187×137 mm supposta)
 import sys
 import fitz
 import numpy as np

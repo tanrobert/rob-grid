@@ -2,15 +2,15 @@ import { geoGraticule, geoOrthographic, geoPath } from 'd3-geo';
 import type { GeoPermissibleObjects } from 'd3-geo';
 
 /**
- * Globo della casella "terra": la Terra orientata com'è adesso nello spazio.
+ * Globo della cella "terra": la Terra orientata com'è adesso nello spazio.
  * Rotazione siderale (un giro ogni 23h56m rispetto alle stelle): al centro c'è il meridiano
- * che guarda verso il punto d'equinozio; asse inclinato di 23,4° come un mappamondo.
+ * che guarda verso il punto d'equinozio; asse inclinato di 23,44° come un mappamondo.
  * Usato al build (primo disegno nell'HTML) e nel browser (scripts/globe.ts).
  */
 
 const TILT = 23.44;
 const VIEW = 100;  // viewBox dell'SVG
-const RADIUS = 46; // come il cerchio dell'occhio (EyeCell): stessa misura nelle due caselle
+const RADIUS = 46; // come il cerchio dell'occhio (EyeCell): stessa misura nelle due celle
 
 /** [λ, φ] per d3: il punto al centro è [-λ, -φ]. */
 export type Spin = [number, number];

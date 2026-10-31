@@ -1,5 +1,5 @@
 /**
- * Tavolo della home (components/tavolo/Tavolo.astro): carta infinita, celle da spostare, lanciare e aprire,
+ * Tavolo della home (components/tavolo/Tavolo.astro): carta con un confine, celle da spostare, lanciare e aprire,
  * zoom = misura del quadretto. Prototipo e scelte: tools/pages/tavolo.html.
  * Stessa visita = tavolo com'era (memoria.ts); visita nuova = disposizione pensata per la finestra vera.
  * C'è anche sotto i fogli aperti (components/foglio): lì è inerte finché il foglio resta aperto.
@@ -9,7 +9,7 @@ import { InertiaPlugin } from 'gsap/InertiaPlugin';
 import { PER_UNITA, pack, confine } from '../../lib/tavolo';
 import { creaVista, scala, applica, aPixel, base, clampQ, ox, oy, limita, sulFoglio, type Vista } from './vista';
 import { leggiPezzi, posa, alza, disponi, riordina, type Pezzo } from './pezzi';
-import { initGesti, vai } from './gesti';
+import { initGesti } from './gesti';
 import { leggi, scrivi } from './memoria';
 import { initMatita, type Matita } from './matita';
 import { initSuono } from '../suono';
@@ -109,7 +109,6 @@ function initTavolo(el: HTMLElement): Tavolo {
   if (attrezzi) {
     attrezzi.hidden = false;
     attrezzi.querySelector('[data-riordina]')?.addEventListener('click', () => riordina(t), { signal: ac.signal });
-    attrezzi.querySelector('[data-centro]')?.addEventListener('click', () => vai(t, 0, 0, 0.6), { signal: ac.signal });
     initSuono(ac.signal);
   }
   initPiede(ac.signal);

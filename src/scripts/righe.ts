@@ -12,9 +12,9 @@ const FILO = 640;    // il filo si disegna (45%), resta, si ritira (dal 60%)
 const ATTACCO = 160; // la riga parte quando il filo è a metà
 const PASSO = 50;    // tra una riga e la successiva (stagger massimo del sito)
 
-/** Le righe come le dispone il browser: parole raggruppate per altezza */
-function lines(title: HTMLElement): string[][] {
-  const words = (title.firstChild?.textContent ?? '').trim().split(/\s+/);
+/** Le righe di `testo` come le dispone il browser nel titolo: parole raggruppate per altezza (anche titoloni.ts) */
+export function righeDi(title: HTMLElement, testo: string): string[][] {
+  const words = testo.trim().split(/\s+/);
   const probe = words.map(w => Object.assign(document.createElement('span'), { textContent: w }));
   title.replaceChildren(...probe.flatMap((s, i) => (i ? [' ', s] : [s])));
   const out: string[][] = [];
@@ -30,7 +30,7 @@ function split(title: HTMLElement, start: number, easing: string) {
   const original = [...title.childNodes];
   // il cursore di "Scrivimi_" (TextCell) resta in fondo all'ultima riga
   const caret = title.querySelector('.caret');
-  const rows = lines(title);
+  const rows = righeDi(title, title.firstChild?.textContent ?? '');
   const anims: Animation[] = [];
 
   title.replaceChildren(...rows.map((words, n) => {
@@ -57,12 +57,10 @@ function split(title: HTMLElement, start: number, easing: string) {
   Promise.allSettled(anims.map(a => a.finished)).then(() => title.replaceChildren(...original));
 }
 
+/** Da cells.ts, solo nell'intro e col font vero (fonts.ready): a capo giusti */
 export async function initRighe(signal: AbortSignal) {
   const html = document.documentElement;
-  if (!html.classList.contains('is-intro')) return;
   const titles = [...document.querySelectorAll<HTMLElement>('.cell > .text > .title')];
-  // a capo giusti solo col font vero (Layout.astro lo precarica)
-  await document.fonts.ready;
   const easing = getComputedStyle(html).getPropertyValue('--ease-out').trim();
 
   for (const title of titles) {

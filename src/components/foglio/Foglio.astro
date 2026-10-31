@@ -67,7 +67,7 @@ const recapiti: Cell = { id: 'recapiti', type: 'contatti', w: 4, h: 2, tone: 're
     pointer-events: none;
   }
   .foglio--pagina::before {
-    --carta-ink: color-mix(in srgb, var(--inchiostro) 22%, transparent);
+    --carta-ink: var(--carta-tinta);
     background-image:
       linear-gradient(to right, var(--carta-ink) var(--line-dp), transparent var(--line-dp)),
       linear-gradient(to bottom, var(--carta-ink) var(--line-dp), transparent var(--line-dp));

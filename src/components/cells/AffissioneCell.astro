@@ -22,7 +22,7 @@ const attiva = (i: number) => (i === 0 ? 'is-attiva' : undefined);
 ---
 
 <div class="affissione" data-affissioni>
-  {title && <div class="testo"><h2 class="titolo" data-lente="inversa">{title}</h2></div>}
+  {title && <div class="testo"><h2 class="titolo titolone" data-lente="inversa">{title}</h2></div>}
   <div class="foto" data-affissione>
     {affissioni.map((a, i) => (
       <div class:list={['scena', attiva(i)]}>
@@ -35,8 +35,8 @@ const attiva = (i: number) => (i === 0 ? 'is-attiva' : undefined);
   <div class="testi">
     {affissioni.map((a, i) => (
       <div class:list={['sotto', attiva(i)]}>
-        {a.subtitle && <h3 class="sottotitolo">{a.subtitle}</h3>}
-        {a.body && <div class="body"><Paragrafi testo={a.body} /></div>}
+        {a.subtitle && <h3 class="titoletto">{a.subtitle}</h3>}
+        {a.body && <div class="body paragrafo"><Paragrafi testo={a.body} /></div>}
       </div>
     ))}
   </div>
@@ -46,12 +46,8 @@ const attiva = (i: number) => (i === 0 ? 'is-attiva' : undefined);
   /* in colonna: titolone, la foto in tutto lo spazio che resta (a filo dei lati della cella), il testo in fondo */
   .affissione { position: absolute; inset: 0; display: grid; grid-template: auto minmax(0, 1fr) auto / minmax(0, 1fr); }
   .testo { padding: var(--pad-label) var(--pad) var(--pad); pointer-events: none; }
-  .titolo {
-    font-family: var(--font-testo); font-weight: 900; line-height: 0.85; letter-spacing: -0.05em;
-    font-size: var(--titolone);
-  }
   .foto { position: relative; overflow: hidden; }
-  .foto:global(.is-sfogliabile) { cursor: pointer; }
+  .foto:global(.is-sfogliabile) { cursor: var(--cursore-mano); }
   .scena, .scena img, .velo { position: absolute; inset: 0; width: 100%; height: 100%; }
   .scena img { object-fit: cover; }
   /* cambio di scena: la nuova sfuma sopra la precedente, che resta piena sotto (niente carta che traspare a metà) */
@@ -72,10 +68,4 @@ const attiva = (i: number) => (i === 0 ? 'is-attiva' : undefined);
     opacity: 0; transition: opacity 300ms ease;
   }
   .sotto.is-attiva { opacity: 1; transition-delay: 300ms; }
-  /* titolino e paragrafo come una cella di testo piccola (TextCell size 's') */
-  .sottotitolo {
-    font-family: var(--font-testo); font-weight: 500; line-height: 1; letter-spacing: -0.025em;
-    font-size: var(--titoletto);
-  }
-  .body { max-width: 44ch; font-size: var(--paragrafo); line-height: 1.35; }
 </style>

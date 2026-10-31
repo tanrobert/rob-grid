@@ -8,6 +8,6 @@ import zioChecco from '../assets/loghi/zio-checco.svg?raw';
 const senzaCommenti = (svg: string) => svg.replace(/<!--[\s\S]*?-->\s*/g, '');
 
 export const loghi: Record<string, string> = {
-  // I panini di Zio Chècco da Kiale, sottologo estivo (dal 30/10/2026)
+  // I panini di Zio Checco da Kiale, sottologo estivo (dal 30/10/2026)
   'zio-checco': senzaCommenti(zioChecco),
 };

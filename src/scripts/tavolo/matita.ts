@@ -10,13 +10,12 @@
  */
 import { gsap } from 'gsap';
 import type { Posto } from '../../lib/tavolo';
-import { ox, oy, type VistaEvento } from './vista';
+import { ox, oy } from './vista';
 import type { Pezzo } from './pezzi';
-import { T } from './tempi';
+import { T, FINE } from '../preferenze';
 import type { Tavolo } from './index';
 
 const SVGNS = 'http://www.w3.org/2000/svg';
-const FINE = matchMedia('(hover: hover) and (pointer: fine)').matches;
 
 export interface Matita {
   attiva(): boolean;
@@ -53,19 +52,18 @@ export function initMatita(t: Tavolo): Matita {
   // i segni del tavolo sono in quadretti: il gruppo scala col quadretto
   const scala = (q: number) => sulTavolo.setAttribute('transform', `scale(${q})`);
   scala(v.q);
-  document.addEventListener('tavolo:vista', e => scala((e as CustomEvent<VistaEvento>).detail.q), { signal });
+  document.addEventListener('tavolo:zoom', e => scala((e as CustomEvent<number>).detail), { signal });
 
   /** dove cade un punto del tavolo (in quadretti) */
   const dentro = ({ p }: Foglio, x: number, y: number) => x >= p.gx && x < p.gx + p.w && y >= p.gy && y < p.gy + p.h;
   /** il foglio sotto un punto del tavolo (in quadretti): la cella più in alto, o null = il tavolo */
   const foglioIn = (x: number, y: number) => {
+    // a parità di z vince quella che viene dopo (fogli è nell'ordine dei pezzi)
     let sopra: Foglio | null = null, iSopra = -1;
-    for (const f of fogli) {
-      if (!dentro(f, x, y)) continue;
-      const i = t.pezzi.indexOf(f.p);
-      if (!sopra || f.p.z > sopra.p.z || (f.p.z === sopra.p.z && i > iSopra)) { sopra = f; iSopra = i; }
-    }
-    return sopra as Foglio | null;
+    fogli.forEach((f, i) => {
+      if (dentro(f, x, y) && (!sopra || f.p.z > sopra.p.z || (f.p.z === sopra.p.z && i > iSopra))) { sopra = f; iSopra = i; }
+    });
+    return sopra;
   };
 
   // ── Il tratto in corso: un pezzo per ogni foglio attraversato ──

@@ -2,7 +2,7 @@ import type { ImageMetadata } from 'astro';
 import type { SvgName } from './svgs';
 import type { TagCount } from '../lib/tags';
 
-/** Unità occupate da una cella: w = colonne, h = righe (unità piccola: la casella quadrata base è 2×2). */
+/** Unità occupate da una cella: w = colonne, h = righe (unità piccola: la cella quadrata di base è 2×2). */
 export interface Span {
   w: number;
   h: number;
@@ -17,9 +17,9 @@ export interface Barattolo {
   mockup: Mockup;
   /** larga 14 cm: l'altezza vera viene dalle proporzioni del file, e dà la scala comune tra i vasi */
   etichetta: ImageMetadata;
-  /** bordo vettoriale dell'etichetta (SVG da Illustrator, un colore + bianco): decorazione sul lato destro della cella */
+  /** bordo vettoriale dell'etichetta (SVG da Illustrator, un colore + bianco): in grande in fondo alla cella, sopra la didascalia */
   bordo?: ImageMetadata;
-  /** la parola della linea (Confetture, Sughi…: SVG a tinta unica, vettorializzato), in basso a sinistra col colore del bordo */
+  /** la parola della linea (Confetture, Sughi…: SVG a tinta unica, vettorializzato), in verticale sopra la fascia del bordo, col suo colore */
   parola?: ImageMetadata;
   /** foto del contenuto (che si ripete senza stacco ai lati), avvolta come un cartoncino dentro il vetro al posto del segnaposto */
   interno?: ImageMetadata;
@@ -46,14 +46,14 @@ export interface Bottone { label: string; href: string }
 export type Tone = 'paper' | 'red';
 
 interface CellBase extends Span {
-  /** Identificativo unico: usato per le transizioni e il debug. */
+  /** Identificativo unico: memoria del tavolo, celle agganciate o nascoste (presso, sotto), contatori. */
   id: string;
   /** Override opzionale su tablet (8 colonne). Default: w ridotto a max 8. */
   md?: Partial<Span>;
   /** Override opzionale su mobile (4 colonne). Default: w ridotto a max 4. */
   sm?: Partial<Span>;
   tone?: Tone;
-  /** Se presente, la cella è cliccabile e si espande nella pagina di destinazione. */
+  /** Se presente, la cella è cliccabile e apre la pagina come foglio sopra il tavolo. */
   href?: string;
   /** Il link sostituisce la pagina corrente nella history invece di aggiungerne una (progetto
       precedente/successivo: sfogliando, la ✕ torna comunque alla griglia di partenza). */
@@ -89,12 +89,9 @@ export type Cell = CellBase & (
   /** ROBERTO scritto col font del logotipo, largo quanto la cella */
   | { type: 'logotipo' }
   | {
-      type: 'marquee'; /** secondi per un giro completo */ speed?: number; reverse?: boolean;
-      /** cosa scorre: un logo del registro, o un testo scritto col font del logotipo (uno dei due) */
-      svg?: SvgName; text?: string;
-      /** Scorre dall'alto in basso invece che da destra a sinistra */
-      vertical?: boolean;
-      /** Logo orizzontale girato di 90° in una cella verticale: si legge dal basso, scorre verso il basso */
+      /** un testo che scorre, scritto col font del logotipo */
+      type: 'marquee'; text: string; /** secondi per un giro completo */ speed?: number;
+      /** nastro girato di 90° in una cella verticale: si legge dal basso, scorre verso il basso */
       ruotato?: boolean;
     }
   | {

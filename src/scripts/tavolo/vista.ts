@@ -58,7 +58,7 @@ export const limiti = (v: Vista): Posto => ({
   x: Math.abs((v.foglio.x + 1) * v.q - v.vw / 2),
   y: Math.abs((v.foglio.y + 1) * v.q - v.vh / 2),
 });
-const stringi = (n: number, l: number) => Math.min(l, Math.max(-l, n));
+export const stringi = (n: number, l: number) => Math.min(l, Math.max(-l, n));
 /** La vista dentro i limiti, di colpo (rotella, zoom, finestra che cambia) */
 export function limita(v: Vista) {
   const l = limiti(v);
@@ -80,8 +80,7 @@ export const sulFoglio = (n: number, lato: number, mezzo: number) => Math.min(me
 
 /**
  * Sposta mondo e carta. La carta si muove solo del resto rispetto al modulo: sembra infinita.
- * Durante l'intro dice alla carta dov'è il centro del tavolo (i giri partono da lì, Tavolo.astro);
- * a ogni spostamento lo dice alle celle che girano col tavolo (la ghiera della cella mark, cells.ts)
+ * Durante l'intro dice alla carta dov'è il centro del tavolo (i giri partono da lì, Tavolo.astro)
  */
 export function applica(v: Vista) {
   const x = ox(v), y = oy(v), S = v.q * PER_UNITA;
@@ -107,10 +106,7 @@ export function applica(v: Vista) {
     v.carta.style.setProperty('--ox', `${S + x - mod(x, S)}px`);
     v.carta.style.setProperty('--oy', `${S + y - mod(y, S)}px`);
   }
-  document.dispatchEvent(new CustomEvent<VistaEvento>('tavolo:vista', { detail: { y: v.pan.y, q: v.q } }));
 }
-/** Spostamento verticale della vista e quadretto, in px */
-export interface VistaEvento { y: number; q: number }
 
 /** Quadretto a `q`: lo leggono carta e celle (--q sul tavolo). --zoom = rispetto al quadretto di base: i testi e i
     margini interni delle celle (--pad, global.css) crescono e calano con lo zoom. Lo zoom si legge anche in alto a destra */
@@ -120,6 +116,8 @@ export function scala(v: Vista, q: number) {
   const zoom = q / base(v);
   v.el.style.setProperty('--q', `${q}px`);
   v.el.style.setProperty('--zoom', String(zoom));
+  // i segni della matita sono in quadretti (matita.ts)
+  document.dispatchEvent(new CustomEvent<number>('tavolo:zoom', { detail: q }));
   indicatore ??= document.querySelector<HTMLElement>('[data-zoom]');
   // come moltiplicatore, al ventesimo con la virgola: 1×, 0,75×, 0,5× (il quadretto intero lo sposta di poco)
   if (indicatore) indicatore.textContent = `${(Math.round(zoom * 20) / 20).toLocaleString('it-IT')}×`;

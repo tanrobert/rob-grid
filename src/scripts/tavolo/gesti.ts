@@ -6,13 +6,14 @@
  * - con la matita presa (matita.ts) un dito o il mouse disegna; due dita spostano e zoomano;
  * - due dita: zoom, e insieme spostano il tavolo. Rotella del mouse: zoom a scatti di ZOOM_PASSO; Ctrl + rotella
  *   (il pizzico del trackpad arriva così): zoom continuo; il trackpad con due dita sposta. Mai oltre 1×.
- * Senza movimento il click resta al browser: le celle sono link veri e aprono le pagine. Il click che
+ * Senza movimento il clic resta al browser: le celle sono link veri e aprono le pagine. Il clic che
  * arriva alla fine di un gesto invece si ferma, se no lasciando una cella si aprirebbe.
  */
 import { gsap } from 'gsap';
-import { applica, aPixel, base, clampQ, sulTavolo, zoomTo, limita, limiti, elastico } from './vista';
+import { applica, aPixel, base, clampQ, sulTavolo, zoomTo, limita, limiti, elastico, stringi } from './vista';
 import { prendi, porta, lascia, type Pezzo, type Presa } from './pezzi';
-import { T, REDUCED, LONG, SLOP, QUIETE } from './tempi';
+import { T, REDUCED } from '../preferenze';
+import { LONG, SLOP, QUIETE } from './tempi';
 import { ZOOM_PASSO, type Posto } from '../../lib/tavolo';
 import type { Tavolo } from './index';
 
@@ -40,7 +41,7 @@ export function initGesti(t: Tavolo) {
 
   let g: Attesa | Pizzico | Disegno | null = null;
   const pts = new Map<number, Posto>();  // dita (o mouse) appoggiati adesso
-  // fine dell'ultimo gesto che si è mosso: il click che lo segue (subito dopo) non apre niente
+  // fine dell'ultimo gesto che si è mosso: il clic che lo segue (subito dopo) non apre niente
   let fermo = 0;
   let touch = false;                      // ultimo puntatore: dito o penna
 
@@ -69,8 +70,9 @@ export function initGesti(t: Tavolo) {
   };
 
   // ── Zoom ────────────────────────────────────────────────
-  const zoomAt = (q: number, fx: number, fy: number) => {
-    zoomTo(v, q, fx, fy, sulTavolo(v, fx, fy));
+  // w: il punto del tavolo che resta sotto (fx, fy); il pizzico lo fissa all'inizio del gesto
+  const zoomAt = (q: number, fx: number, fy: number, w = sulTavolo(v, fx, fy)) => {
+    zoomTo(v, q, fx, fy, w);
     limita(v);
     t.posaTutti();
     applica(v);
@@ -86,10 +88,7 @@ export function initGesti(t: Tavolo) {
     const [a, b] = [...pts.values()];
     p.m = mid(a, b);
     // le dita che si allargano zoomano, quelle che si spostano insieme portano il tavolo
-    zoomTo(v, clampQ(v, p.q0 * Math.hypot(a.x - b.x, a.y - b.y) / p.d0), p.m.x, p.m.y, p.w);
-    limita(v);
-    t.posaTutti();
-    applica(v);
+    zoomAt(clampQ(v, p.q0 * Math.hypot(a.x - b.x, a.y - b.y) / p.d0), p.m.x, p.m.y, p.w);
   };
   // a gesto finito il quadretto si ferma su un numero intero di pixel: i fili da 1px restano netti
   const endPinch = (p: Pizzico) => {
@@ -168,12 +167,12 @@ export function initGesti(t: Tavolo) {
     pts.delete(e.pointerId);
     if (g?.mode === 'pinch') { if (pts.size < 2) endPinch(g); return; }
     if (!g || e.pointerId !== g.id) return;
-    // fine del tratto: il click che segue non apre la cella su cui si è disegnato
+    // fine del tratto: il clic che segue non apre la cella su cui si è disegnato
     if (g.mode === 'draw') { t.matita?.fine(); fermo = performance.now(); g = null; return; }
     const a = g;
     g = null;
     clearTimeout(a.timer);
-    if (a.mode === 'wait') { unpress(a); return; }  // tocco o click: lo apre il browser
+    if (a.mode === 'wait') { unpress(a); return; }  // tocco o clic: lo apre il browser
     fermo = performance.now();
     el.classList.remove('is-panning');
     if (a.mode === 'drag') { lascia(t, a.presa!, a.vx, a.vy); return; }
@@ -251,10 +250,10 @@ export function initGesti(t: Tavolo) {
 }
 
 /** La vista scivola allo spostamento (x, y) in px */
-export function vai(t: Tavolo, x: number, y: number, duration: number) {
+function vai(t: Tavolo, x: number, y: number, duration: number) {
   gsap.killTweensOf(t.v.pan);
   const l = limiti(t.v);
-  x = Math.min(l.x, Math.max(-l.x, x));
-  y = Math.min(l.y, Math.max(-l.y, y));
+  x = stringi(x, l.x);
+  y = stringi(y, l.y);
   gsap.to(t.v.pan, { x, y, duration: T(duration), ease: 'power3.inOut', onUpdate: () => applica(t.v), onComplete: t.salva });
 }

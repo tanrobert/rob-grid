@@ -1,37 +1,26 @@
 ---
-import SvgAsset from '../SvgAsset.astro';
-import { svgs, type SvgName } from '../../data/svgs';
-
 interface Props {
-  /** un logo del registro, oppure… */
-  svg?: SvgName;
-  /** …un testo, scritto col font del logotipo (.logotipo) */
-  text?: string;
+  /** il testo che scorre, scritto col font del logotipo (.logotipo) */
+  text: string;
   speed?: number;
-  reverse?: boolean;
-  /** scorre dall'alto in basso */
-  vertical?: boolean;
-  /** logo orizzontale girato di 90° in una cella verticale */
+  /** nastro orizzontale girato di 90° in una cella verticale */
   ruotato?: boolean;
 }
-const { svg, text, speed = 40, reverse = false, vertical = false, ruotato = false } = Astro.props;
-// due metà identiche: la traccia scorre del 50% e riparte senza stacco.
-// Orizzontale: tre copie per metà. Verticale: il logo è già più alto della cella, ne basta una.
-const copies = vertical ? [0] : [0, 1, 2];
-// spazio tra una copia e l'altra, proprio di ogni logo (data/svgs.ts)
-const gap = svg ? svgs[svg].gap ?? 0 : 0;
+const { text, speed = 40, ruotato = false } = Astro.props;
+// due metà identiche di tre copie: la traccia scorre del 50% e riparte senza stacco
+const copies = [0, 1, 2];
 ---
 
-<div class:list={['marquee', vertical && 'marquee--y', ruotato && 'marquee--ruotato']} aria-hidden="true">
-  <div class:list={['track', 'loop', reverse && 'track--reverse']} style={`--speed:${speed}s;--gap:${gap}`}>
+<div class:list={['marquee', ruotato && 'marquee--ruotato']} aria-hidden="true">
+  <div class="track loop" style={`--speed:${speed}s`}>
     {[0, 1].map(() => (
       <div class="half">
-        {copies.map(() => svg ? <SvgAsset name={svg} class="item" /> : <span class="item logotipo">{text}</span>)}
+        {copies.map(() => <span class="item logotipo">{text}</span>)}
       </div>
     ))}
   </div>
 </div>
-<span class="sr-only">{svg ? svgs[svg].label : text}</span>
+<span class="sr-only">{text}</span>
 
 <style>
   .marquee {
@@ -43,56 +32,30 @@ const gap = svg ? svgs[svg].gap ?? 0 : 0;
     display: flex; width: max-content;
     animation: marquee var(--speed) linear infinite;
   }
-  .track--reverse { animation-direction: reverse; }
   .half { display: flex; }
-  .half :global(.item) {
-    /* stessa altezza del logo-r nella cella 1×1: lato cella meno il padding */
-    --h: calc(100cqb - 2 * var(--pad));
-    height: var(--h); width: auto; max-width: none;
-    margin-right: calc(var(--h) * var(--gap));
-  }
   @keyframes marquee {
     from { transform: translate3d(0, 0, 0); }
     to   { transform: translate3d(-50%, 0, 0); }
   }
 
+  /* testo: maiuscole alte quanto la cella meno il margine. Riquadro senza rifilo (i margini delle lettere fanno
+     parte del ritmo) e dopo ogni copia uno spazio, così tra "·" e la R c'è lo stesso stacco che c'è dentro il testo.
+     Sul tavolo non più grandi di ROBERTO nella cella del nome (--corpo-logotipo, Tavolo.astro): riquadro alto
+     quanto le maiuscole, così il nastro lo centra nella striscia */
+  .item {
+    --h: calc(100cqb - 2 * var(--pad));
+    font-size: min(var(--h) / var(--maiuscole), var(--corpo-logotipo, 100vmax));
+    margin-inline: 0 0.22em;
+  }
+
   /* ── Ruotato: il nastro orizzontale girato di 90° dentro una cella verticale. Il riquadro ha i lati
-     scambiati (largo quanto la cella è alta) e ruota attorno al centro; il logo è alto quanto la cella
-     è larga, meno il padding (100cqi = larghezza della cella, il container più vicino) ── */
+     scambiati (largo quanto la cella è alta) e ruota attorno al centro; il testo è alto quanto la cella
+     è larga, meno il margine (100cqi = larghezza della cella, il container più vicino) ── */
   .marquee--ruotato {
     inset: auto; top: 50%; left: 50%;
     width: 100cqb; height: 100cqi;
     translate: -50% -50%;
     rotate: -90deg;
   }
-  .marquee--ruotato .half :global(.item) { --h: calc(100cqi - 2 * var(--pad)); }
-
-  /* testo: maiuscole alte quanto il logo. Riquadro senza rifilo (i margini delle lettere fanno parte del ritmo)
-     e dopo ogni copia uno spazio, così tra "·" e la R c'è lo stesso stacco che c'è dentro il testo.
-     Sul tavolo non più grandi di ROBERTO nella cella del nome (--corpo-logotipo, Tavolo.astro): riquadro alto
-     quanto le maiuscole (non quanto il logo), così il nastro lo centra nella striscia */
-  .half .logotipo.item {
-    width: auto; height: auto;
-    font-size: min(var(--h) / var(--maiuscole), var(--corpo-logotipo, 100vmax));
-    margin-inline: 0 0.22em;
-  }
-
-  /* ── Verticale: scorre verso il basso ── */
-  .marquee--y { flex-direction: column; }
-  .marquee--y .track {
-    flex-direction: column; width: auto; height: max-content;
-    animation-name: marquee-y;
-  }
-  .marquee--y .half { flex-direction: column; }
-  .marquee--y .half :global(.item) {
-    /* larghezza = altezza del "roberto" orizzontale: lato cella meno il padding */
-    --w: calc(100cqi - 2 * var(--pad));
-    width: var(--w); height: auto; max-height: none;
-    margin-right: 0;
-    margin-bottom: calc(var(--w) * var(--gap));
-  }
-  @keyframes marquee-y {
-    from { transform: translate3d(0, -50%, 0); }
-    to   { transform: translate3d(0, 0, 0); }
-  }
+  .marquee--ruotato .item { --h: calc(100cqi - 2 * var(--pad)); }
 </style>

@@ -24,13 +24,13 @@ const cells: Cell[] = [
     ...(p.shape ? scaleShape(p.shape, 1) : p.featured ? FEATURED : REGULAR),
   })),
 ];
-// .tagbar: su mobile i filtri stanno in una striscia fissa in alto (la casella tags è nascosta)
+// .tagbar: su mobile i filtri stanno in una striscia fissa in alto (la cella tags è nascosta)
 ---
 
 <Layout
   foglio
   titolo={pageTitle('Archivio')}
-  descrizione={`Archivio dei progetti di ${site.name}, graphic designer: identità visive, packaging, menu e siti web. Filtra per tag e trova il lavoro più vicino al tuo.`}
+  descrizione={`Archivio dei progetti di ${site.name}, graphic designer: identità visive, packaging, menù e siti web. Filtra per tag e trova il lavoro più vicino al tuo.`}
 >
   <Tavolo cells={tavolo} sotto />
   <Foglio cells={cells} filterable>

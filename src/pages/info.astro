@@ -16,7 +16,7 @@ const cells: Cell[] = [
     title: 'Disegno sistemi visivi: marchi, confezioni, siti. Parto da una griglia e da poche regole, poi le applico con rigore.',
   },
   { id: 'logo', type: 'svg', w: 4, h: 4, svg: 'logo-r', fit: 'bleed', label: false, frame: false },
-  { id: 'settori', type: 'list', w: 6, h: 2, title: 'Settori', items: ['Ristorazione', 'Ospitalità', 'Cultura', 'Salute', 'Consulenza', 'Imprese'] },
+  { id: 'settori', type: 'list', w: 6, h: 2, title: 'Settori', items: ['Ristorazione', 'Ospitalità', 'Salute', 'Consulenza', 'Imprese'] },
   { id: 'ora', type: 'clock', w: 2, h: 2 },
   // arrivo di "Scrivimi_" della home: qui l'indirizzo, cliccabile
   { id: 'email', type: 'text', w: 4, h: 2, href: `mailto:${site.email}`, as: 'p', size: 's', eyebrow: 'Scrivimi', title: site.email },
@@ -24,7 +24,7 @@ const cells: Cell[] = [
 ];
 ---
 
-<Layout foglio titolo={pageTitle('Bio')} descrizione={`Chi sono: ${site.name}, graphic designer. Identità visive, packaging e siti web per ristorazione, ospitalità, cultura e imprese.`}>
+<Layout foglio titolo={pageTitle('Bio')} descrizione={`Chi sono: ${site.name}, graphic designer. Identità visive, packaging e siti web per ristorazione, ospitalità e imprese.`}>
   <Tavolo cells={tavolo} sotto />
   <Foglio cells={cells} />
 </Layout>

@@ -17,7 +17,7 @@ interface Props {
 
 const {
   titolo = homeTitle,
-  descrizione = `Identità visive, packaging e siti web. Portfolio di ${site.name}, graphic designer: progetti per ristorazione, ospitalità, cultura e imprese.`,
+  descrizione = `Identità visive, packaging e siti web. Portfolio di ${site.name}, graphic designer: progetti per ristorazione, ospitalità e imprese.`,
   canonical: withCanonical = true,
   tavolo = false,
   foglio = false,
@@ -49,7 +49,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
         // js: il tavolo resta nascosto finché scripts/tavolo non l'ha disposto per la finestra vera
         root.classList.add('js');
 
-        // Arrivo da una pagina del sito (click, non ricarica): niente intro. Su una pagina con foglio il foglio
+        // Arrivo da una pagina del sito (clic, non ricarica): niente intro. Su una pagina con foglio il foglio
         // entra dalla cella del tavolo che l'ha aperto (scripts/foglio): fino ad allora resta nascosto (in-arrivo)
         var nav = performance.getEntriesByType('navigation')[0];
         var tipo = nav ? nav.type : 'navigate';

@@ -1,5 +1,5 @@
 /**
- * Cella `sottologo` (Kiale: I panini di Zio Chècco). Import dinamico da cells.ts, solo se la cella c'è.
+ * Cella `sottologo` (Kiale: I panini di Zio Checco). Import dinamico da cells.ts, solo se la cella c'è.
  * - Vetrina: logo e foto si alternano ogni GIRO ms (la vecchia scena sfuma via, poi entra la nuova: le foto sono
  *   scontornate); un tocco passa alla scena dopo. Ferma fuori vista e col mouse sopra.
  * - Il logo si compone quando la cella entra in vista e ogni volta che torna: il cerchio si disegna, le lettere
@@ -8,6 +8,9 @@
  *   dopo la sua parola. Le penne stanno nelle maschere del file, ferme a fine corsa: senza script, o con riduci
  *   movimento, il logo è già composto. Scelto da Roberto nel laboratorio tools/pages/zio-checco.html (30/10/2026).
  */
+
+import { REDUCED } from './preferenze';
+import { giraDaSola } from './giro';
 
 const GIRO = 6000;
 const ESCE_SCENA = 300;  // = transition-delay di .scena.is-attiva (SottologoCell.astro)
@@ -76,18 +79,18 @@ function compositore(svg: SVGSVGElement) {
   };
 }
 
-export function initSottologhi(signal: AbortSignal, reduced: boolean) {
-  const mouse = matchMedia('(hover: hover) and (pointer: fine)').matches;
+export function initSottologhi(signal: AbortSignal) {
   document.querySelectorAll<HTMLElement>('[data-sottologo]').forEach(cella => {
     const vetrina = cella.querySelector<HTMLElement>('[data-vetrina]')!;
     const scene = [...vetrina.querySelectorAll<HTMLElement>('.scena')];
     const svg = vetrina.querySelector<SVGSVGElement>('svg[data-logo-animato]');
-    const componi = svg && !reduced ? compositore(svg) : null;
+    const componi = svg && !REDUCED ? compositore(svg) : null;
     // il logo aspetta di entrare in vista: fermo al primo fotogramma (vuoto)
     let attesa = componi?.() ?? null;
     attesa?.forEach(a => a.pause());
 
-    let i = 0, timer = 0, inVista = false, sopra = false;
+    // initCells riparte (un foglio nuovo sopra): si riprende dalla scena dov'era
+    let i = Math.max(0, scene.findIndex(s => s.classList.contains('is-attiva')));
     // la vecchia scena esce (CSS, ESCE_SCENA ms), poi entra la nuova: il logo comincia quando la sua scena è entrata
     const mostra = (prossima: number) => {
       scene[i].classList.remove('is-attiva');
@@ -95,23 +98,12 @@ export function initSottologhi(signal: AbortSignal, reduced: boolean) {
       i = prossima;
       if (svg && scene[i].contains(svg)) componi?.(ESCE_SCENA);
     };
-    const avanti = () => mostra((i + 1) % scene.length);
-    const aggiorna = () => {
-      clearInterval(timer);
-      timer = inVista && !sopra && scene.length > 1 ? window.setInterval(avanti, GIRO) : 0;
-    };
-    vetrina.addEventListener('click', () => { if (scene.length > 1) { avanti(); aggiorna(); } }, { signal });
-    if (mouse) {
-      vetrina.addEventListener('pointerenter', () => { sopra = true; aggiorna(); }, { signal });
-      vetrina.addEventListener('pointerleave', () => { sopra = false; aggiorna(); }, { signal });
-    }
-    const io = new IntersectionObserver(([e]) => {
-      inVista = e.isIntersecting;
+    // con una scena sola resta ferma (e il logo si compone una volta)
+    const avanti = () => { if (scene.length > 1) mostra((i + 1) % scene.length); };
+    giraDaSola(vetrina, GIRO, avanti, signal, {
+      fermaSopra: true, soglie: [0, 0.5],
       // il logo parte quando se ne vede almeno metà
-      if (attesa && e.intersectionRatio >= 0.5) { attesa.forEach(a => a.play()); attesa = null; }
-      aggiorna();
-    }, { threshold: [0, 0.5] });
-    io.observe(vetrina);
-    signal.addEventListener('abort', () => { io.disconnect(); clearInterval(timer); });
+      entra: e => { if (attesa && e.intersectionRatio >= 0.5) { attesa.forEach(a => a.play()); attesa = null; } },
+    });
   });
 }

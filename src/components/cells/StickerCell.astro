@@ -30,7 +30,7 @@ const serie = piatti.reduce((s, p) => s + p.w + SPAZIO, 0);
 ---
 
 <div class="sticker">
-  {title && <div class="testo"><h2 class="titolo" data-lente="inversa">{title}</h2></div>}
+  {title && <div class="testo"><h2 class="titolo titolone" data-lente="inversa">{title}</h2></div>}
   <div class="nastro" role="img" aria-label={alt}>
     <div class="traccia loop" style={`--serie: ${serie.toFixed(2)}cqi; --durata: ${(serie / VELOCITA).toFixed(1)}s`}>
       {[0, 1].map(() => piatti.map(p => (
@@ -43,7 +43,7 @@ const serie = piatti.reduce((s, p) => s + p.w + SPAZIO, 0);
     </div>
   </div>
   {(body || button) && (
-    <div class="body">
+    <div class="body paragrafo">
       {body && <Paragrafi testo={body} />}
       {button && <div class="azione"><Bottone {...button} /></div>}
     </div>
@@ -57,8 +57,6 @@ const serie = piatti.reduce((s, p) => s + p.w + SPAZIO, 0);
   .sticker { position: absolute; inset: 0; display: grid; grid-template: auto auto minmax(0, 1fr) / minmax(0, 1fr); }
   .testo { padding: var(--pad-label) var(--pad) 0; pointer-events: none; }
   .titolo {
-    font-family: var(--font-testo); font-weight: 900; line-height: 0.85; letter-spacing: -0.05em;
-    font-size: var(--titolone);
     margin-bottom: -0.5em;
   }
   .nastro { position: relative; z-index: 1; display: flex; align-items: center; }
@@ -69,6 +67,6 @@ const serie = piatti.reduce((s, p) => s + p.w + SPAZIO, 0);
   .piatto { flex: none; height: auto; }
   /* staccato dal paragrafo di una riga, come i paragrafi tra loro */
   .azione { margin-top: 1lh; }
-  .body { align-self: end; padding: 0 var(--pad) var(--pad); max-width: 44ch; font-size: var(--paragrafo); line-height: 1.35; }
+  .body { align-self: end; padding: 0 var(--pad) var(--pad); }
   @keyframes sticker-scorre { to { transform: translateX(calc(var(--serie) * -1)); } }
 </style>
