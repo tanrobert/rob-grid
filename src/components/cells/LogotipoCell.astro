@@ -1,8 +1,12 @@
 ---
-// ROBERTO scritto col font del logotipo (classe .logotipo in global.css), il più grande che sta nella cella
+// ROBERTO scritto col font del logotipo (classe .logotipo in global.css), il più grande che sta nella cella.
+// `nudo` (cella senza filo, 31/10/2026): la cella è la parola. La R alta quanto la cella (sulle linee della carta),
+// a filo del lato sinistro; la O sborda di 0,012 em sopra e sotto, come nel disegno del font
+interface Props { nudo?: boolean }
+const { nudo = false } = Astro.props;
 ---
 
-<div class="logotipo-cella">
+<div class:list={['logotipo-cella', { 'logotipo-cella--nudo': nudo }]}>
   <p class="logotipo">Roberto</p>
 </div>
 
@@ -15,4 +19,6 @@
   .logotipo {
     font-size: min((100cqw - 2 * var(--pad)) / var(--roberto-w), (100cqh - 2 * var(--pad)) / var(--maiuscole));
   }
+  .logotipo-cella--nudo { padding: 0; justify-items: start; }
+  .logotipo-cella--nudo .logotipo { font-size: calc(100cqh / var(--maiuscole)); }
 </style>

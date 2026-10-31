@@ -87,10 +87,24 @@ const altre = (f: Foglio, tranne?: HTMLElement | null) =>
   [...f.el.querySelectorAll<HTMLElement>(':scope > .grid > .cell:not([data-hero]):not([hidden]), :scope > :not(.grid)')]
     .filter(el => el !== tranne);
 
-/** La hero che vola: una copia fuori dalla griglia, ferma nella finestra */
-function copia(hero: HTMLElement, r: DOMRect) {
+/** Quadretto dei testi e zoom di una cella: da qui vengono margini e testi (global.css, --quadretto), che sul tavolo
+    seguono lo zoom e nel foglio no. La copia che vola parte con quelli della cella di partenza e arriva a quelli della
+    cella d'arrivo: se no, col tavolo rimpicciolito, al clic freccia e testi saltavano verso il centro */
+const scala = (el: HTMLElement) => {
+  // --q-testo nel foglio è una formula (round, min, vw): GSAP la interpolerebbe come testo. In px, da un elemento di prova
+  const prova = document.createElement('div');
+  prova.style.cssText = 'position: absolute; visibility: hidden; width: var(--q-testo)';
+  el.append(prova);
+  const qTesto = getComputedStyle(prova).width;
+  prova.remove();
+  return { '--q-testo': qTesto, '--zoom': parseFloat(getComputedStyle(el).getPropertyValue('--zoom')) || 1 };
+};
+
+/** La hero che vola: una copia fuori dalla griglia, ferma nella finestra, con le misure della cella `da` */
+function copia(hero: HTMLElement, r: DOMRect, da: HTMLElement = hero) {
   const c = hero.cloneNode(true) as HTMLElement;
   c.removeAttribute('data-hero');
+  c.classList.add('in-volo');
   c.setAttribute('aria-hidden', 'true');
   c.inert = true;
   c.querySelectorAll('video').forEach(v => v.remove());
@@ -106,12 +120,13 @@ function copia(hero: HTMLElement, r: DOMRect) {
   });
   // visibile anche se la hero, all'apertura, è già nascosta in attesa del volo
   Object.assign(c.style, { position: 'fixed', left: '0', top: '0', margin: '0', zIndex: '45', pointerEvents: 'none', visibility: 'visible', opacity: '1' });
-  gsap.set(c, { x: r.left, y: r.top, width: r.width, height: r.height });
+  gsap.set(c, { x: r.left, y: r.top, width: r.width, height: r.height, ...scala(da) });
   document.body.append(c);
   return c;
 }
-const vola = (el: HTMLElement, r: DOMRect, duration: number) =>
-  gsap.to(el, { x: r.left, y: r.top, width: r.width, height: r.height, duration: T(duration), ease: 'power3.inOut' });
+/** La copia vola fino alla cella `verso` (al suo posto `r`), prendendone le misure */
+const vola = (el: HTMLElement, verso: HTMLElement, r: DOMRect, duration: number) =>
+  gsap.to(el, { x: r.left, y: r.top, width: r.width, height: r.height, ...scala(verso), duration: T(duration), ease: 'power3.inOut' });
 
 /** Foto della hero pronta prima del volo: se no la copia volerebbe vuota (al massimo 600ms) */
 const fotoPronta = (hero: HTMLElement) => {
@@ -177,8 +192,8 @@ async function entra(f: Foglio, { da = null as HTMLElement | null, sostituito = 
   });
   if (liv === 0 && f.origine) gsap.set(f.origine.nascondi, { visibility: 'hidden' });
   if (daRect) {
-    const v = copia(f.hero, daRect);
-    await vola(v, fine, 0.55);
+    const v = copia(f.hero, daRect, da!);
+    await vola(v, f.hero, fine, 0.55);
     v.remove();
     gsap.set(f.hero, { clearProps: 'visibility' });
   } else {
@@ -204,7 +219,7 @@ async function esce() {
     gsap.to(resto, { opacity: 0, duration: T(0.14), ease: 'power1.in' });
     if (retino) gsap.to(retino, { opacity: 0, duration: T(0.38), delay: T(0.1), ease: 'power1.inOut' });
     verso = visibile(f.origine?.cella ?? null);
-    if (verso) await vola(v, verso.getBoundingClientRect(), 0.48);
+    if (verso) await vola(v, verso, verso.getBoundingClientRect(), 0.48);
     // posata: sotto c'è già la cella vera, la copia sfuma
     if (f.origine) gsap.set(f.origine.nascondi, { clearProps: 'visibility' });
     await gsap.to(v, { opacity: 0, duration: T(verso ? 0.1 : 0.3), ease: 'power1.out' });
@@ -223,7 +238,7 @@ async function esce() {
     gsap.fromTo(altre(sotto, verso), { opacity: 0 }, { opacity: 1, duration: T(0.2), ease: 'power1.out', clearProps: 'opacity' });
     if (verso) {
       gsap.set(verso, { visibility: 'hidden' });
-      await vola(v, verso.getBoundingClientRect(), 0.48);
+      await vola(v, verso, verso.getBoundingClientRect(), 0.48);
       gsap.set(verso, { clearProps: 'visibility' });
     }
     await gsap.to(v, { opacity: 0, duration: T(verso ? 0.1 : 0.3), ease: 'power1.out' });

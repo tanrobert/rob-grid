@@ -74,6 +74,10 @@ interface CellBase extends Span {
   /** Solo sul tavolo: nascosta sotto la cella `id`, spostata di x, y quadretti dal suo angolo in alto a sinistra.
       Fuori dalla spirale, sotto tutte le altre, invisibile nell'intro: si scopre spostando chi la copre */
   sotto?: Sotto;
+  /** Solo sul tavolo: nella disposizione va accanto alla cella `id` (che viene prima nell'elenco), spostata di x, y
+      quadretti dal suo angolo in alto a sinistra, invece del posto libero più vicino al centro. Visibile, e le altre
+      celle le girano attorno (ROBERTO sotto la R) */
+  presso?: Sotto;
 }
 
 export interface Sotto { id: string; x: number; y: number }

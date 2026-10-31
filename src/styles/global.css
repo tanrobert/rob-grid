@@ -77,8 +77,10 @@
      prima 14 e 13). Se non ci sta, nei fogli la cella si allunga da sola (scripts/mosaico.ts)
    Ricalcolati dove cambia il quadretto: nel foglio e sul tavolo, dove il clamp vale sul quadretto di base e poi tutto
    segue lo zoom (--zoom, scripts/tavolo/vista.ts), anche sotto il minimo: rimpicciolire serve per vedere più tavolo.
-   I titoli che riempiono la cella (TextCell 'm' e 'l', logotipo, numeri, orologio) restano in proporzione alla cella */
-:root, .tavolo, html:is(.ha-foglio, .ha-pagina) body {
+   I titoli che riempiono la cella (TextCell 'm' e 'l', logotipo, numeri, orologio) restano in proporzione alla cella.
+   Anche sulla copia della hero che vola tra tavolo e foglio (.in-volo, scripts/foglio): passa dalle misure dell'uno
+   a quelle dell'altro */
+:root, .tavolo, html:is(.ha-foglio, .ha-pagina) body, .in-volo {
   --titolone: calc(clamp(46px, var(--q-testo) * 2.55, 64px) * var(--zoom, 1));
   --titoletto: calc(clamp(18px, var(--q-testo) * 0.96, 24px) * var(--zoom, 1));
   --paragrafo: calc(clamp(15px, var(--q-testo) * 0.64, 16px) * var(--zoom, 1));
@@ -337,6 +339,8 @@ p { text-wrap: pretty; }
 
 /* cella senza filo (frame: false): niente filo, nemmeno nell'intro */
 .cell--bare::after { content: none; }
+/* ROBERTO nudo: la cella è alta quanto la R, le O sbordano sopra e sotto (LogotipoCell) e non vanno rifilate */
+.cell--bare.cell--logotipo { overflow: visible; }
 
 .cell--red { background: var(--inchiostro); color: var(--bianco); }
 

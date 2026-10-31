@@ -31,7 +31,7 @@ for (const c of cells) {
   ids.add(c.id);
 }
 
-const misure = cells.map(c => ({ id: c.id, ...inQuadretti(c), sotto: c.sotto }));
+const misure = cells.map(c => ({ id: c.id, ...inQuadretti(c), sotto: c.sotto, presso: c.presso }));
 const posti = {
   lg: pack(misure, FINESTRE.lg),
   md: pack(misure, FINESTRE.md),
@@ -52,8 +52,9 @@ const nome = misure[cells.findIndex(c => c.type === 'logotipo')];
 const sagoma = (c: Cell) => (c.frame === false && c.type === 'svg' ? svgs[c.svg].component.src : undefined);
 ---
 
-<Radice id={sotto ? undefined : 'main'} class="tavolo" data-tavolo data-versione={versione(misure)} inert={sotto} style={`--q-lg:${Q.lg}px;--q-sm:${Q.sm}px${nome ? `;--nome-w:${nome.w};--nome-h:${nome.h}` : ''}`}>
-  <div class="tavolo__carta" data-carta aria-hidden="true"></div>
+<Radice id={sotto ? undefined : 'main'} class="tavolo" data-tavolo data-versione={versione(misure)} inert={sotto} style={`--q-lg:${Q.lg}px;--q-sm:${Q.sm}px${nome ? `;--nome-h:${nome.h}` : ''}`}>
+  {/* le due tracce servono solo all'intro: le linee che si disegnano, verticali e orizzontali */}
+  <div class="tavolo__carta" data-carta aria-hidden="true"><div class="carta__tracce carta__tracce--v"></div><div class="carta__tracce carta__tracce--o"></div></div>
   {/* bordo del foglio (lib/tavolo.ts, confine): un quadretto di carta liscia, poi solo inchiostro.
       Bande sopra, sotto, a sinistra, a destra, e il margine */}
   <div class="tavolo__bordo" data-bordo aria-hidden="true"><div></div><div></div><div></div><div></div><div class="tavolo__margine"></div></div>
@@ -70,11 +71,18 @@ const sagoma = (c: Cell) => (c.frame === false && c.type === 'svg' ? svgs[c.svg]
           data-w={w}
           data-h={h}
           data-sotto={cell.sotto ? `${cell.sotto.id} ${cell.sotto.x} ${cell.sotto.y}` : undefined}
+          data-presso={cell.presso ? `${cell.presso.id} ${cell.presso.x} ${cell.presso.y}` : undefined}
           style={`--qw:${w};--qh:${h};--x:${lg.x};--y:${lg.y};--x-md:${md.x};--y-md:${md.y};--x-sm:${sm.x};--y-sm:${sm.y}`}
         >
           {cell.frame !== false ? (
             <div class="pezzo__ombra" data-ombra aria-hidden="true"></div>
           )
+            : cell.type === 'logotipo' ? (
+              <div class="pezzo__ombra pezzo__ombra--sagoma" data-ombra aria-hidden="true">
+                {/* ombra della parola: ROBERTO ricomposto come nella cella, col retino al posto dell'inchiostro */}
+                <div class="ombra__parola"><span class="logotipo">Roberto</span></div>
+              </div>
+            )
             : sagoma(cell) && (
               <div class="pezzo__ombra pezzo__ombra--sagoma" data-ombra aria-hidden="true">
                 {/* la maschera sta nel figlio: GSAP sposta il pezzo__ombra, il figlio gira con Woberto.
@@ -151,9 +159,9 @@ const sagoma = (c: Cell) => (c.frame === false && c.type === 'svg' ? svgs[c.svg]
     -webkit-touch-callout: none;
   }
   .tavolo {
-    /* corpo di ROBERTO nella cella del nome (stessa misura di LogotipoCell, in quadretti): il nastro lo usa per le
-       sue maiuscole, così sono grandi uguali (30/10/2026, scelta di Roberto) */
-    --corpo-logotipo: min((var(--nome-w) * var(--q) - 2 * var(--pad)) / var(--roberto-w), (var(--nome-h) * var(--q) - 2 * var(--pad)) / var(--maiuscole));
+    /* corpo di ROBERTO nella cella del nome (senza filo: la R alta quanto la cella, LogotipoCell nuda): il nastro lo
+       usa per le sue maiuscole, così sono grandi uguali (30/10/2026, scelta di Roberto) */
+    --corpo-logotipo: calc(var(--nome-h) * var(--q) / var(--maiuscole));
   }
   @media (max-width: 599px) { .tavolo { --q: var(--q-sm); --q-testo: var(--q-sm); } }
   /* mano chiusa mentre si porta il tavolo o una cella (gesti.ts), anche sopra le celle-link (se no la manina) */
@@ -185,20 +193,56 @@ const sagoma = (c: Cell) => (c.frame === false && c.type === 'svg' ? svgs[c.svg]
     background: var(--crocini-ink);
     mask: var(--crocini-forma) 0 0 / var(--modulo) var(--modulo) repeat;
   }
-  /* intro: la carta compare a giri quadrati dal centro del tavolo (--ox, --oy: lo scrive scripts/tavolo/vista.ts),
-     un modulo per giro (o più, --passo-giro, se la finestra è grande): il giro n sfuma mentre --giro va da n
-     a n+1 (crocini-in, global.css), e a intro finita --giro torna a coprire tutto */
-  :global(.is-intro) .tavolo__carta {
-    --ox: 50%; --oy: 50%;
+  /* intro (31/10/2026, idea di Roberto): prima le linee si disegnano tutte insieme, a versi alterni. Le verticali una
+     dal basso e una dall'alto, le orizzontali una da sinistra e una da destra: ogni traccia ha le sue linee e una
+     maschera a strisce larghe un quadretto, una sì e una no, centrate sulle linee (sul bordo della striscia la linea
+     verrebbe sfumata a metà), che crescono da un lato (--traccia da 0 a 1). Il periodo
+     (2 quadretti) divide il modulo, quindi l'alternanza segue la carta che si sposta. Finite le linee, la carta vera
+     prende il loro posto (stessi pixel) e arrivano i crocini */
+  .carta__tracce { display: none; }
+  /* --ox, --oy: centro dei giri dei crocini (sotto), di riserva; quelli veri li scrive vista.ts sulla carta */
+  :global(.is-intro) .tavolo__carta { background-image: none; --ox: 50%; --oy: 50%; }
+  :global(.is-intro) .carta__tracce {
+    /* --carta-ink non si eredita (@property in global.css): lo stesso colore della carta */
+    --carta-ink: color-mix(in srgb, var(--inchiostro) 22%, transparent);
+    display: block;
+    position: absolute; inset: 0;
+    background-size: var(--q) var(--q);
+    mask-repeat: repeat-x;
+    animation: carta-traccia 720ms cubic-bezier(0.65, 0, 0.35, 1) backwards;
+  }
+  :global(.is-intro) .carta__tracce--v {
+    background-image: linear-gradient(to right, var(--carta-ink) var(--line-dp), transparent var(--line-dp));
+    mask-image: linear-gradient(to right, #000 50%, transparent 50%), linear-gradient(to right, #000 50%, transparent 50%);
+    mask-size: calc(2 * var(--q)) calc(var(--traccia) * 100%);
+    mask-position: calc(var(--q) / -2) 100%, calc(var(--q) / 2) 0;
+  }
+  :global(.is-intro) .carta__tracce--o {
+    background-image: linear-gradient(to bottom, var(--carta-ink) var(--line-dp), transparent var(--line-dp));
+    mask-image: linear-gradient(to bottom, #000 50%, transparent 50%), linear-gradient(to bottom, #000 50%, transparent 50%);
+    mask-size: calc(var(--traccia) * 100%) calc(2 * var(--q));
+    mask-position: 0 calc(var(--q) / -2), 100% calc(var(--q) / 2);
+    mask-repeat: repeat-y;
+  }
+  @property --traccia { syntax: '<number>'; inherits: false; initial-value: 1; }
+  @keyframes carta-traccia { from { --traccia: 0; } }
+  /* poi i crocini, a giri quadrati dal centro del tavolo (--ox, --oy: lo scrive scripts/tavolo/vista.ts), un modulo
+     per giro (o più, --passo-giro, se la finestra è grande): il giro n sfuma mentre --giro va da n a n+1
+     (crocini-in, global.css), e a intro finita --giro torna a coprire tutto. Maschera = forma dei crocini ∩ giri */
+  :global(.is-intro) .tavolo__carta::after {
     --giro: 1000;
     --a: calc(var(--giro) * var(--passo-giro, var(--modulo)));
     --b: calc(max(var(--giro) - 1, 0) * var(--passo-giro, var(--modulo)));
     --c: rgb(0 0 0 / min(1, var(--giro)));
     mask-image:
+      var(--crocini-forma),
       linear-gradient(to right, transparent calc(var(--ox) - var(--a)), var(--c) calc(var(--ox) - var(--b)), var(--c) calc(var(--ox) + var(--b)), transparent calc(var(--ox) + var(--a))),
       linear-gradient(to bottom, transparent calc(var(--oy) - var(--a)), var(--c) calc(var(--oy) - var(--b)), var(--c) calc(var(--oy) + var(--b)), transparent calc(var(--oy) + var(--a)));
+    mask-size: var(--modulo) var(--modulo), 100% 100%, 100% 100%;
+    mask-position: 0 0;
+    mask-repeat: repeat, no-repeat, no-repeat;
     mask-composite: intersect;
-    animation: crocini-in 960ms linear backwards;
+    animation: crocini-in 720ms linear 720ms backwards;
   }
   /* fuori dal foglio: bande di inchiostro grandi quanto la finestra, accostate al bordo da scripts/tavolo/vista.ts.
      Solo col JavaScript (senza, il tavolo non si sposta e il bordo non serve) */
@@ -258,10 +302,28 @@ const sagoma = (c: Cell) => (c.frame === false && c.type === 'svg' ? svgs[c.svg]
     position: absolute; inset: 0;
     background: radial-gradient(circle at 2px 2px, var(--inchiostro) 0 1.15px, transparent 1.4px) 0 0 / 4px 4px;
   }
+  /* a terra l'ombra non si vede: sotto lettere e disegni senza fondo i bordi sfumati (antialias) la lascerebbero
+     trasparire a puntini. La mostra scripts/tavolo/pezzi.ts mentre la cella è presa, e l'intro mentre le celle cadono
+     (inherit, non visible: Woberto nell'intro resta nascosto con la sua ombra) */
+  .pezzo__ombra { visibility: hidden; }
+  :global(.is-intro) .pezzo__ombra { visibility: inherit; }
   /* ombra a sagoma (cella svg senza filo): lo stesso retino, ritagliato dal disegno usato come maschera */
   .pezzo__ombra--sagoma { background: none; }
   .ombra__sagoma { mask: var(--sagoma) center / 100% 100% no-repeat; }
   .ombra__sagoma--girata { rotate: 180deg; }
+  /* ombra a parola (cella logotipo senza filo): stessa composizione di LogotipoCell nuda (R alta quanto la cella,
+     a filo a sinistra), il retino ritagliato sulle lettere */
+  .ombra__parola {
+    position: absolute; inset: 0;
+    container-type: size;
+    display: grid; place-items: center start;
+  }
+  .ombra__parola .logotipo {
+    font-size: calc(100cqh / var(--maiuscole));
+    color: transparent;
+    background: radial-gradient(circle at 2px 2px, var(--inchiostro) 0 1.15px, transparent 1.4px) 0 0 / 4px 4px;
+    -webkit-background-clip: text; background-clip: text;
+  }
   /* intro, atterraggio (variante A "Secco" di tools/pages/atterraggio.html): il filo si disegna con la cella
      sollevata come in mano (misure di prendi(), scripts/tavolo/pezzi.ts); a filo finito entra il fondo, poi l'ombra
      (prima si vedrebbe attraverso la cella ancora trasparente), un attimo sospesa e giù di colpo: l'ombra rientra.

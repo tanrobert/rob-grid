@@ -42,7 +42,7 @@ const order = (n: number) => orders.get(n) ?? orders.set(n, Array.from({ length:
  * Stesso risultato del prototipo (che provava tutti i posti), ma si ferma appena nessun posto
  * rimasto può essere più vicino: righe e colonne in ordine di distanza.
  */
-export function pack(pezzi: Array<Span & { id?: string; sotto?: Sotto }>, finestra: Finestra): Posto[] {
+export function pack(pezzi: Array<Span & { id?: string; sotto?: Sotto; presso?: Sotto }>, finestra: Finestra): Posto[] {
   // le celle nascoste sotto un'altra (grid-types, `sotto`) restano fuori dalla spirale: vanno sotto la loro ospite
   const libere = pezzi.filter(p => !p.sotto);
   const posti = spirale(libere, finestra);
@@ -58,13 +58,20 @@ export function pack(pezzi: Array<Span & { id?: string; sotto?: Sotto }>, finest
 
 export interface Finestra { vw: number; vh: number; q: number }
 
-function spirale(pezzi: Span[], { vw, vh, q }: Finestra): Posto[] {
+function spirale(pezzi: Array<Span & { id?: string; presso?: Sotto }>, { vw, vh, q }: Finestra): Posto[] {
   const ax = vw / q, ay = (vh / q) * (vw < BREAKPOINTS.md ? 2.6 : 1);
   const placed: Rect[] = [];
-  return pezzi.map(({ w, h }, i) => {
+  const di = new Map<string | undefined, Posto>();
+  return pezzi.map(({ w, h, id, presso }, i) => {
     let best: Posto = { x: 0, y: 0 }, score = Infinity;
     if (i === 0) best = { x: -Math.floor(w / 2), y: -Math.floor(h / 2) };
-    else {
+    else if (presso) {
+      // agganciata alla sua ospite (grid-types, `presso`): il posto è quello, le celle dopo le girano attorno
+      const ospite = di.get(presso.id);
+      if (!ospite) throw new Error(`[tavolo] "${id}" sta presso "${presso.id}", che deve venire prima nell'elenco`);
+      best = { x: ospite.x + presso.x, y: ospite.y + presso.y };
+      if (!free({ ...best, w, h }, placed)) throw new Error(`[tavolo] "${id}" presso "${presso.id}" si sovrappone a un'altra cella`);
+    } else {
       const xs = order(w);
       for (const y of order(h)) {
         const dy = (y + h / 2) / ay, ty = dy * dy;
@@ -80,6 +87,7 @@ function spirale(pezzi: Span[], { vw, vh, q }: Finestra): Posto[] {
       }
     }
     placed.push({ ...best, w, h });
+    di.set(id, best);
     return best;
   });
 }

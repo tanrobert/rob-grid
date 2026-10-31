@@ -21,18 +21,25 @@ export interface Pezzo {
   z: number;
   /** nascosta sotto un'altra cella (grid-types, `sotto`): la disposizione la mette sotto la sua ospite */
   sotto?: Sotto;
+  /** agganciata accanto a un'altra (grid-types, `presso`): la disposizione la mette lì */
+  presso?: Sotto;
 }
 
 /** z di partenza: le nascoste sotto tutte (anche per la matita, che disegna sulla cella più in alto) */
 const zBase = (p: Pezzo) => (p.sotto ? -1 : 0);
 
+/** "id x y" di data-sotto e data-presso (Tavolo.astro) */
+const aggancio = (s?: string): Sotto | undefined => {
+  const [id, x, y] = s?.split(' ') ?? [];
+  return id ? { id, x: Number(x), y: Number(y) } : undefined;
+};
+
 export const leggiPezzi = (mondo: HTMLElement): Pezzo[] =>
   [...mondo.querySelectorAll<HTMLElement>('[data-pezzo]')].map(el => {
-    const [id, x, y] = el.dataset.sotto?.split(' ') ?? [];
     const p: Pezzo = {
       id: el.dataset.pezzo!, el, ombra: el.querySelector<HTMLElement>('[data-ombra]'),
       w: Number(el.dataset.w), h: Number(el.dataset.h), gx: 0, gy: 0, z: 0,
-      sotto: id ? { id, x: Number(x), y: Number(y) } : undefined,
+      sotto: aggancio(el.dataset.sotto), presso: aggancio(el.dataset.presso),
     };
     p.z = zBase(p);
     return p;
@@ -70,7 +77,11 @@ export function prendi(t: Tavolo, p: Pezzo, sx: number, sy: number, touch: boole
   alza(p, ++t.zTop);
   gsap.set(el, { transformOrigin: `${ox}px ${oy}px` });
   gsap.to(el, { scale: 1.035, duration: T(0.18), ease: 'power2.out' });
-  if (p.ombra) gsap.to(p.ombra, { x: t.v.q * 0.55, y: t.v.q * 0.55, duration: T(0.18), ease: 'power2.out' });
+  // a terra l'ombra è nascosta (Tavolo.astro): si mostra presa. overwrite: la posa di prima non la rinasconde
+  if (p.ombra) {
+    p.ombra.style.visibility = 'inherit';
+    gsap.to(p.ombra, { x: t.v.q * 0.55, y: t.v.q * 0.55, duration: T(0.18), ease: 'power2.out', overwrite: true });
+  }
   InertiaPlugin.track(el, 'x,y');
   if (touch) try { navigator.vibrate?.(8); } catch {}
   suona('presa');
@@ -108,7 +119,10 @@ export function lascia(t: Tavolo, pr: Presa, vx: number, vy: number) {
     p.gy = Math.round(Number(gsap.getProperty(el, 'y')) / q);
     // il foglio si posa: l'ombra rientra appena dopo l'aggancio
     gsap.to(el, { scale: 1, duration: T(0.18), ease: 'power2.inOut' });
-    if (p.ombra) gsap.to(p.ombra, { x: 0, y: 0, duration: T(0.18), ease: 'power2.inOut' });
+    if (p.ombra) {
+      const ombra = p.ombra;
+      gsap.to(ombra, { x: 0, y: 0, duration: T(0.18), ease: 'power2.inOut', onComplete: () => { ombra.style.visibility = ''; } });
+    }
     t.salva();
   };
   // raddrizzarsi con una piccola oscillazione, senza un ritorno secco
