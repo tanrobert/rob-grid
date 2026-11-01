@@ -13,7 +13,7 @@
  *   stacco ai lati: un cartoncino arrotolato), o un segnaposto disegnato qui (pezzi, crema, filetti).
  * - Un solo rAF per cella, acceso solo quando qualcosa si muove e la cella è in vista; con riduci movimento
  *   non gira da solo e sfogliando non scorre (il trascinamento resta: è un gesto).
- * - Fondo del colore della cella: segue Inverti e la tinta di Woberto.
+ * - Fondo del colore della cella (letto quando si prepara la tela).
  * - Parola della linea (Confetture, Sughi…) girata in verticale sul lato sinistro (sul destro coi vasi alti),
  *   appoggiata sopra la fascia del bordo, col colore del bordo: se resta la stessa cambia solo
  *   il colore, se cambia esce e rientra col barattolo.
@@ -545,15 +545,13 @@ async function avvia(root: HTMLElement, signal: AbortSignal) {
   }
   root.querySelectorAll<HTMLElement>('[data-passo]').forEach(b => b.addEventListener('click', () => sfoglia(+b.dataset.passo!), opz));
 
-  // in vista: gira; fuori: fermo. Misura nuova al resize; colori nuovi con Inverti e con la tinta di Woberto
+  // in vista: gira; fuori: fermo. Misura nuova al resize
   const io = new IntersectionObserver(([e]) => { inVista = e.isIntersecting; if (inVista) muovi(); });
   io.observe(cv);
   const ro = new ResizeObserver(() => { prepara(); muovi(); });
   ro.observe(cv);
-  const mo = new MutationObserver(() => requestAnimationFrame(prepara));
-  mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-inchiostro', 'data-tinta'] });
   // initCells riparte (un foglio nuovo sopra): si ricomincia dal primo barattolo, anche nella didascalia
   scriviNome();
   programma();
-  signal.addEventListener('abort', () => { io.disconnect(); ro.disconnect(); mo.disconnect(); cancelAnimationFrame(raf); clearTimeout(timer); });
+  signal.addEventListener('abort', () => { io.disconnect(); ro.disconnect(); cancelAnimationFrame(raf); clearTimeout(timer); });
 }

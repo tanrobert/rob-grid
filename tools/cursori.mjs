@@ -61,7 +61,8 @@ function svg(righe, commento) {
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" shape-rendering="crispEdges">\n<!-- ${commento} -->\n<path d="${path('#')}"/>\n<path fill="#fff" d="${path('.')}"/>\n</svg>\n`;
 }
 
-// colori della palette (global.css) e coppie contorno-riempimento: base, Inverti, Woberto, Woberto invertito
+// colori della palette (global.css) e coppie contorno-riempimento. Il sito usa solo nero-carta (dal 1/11/2026);
+// le altre restano per provare colori diversi
 const COLORI = { rosso: '#f03f24', carta: '#f5f3f0', nero: '#1c1a17' };
 const COPPIE = [['rosso', 'carta'], ['carta', 'rosso'], ['nero', 'carta'], ['carta', 'nero']];
 

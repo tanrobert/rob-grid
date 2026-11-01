@@ -2,16 +2,15 @@
 
 /* ── Token ────────────────────────────────────────────── */
 :root {
-  /* palette. Il sito usa rosso e bianco:
-     bianco = fondo di pagina e celle, e scritte/fili/loghi sulle celle rosse */
+  /* palette. Il sito usa nero e bianco (dal 1/11/2026, prima rosso e bianco), il rosso solo dove lo si sceglie
+     (la R, ROBERTO): bianco = fondo di pagina e celle, e scritte/fili/loghi sulle celle piene */
   --rosso:  hsl(8 87% 54%);     /* = #f03f24 */
   --chiaro: hsl(36 20% 95%);    /* = #f5f3f0, bianco caldo, unico bianco del sito */
-  /* carta del sito (fondo di pagina e celle, scritte sulle celle piene): il chiaro, o il rosso a colori invertiti */
+  /* carta del sito (fondo di pagina e celle, scritte sulle celle piene) */
   --bianco: var(--chiaro);
   --nero:   hsl(36 10% 10%);    /* = #1c1a17 */
-  /* inchiostro del sito: rosso, o il chiaro a colori invertiti (la R, Inverti: scripts/ink.ts).
-     Unico colore di ruolo: tutto ciò che è "rosso" nel sito usa questo, non --rosso */
-  --inchiostro: var(--rosso);
+  /* inchiostro del sito. Unico colore di ruolo: testi, fili, crocini e celle piene usano questo, non --nero */
+  --inchiostro: var(--nero);
 
   /* due font (fonts.css): Archivo variabile per titoli e testi (in prova dal 25/10/2026 al posto di Schibsted Grotesk),
      JetBrains Mono per numeri ed etichette: linguette, occhielli, didascalie, orologio, righello (.mono), cifre delle celle stat */
@@ -36,11 +35,11 @@
 
   /* cursori a pixel di Windows 95 (public/cursori, dal 26/10/2026), misura 1×: freccia di base, manina su ciò che
      si clicca. Contorno = inchiostro, riempimento = carta: un file per coppia di colori (un SVG da cursore non legge
-     le variabili), ridefiniti sotto con Inverti, Woberto e contrasto alto. Numeri = punta del cursore in pixel */
-  --cursore:      url("/cursori/freccia-rosso-carta.svg") 0 0, default;
-  --cursore-mano: url("/cursori/mano-rosso-carta.svg") 5 0, pointer;
-  --cursore-aperta: url("/cursori/mano-aperta-rosso-carta.svg") 8 11, grab;
-  --cursore-chiusa: url("/cursori/mano-chiusa-rosso-carta.svg") 8 11, grabbing;
+     le variabili). Numeri = punta del cursore in pixel */
+  --cursore:      url("/cursori/freccia-nero-carta.svg") 0 0, default;
+  --cursore-mano: url("/cursori/mano-nero-carta.svg") 5 0, pointer;
+  --cursore-aperta: url("/cursori/mano-aperta-nero-carta.svg") 8 11, grab;
+  --cursore-chiusa: url("/cursori/mano-chiusa-nero-carta.svg") 8 11, grabbing;
 
   /* colonne delle pagine (12, 8, 4): il foglio (components/foglio) ne ricava quadretto e unità */
   --cols: 12;
@@ -56,13 +55,11 @@
   --carta-tinta: color-mix(in srgb, var(--inchiostro) 22%, transparent);
 
   --ease-out:   cubic-bezier(0.22, 1, 0.36, 1);
-  --ease-morph: cubic-bezier(0.72, 0, 0.18, 1);  /* filo dell'intro e cerchio di Inverti */
+  --ease-morph: cubic-bezier(0.72, 0, 0.18, 1);  /* filo dell'intro */
   --t-draw-u:   70ms;   /* intro: tempo del filo per ogni unità di perimetro (2×2 → 560ms, 4×2 → 840ms)… */
   --t-draw-max: 900ms;  /* …fino a questo tetto: le celle più grandi disegnano il filo più veloci */
   --t-fill:     400ms;  /* intro: fondo e contenuto entrano a filo finito */
   --t-scaglione: 30ms;  /* intro: una cella dopo l'altra (--i = il suo turno) */
-
-  --t-ink:      960ms;  /* cambio d'inchiostro: il nuovo colore si allarga dall'interruttore */
 
   color-scheme: light;
   cursor: var(--cursore);
@@ -105,41 +102,6 @@
 .titoletto { font-family: var(--font-testo); font-weight: 500; line-height: 1; letter-spacing: -0.025em; font-size: var(--titoletto); }
 .paragrafo { max-width: 44ch; font-size: var(--paragrafo); line-height: 1.35; }
 a[href], button, [role="button"], [role="switch"], label[for], summary, select { cursor: var(--cursore-mano); }
-/* colori invertiti: rosso e bianco si scambiano, inchiostro chiaro su carta rossa. data-inchiostro su <html>
-   (Layout.astro, prima del primo disegno) */
-:root[data-inchiostro="bianco"] {
-  --inchiostro: var(--chiaro);
-  --bianco: var(--rosso);
-  --cursore:      url("/cursori/freccia-carta-rosso.svg") 0 0, default;
-  --cursore-mano: url("/cursori/mano-carta-rosso.svg") 5 0, pointer;
-  --cursore-aperta: url("/cursori/mano-aperta-carta-rosso.svg") 8 11, grab;
-  --cursore-chiusa: url("/cursori/mano-chiusa-carta-rosso.svg") 8 11, grabbing;
-}
-/* tinta nera (Woberto, il marchio nascosto sotto la R: scripts/ink.ts): il rosso diventa nero, e Inverti
-   scambia nero e bianco. data-tinta su <html>, solo per la visita (Layout.astro) */
-:root[data-tinta="nero"] {
-  --inchiostro: var(--nero);
-  --cursore:      url("/cursori/freccia-nero-carta.svg") 0 0, default;
-  --cursore-mano: url("/cursori/mano-nero-carta.svg") 5 0, pointer;
-  --cursore-aperta: url("/cursori/mano-aperta-nero-carta.svg") 8 11, grab;
-  --cursore-chiusa: url("/cursori/mano-chiusa-nero-carta.svg") 8 11, grabbing;
-}
-:root[data-tinta="nero"][data-inchiostro="bianco"] {
-  --inchiostro: var(--chiaro);
-  --bianco: var(--nero);
-  --cursore:      url("/cursori/freccia-carta-nero.svg") 0 0, default;
-  --cursore-mano: url("/cursori/mano-carta-nero.svg") 5 0, pointer;
-  --cursore-aperta: url("/cursori/mano-aperta-carta-nero.svg") 8 11, grab;
-  --cursore-chiusa: url("/cursori/mano-chiusa-carta-nero.svg") 8 11, grabbing;
-}
-/* chi chiede più contrasto al sistema, a colori non invertiti: inchiostro nero (rosso su bianco è 3,5:1, nero ~15,7:1) */
-@media (prefers-contrast: more) { :root:not([data-inchiostro]) {
-  --inchiostro: var(--nero);
-  --cursore:      url("/cursori/freccia-nero-carta.svg") 0 0, default;
-  --cursore-mano: url("/cursori/mano-nero-carta.svg") 5 0, pointer;
-  --cursore-aperta: url("/cursori/mano-aperta-nero-carta.svg") 8 11, grab;
-  --cursore-chiusa: url("/cursori/mano-chiusa-nero-carta.svg") 8 11, grabbing;
-} }
 @supports (width: round(down, 1px, 1px)) {
   :root { --line-dp: max(var(--dp), round(down, var(--line), var(--dp))); }
 }
@@ -346,7 +308,8 @@ p { text-wrap: pretty; }
   content: '';
   position: absolute; inset: 0; z-index: 3;
   --l0: 1; --l1: 1; --l2: 1; --l3: 1;
-  --ink: linear-gradient(var(--inchiostro), var(--inchiostro));
+  --filo: var(--inchiostro);
+  --ink: linear-gradient(var(--filo), var(--filo));
   background-image: var(--ink), var(--ink), var(--ink), var(--ink);
   background-repeat: no-repeat;
   background-position: left top, right top, right bottom, left bottom;
@@ -356,6 +319,17 @@ p { text-wrap: pretty; }
     calc(var(--l2) * 100%) var(--line-dp),
     var(--line-dp) calc(var(--l3) * 100%);
   pointer-events: none;
+}
+
+/* hover della cella (in prova dal 1/11/2026, idea di Roberto): il filo diventa rosso. Solo col mouse; --filo è
+   registrato, così il colore dei gradienti può sfumare */
+@property --filo { syntax: '<color>'; inherits: false; initial-value: transparent; }
+@media (hover: hover) and (pointer: fine) {
+  .cell::after { transition: --filo 160ms var(--ease-out); }
+  .cell:hover::after { --filo: var(--rosso); }
+  /* e la didascalia dei progetti (il rettangolo col titolo) si colora con lui */
+  .cell > .caption { transition: background-color 160ms var(--ease-out); }
+  .cell:hover > .caption { background-color: var(--rosso); }
 }
 
 /* cella senza filo (frame: false): niente filo, nemmeno nell'intro */
@@ -396,7 +370,7 @@ p { text-wrap: pretty; }
   .cell[data-hero] { cursor: var(--cursore-mano); }
 }
 
-/* scritte sulle foto: sempre chiare, anche a colori invertiti (rosse sulle foto non si leggevano) */
+/* scritte sulle foto: sempre chiare (d'inchiostro sulle foto non si leggevano) */
 .cell:has(> .duo) > :is(.cell__label, .cell__go) { color: var(--chiaro); }
 
 /* Didascalia (titolo dei progetti, 30/10/2026, idea di Roberto): un rettangolo d'inchiostro grande quanto il testo,
@@ -498,16 +472,6 @@ p { text-wrap: pretty; }
 .lente__riga { display: block; white-space: nowrap; }
 /* animazioni infinite in pausa fuori schermo */
 [data-offscreen] .loop { animation-play-state: paused !important; }
-
-/* ── Cambio d'inchiostro (scripts/ink.ts): View Transition della stessa pagina. La pagina col colore nuovo si
-   allarga a cerchio dall'interruttore Inverti sopra quella vecchia, ferma. Centro e raggio (fino all'angolo
-   più lontano) li scrive ink.ts. Con riduci movimento ink.ts cambia colore senza transizione ── */
-::view-transition-old(root) { animation: none; }
-html.vt-ink::view-transition-new(root) { animation: ink-flood var(--t-ink) var(--ease-morph) both; }
-@keyframes ink-flood {
-  from { clip-path: circle(0 at var(--macchia-x) var(--macchia-y)); }
-  to   { clip-path: circle(var(--macchia-r) at var(--macchia-x) var(--macchia-y)); }
-}
 
 /* ── Riduzione del movimento ──────────────────────────── */
 @media (prefers-reduced-motion: reduce) {

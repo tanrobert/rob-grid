@@ -30,8 +30,8 @@ function projectCell(id: string, slug: string): Cell {
 }
 
 export const tavolo: Cell[] = [
-  // al centro: la R è l'interruttore Inverti, premuta scambia rosso e bianco del sito
-  { id: 'logo',     type: 'svg',      w: 2, h: 2, svg: 'logo-r', fit: 'bleed', label: false, frame: false, ink: true },
+  // al centro: la R, rossa; premuta riordina il tavolo come il tasto della barra (1/11/2026)
+  { id: 'logo',     type: 'svg',      w: 2, h: 2, svg: 'logo-r', fit: 'bleed', label: false, frame: false, riordina: true },
   // ROBERTO senza filo né fondo, sulla carta (31/10/2026): la cella è la parola, sollevata fa l'ombra delle lettere
   // (Tavolo.astro). Maiuscole (la R) alte 3 quadretti: la parola è larga 3 × 5,21 / 0,68 = 22,99 quadretti.
   // Agganciata sotto la R (8×8 quadretti), a un quadretto, a filo a sinistra: si apre col marchio intero
@@ -70,11 +70,4 @@ export const tavolo: Cell[] = [
   // il footer di oggi, come cella: email e luogo. P.IVA, informativa, anno e versione (27/10/2026) nella striscia
   // d'inchiostro in basso a sinistra (Tavolo.astro)
   { id: 'recapiti', type: 'contatti', w: 4, h: 2, tone: 'red', piede: false },
-  // primo easter egg: sotto la R, dietro la sua asta, il marchio di Woberto (la R girata, nera). Si scopre
-  // spostando la R; premuto porta il nero (scripts/ink.ts). Ultimo nell'elenco: non sposta i numeri delle
-  // altre celle, ed è l'ultimo nella lettura
-  {
-    id: 'woberto', type: 'svg', w: 1, h: 1, q: { w: 2, h: 2 }, svg: 'logo-r', fit: 'bleed', label: false, frame: false,
-    tinta: true, sotto: { id: 'logo', x: 1, y: 1 },
-  },
 ];

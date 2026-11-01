@@ -184,6 +184,8 @@ async function entra(f: Foglio, { da = null as HTMLElement | null, sostituito = 
 
   const fine = f.hero.getBoundingClientRect();
   if (retino) gsap.to(retino, { opacity: 1, duration: T(0.3), ease: 'power1.out' });
+  // la carta del tavolo (quadretti e crocini) se ne va mentre arriva il retino; poi la tiene nascosta Tavolo.astro
+  if (dalTavolo && !retinoPieno && tavolo) gsap.fromTo(tavolo.v.carta, { opacity: 1 }, { opacity: 0, duration: T(0.3), ease: 'power1.out', clearProps: 'opacity' });
   // i dettagli arrivano quando il foglio è quasi al suo posto, uno dopo l'altro
   const gap = parseFloat(getComputedStyle(f.el).getPropertyValue('--gap')) || 20;
   gsap.fromTo(resto, { y: gap * 0.5 }, {
@@ -218,6 +220,8 @@ async function esce() {
     document.title = homeTitle;
     gsap.to(resto, { opacity: 0, duration: T(0.14), ease: 'power1.in' });
     if (retino) gsap.to(retino, { opacity: 0, duration: T(0.38), delay: T(0.1), ease: 'power1.inOut' });
+    // e la carta torna insieme al tavolo
+    if (tavolo) gsap.fromTo(tavolo.v.carta, { opacity: 0 }, { opacity: 1, duration: T(0.38), delay: T(0.1), ease: 'power1.inOut' });
     verso = visibile(f.origine?.cella ?? null);
     if (verso) await vola(v, verso, verso.getBoundingClientRect(), 0.48);
     // posata: sotto c'è già la cella vera, la copia sfuma
@@ -227,6 +231,7 @@ async function esce() {
     f.el.remove();
     tavoloVivo(true);
     if (retino) gsap.set(retino, { clearProps: 'opacity' });
+    if (tavolo) gsap.set(tavolo.v.carta, { clearProps: 'opacity' });
   } else {
     await gsap.to(resto, { opacity: 0, duration: T(0.14), ease: 'power1.in' });
     pila.pop();

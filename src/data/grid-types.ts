@@ -46,7 +46,7 @@ export interface Bottone { label: string; href: string }
 export type Tone = 'paper' | 'red';
 
 interface CellBase extends Span {
-  /** Identificativo unico: memoria del tavolo, celle agganciate o nascoste (presso, sotto), contatori. */
+  /** Identificativo unico: memoria del tavolo, celle agganciate (presso), contatori. */
   id: string;
   /** Override opzionale su tablet (8 colonne). Default: w ridotto a max 8. */
   md?: Partial<Span>;
@@ -71,21 +71,17 @@ interface CellBase extends Span {
   hideOn?: Array<'lg' | 'md' | 'sm'>;
   /** Misura sul tavolo della home, in quadretti, quando non è w×h unità × 4 (lib/tavolo.ts) */
   q?: Span;
-  /** Solo sul tavolo: nascosta sotto la cella `id`, spostata di x, y quadretti dal suo angolo in alto a sinistra.
-      Fuori dalla spirale, sotto tutte le altre, invisibile nell'intro: si scopre spostando chi la copre */
-  sotto?: Sotto;
   /** Solo sul tavolo: nella disposizione va accanto alla cella `id` (che viene prima nell'elenco), spostata di x, y
       quadretti dal suo angolo in alto a sinistra, invece del posto libero più vicino al centro. Visibile, e le altre
       celle le girano attorno (ROBERTO sotto la R) */
-  presso?: Sotto;
+  presso?: Presso;
 }
 
-export interface Sotto { id: string; x: number; y: number }
+export interface Presso { id: string; x: number; y: number }
 
 export type Cell = CellBase & (
-  /** ink: la cella è l'interruttore Inverti, premuta scambia rosso e bianco del sito (scripts/ink.ts).
-      tinta: Woberto, il marchio nero nascosto sotto la R: il primo clic porta il nero, i successivi invertono */
-  | { type: 'svg'; svg: SvgName; fit?: 'contain' | 'bleed'; ink?: boolean; tinta?: boolean }
+  /** riordina: la cella è un tasto Riordina del tavolo, come quello della barra (scripts/tavolo) */
+  | { type: 'svg'; svg: SvgName; fit?: 'contain' | 'bleed'; riordina?: boolean }
   /** ROBERTO scritto col font del logotipo, largo quanto la cella */
   | { type: 'logotipo' }
   | {

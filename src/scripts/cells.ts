@@ -4,7 +4,6 @@
  */
 
 import { initArchive } from './archive';
-import { initInk } from './ink';
 import { initRighe } from './righe';
 import { fitTitles, initTitoloni } from './titoloni';
 import { initMosaico } from './mosaico';
@@ -38,7 +37,6 @@ export function initCells() {
   const { signal } = ac;
 
   initArchive(signal);
-  initInk(signal);
   // globo: d3-geo e le terre si caricano solo se la cella c'è
   if (document.querySelector('[data-globe]')) {
     import('./globe').then(m => signal.aborted || m.initGlobe(signal));

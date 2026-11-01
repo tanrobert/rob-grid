@@ -65,14 +65,6 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
           matchMedia('(resolution: ' + devicePixelRatio + 'dppx)').addEventListener('change', watch, { once: true });
         }
         watch();
-
-        // colori invertiti con l'interruttore Inverti (scripts/ink.ts): prima del primo disegno, niente lampo di colori.
-        // 'nero' è la scelta salvata dalla versione precedente dell'interruttore: vale come invertiti
-        var scelta = null;
-        try { scelta = localStorage.getItem('inchiostro'); } catch (e) {}
-        if (scelta === 'bianco' || scelta === 'nero') root.dataset.inchiostro = 'bianco';
-        // tinta nera di Woberto (scripts/ink.ts): solo per questa visita
-        try { if (sessionStorage.getItem('tinta') === 'nero') root.dataset.tinta = 'nero'; } catch (e) {}
       })();
     </script>
   </head>

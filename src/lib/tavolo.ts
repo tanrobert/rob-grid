@@ -1,4 +1,4 @@
-import type { Cell, Span, Sotto } from '../data/grid-types';
+import type { Cell, Span, Presso } from '../data/grid-types';
 import { BREAKPOINTS } from './grid';
 
 /*
@@ -42,23 +42,7 @@ const order = (n: number) => orders.get(n) ?? orders.set(n, Array.from({ length:
  * Stesso risultato del prototipo (che provava tutti i posti), ma si ferma appena nessun posto
  * rimasto può essere più vicino: righe e colonne in ordine di distanza.
  */
-export function pack(pezzi: Array<Span & { id?: string; sotto?: Sotto; presso?: Sotto }>, finestra: Finestra): Posto[] {
-  // le celle nascoste sotto un'altra (grid-types, `sotto`) restano fuori dalla spirale: vanno sotto la loro ospite
-  const libere = pezzi.filter(p => !p.sotto);
-  const posti = spirale(libere, finestra);
-  const di = new Map(libere.map((p, i) => [p.id, posti[i]]));
-  let n = 0;
-  return pezzi.map(p => {
-    if (!p.sotto) return posti[n++];
-    const ospite = di.get(p.sotto.id);
-    if (!ospite) throw new Error(`[tavolo] "${p.id}" sta sotto "${p.sotto.id}", che non c'è o è nascosta anche lei`);
-    return { x: ospite.x + p.sotto.x, y: ospite.y + p.sotto.y };
-  });
-}
-
-export interface Finestra { vw: number; vh: number; q: number }
-
-function spirale(pezzi: Array<Span & { id?: string; presso?: Sotto }>, { vw, vh, q }: Finestra): Posto[] {
+export function pack(pezzi: Array<Span & { id?: string; presso?: Presso }>, { vw, vh, q }: Finestra): Posto[] {
   const ax = vw / q, ay = (vh / q) * (vw < BREAKPOINTS.md ? 2.6 : 1);
   const placed: Rect[] = [];
   const di = new Map<string | undefined, Posto>();
@@ -91,6 +75,8 @@ function spirale(pezzi: Array<Span & { id?: string; presso?: Sotto }>, { vw, vh,
     return best;
   });
 }
+
+export interface Finestra { vw: number; vh: number; q: number }
 
 /** Foglio rispetto alla finestra, al minimo: mezza finestra in più per lato, da esplorare */
 const FOGLIO_MIN = 2;

@@ -10,7 +10,7 @@ import { T, REDUCED } from '../preferenze';
 import { LANCIO } from './tempi';
 import { suona } from '../suono';
 import type { Tavolo } from './index';
-import type { Sotto } from '../../data/grid-types';
+import type { Presso } from '../../data/grid-types';
 
 export interface Pezzo {
   id: string;
@@ -18,33 +18,24 @@ export interface Pezzo {
   ombra: HTMLElement | null;
   /** misure e posizione in quadretti */
   w: number; h: number; gx: number; gy: number;
-  /** ordine sopra/sotto: l'ultima presa sta sopra; −1 = nascosta sotto un'altra, finché non si prende */
+  /** ordine sopra/sotto: l'ultima presa sta sopra */
   z: number;
-  /** nascosta sotto un'altra cella (grid-types, `sotto`): la disposizione la mette sotto la sua ospite */
-  sotto?: Sotto;
   /** agganciata accanto a un'altra (grid-types, `presso`): la disposizione la mette lì */
-  presso?: Sotto;
+  presso?: Presso;
 }
 
-/** z di partenza: le nascoste sotto tutte (anche per la matita, che disegna sulla cella più in alto) */
-const zBase = (p: Pezzo) => (p.sotto ? -1 : 0);
-
-/** "id x y" di data-sotto e data-presso (Tavolo.astro) */
-const aggancio = (s?: string): Sotto | undefined => {
+/** "id x y" di data-presso (Tavolo.astro) */
+const aggancio = (s?: string): Presso | undefined => {
   const [id, x, y] = s?.split(' ') ?? [];
   return id ? { id, x: Number(x), y: Number(y) } : undefined;
 };
 
 export const leggiPezzi = (mondo: HTMLElement): Pezzo[] =>
-  [...mondo.querySelectorAll<HTMLElement>('[data-pezzo]')].map(el => {
-    const p: Pezzo = {
-      id: el.dataset.pezzo!, el, ombra: el.querySelector<HTMLElement>('[data-ombra]'),
-      w: Number(el.dataset.w), h: Number(el.dataset.h), gx: 0, gy: 0, z: 0,
-      sotto: aggancio(el.dataset.sotto), presso: aggancio(el.dataset.presso),
-    };
-    p.z = zBase(p);
-    return p;
-  });
+  [...mondo.querySelectorAll<HTMLElement>('[data-pezzo]')].map(el => ({
+    id: el.dataset.pezzo!, el, ombra: el.querySelector<HTMLElement>('[data-ombra]'),
+    w: Number(el.dataset.w), h: Number(el.dataset.h), gx: 0, gy: 0, z: 0,
+    presso: aggancio(el.dataset.presso),
+  }));
 
 export const posa = (p: Pezzo, q: number) => gsap.set(p.el, { x: p.gx * q, y: p.gy * q });
 
@@ -146,7 +137,7 @@ export function riordina(t: Tavolo) {
   const q = t.v.q;
   disponi(t);
   t.confina();
-  t.pezzi.forEach(p => alza(p, zBase(p)));
+  t.pezzi.forEach(p => alza(p, 0));
   t.zTop = 0;
   [...t.pezzi].sort((a, b) => Math.hypot(a.gx, a.gy) - Math.hypot(b.gx, b.gy)).forEach((p, i) => {
     gsap.to(p.el, { x: p.gx * q, y: p.gy * q, rotation: 0, scale: 1, skewX: 0, duration: T(0.7), ease: 'power3.inOut', delay: T(i * 0.018) });

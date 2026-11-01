@@ -46,8 +46,7 @@ const state = p => p.evaluate(() => {
   const q = parseFloat(t.style.getPropertyValue('--q'));
   const m = new DOMMatrix(getComputedStyle(t.querySelector('[data-mondo]')).transform);
   const cells = {};
-  // le celle nascoste sotto un'altra (Woberto) non contano: stanno apposta sotto la loro ospite
-  for (const el of document.querySelectorAll('[data-pezzo]:not([data-sotto])')) {
+  for (const el of document.querySelectorAll('[data-pezzo]')) {
     const r = el.getBoundingClientRect();
     cells[el.dataset.pezzo] = { x: r.left, y: r.top, w: r.width, h: r.height, gx: Math.round((r.left - m.e) / q * 100) / 100, gy: Math.round((r.top - m.f) / q * 100) / 100 };
   }
@@ -154,7 +153,7 @@ console.log(`${browser} — ${BASE}`);
   await sleep(1500);
   await mouseDrag(p, center((await state(p)).cells[id]), -5 * s0.q, 4 * s0.q);
   await sleep(900);
-  await p.click('[data-riordina]');
+  await p.click('[data-attrezzi] [data-riordina]');
   await sleep(1500);
   const s6 = await state(p);
   check(grid(s6) === layout0 && Math.abs(s6.ox - s0.ox) < 1, 'riordina: disposizione di partenza');
@@ -496,41 +495,24 @@ if (chrome) {
   await p.close();
 }
 
-// ── Woberto, il marchio nascosto sotto la R ─────────────────────────────
+// ── La R al centro: un clic riordina come il tasto della barra; trascinata si sposta e basta ─────────
 {
   const p = await page();
   await fresh(p);
-  const vedo = () => p.evaluate(() => {
-    const b = document.querySelector('[data-woberto]'), r = b.getBoundingClientRect(), html = document.documentElement;
-    const x = r.left + r.width / 2, y = r.top + r.height / 2;
-    return { coperto: !b.contains(document.elementFromPoint(x, y)), x, y, tinta: html.dataset.tinta ?? 'rosso', inv: html.dataset.inchiostro ? 'inv' : 'no' };
-  });
-  let w = await vedo();
-  check(w.coperto, 'Woberto nascosto sotto la R');
-  // la R presa lontano da Woberto (in basso a destra) e portata via
-  const s = await state(p), r = s.cells.logo;
-  await mouseDrag(p, { x: r.x + r.w * 0.85, y: r.y + r.h * 0.9 }, 12 * s.q, 0);
+  const s0 = await state(p), layout0 = grid(s0);
+  const altra = visible(s0, ['archivio', 'extra', 'info', 'kiale']);
+  await mouseDrag(p, center(s0.cells[altra]), -5 * s0.q, 4 * s0.q);
   await sleep(900);
-  w = await vedo();
-  check(!w.coperto && w.tinta === 'rosso' && w.inv === 'no', 'spostata la R, Woberto in vista (e i colori non si sono invertiti)');
-  // ognuno il suo colore: il primo clic sul marchio dell'altro colore cambia il colore, i successivi invertono
-  const logo = () => state(p).then(s => ({ x: s.cells.logo.x + s.cells.logo.w * 0.85, y: s.cells.logo.y + s.cells.logo.h * 0.9 }));
-  const giro = [];
-  for (const chi of ['W', 'W', 'W', 'R', 'R', 'W', 'R', 'R']) {
-    const pt = chi === 'W' ? w : await logo();
-    await p.mouse.click(pt.x, pt.y);
-    await sleep(1300);
-    const v = await vedo();
-    giro.push(`${chi}:${v.tinta}/${v.inv}`);
-    if (giro.length === 1) {
-      await p.reload({ waitUntil: 'networkidle0' });
-      await sleep(2500);
-      w = await vedo();
-      check(w.tinta === 'nero' && !w.coperto, 'ricarica: nero e Woberto dove era');
-    }
-  }
-  const atteso = 'W:nero/no W:nero/inv W:nero/no R:rosso/no R:rosso/inv W:nero/inv R:rosso/inv R:rosso/no';
-  check(giro.join(' ') === atteso, 'R e Woberto: il primo clic porta il colore, poi inverte', giro.join(' → '));
+  // la R trascinata: si sposta, niente riordino
+  await mouseDrag(p, center((await state(p)).cells.logo), 6 * s0.q, 0);
+  await sleep(900);
+  const s1 = await state(p);
+  check(s1.cells.logo.gx - s0.cells.logo.gx === 6 && grid(s1) !== layout0, 'R trascinata: si sposta, il tavolo resta com\'è');
+  // la R cliccata: riordina
+  await p.mouse.click(center(s1.cells.logo).x, center(s1.cells.logo).y);
+  await sleep(1500);
+  const s2 = await state(p);
+  check(grid(s2) === layout0 && Math.abs(s2.ox - s0.ox) < 1, 'clic sulla R: disposizione di partenza');
   await p.close();
 }
 

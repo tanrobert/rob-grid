@@ -1,12 +1,12 @@
 /**
- * Suoni del tavolo: solo dove c'è un gesto (presa, ricaduta, foglio, inverti), mai su hover o scroll.
+ * Suoni del tavolo: solo dove c'è un gesto (presa, ricaduta, foglio, interruttore del suono), mai su hover o scroll.
  * Sintetizzati con Web Audio (rumore filtrato e oscillatori), nessun file: le 4 varianti scelte nel laboratorio
  * tools/pages/suoni.html. Ogni colpo varia un poco tono e volume, così non suona mai uguale.
  * Acceso di base (prova del 25/10/2026): lo spegne l'icona nella barra del tavolo (Tavolo.astro), scelta in localStorage.
  * Il contesto audio si sveglia ai gesti e dorme dopo 1,5 s di quiete.
  */
 
-export type Momento = 'presa' | 'ricaduta' | 'foglio' | 'inverti';
+export type Momento = 'presa' | 'ricaduta' | 'foglio' | 'interruttore';
 
 const KEY = 'suono';
 /** volume generale (60 nel laboratorio, al quadrato) e di ogni momento (70) */
@@ -100,7 +100,7 @@ const RICETTE: Record<Momento, (c: AudioContext, t: number, p: number, dest: Aud
     soffio(c, { t, dest, f: f * p, f2: f2 * p, Q: 0.7, picco: 0.22, a: 0.12, d: 0.2 });
   },
   // Interruttore: scatto e ritorno della levetta
-  inverti: (c, t, p, dest) => {
+  interruttore: (c, t, p, dest) => {
     tono(c, { t, dest, forma: 'square', f: 2400 * p, picco: 0.05, d: 0.006 });
     soffio(c, { t, dest, tipo: 'highpass', f: 4000 * p, picco: 0.2, a: 0.001, d: 0.012 });
     soffio(c, { t: t + 0.045, dest, tipo: 'bandpass', f: 1800 * p, Q: 2, picco: 0.12, a: 0.001, d: 0.015 });
@@ -136,7 +136,7 @@ export function initSuono(signal: AbortSignal) {
     acceso = !acceso;
     try { localStorage.setItem(KEY, acceso ? 'si' : 'no'); } catch {}
     sync();
-    if (acceso) suona('inverti');
+    if (acceso) suona('interruttore');
     else dormi(0);
   }, { signal });
 }

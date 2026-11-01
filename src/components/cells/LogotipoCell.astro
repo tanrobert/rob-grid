@@ -19,6 +19,7 @@ const { nudo = false } = Astro.props;
   .logotipo {
     font-size: min((100cqw - 2 * var(--pad)) / var(--roberto-w), (100cqh - 2 * var(--pad)) / var(--maiuscole));
   }
-  .logotipo-cella--nudo { padding: 0; justify-items: start; }
+  /* ROBERTO sulla carta, sotto la R: rosso come lei (1/11/2026) */
+  .logotipo-cella--nudo { padding: 0; justify-items: start; color: var(--rosso); }
   .logotipo-cella--nudo .logotipo { font-size: calc(100cqh / var(--maiuscole)); }
 </style>

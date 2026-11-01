@@ -108,9 +108,10 @@ function initTavolo(el: HTMLElement): Tavolo {
   const attrezzi = document.querySelector<HTMLElement>('[data-attrezzi]');
   if (attrezzi) {
     attrezzi.hidden = false;
-    attrezzi.querySelector('[data-riordina]')?.addEventListener('click', () => riordina(t), { signal: ac.signal });
     initSuono(ac.signal);
   }
+  // Riordina: il tasto della barra e la R al centro
+  document.querySelectorAll('[data-riordina]').forEach(b => b.addEventListener('click', () => riordina(t), { signal: ac.signal }));
   initPiede(ac.signal);
 
   // uscendo dalla pagina (anche verso la cache del browser, per tornare con indietro): il tavolo com'è adesso,
