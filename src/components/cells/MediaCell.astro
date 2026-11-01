@@ -7,6 +7,10 @@ import path from 'node:path';
 interface Props {
   image?: ImageMetadata;
   video?: string;
+  /** PNG trasparente posato sopra video o immagine (stessa tavola della copertina) */
+  overlay?: ImageMetadata;
+  /** numero, freccia e ✕ della cella scuri (global.css), per le foto chiare */
+  etichette?: 'scure';
   alt: string;
   sizes: string;
   /** Titolo nella didascalia sotto la cella (global.css, .caption) */
@@ -14,21 +18,28 @@ interface Props {
   /** Hero della pagina: caricata subito, deve esserci già quando il foglio si apre */
   priority?: boolean;
 }
-const { image, video, alt, sizes, title, priority = false } = Astro.props;
-const poster = image && video ? await getImage({ src: image, width: 1280, format: 'webp' }) : undefined;
+const { image, video, overlay, etichette, alt, sizes, title, priority = false } = Astro.props;
+const inPublic = (file?: string) => !!file && file !== video && fs.existsSync(path.join(process.cwd(), 'public', file));
 // se accanto all'mp4 (H.264, per tutti) c'è lo stesso nome in .webm (AV1, molto più leggero), chi lo sa leggere usa quello
 const webm = video?.replace(/\.mp4$/, '.webm');
-const conWebm = !!webm && webm !== video && fs.existsSync(path.join(process.cwd(), 'public', webm));
+const conWebm = inPublic(webm);
+// poster: lo stesso nome in .webp (il primo fotogramma), se no la copertina
+const posterWebp = video?.replace(/\.mp4$/, '.webp');
+const poster = inPublic(posterWebp) ? posterWebp
+  : image && video ? (await getImage({ src: image, width: 1280, format: 'webp' })).src : undefined;
 ---
 
-<div class="duo">
+<div class="duo" data-etichette={etichette}>
   {video ? (
-    <video data-autoplay muted loop playsinline preload="none" poster={poster?.src} aria-label={alt || undefined}>
+    <video data-autoplay muted loop playsinline preload="none" poster={poster} aria-label={alt || undefined}>
       {conWebm && <source src={webm} type='video/webm; codecs="av01.0.05M.08"' />}
       <source src={video} type="video/mp4" />
     </video>
   ) : image && (
     <Image src={image} alt={alt} widths={[400, 800, 1200, 1600, 2400]} sizes={sizes} loading={priority ? 'eager' : 'lazy'} fetchpriority={priority ? 'high' : undefined} decoding="async" />
+  )}
+  {overlay && (
+    <Image class="duo__overlay" src={overlay} alt="" widths={[400, 800, 1200, 1600, 2400]} sizes={sizes} loading={priority ? 'eager' : 'lazy'} decoding="async" />
   )}
 </div>
 

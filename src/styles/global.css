@@ -327,6 +327,9 @@ p { text-wrap: pretty; }
 @media (hover: hover) and (pointer: fine) {
   .cell::after { transition: --filo 160ms var(--ease-out); }
   .cell:hover::after { --filo: var(--rosso); }
+  /* le celle piene d'inchiostro (Bio, recapiti…) diventano rosse anche di fondo */
+  .cell--red { transition: background-color 160ms var(--ease-out); }
+  .cell--red:hover { background-color: var(--rosso); }
   /* e la didascalia dei progetti (il rettangolo col titolo) si colora con lui */
   .cell > .caption { transition: background-color 160ms var(--ease-out); }
   .cell:hover > .caption { background-color: var(--rosso); }
@@ -372,6 +375,7 @@ p { text-wrap: pretty; }
 
 /* scritte sulle foto: sempre chiare (d'inchiostro sulle foto non si leggevano) */
 .cell:has(> .duo) > :is(.cell__label, .cell__go) { color: var(--chiaro); }
+.cell:has(> .duo[data-etichette="scure"]) > :is(.cell__label, .cell__go) { color: var(--inchiostro); }
 
 /* Didascalia (titolo dei progetti, 30/10/2026, idea di Roberto): un rettangolo d'inchiostro grande quanto il testo,
    attaccato sotto la cella a sinistra, fuori dalla cella (stacca dalla rigidità del quadrato). Alto un quadretto
@@ -397,6 +401,8 @@ p { text-wrap: pretty; }
    velo a quadretti in hover (fino alla 1.4.95), dithering a 1 bit (17/10/2026) */
 .duo { position: absolute; inset: 0; background: var(--bianco); }
 .duo img, .duo video { width: 100%; height: 100%; object-fit: cover; }
+/* un logo non si taglia: intero anche se la forma della cella non è quella della tavola */
+.duo .duo__overlay { position: absolute; inset: 0; object-fit: contain; }
 
 /* ── Intro (solo al primo caricamento) ────────────────── */
 /* 1. il filo parte da un vertice (data-from, scelto a caso da Layout.astro) e fa il giro;

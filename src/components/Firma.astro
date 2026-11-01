@@ -1,0 +1,44 @@
+---
+// ROBERTO piccolo col font del logotipo in alto a sinistra, fisso, maiuscole alte un quadretto del tavolo a 1×
+// (25px, 18 sul telefono; sta fuori da .tavolo, lo zoom non lo cambia).
+// - Sul tavolo è solo un segno (il nome lo dice già la cella `nome`): inerte, sotto si trascina il tavolo.
+// - Col foglio aperto resta dov'è e porta alla home (1/11/2026): data-close chiude tutta la pila, come le celle
+//   Indice (scripts/foglio, che lo rende inerte o vivo con il tavolo). In hover le lettere si riempiono di rosso
+//   una alla volta da sinistra, e lasciandolo si svuotano da destra.
+import { Q } from '../lib/tavolo';
+
+interface Props { /** la pagina è il tavolo (home) */ inerte?: boolean }
+const { inerte = false } = Astro.props;
+/** lettere col loro turno: --i da sinistra, --j da destra */
+const lettere = [...'Roberto'].map((l, i, tutte) => ({ l, stile: `--i:${i};--j:${tutte.length - 1 - i}` }));
+---
+
+<a class="firma logotipo" href="/" data-close data-firma inert={inerte} aria-label="Roberto Tanasi, torna al tavolo" style={`--q-lg:${Q.lg}px;--q-sm:${Q.sm}px`}>
+  <span aria-hidden="true">{lettere.map(({ l, stile }) => <span class="firma__l" style={stile}>{l}</span>)}</span>
+</a>
+
+<style>
+  .firma {
+    position: fixed; z-index: 40;
+    top: max(var(--gap), env(safe-area-inset-top));
+    left: max(var(--gap), env(safe-area-inset-left));
+    font-size: calc(var(--q-lg) / var(--maiuscole));
+    color: var(--inchiostro); text-decoration: none;
+  }
+  @media (max-width: 599px) { .firma { font-size: calc(var(--q-sm) / var(--maiuscole)); } }
+  /* sul tavolo i gesti passano sotto */
+  :global(html.is-tavolo) .firma { pointer-events: none; }
+
+  /* il ritardo è quello dello stato d'arrivo: entrando da sinistra (--i), uscendo da destra (--j). 35ms tra una
+     lettera e l'altra (stagger sotto i 50) */
+  .firma__l {
+    transition: color 60ms linear;
+    transition-delay: calc(var(--j) * 35ms);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .firma:hover .firma__l {
+      color: var(--rosso);
+      transition-delay: calc(var(--i) * 35ms);
+    }
+  }
+</style>

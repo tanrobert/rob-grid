@@ -5,6 +5,8 @@ period: "dal 2024"
 description: "Kiale Food Service è una cucina artigianale specializzata in piatti pronti da asporto e servizi buffet per ogni tipo di occasione. Ogni preparazione parte da ingredienti freschi selezionati, lavorati ogni giorno con la stessa cura di una cucina di casa."
 featured: true
 marchio: cliente
+# copertina chiara: numero, freccia e ✕ in inchiostro
+etichette: scure
 # copertina: manifesti e volantini sparsi (da sorgenti/kiale/kiale-copertina-volantini.png, 4500×3000, portata a 3600×2400).
 # Prima era il poster estivo nel mockup (sorgenti/kiale/kiale-poster-1.png, 4×5)
 shape: { w: 6, h: 4 }

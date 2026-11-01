@@ -99,7 +99,7 @@ export type Cell = CellBase & (
     }
   | { type: 'list'; title: string; items: Array<string | { label: string; href: string }> }
   | { type: 'stat'; value: string; caption: string; /** il numero sale da 0 quando la cella entra in vista */ countUp?: boolean; /** h1 nascosto: la cella fa da hero di una pagina */ heading?: string }
-  | { type: 'media'; image?: ImageMetadata; video?: string; alt: string; caption?: string }
+  | { type: 'media'; image?: ImageMetadata; video?: string; overlay?: ImageMetadata; etichette?: 'scure'; alt: string; caption?: string }
   | { type: 'project'; slug: string }
   | { type: 'clock' }
   | { type: 'cursor' }
@@ -125,7 +125,7 @@ export type Cell = CellBase & (
    *  quel lato della cella (più grande, a filo del bordo), che entra ed esce scivolando da lì */
   | { type: 'sottologo'; logo: string; immagini: Array<{ image: ImageMetadata; alt: string; lato?: 'sinistra' }>; eyebrow?: string; title?: string; body?: string }
   /** cella 02 delle pagine progetto con la foto di contesto: titolo (h1) e descrizione, sotto la foto a tutta larghezza */
-  | { type: 'contesto'; eyebrow?: string; title: string; body?: string; image: ImageMetadata; alt: string }
+  | { type: 'contesto'; eyebrow?: string; title: string; body?: string; image: ImageMetadata; alt: string; fondo?: string }
   /** pagina d'errore: codice grande con glitch, titolo (h1) e link all'indice, su carta a quadretti */
   | { type: 'error'; code: string; title: string }
   /** recapiti (email, luogo, P.IVA, versione): cella del tavolo e dei fogli */

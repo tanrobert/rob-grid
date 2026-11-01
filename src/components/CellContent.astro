@@ -60,7 +60,7 @@ if (cell.type === 'project' && !p) throw new Error(`[grid] progetto non trovato:
     attrs={filterable ? { 'data-tags': p.tags.map(tagSlug).join(' ') } : undefined}
   >
     {/* alt vuoto: la cella è un link e la didascalia lo nomina già */}
-    <MediaCell image={p.image} video={p.video} alt="" sizes={sizes} title={p.title} priority={priority} />
+    <MediaCell image={p.image} video={p.video} overlay={p.overlay} etichette={p.etichette} alt="" sizes={sizes} title={p.title} priority={priority} />
   </Cell>
 ) : (
   <Cell cell={cell} index={index} turno={turno}>
@@ -70,7 +70,7 @@ if (cell.type === 'project' && !p) throw new Error(`[grid] progetto non trovato:
     {cell.type === 'text' && <TextCell title={cell.title} body={cell.body} as={cell.as} size={cell.size} immagini={cell.immagini} sizes={sizes} />}
     {cell.type === 'list' && <ListCell items={cell.items} />}
     {cell.type === 'stat' && <StatCell value={cell.value} caption={cell.caption} countUp={cell.countUp} heading={cell.heading} />}
-    {cell.type === 'media' && <MediaCell image={cell.image} video={cell.video} alt={cell.alt} sizes={sizes} title={cell.caption} priority={!!cell.heroOf} />}
+    {cell.type === 'media' && <MediaCell image={cell.image} video={cell.video} overlay={cell.overlay} etichette={cell.etichette} alt={cell.alt} sizes={sizes} title={cell.caption} priority={!!cell.heroOf} />}
     {cell.type === 'clock' && <ClockCell />}
     {cell.type === 'meter' && <MeterCell />}
     {cell.type === 'cursor' && <CursorCell />}
@@ -82,7 +82,7 @@ if (cell.type === 'project' && !p) throw new Error(`[grid] progetto non trovato:
     {cell.type === 'sticker' && <StickerCell immagini={cell.immagini} alt={cell.alt} title={cell.title} body={cell.body} button={cell.button} />}
     {cell.type === 'affissione' && <AffissioneCell affissioni={cell.affissioni} title={cell.title} sizes={sizes} />}
     {cell.type === 'sottologo' && <SottologoCell logo={cell.logo} immagini={cell.immagini} title={cell.title} body={cell.body} sizes={sizes} />}
-    {cell.type === 'contesto' && <ContestoCell title={cell.title} body={cell.body} image={cell.image} alt={cell.alt} sizes={sizes} />}
+    {cell.type === 'contesto' && <ContestoCell title={cell.title} body={cell.body} image={cell.image} alt={cell.alt} fondo={cell.fondo} sizes={sizes} />}
     {cell.type === 'error' && <ErrorCell code={cell.code} title={cell.title} />}
     {cell.type === 'archive-head' && <ArchiveHeadCell total={cell.total} />}
     {cell.type === 'tags' && <TagsCell tags={cell.tags} total={projects} />}

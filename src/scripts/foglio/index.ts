@@ -107,7 +107,6 @@ function copia(hero: HTMLElement, r: DOMRect, da: HTMLElement = hero) {
   c.classList.add('in-volo');
   c.setAttribute('aria-hidden', 'true');
   c.inert = true;
-  c.querySelectorAll('video').forEach(v => v.remove());
   // la foto già scaricata della hero: partendo piccola la copia sceglierebbe un file più piccolo, ancora da
   // scaricare, e volerebbe vuota
   const foto = hero.querySelectorAll('img');
@@ -117,6 +116,14 @@ function copia(hero: HTMLElement, r: DOMRect, da: HTMLElement = hero) {
     img.removeAttribute('sizes');
     img.loading = 'eager';
     img.src = foto[i].currentSrc;
+  });
+  // al posto del video vola il suo poster (dopo le foto, che si abbinano per posizione)
+  c.querySelectorAll('video').forEach(v => {
+    if (!v.poster) return v.remove();
+    const img = document.createElement('img');
+    img.src = v.poster;
+    img.alt = '';
+    v.replaceWith(img);
   });
   // visibile anche se la hero, all'apertura, è già nascosta in attesa del volo
   Object.assign(c.style, { position: 'fixed', left: '0', top: '0', margin: '0', zIndex: '45', pointerEvents: 'none', visibility: 'visible', opacity: '1' });
@@ -143,6 +150,9 @@ function principale() {
 function tavoloVivo(vivo: boolean) {
   html.classList.toggle('is-tavolo', vivo);
   if (tavolo) tavolo.v.el.inert = !vivo;
+  // la firma in alto a sinistra: sul tavolo solo segno, coi fogli porta al tavolo (components/Firma)
+  const firma = document.querySelector<HTMLElement>('[data-firma]');
+  if (firma) firma.inert = vivo;
 }
 
 /**

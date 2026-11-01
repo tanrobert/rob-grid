@@ -1,7 +1,8 @@
 ---
 // Cella 02 delle pagine progetto quando il progetto ha una foto di contesto (`contesto` nell'index.md): titolo del
 // progetto (h1) e descrizione in alto, come la cella di testo piccola, e sotto la foto a tutta larghezza, a filo dei
-// lati e del fondo della cella.
+// lati e del fondo della cella. Con `fondo` (immagini piccole, es. un vecchio banner): la foto intera, alla sua misura
+// (mai ingrandita), al centro di un campo del suo colore.
 import type { ImageMetadata } from 'astro';
 import { Image } from 'astro:assets';
 import Paragrafi from '../Paragrafi.astro';
@@ -11,19 +12,26 @@ interface Props {
   body?: string;
   image: ImageMetadata;
   alt: string;
+  fondo?: string;
   sizes: string;
 }
-const { title, body, image, alt, sizes } = Astro.props;
+const { title, body, image, alt, fondo, sizes } = Astro.props;
 ---
 
-<div class="contesto">
+<div class:list={['contesto', fondo && 'contesto--fondo']}>
   <div class="testo">
     <h1 class="titoletto">{title}</h1>
     {body && <div class="body paragrafo"><Paragrafi testo={body} /></div>}
   </div>
-  <div class="foto">
-    <Image src={image} alt={alt} widths={[600, 1000, 1500]} sizes={sizes} loading="eager" decoding="async" />
-  </div>
+  {fondo ? (
+    <div class="foto foto--fondo" style={{ background: fondo }} data-intero>
+      <Image src={image} alt={alt} loading="eager" decoding="async" />
+    </div>
+  ) : (
+    <div class="foto">
+      <Image src={image} alt={alt} widths={[600, 1000, 1500]} sizes={sizes} loading="eager" decoding="async" />
+    </div>
+  )}
 </div>
 
 <style>
@@ -32,4 +40,9 @@ const { title, body, image, alt, sizes } = Astro.props;
   .testo { display: flex; flex-direction: column; gap: var(--m); padding: var(--pad-label) var(--pad) var(--pad); }
   .foto { position: relative; overflow: hidden; }
   .foto img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  /* campo colorato quadrato (100cqi = larghezza della cella), lo spazio che avanza va sotto il testo; se non ci sta
+     esce dal fondo e scripts/mosaico.ts (data-intero) allunga la cella, invece di schiacciarlo */
+  .contesto--fondo { grid-template-rows: 1fr 100cqi; }
+  .foto--fondo { display: grid; place-items: center; }
+  .foto--fondo img { position: static; width: auto; height: auto; max-width: 100%; max-height: 100%; object-fit: contain; }
 </style>

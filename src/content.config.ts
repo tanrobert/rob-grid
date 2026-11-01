@@ -101,10 +101,15 @@ const progetti = defineCollection({
       marchio: z.union([z.literal('mio'), z.literal('cliente'), z.strictObject({ di: z.string() })]).optional(),
       /** Forma della copertina in unità: cella in home e archivio, ×2 nella hero. Tavola: 600 px per unità */
       shape: z.strictObject(span).optional(),
-      /** Foto di contesto (il posto, le persone): nella pagina progetto sotto titolo e descrizione */
-      contesto: z.strictObject({ foto: image(), alt: z.string() }).optional(),
+      /** Foto di contesto (il posto, le persone): nella pagina progetto sotto titolo e descrizione.
+          `fondo` (colore del fondo della foto): foto intera, mai ingrandita, al centro di un campo di quel colore (immagini piccole) */
+      contesto: z.strictObject({ foto: image(), alt: z.string(), fondo: z.string().regex(/^#[0-9a-f]{6}$/i).optional() }).optional(),
       /** Video in loop (percorso in /public), al posto della copertina, che gli fa da poster */
       video: z.string().optional(),
+      /** PNG trasparente sopra video o copertina (es. il logo sopra il video), stessa tavola della copertina */
+      overlay: image().optional(),
+      /** Numero, freccia e ✕ della copertina scuri (copertine chiare); di base chiari */
+      etichette: z.literal('scure').optional(),
       cells: z.array(cell).optional(),
     });
   },

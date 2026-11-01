@@ -6,6 +6,7 @@
 // nel browser per la finestra vera, prima di mostrare il tavolo.
 import type { Cell } from '../../data/grid-types';
 import CellContent from '../CellContent.astro';
+import Firma from '../Firma.astro';
 import { inQuadretti, pack, FINESTRE, Q, versione } from '../../lib/tavolo';
 import { BREAKPOINTS } from '../../lib/grid';
 import { svgs } from '../../data/svgs';
@@ -100,8 +101,7 @@ const sagoma = (c: Cell) => (c.frame === false && c.type === 'svg' ? svgs[c.svg]
   </div>
 </Radice>
 
-{/* ROBERTO piccolo in alto a sinistra: solo segno (il nome lo dice già la cella `nome`) */}
-<span class="firma logotipo" aria-hidden="true" style={`--q-lg:${Q.lg}px;--q-sm:${Q.sm}px`}>Roberto</span>
+<Firma inerte={!sotto} />
 {/* zoom del tavolo in alto a destra (scripts/tavolo/vista.ts, scala): 1× = quadretto di base */}
 <span class="zoom mono" data-zoom aria-hidden="true">1×</span>
 {/* la barra in basso: a sinistra le scritte piccole dei recapiti (P.IVA, informativa, anno, versione), a destra i
@@ -335,18 +335,7 @@ const sagoma = (c: Cell) => (c.frame === false && c.type === 'svg' ? svgs[c.svg]
   .piede.is-scorre .piede__nastro { animation: piede-scorre var(--durata, 30s) linear infinite; }
   @keyframes piede-scorre { to { transform: translate3d(-50%, 0, 0); } }
   .attrezzi[hidden], .attrezzi [hidden] { display: none; }
-  /* ROBERTO piccolo in alto a sinistra, maiuscole alte un quadretto del tavolo a 1× (25px, 18 sul telefono; sta fuori
-     da .tavolo, quindi lo zoom non lo cambia). Non si prende: sotto si trascina il tavolo */
-  .firma {
-    position: fixed; z-index: 40;
-    top: max(var(--gap), env(safe-area-inset-top));
-    left: max(var(--gap), env(safe-area-inset-left));
-    font-size: calc(var(--q-lg) / var(--maiuscole));
-    color: var(--inchiostro);
-    pointer-events: none;
-  }
-  @media (max-width: 599px) { .firma { font-size: calc(var(--q-sm) / var(--maiuscole)); } }
-  /* zoom in alto a destra, alla stessa distanza della firma */
+  /* zoom in alto a destra, alla stessa distanza della firma (components/Firma) */
   .zoom {
     position: fixed; z-index: 40;
     top: max(var(--gap), env(safe-area-inset-top));
@@ -355,7 +344,7 @@ const sagoma = (c: Cell) => (c.frame === false && c.type === 'svg' ? svgs[c.svg]
     pointer-events: none;
   }
   /* col foglio aperto i comandi del tavolo non servono */
-  :global(html.ha-foglio:not(.is-tavolo)) :is(.barra, .firma, .zoom) { display: none; }
+  :global(html.ha-foglio:not(.is-tavolo)) :is(.barra, .zoom) { display: none; }
   .attrezzi button {
     appearance: none; margin: 0;
     padding: 10px 12px;

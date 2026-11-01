@@ -41,6 +41,15 @@ const recapiti: Cell = { id: 'recapiti', type: 'contatti', w: 4, h: 2, tone: 're
     --q-testo: var(--qf);
   }
   @media (max-width: 599px) { :global(html:is(.ha-foglio, .ha-pagina) body) { --qf-max: 100vw; } }
+  /* telefono, fogli sopra il tavolo (1/11/2026, scelta di Roberto: più spazio alle celle): niente margini ai lati, le
+     celle toccano i bordi dello schermo. Le 4 colonne riempiono la finestra (4·4−1 quadretti); gli spazi tra le celle,
+     in verticale e tra due affiancate, restano di un quadretto. 1fr: i pixel che l'arrotondamento del quadretto
+     lascia (meno di 15) si spartiscono tra le colonne, così la griglia arriva ai due bordi */
+  @media (max-width: 599px) {
+    :global(html.ha-foglio body) { --qf: round(down, 100vw / (var(--cols) * 4 - 1), 1px); }
+    .foglio[data-foglio] { width: 100%; padding-inline: 0; }
+    .foglio[data-foglio] :global(.grid) { grid-template-columns: repeat(var(--cols), 1fr); justify-content: normal; }
+  }
   .foglio {
     --gap: var(--qf);
     --u: calc(var(--qf) * 3);
@@ -51,6 +60,10 @@ const recapiti: Cell = { id: 'recapiti', type: 'contatti', w: 4, h: 2, tone: 're
     margin-inline: auto;
     padding: var(--qf);
   }
+  /* sopra il tavolo la firma (components/Firma) resta fissa in alto a sinistra: le celle partono sotto di lei, con
+     un quadretto di carta in mezzo. 25 e 18 = la sua altezza (Q.lg, Q.sm di lib/tavolo.ts) */
+  .foglio[data-foglio] { padding-top: calc(var(--m) + 25px + var(--qf)); }
+  @media (max-width: 599px) { .foglio[data-foglio] { padding-top: calc(var(--m) + 18px + var(--qf)); } }
 
   /* colonne vuote chiuse (auto-fit) e quelle usate al centro: lo scarto è di mezze colonne, cioè quadretti interi.
      Non nell'archivio: filtrando le colonne usate cambiano e tutta la griglia si sposterebbe */

@@ -34,10 +34,10 @@ const siblingCell = (id: string, label: string, step: number): Cell => {
 };
 
 const cells: Cell[] = [
-  { id: 'hero', type: 'media', ...heroSpan, heroOf: `/progetti/${p.slug}`, image: p.image, video: p.video, alt: `${p.title} · ${senzaSegni(p.description)}` },
-  // con la foto di contesto la cella si allunga: il testo e, sotto, la foto
+  { id: 'hero', type: 'media', ...heroSpan, heroOf: `/progetti/${p.slug}`, image: p.image, video: p.video, overlay: p.overlay, etichette: p.etichette, alt: `${p.title} · ${senzaSegni(p.description)}` },
+  // con la foto di contesto la cella si allunga: il testo e, sotto, la foto (con `fondo` il campo colorato resta quadrato)
   p.contesto
-    ? { id: 'progetto', type: 'contesto', w: 4, h: 7, eyebrow: 'Contesto', title: p.title, body: descrizione, image: p.contesto.foto, alt: p.contesto.alt }
+    ? { id: 'progetto', type: 'contesto', w: 4, h: p.contesto.fondo ? 5 : 7, eyebrow: 'Contesto', title: p.title, body: descrizione, image: p.contesto.foto, alt: p.contesto.alt, fondo: p.contesto.fondo }
     : { id: 'progetto', type: 'text', w: 4, h: 2, as: 'h1', size: 's', eyebrow: 'Progetto', title: p.title, body: descrizione },
   // celle proprie del progetto (cells in index.md); finché non ci sono, il segnaposto
   ...(p.cells ?? [{ id: 'nota', type: 'text', w: 4, h: 2, size: 's', title: 'Contenuto segnaposto: qui andranno immagini, processo e risultati.' }]),

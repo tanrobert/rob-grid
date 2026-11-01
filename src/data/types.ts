@@ -17,8 +17,12 @@ export interface Project {
   image?: ImageMetadata;
   /** Video in loop (percorso in /public), mostrato al posto di `image`, che gli fa da poster */
   video?: string;
+  /** PNG trasparente sopra video o copertina (es. il logo sopra il video), stessa tavola */
+  overlay?: ImageMetadata;
+  /** Numero, freccia e ✕ della copertina scuri (copertine chiare); di base chiari */
+  etichette?: 'scure';
   /** Foto di contesto (il posto, le persone): nella pagina progetto sotto titolo e descrizione, nella cella 02 */
-  contesto?: { foto: ImageMetadata; alt: string };
+  contesto?: { foto: ImageMetadata; alt: string; fondo?: string };
   /** Celle proprie della pagina progetto (cells in index.md), tra le celle fisse e precedente/successivo */
   cells?: Cell[];
 }

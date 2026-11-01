@@ -17,7 +17,7 @@ const ATTESA = 150;  // ms senza resize prima di rimisurare
 // il logotipo ha il riquadro rifilato sull'inchiostro: le righe del testo escono per costruzione
 const FUORI = '[aria-hidden="true"], .cell__label, .caption, .sr-only, .logotipo, svg';
 
-/** di quanti px il testo della cella esce dal suo rettangolo (0 = ci sta) */
+/** di quanti px il testo (o un blocco `data-intero`) della cella esce dal suo rettangolo (0 = ci sta) */
 function esce(cella: HTMLElement, rg: Range) {
   const r = cella.getBoundingClientRect();
   const testi = document.createTreeWalker(cella, NodeFilter.SHOW_TEXT);
@@ -28,6 +28,8 @@ function esce(cella: HTMLElement, rg: Range) {
     const t = rg.getBoundingClientRect();
     if (t.height) fuori = Math.max(fuori, r.top - t.top, t.bottom - r.bottom);
   }
+  // blocchi con un'altezza minima che non si devono tagliare (es. il campo quadrato della cella contesto)
+  cella.querySelectorAll('[data-intero]').forEach(el => { fuori = Math.max(fuori, el.getBoundingClientRect().bottom - r.bottom); });
   return fuori > 0.5 ? fuori : 0;
 }
 

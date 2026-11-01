@@ -37,11 +37,12 @@ export function spanStyle(cell: Cell): string {
 
 /** `sizes` per <Image>: larghezza reale della cella a ogni breakpoint (components/foglio). Una cella larga w unità
     è 4w−1 quadretti; il foglio è largo 4·colonne+1 quadretti, quindi finché il quadretto segue la finestra la cella
-    ne è una frazione fissa, da QF_MAX in su (oltre si aggiungono colonne) ha una misura fissa in px. */
+    ne è una frazione fissa, da QF_MAX in su (oltre si aggiungono colonne) ha una misura fissa in px. Sul telefono
+    il foglio non ha margini ai lati (4·colonne−1 quadretti, components/foglio) */
 export function mediaSizes(cell: Cell): string {
   const { lg, md, sm } = resolveSpans(cell);
   const q = (w: number) => 4 * w - 1;
-  const vw = (w: number, cols: number) => `${((q(w) / (4 * cols + 1)) * 100).toFixed(2)}vw`;
+  const vw = (w: number, cols: number, quadretti = 4 * cols + 1) => `${((q(w) / quadretti) * 100).toFixed(2)}vw`;
   const px = (w: number) => `${q(w) * QF_MAX}px`;
   const fisso = (cols: number) => (4 * cols + 1) * QF_MAX;
   return [
@@ -49,6 +50,6 @@ export function mediaSizes(cell: Cell): string {
     `(min-width: ${BREAKPOINTS.lg}px) ${vw(lg.w, COLS.lg)}`,
     `(min-width: ${fisso(COLS.md)}px) ${px(md.w)}`,
     `(min-width: ${BREAKPOINTS.md}px) ${vw(md.w, COLS.md)}`,
-    vw(sm.w, COLS.sm),
+    vw(sm.w, COLS.sm, 4 * COLS.sm - 1),
   ].join(', ');
 }
