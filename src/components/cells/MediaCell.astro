@@ -7,7 +7,7 @@ import path from 'node:path';
 interface Props {
   image?: ImageMetadata;
   video?: string;
-  /** PNG trasparente posato sopra video o immagine (stessa tavola della copertina) */
+  /** PNG trasparente o SVG posato sopra video o immagine (stessa tavola della copertina) */
   overlay?: ImageMetadata;
   /** numero, freccia e ✕ della cella scuri (global.css), per le foto chiare */
   etichette?: 'scure';
@@ -17,8 +17,16 @@ interface Props {
   title?: string;
   /** Hero della pagina: caricata subito, deve esserci già quando il foglio si apre */
   priority?: boolean;
+  /** seconda foto sotto la prima, nella stessa cella: ognuna a tutta larghezza, metà altezza */
+  seconda?: { image: ImageMetadata; alt: string };
+  /** le foto (non video né disegni) si ingrandiscono al clic, sopra il retino (scripts/ingrandisci.ts) */
+  ingrandisci?: boolean;
 }
-const { image, video, overlay, etichette, alt, sizes, title, priority = false } = Astro.props;
+const { image, video, overlay, alt, sizes, title, priority = false, seconda, ingrandisci } = Astro.props;
+const grande = (testo: string) => ingrandisci ? { 'data-ingrandisci': '', tabindex: 0, role: 'button' as const, 'aria-label': `Ingrandisci: ${testo}` } : {};
+// un disegno SVG (es. una grafica del cliente) va così com'è, intero sulla carta: etichette scure
+const disegno = !video && image?.format === 'svg';
+const etichette = disegno ? 'scure' : Astro.props.etichette;
 const inPublic = (file?: string) => !!file && file !== video && fs.existsSync(path.join(process.cwd(), 'public', file));
 // se accanto all'mp4 (H.264, per tutti) c'è lo stesso nome in .webm (AV1, molto più leggero), chi lo sa leggere usa quello
 const webm = video?.replace(/\.mp4$/, '.webm');
@@ -29,16 +37,24 @@ const poster = inPublic(posterWebp) ? posterWebp
   : image && video ? (await getImage({ src: image, width: 1280, format: 'webp' })).src : undefined;
 ---
 
-<div class="duo" data-etichette={etichette}>
+<div class:list={['duo', seconda && 'duo--pila']} data-etichette={etichette}>
   {video ? (
     <video data-autoplay muted loop playsinline preload="none" poster={poster} aria-label={alt || undefined}>
       {conWebm && <source src={webm} type='video/webm; codecs="av01.0.05M.08"' />}
       <source src={video} type="video/mp4" />
     </video>
+  ) : disegno ? (
+    <img class="duo__disegno" src={image.src} width={image.width} height={image.height} alt={alt} loading={priority ? 'eager' : 'lazy'} decoding="async" />
   ) : image && (
-    <Image src={image} alt={alt} widths={[400, 800, 1200, 1600, 2400]} sizes={sizes} loading={priority ? 'eager' : 'lazy'} fetchpriority={priority ? 'high' : undefined} decoding="async" />
+    <Image src={image} alt={alt} {...grande(alt)} widths={[400, 800, 1200, 1600, 2400]} sizes={sizes} loading={priority ? 'eager' : 'lazy'} fetchpriority={priority ? 'high' : undefined} decoding="async" />
   )}
-  {overlay && (
+  {seconda && (
+    <Image src={seconda.image} alt={seconda.alt} {...grande(seconda.alt)} widths={[400, 800, 1200, 1600]} sizes={sizes} loading="lazy" decoding="async" />
+  )}
+  {/* un SVG va così com'è: nitido a ogni zoom, niente WebP in più misure */}
+  {overlay?.format === 'svg' ? (
+    <img class="duo__overlay" src={overlay.src} width={overlay.width} height={overlay.height} alt="" loading={priority ? 'eager' : 'lazy'} decoding="async" />
+  ) : overlay && (
     <Image class="duo__overlay" src={overlay} alt="" widths={[400, 800, 1200, 1600, 2400]} sizes={sizes} loading={priority ? 'eager' : 'lazy'} decoding="async" />
   )}
 </div>

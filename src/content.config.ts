@@ -41,7 +41,13 @@ const progetti = defineCollection({
   }),
   schema: ({ image }) => {
     const cell = z.discriminatedUnion('type', [
-      z.strictObject({ ...base, type: z.literal('media'), image: image().optional(), video: z.string().optional(), alt: z.string(), caption: z.string().optional() }),
+      // seconda: un'altra foto sotto la prima, nella stessa cella
+      z.strictObject({
+        ...base, type: z.literal('media'), image: image().optional(), video: z.string().optional(), alt: z.string(), caption: z.string().optional(),
+        seconda: z.strictObject({ image: image(), alt: z.string() }).optional(),
+        // le foto si ingrandiscono al clic (scripts/ingrandisci.ts)
+        ingrandisci: z.literal(true).optional(),
+      }),
       z.strictObject({
         ...base, type: z.literal('text'), eyebrow: z.string().optional(), title: z.string(),
         body: z.union([z.string(), z.array(z.string())]).optional(),
@@ -86,6 +92,14 @@ const progetti = defineCollection({
         // lato: la foto è attaccata a quel lato della cella (es. un braccio che arriva dal bordo), entra ed esce da lì
         immagini: z.array(z.strictObject({ image: image(), alt: z.string(), lato: z.literal('sinistra').optional() })),
         eyebrow: z.string().optional(), title: z.string().optional(), body: z.string().optional(),
+      }),
+      // la radio Purple Piper in diretta (data/radio.ts): logo, bottone, brano in onda
+      z.strictObject({ ...base, type: z.literal('radio'), eyebrow: z.string().optional() }),
+      // la costruzione di un segno che si disegna da sola: `disegno` = SVG coi tratti vivi nella cartella del progetto,
+      // chiamato costruzione-*.svg (data/projects.ts lo legge)
+      z.strictObject({
+        ...base, type: z.literal('costruzione'), disegno: z.string().regex(/^\.\/costruzione-[\w-]+\.svg$/, 'disegno: ./costruzione-<nome>.svg'),
+        alt: z.string(), eyebrow: z.string().optional(), title: z.string().optional(), body: z.string().optional(),
       }),
     ]);
 

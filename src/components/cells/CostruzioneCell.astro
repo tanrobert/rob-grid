@@ -1,0 +1,38 @@
+---
+// La costruzione di un segno (Purple Piper: la P del logo) che si disegna da sola: titolone in alto, il disegno in
+// mezzo, il paragrafo in fondo. L'SVG è quello di Illustrator coi tratti vivi, preparato al build (lib/costruzione.ts)
+// e disegnato da scripts/costruzione.ts quando entra in vista; un clic lo rifà. Senza JavaScript è già completo.
+import { costruzione } from '../../lib/costruzione';
+import Paragrafi from '../Paragrafi.astro';
+
+interface Props {
+  /** SVG grezzo (data/projects.ts lo legge dalla cartella del progetto) */
+  svg: string;
+  /** nome per gli errori di build e per gli id delle maschere: progetto · cella */
+  nome: string;
+  alt: string;
+  title?: string;
+  body?: string;
+}
+const { svg, nome, alt, title, body } = Astro.props;
+const disegno = costruzione(svg, { nome, alt });
+---
+
+<div class="costruzione" data-costruzione>
+  {title && <div class="testo"><h2 class="titolo titolone" data-lente="inversa">{title}</h2></div>}
+  <div class="disegno"><Fragment set:html={disegno} /></div>
+  {body && <div class="body paragrafo"><Paragrafi testo={body} /></div>}
+</div>
+
+<style>
+  /* in colonna: titolone, il disegno in tutto lo spazio che resta (mai più basso di così: se il testo non ci sta
+     cresce la cella, scripts/mosaico.ts), il paragrafo in fondo */
+  .costruzione { position: absolute; inset: 0; display: grid; grid-template: auto minmax(60cqi, 1fr) auto / minmax(0, 1fr); }
+  .testo { padding: var(--pad-label) var(--pad) 0; pointer-events: none; }
+  .disegno { position: relative; cursor: var(--cursore-mano); }
+  .disegno > :global(svg) {
+    position: absolute; inset: var(--pad);
+    width: calc(100% - 2 * var(--pad)); height: calc(100% - 2 * var(--pad));
+  }
+  .body { padding: var(--pad); }
+</style>

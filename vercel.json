@@ -8,6 +8,12 @@
       ]
     },
     {
+      "source": "/radio/stato",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store" }
+      ]
+    },
+    {
       "source": "/(.*)",
       "headers": [
         { "key": "X-Content-Type-Options", "value": "nosniff" },
@@ -16,5 +22,8 @@
         { "key": "Content-Security-Policy", "value": "frame-ancestors 'self'" }
       ]
     }
+  ],
+  "rewrites": [
+    { "source": "/radio/stato", "destination": "https://s2.shoutitaly.com/radio/8030/stats?sid=1&json=1" }
   ]
 }

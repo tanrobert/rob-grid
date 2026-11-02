@@ -17,7 +17,7 @@ export interface Project {
   image?: ImageMetadata;
   /** Video in loop (percorso in /public), mostrato al posto di `image`, che gli fa da poster */
   video?: string;
-  /** PNG trasparente sopra video o copertina (es. il logo sopra il video), stessa tavola */
+  /** SVG o PNG trasparente sopra video o copertina (es. il logo sopra il video), stessa tavola */
   overlay?: ImageMetadata;
   /** Numero, freccia e ✕ della copertina scuri (copertine chiare); di base chiari */
   etichette?: 'scure';

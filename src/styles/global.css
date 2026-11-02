@@ -22,6 +22,9 @@
   --roberto-w: 5.21;
   --maiuscole: 0.68;
 
+  /* retino dei fogli aperti: carta piena con un foro ogni 4px (components/foglio, foto ingrandite) */
+  --retino: radial-gradient(circle at 2px 2px, transparent 0 0.9px, var(--bianco) 1.1px) 0 0 / 4px 4px;
+
   /* modulo di base */
   --m:    10px;
   --gap:  var(--m);
@@ -375,6 +378,8 @@ p { text-wrap: pretty; }
 
 /* scritte sulle foto: sempre chiare (d'inchiostro sulle foto non si leggevano) */
 .cell:has(> .duo) > :is(.cell__label, .cell__go) { color: var(--chiaro); }
+/* la radio è un blocco viola (RadioCell): numero e occhiello in carta */
+.cell:has(> [data-radio]) > .cell__label { color: var(--bianco); }
 .cell:has(> .duo[data-etichette="scure"]) > :is(.cell__label, .cell__go) { color: var(--inchiostro); }
 
 /* Didascalia (titolo dei progetti, 30/10/2026, idea di Roberto): un rettangolo d'inchiostro grande quanto il testo,
@@ -403,6 +408,35 @@ p { text-wrap: pretty; }
 .duo img, .duo video { width: 100%; height: 100%; object-fit: cover; }
 /* un logo non si taglia: intero anche se la forma della cella non è quella della tavola */
 .duo .duo__overlay { position: absolute; inset: 0; object-fit: contain; }
+/* due foto una sopra l'altra (MediaCell `seconda`), metà cella ciascuna, divise dal filo */
+.duo--pila { display: flex; flex-direction: column; }
+.duo--pila img { flex: 1 1 0; min-height: 0; }
+.duo--pila img + img { border-top: var(--line) solid var(--inchiostro); }
+/* foto ingrandita (MediaCell `ingrandisci`, scripts/ingrandisci.ts): la foto in un <dialog> a tutta finestra, sopra
+   il retino come un foglio aperto; la ✕ in alto a destra, un clic ovunque chiude */
+.grande {
+  position: fixed; inset: 0; width: 100%; height: 100%; max-width: none; max-height: none;
+  margin: 0; padding: 0; border: 0; background: none; overflow: hidden; cursor: var(--cursore-mano);
+}
+.grande::backdrop { background: none; }
+.grande:focus { outline: none; }
+.grande__retino { position: absolute; inset: 0; background: var(--retino); }
+.grande__foto { position: fixed; left: 0; top: 0; max-width: none; object-fit: cover; }
+.grande__chiudi {
+  position: fixed; top: var(--gap); right: var(--gap);
+  display: grid; place-items: center; width: var(--riga-label); height: var(--riga-label);
+  color: var(--inchiostro); background: none; border: 0;
+}
+/* si prende anche attorno al segno, come la ✕ delle hero */
+.grande__chiudi::before { content: ''; position: absolute; inset: calc(var(--pad) * -1); }
+.grande__chiudi svg { width: 100%; height: 100%; fill: currentColor; }
+/* un disegno SVG in pila: metà cella, intero, staccato dai bordi come da solo */
+.duo.duo--pila .duo__disegno { position: static; width: 100%; height: auto; padding: var(--pad-label); }
+/* disegno SVG (MediaCell): intero, lontano da numero e freccia quanto il contenuto delle altre celle */
+.duo .duo__disegno {
+  position: absolute; inset: var(--pad-label);
+  width: calc(100% - 2 * var(--pad-label)); height: calc(100% - 2 * var(--pad-label)); object-fit: contain;
+}
 
 /* ── Intro (solo al primo caricamento) ────────────────── */
 /* 1. il filo parte da un vertice (data-from, scelto a caso da Layout.astro) e fa il giro;

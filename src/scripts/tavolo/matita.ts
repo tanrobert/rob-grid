@@ -58,10 +58,10 @@ export function initMatita(t: Tavolo): Matita {
   const dentro = ({ p }: Foglio, x: number, y: number) => x >= p.gx && x < p.gx + p.w && y >= p.gy && y < p.gy + p.h;
   /** il foglio sotto un punto del tavolo (in quadretti): la cella più in alto, o null = il tavolo */
   const foglioIn = (x: number, y: number) => {
-    // a parità di z vince quella che viene dopo (fogli è nell'ordine dei pezzi)
+    // a parità di z vince quella che viene dopo (fogli è nell'ordine dei pezzi); le celle nascoste non ci sono
     let sopra: Foglio | null = null, iSopra = -1;
     fogli.forEach((f, i) => {
-      if (dentro(f, x, y) && (!sopra || f.p.z > sopra.p.z || (f.p.z === sopra.p.z && i > iSopra))) { sopra = f; iSopra = i; }
+      if (!f.p.el.hidden && dentro(f, x, y) && (!sopra || f.p.z > sopra.p.z || (f.p.z === sopra.p.z && i > iSopra))) { sopra = f; iSopra = i; }
     });
     return sopra;
   };

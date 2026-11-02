@@ -7,7 +7,7 @@ import Foglio from '../../components/foglio/Foglio.astro';
 import { tavolo } from '../../data/tavolo';
 import { projects } from '../../data/projects';
 import { projectsByYear } from '../../lib/projects';
-import { scaleShape } from '../../lib/grid';
+import { COLS, scaleShape } from '../../lib/grid';
 import { pageTitle } from '../../data/site';
 import { senzaSegni } from '../../lib/format';
 
@@ -35,9 +35,10 @@ const siblingCell = (id: string, label: string, step: number): Cell => {
 
 const cells: Cell[] = [
   { id: 'hero', type: 'media', ...heroSpan, heroOf: `/progetti/${p.slug}`, image: p.image, video: p.video, overlay: p.overlay, etichette: p.etichette, alt: `${p.title} · ${senzaSegni(p.description)}` },
-  // con la foto di contesto la cella si allunga: il testo e, sotto, la foto (con `fondo` il campo colorato resta quadrato)
+  // con la foto di contesto la cella si allunga: il testo e, sotto, la foto. Con `fondo` il campo colorato prende lo
+  // spazio che resta e la cella è alta quanto la hero quando le sta accanto (2/11/2026, scelta di Roberto); se no 5
   p.contesto
-    ? { id: 'progetto', type: 'contesto', w: 4, h: p.contesto.fondo ? 5 : 7, eyebrow: 'Contesto', title: p.title, body: descrizione, image: p.contesto.foto, alt: p.contesto.alt, fondo: p.contesto.fondo }
+    ? { id: 'progetto', type: 'contesto', w: 4, h: p.contesto.fondo ? heroSpan.h : 7, ...(p.contesto.fondo && { md: { w: 4, h: heroSpan.md.w + 4 <= COLS.md ? heroSpan.md.h : 5 }, sm: { w: 4, h: 5 } }), eyebrow: 'Contesto', title: p.title, body: descrizione, image: p.contesto.foto, alt: p.contesto.alt, fondo: p.contesto.fondo }
     : { id: 'progetto', type: 'text', w: 4, h: 2, as: 'h1', size: 's', eyebrow: 'Progetto', title: p.title, body: descrizione },
   // celle proprie del progetto (cells in index.md); finché non ci sono, il segnaposto
   ...(p.cells ?? [{ id: 'nota', type: 'text', w: 4, h: 2, size: 's', title: 'Contenuto segnaposto: qui andranno immagini, processo e risultati.' }]),

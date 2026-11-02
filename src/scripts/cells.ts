@@ -49,6 +49,18 @@ export function initCells() {
   if (document.querySelector('[data-sottologo]')) {
     import('./sottologo').then(m => signal.aborted || m.initSottologhi(signal));
   }
+  // la radio: un solo lettore per la pagina, solo se c'è una cella radio
+  if (document.querySelector('[data-radio]')) {
+    import('./radio').then(m => signal.aborted || m.initRadio(signal));
+  }
+  // foto che si ingrandiscono al clic, solo se ce ne sono
+  if (document.querySelector('[data-ingrandisci]')) {
+    import('./ingrandisci').then(m => signal.aborted || m.initIngrandisci(signal));
+  }
+  // costruzioni: il segno che si disegna da solo, solo se la cella c'è
+  if (document.querySelector('[data-costruzione]')) {
+    import('./costruzione').then(m => signal.aborted || m.initCostruzioni(signal));
+  }
   // affissioni: col mouse il velo sulla strada è un hover (CSS). Con più affissioni la scena cambia ogni 7 s,
   // insieme al suo testo, ferma fuori vista e col mouse sulla foto; un clic (o un tocco) passa alla successiva.
   // Con una sola il tocco accende e spegne il velo

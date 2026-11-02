@@ -1,4 +1,4 @@
-import type { Cell, Span, Presso } from '../data/grid-types';
+import type { Cell, Span, Presso, Nascosta } from '../data/grid-types';
 import { BREAKPOINTS } from './grid';
 
 /*
@@ -42,12 +42,18 @@ const order = (n: number) => orders.get(n) ?? orders.set(n, Array.from({ length:
  * Stesso risultato del prototipo (che provava tutti i posti), ma si ferma appena nessun posto
  * rimasto può essere più vicino: righe e colonne in ordine di distanza.
  */
-export function pack(pezzi: Array<Span & { id?: string; presso?: Presso }>, { vw, vh, q }: Finestra): Posto[] {
+export function pack(pezzi: Array<Span & { id?: string; presso?: Presso; nascosta?: Nascosta }>, { vw, vh, q }: Finestra): Posto[] {
   const ax = vw / q, ay = (vh / q) * (vw < BREAKPOINTS.md ? 2.6 : 1);
   const placed: Rect[] = [];
-  const di = new Map<string | undefined, Posto>();
-  return pezzi.map(({ w, h, id, presso }, i) => {
+  const di = new Map<string | undefined, Rect>();
+  return pezzi.map(({ w, h, id, presso, nascosta }, i) => {
     let best: Posto = { x: 0, y: 0 }, score = Infinity;
+    if (nascosta) {
+      // nascosta (grid-types, `nascosta`): sotto la sua ospite, senza occupare posto
+      const ospite = di.get(nascosta.sotto);
+      if (!ospite) throw new Error(`[tavolo] "${id}" compare sotto "${nascosta.sotto}", che deve venire prima nell'elenco`);
+      return { x: ospite.x, y: ospite.y + ospite.h + (nascosta.y ?? 1) };
+    }
     if (i === 0) best = { x: -Math.floor(w / 2), y: -Math.floor(h / 2) };
     else if (presso) {
       // agganciata alla sua ospite (grid-types, `presso`): il posto è quello, le celle dopo le girano attorno
@@ -71,7 +77,7 @@ export function pack(pezzi: Array<Span & { id?: string; presso?: Presso }>, { vw
       }
     }
     placed.push({ ...best, w, h });
-    di.set(id, best);
+    di.set(id, { ...best, w, h });
     return best;
   });
 }

@@ -32,7 +32,7 @@ for (const c of cells) {
   ids.add(c.id);
 }
 
-const misure = cells.map(c => ({ id: c.id, ...inQuadretti(c), presso: c.presso }));
+const misure = cells.map(c => ({ id: c.id, ...inQuadretti(c), presso: c.presso, nascosta: c.nascosta }));
 const posti = {
   lg: pack(misure, FINESTRE.lg),
   md: pack(misure, FINESTRE.md),
@@ -71,6 +71,8 @@ const sagoma = (c: Cell) => (c.frame === false && c.type === 'svg' ? svgs[c.svg]
           data-w={w}
           data-h={h}
           data-presso={cell.presso ? `${cell.presso.id} ${cell.presso.x} ${cell.presso.y}` : undefined}
+          data-nascosta={cell.nascosta ? `${cell.nascosta.sotto} ${cell.nascosta.y ?? 1}` : undefined}
+          hidden={!!cell.nascosta}
           style={`--qw:${w};--qh:${h};--x:${lg.x};--y:${lg.y};--x-md:${md.x};--y-md:${md.y};--x-sm:${sm.x};--y-sm:${sm.y}`}
         >
           {cell.frame !== false ? (

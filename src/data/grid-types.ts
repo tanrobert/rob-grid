@@ -75,7 +75,14 @@ interface CellBase extends Span {
       quadretti dal suo angolo in alto a sinistra, invece del posto libero più vicino al centro. Visibile, e le altre
       celle le girano attorno (ROBERTO sotto la R) */
   presso?: Presso;
+  /** Solo sul tavolo: nascosta finché qualcosa non la fa comparire (la radio, quando parte: scripts/radio.ts), e
+      allora va sotto la cella `sotto` (che viene prima nell'elenco), a filo a sinistra, sopra le altre: `y` quadretti
+      dal suo fondo (1 = un quadretto di stacco, di base; negativo = le si posa sopra). Nella disposizione non occupa
+      posto: le altre celle non le girano attorno (lib/tavolo.ts, pack) */
+  nascosta?: Nascosta;
 }
+
+export interface Nascosta { sotto: string; y?: number }
 
 export interface Presso { id: string; x: number; y: number }
 
@@ -99,7 +106,9 @@ export type Cell = CellBase & (
     }
   | { type: 'list'; title: string; items: Array<string | { label: string; href: string }> }
   | { type: 'stat'; value: string; caption: string; /** il numero sale da 0 quando la cella entra in vista */ countUp?: boolean; /** h1 nascosto: la cella fa da hero di una pagina */ heading?: string }
-  | { type: 'media'; image?: ImageMetadata; video?: string; overlay?: ImageMetadata; etichette?: 'scure'; alt: string; caption?: string }
+  | { type: 'media'; image?: ImageMetadata; video?: string; overlay?: ImageMetadata; etichette?: 'scure'; alt: string; caption?: string;
+      /** un'altra foto sotto la prima, nella stessa cella (metà altezza ciascuna) */ seconda?: { image: ImageMetadata; alt: string };
+      /** le foto si ingrandiscono al clic, sopra il retino (scripts/ingrandisci.ts) */ ingrandisci?: true }
   | { type: 'project'; slug: string }
   | { type: 'clock' }
   | { type: 'cursor' }
@@ -124,6 +133,11 @@ export type Cell = CellBase & (
    *  data/loghi.ts, si compone ogni volta che torna) e le foto scontornate, paragrafo in fondo. `lato`: foto attaccata a
    *  quel lato della cella (più grande, a filo del bordo), che entra ed esce scivolando da lì */
   | { type: 'sottologo'; logo: string; immagini: Array<{ image: ImageMetadata; alt: string; lato?: 'sinistra' }>; eyebrow?: string; title?: string; body?: string }
+  /** la radio Purple Piper in diretta (data/radio.ts, scripts/radio.ts): logo, bottone, brano in onda e prossimo */
+  | { type: 'radio'; eyebrow?: string }
+  /** la costruzione di un segno che si disegna da sola (SVG di Illustrator coi tratti vivi, `svg` = il file così
+   *  com'è, lib/costruzione.ts): titolone, il disegno, paragrafo in fondo. `alt` descrive il disegno */
+  | { type: 'costruzione'; svg: string; alt: string; eyebrow?: string; title?: string; body?: string }
   /** cella 02 delle pagine progetto con la foto di contesto: titolo (h1) e descrizione, sotto la foto a tutta larghezza */
   | { type: 'contesto'; eyebrow?: string; title: string; body?: string; image: ImageMetadata; alt: string; fondo?: string }
   /** pagina d'errore: codice grande con glitch, titolo (h1) e link all'indice, su carta a quadretti */

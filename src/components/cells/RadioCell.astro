@@ -1,0 +1,80 @@
+---
+// La radio Purple Piper in diretta (data/radio.ts): un blocco viola (rosso mentre suona) con l'occhiello "Radio live
+// player", al centro la scritta del bottone (il bottone è tutta la cella) e sotto, subito (anche da ferma), il brano
+// in onda e il prossimo. Un solo lettore per la pagina (scripts/radio.ts): la cella sul tavolo e quella nella pagina
+// del progetto comandano la stessa radio e mostrano lo stesso stato. I testi degli stati sono tutti qui, lo script
+// cambia solo data-stato. Senza JavaScript il bottone non c'è (non farebbe nulla).
+import { radio } from '../../data/radio';
+import Close from '../../assets/close.svg';
+
+interface Props {
+  /** la cella del tavolo, che compare quando la radio parte: la ✕ la ferma e la toglie */
+  togli?: boolean;
+}
+const { togli = false } = Astro.props;
+---
+
+<div class="radio" data-radio data-stato="fermo" data-stream={radio.stream} data-stato-url={radio.stato} style={`--radio: ${radio.colore}; --radio-onda: ${radio.inOnda}`}>
+  {togli && <button class="cell__go" type="button" aria-label="Ferma la radio e toglila dal tavolo" data-radio-togli><span><Close /></span></button>}
+  <button class="tasto mono" type="button" aria-pressed="false" data-radio-tasto hidden>
+    <span class="s s--fermo">Ascolta la radio</span>
+    <span class="s s--attesa">Connessione…</span>
+    <span class="s s--onda">In onda · ferma</span>
+    <span class="s s--errore">Non risponde · riprova</span>
+  </button>
+  {/* il brano in onda da solo, il prossimo dopo "Successivo" */}
+  {[['ora', ''], ['dopo', 'Successivo']].map(([k, chi]) => (
+    <p class="brano mono" aria-live={k === 'ora' ? 'polite' : undefined} hidden>
+      {chi && <span class="chi">{chi}</span>}
+      {/* il titolo due volte: se non ci sta scorre (scripts/radio.ts), la seconda serie riempie il giro */}
+      <span class="titolo" data-radio-titolo={k}>
+        <span class="nastro loop">
+          {[0, 1].map(n => (
+            <span class="serie" aria-hidden={n === 1 ? 'true' : undefined}><span data-testo></span><span class="stacco" aria-hidden="true">{'   ·   '}</span></span>
+          ))}
+        </span>
+      </span>
+    </p>
+  ))}
+</div>
+
+<style>
+  /* un blocco unico del viola della radio, scritte in carta: sotto l'occhiello, al centro, il bottone e i brani */
+  .radio {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; justify-content: center; gap: calc(var(--pad) / 2);
+    padding: var(--pad-label) var(--pad) var(--pad);
+    background: var(--radio); color: var(--bianco);
+    transition: background-color 600ms ease;
+  }
+  /* mentre suona il blocco sfuma nel rosso del logo */
+  .radio[data-stato="onda"] { background-color: var(--radio-onda); }
+  /* il bottone è tutta la cella: la sua scritta al centro, più grande; il clic si prende ovunque (::before), la ✕ del
+     tavolo resta sopra (.cell__go, z-index 2) */
+  .tasto {
+    align-self: center; margin-bottom: calc(var(--pad) / 2);
+    padding: 6px 0; font-size: calc(var(--corpo-mono) * 1.3);
+    background: none; color: inherit; border: 0;
+  }
+  .tasto::before { content: ''; position: absolute; inset: 0; z-index: 1; }
+  .radio :focus-visible { outline-color: var(--bianco); }
+  .s { display: none; }
+  .radio[data-stato="fermo"] .s--fermo,
+  .radio[data-stato="attesa"] .s--attesa,
+  .radio[data-stato="onda"] .s--onda,
+  .radio[data-stato="errore"] .s--errore { display: inline; }
+  /* centrati come il resto; un titolo che non ci sta prende tutto lo spazio e scorre */
+  .brano { display: flex; justify-content: center; gap: 1ch; min-width: 0; }
+  .brano[hidden] { display: none; }
+  .chi { flex: none; font-weight: 800; }
+  /* titolo che non ci sta: due serie uguali, il nastro scorre di metà (una serie) e ricomincia senza stacco, come il
+     piede del tavolo; la durata la mette lo script (velocità costante). Fermo fuori vista (.loop, global.css) */
+  .titolo { flex: 0 1 auto; min-width: 0; overflow: hidden; }
+  .nastro { display: flex; width: max-content; }
+  .serie { white-space: nowrap; }
+  .titolo:not(.is-scorre) :is(.serie + .serie, .stacco) { display: none; }
+  .titolo.is-scorre .nastro { animation: radio-scorre var(--durata, 20s) linear infinite; }
+  @keyframes radio-scorre { to { transform: translate3d(-50%, 0, 0); } }
+  /* la ✕ come quella delle hero (.cell__go, global.css): un bottone, quindi senza il suo aspetto */
+  .cell__go { background: none; border: 0; padding: 0; color: inherit; }
+</style>

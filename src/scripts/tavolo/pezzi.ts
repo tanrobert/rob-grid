@@ -10,7 +10,7 @@ import { T, REDUCED } from '../preferenze';
 import { LANCIO } from './tempi';
 import { suona } from '../suono';
 import type { Tavolo } from './index';
-import type { Presso } from '../../data/grid-types';
+import type { Nascosta, Presso } from '../../data/grid-types';
 
 export interface Pezzo {
   id: string;
@@ -22,6 +22,8 @@ export interface Pezzo {
   z: number;
   /** agganciata accanto a un'altra (grid-types, `presso`): la disposizione la mette lì */
   presso?: Presso;
+  /** nascosta finché non compare, poi sotto un'altra cella (grid-types, `nascosta`) */
+  nascosta?: Nascosta;
 }
 
 /** "id x y" di data-presso (Tavolo.astro) */
@@ -30,11 +32,17 @@ const aggancio = (s?: string): Presso | undefined => {
   return id ? { id, x: Number(x), y: Number(y) } : undefined;
 };
 
+/** "id y" di data-nascosta (Tavolo.astro) */
+const sotto = (s?: string): Nascosta | undefined => {
+  const [id, y] = s?.split(' ') ?? [];
+  return id ? { sotto: id, y: Number(y) } : undefined;
+};
+
 export const leggiPezzi = (mondo: HTMLElement): Pezzo[] =>
   [...mondo.querySelectorAll<HTMLElement>('[data-pezzo]')].map(el => ({
     id: el.dataset.pezzo!, el, ombra: el.querySelector<HTMLElement>('[data-ombra]'),
     w: Number(el.dataset.w), h: Number(el.dataset.h), gx: 0, gy: 0, z: 0,
-    presso: aggancio(el.dataset.presso),
+    presso: aggancio(el.dataset.presso), nascosta: sotto(el.dataset.nascosta),
   }));
 
 export const posa = (p: Pezzo, q: number) => gsap.set(p.el, { x: p.gx * q, y: p.gy * q });
@@ -42,6 +50,26 @@ export const posa = (p: Pezzo, q: number) => gsap.set(p.el, { x: p.gx * q, y: p.
 export function alza(p: Pezzo, z: number) {
   p.z = z;
   p.el.style.zIndex = z ? String(z) : '';
+}
+
+/** Una cella nascosta compare (grid-types, `nascosta`): sotto la sua ospite, dov'è adesso, sopra le altre */
+export function compare(t: Tavolo, p: Pezzo) {
+  const o = t.pezzi.find(x => x.id === p.nascosta?.sotto);
+  if (o) {
+    p.gx = sulFoglio(o.gx, p.w, t.v.foglio.x);
+    p.gy = sulFoglio(o.gy + o.h + (p.nascosta!.y ?? 1), p.h, t.v.foglio.y);
+  }
+  p.el.hidden = false;
+  alza(p, ++t.zTop);
+  posa(p, t.v.q);
+  gsap.fromTo(p.el, { opacity: 0 }, { opacity: 1, duration: T(0.3), ease: 'power1.out', clearProps: 'opacity' });
+  t.salva();
+}
+
+/** e sparisce di nuovo */
+export function sparisce(t: Tavolo, p: Pezzo) {
+  p.el.hidden = true;
+  t.salva();
 }
 
 /** Disposizione pensata per la finestra di adesso (lib/tavolo.ts) */
