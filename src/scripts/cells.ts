@@ -61,6 +61,10 @@ export function initCells() {
   if (document.querySelector('[data-costruzione]')) {
     import('./costruzione').then(m => signal.aborted || m.initCostruzioni(signal));
   }
+  // evoluzioni: il segno che cambia a passi, un clic alla volta, solo se la cella c'è
+  if (document.querySelector('[data-evoluzione]')) {
+    import('./evoluzione').then(m => signal.aborted || m.initEvoluzioni(signal));
+  }
   // affissioni: col mouse il velo sulla strada è un hover (CSS). Con più affissioni la scena cambia ogni 7 s,
   // insieme al suo testo, ferma fuori vista e col mouse sulla foto; un clic (o un tocco) passa alla successiva.
   // Con una sola il tocco accende e spegne il velo

@@ -1,0 +1,106 @@
+---
+// L'evoluzione di un segno a passi (G&A: dai montanti e traversi del marchio storico al simbolo nuovo). A sinistra titolo e
+// testo del passo e, in fondo, un righello rosso col quadrato sul passo attuale; a destra il disegno, a tutta altezza.
+// Il primo passo parte quando la cella entra in vista, ogni clic sul disegno fa il passo dopo (dopo l'ultimo da capo):
+// scripts/evoluzione.ts legge i passi dall'SVG annotato (data-passo, data-disegna…, vedi il commento nel file).
+// Senza JavaScript: il disegno finito e il testo dell'ultimo passo. Sul telefono in colonna, il disegno sotto.
+import { pad2 } from '../../lib/format';
+import Paragrafi from '../Paragrafi.astro';
+
+interface Props {
+  /** SVG annotato coi passi (data/projects.ts lo legge dalla cartella del progetto) */
+  svg: string;
+  /** nome per gli errori di build: pagina · cella */
+  nome: string;
+  alt: string;
+  passi: Array<{ title: string; body: string }>;
+}
+const { svg, nome, alt, passi } = Astro.props;
+
+// i passi del disegno e quelli dei testi devono essere gli stessi
+const nelDisegno = Math.max(...[...svg.matchAll(/data-(?:passo|via|zoom|trasla|colore)="(\d+)"|"passo": (\d+)/g)].map(m => +(m[1] ?? m[2])));
+if (nelDisegno !== passi.length) throw new Error(`[evoluzione] ${nome}: ${passi.length} passi nei testi, ${nelDisegno} nel disegno`);
+
+const attr = (s: string) => s.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+// commenti via (finirebbero nella pagina); riempie la sua metà, i bordi delle linee si perdono fuori
+const disegno = svg
+  .replace(/<!--[\s\S]*?-->\s*/g, '')
+  .replace('<svg ', `<svg role="img" aria-label="${attr(alt)}" preserveAspectRatio="xMidYMid slice" data-disegno `);
+const ultimo = passi.length - 1;
+---
+
+<div class="evoluzione" data-evoluzione>
+  <div class="testo">
+    <div class="passi" aria-live="polite">
+      {passi.map((p, i) => (
+        <div class:list={['passo', i === ultimo && 'is-attivo']} data-testo>
+          <h2 class="titoletto">{p.title}</h2>
+          <div class="paragrafo"><Paragrafi testo={p.body} /></div>
+        </div>
+      ))}
+    </div>
+    {/* righello: un quadratino di traccia per passo (un clic porta a quel passo, anche indietro), il quadrato pieno col
+        numero sul passo attuale */}
+    <div class="righello" style={`--at: 1`} role="group" aria-label="Passi" data-righello>
+      {passi.map((p, i) => (
+        <button class="tacca" type="button" style={`--i: ${i / ultimo}`} aria-label={`Passo ${i + 1}: ${p.title}`}
+          aria-current={i === ultimo ? 'step' : undefined} data-vai={i + 1} />
+      ))}
+      <span class="cursore" aria-hidden="true"><span class="numero mono" data-numero>{pad2(passi.length)}</span></span>
+    </div>
+  </div>
+  <button class="disegno" type="button" aria-label="Da capo" data-avanti><Fragment set:html={disegno} /></button>
+</div>
+
+<style>
+  /* il disegno a destra, alto quanto la cella (la cella è un container: cqb = la sua altezza) e largo un quadretto meno,
+     che va al testo (scelta di Roberto); mai più di due terzi della larghezza. Il disegno riempie e taglia i bordi.
+     Se la cella si allarga, lo spazio in più va tutto al testo */
+  .evoluzione { position: absolute; inset: 0; display: grid; grid-template: minmax(0, 1fr) / minmax(0, 1fr) min(100cqb - var(--quadretto), 66cqi); }
+  .testo { display: flex; flex-direction: column; justify-content: space-between; gap: var(--pad-label); padding: var(--pad-label) var(--pad) var(--pad); }
+
+  /* i testi uno sopra l'altro: la colonna è alta quanto il più lungo, cambiando passo niente salta */
+  .passi { display: grid; }
+  .passo { grid-area: 1 / 1; display: flex; flex-direction: column; gap: var(--m); }
+  .passo:not(.is-attivo) { visibility: hidden; }
+
+  /* righello: filo rosso, un quadratino di traccia rosso per passo (bottoni: si torna a un passo), il quadrato pieno
+     che scorre sopra col numero (non prende i clic) */
+  .righello {
+    --lato: var(--riga-label);
+    position: relative; height: calc(var(--lato) * 2.6); color: var(--rosso);
+  }
+  /* il filo all'altezza del centro dei quadrati (border: agganciato ai pixel); dentro i quadratini non passa */
+  .righello::before { content: ''; position: absolute; left: 0; right: 0; bottom: calc(var(--lato) / 2); border-top: var(--line) solid; }
+  .tacca {
+    position: absolute; bottom: 0; left: calc(var(--i) * (100% - var(--lato)));
+    width: var(--lato); height: var(--lato); padding: 0;
+    border: var(--line) solid; background: var(--bianco); color: inherit;
+  }
+  /* si prende anche attorno: il quadratino è piccolo, il dito no */
+  .tacca::after { content: ''; position: absolute; inset: calc(var(--lato) * -0.8); }
+  .cursore {
+    position: absolute; bottom: 0; left: calc(var(--at) * (100% - var(--lato)));
+    width: var(--lato); height: var(--lato); background: currentColor; pointer-events: none;
+    transition: left 480ms var(--ease-morph);
+  }
+  .numero { position: absolute; bottom: calc(100% + var(--lato) * 0.4); left: 0; color: var(--inchiostro); font-variant-numeric: tabular-nums; }
+
+  /* il disegno: tutta la sua metà, staccato dal testo da un filo */
+  .disegno { position: relative; padding: 0; border: 0; border-left: var(--line) solid var(--inchiostro); background: none; overflow: hidden; }
+  .disegno > :global(svg) { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .disegno :global([data-tinta] line), .disegno :global([data-tinta] path) { fill: none; stroke-width: var(--line); vector-effect: non-scaling-stroke; }
+  /* guide: inchiostro schiarito sulla carta (pieno, così gli incroci non si scuriscono) */
+  .disegno :global([data-tinta="guida"]) { stroke: color-mix(in srgb, var(--inchiostro) 30%, var(--bianco)); }
+  .disegno :global([data-tinta="segno"]) { stroke: var(--inchiostro); }
+  .disegno :global([data-tinta="rosso"]) { stroke: var(--rosso); }
+  /* campiture: il colore lo dà il file (--pieno sul gruppo, es. il giallo G&A), senza contorno */
+  .disegno :global([data-tinta="pieno"] path) { fill: var(--pieno); stroke: none; }
+  .disegno :global([data-tratteggio] line), .disegno :global([data-tratteggio] path) { stroke-dasharray: 6 6; }
+
+  /* telefono: in colonna, il disegno quadrato sotto il testo */
+  @media (max-width: 599px) {
+    .evoluzione { grid-template: minmax(0, 1fr) min(100cqi, 70cqb) / minmax(0, 1fr); }
+    .disegno { border-left: 0; border-top: var(--line) solid var(--inchiostro); }
+  }
+</style>

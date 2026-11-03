@@ -1,0 +1,181 @@
+<!doctype html>
+<!--
+  Laboratorio: l'evoluzione del simbolo di G&A (cella della pagina progetto, da fare).
+  Passo 1: si disegnano le linee guida grigie (anche le oblique) e, nello stesso tempo, i quattro pezzi della FIG 03 (due montanti e due traversi in legno con gli intagli a coda di rondine):
+  lo stesso pezzo ruotato di 90°, quindi partono ognuno dal suo capo esterno e girano nello stesso verso. Il disegno: gli angoli
+  di due finestre affiancate, di ognuna un pezzo di montante e uno di traverso (non una girandola: precisazione di Roberto).
+  Passo 2: i quattro assi tratteggiati (blu nel file, qui nel nostro rosso) si disegnano e tagliano la figura sul
+  quadrato che formano: i pezzi che restano fuori scivolano via, ognuno nel verso del suo montante o traverso, e dentro
+  resta la FIG 04 (la FIG 03 tagliata sugli assi: coincide con quella del file al decimo di punto).
+  I tratteggiati si disegnano dietro una maschera con la copia piena (DrawSVG userebbe il loro tratteggio).
+  Geometria dalla tavola 16 ("Semplificare il simbolo") di sorgenti/gea/gea-tavole.ai, FIG 03 centrata in un quadrato
+  di 360 pt (la figura è 274,66 pt); linee tagliate sul quadrato.
+  Solo sviluppo: il sito non cambia.  npm run vt:serve → /_vt/gea-evoluzione.html
+-->
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Evoluzione G&amp;A</title>
+<style>
+  :root { --inchiostro: #1c1a17; --bianco: #f5f3f0; --line: 1px;
+    --guida: color-mix(in srgb, var(--inchiostro) 30%, var(--bianco)); --rosso: #f03f24; }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { height: 100%; }
+  body { background: var(--bianco); color: var(--inchiostro); font: 500 16px/1.2 system-ui, sans-serif; display: grid; place-items: center; overflow: hidden; }
+
+  header { position: fixed; z-index: 2; top: 10px; left: 10px; right: 10px; display: flex; flex-wrap: wrap; gap: 6px; }
+  header .sep { flex: 1; }
+  button { font: inherit; font-size: 11px; font-weight: 400; letter-spacing: .08em; text-transform: uppercase; padding: 9px 11px;
+    border: var(--line) solid var(--inchiostro); background: var(--bianco); color: var(--inchiostro); cursor: pointer; touch-action: manipulation; }
+  button[aria-pressed="true"] { background: var(--inchiostro); color: var(--bianco); }
+  .nota { position: fixed; left: 10px; bottom: 10px; right: 10px; max-width: 52ch; font-size: 13px; line-height: 1.35; }
+
+  /* la cella: un quadrato col filo, il disegno a tutta cella (le linee arrivano al bordo) */
+  .cella { width: min(84vw, 74vh, 560px); aspect-ratio: 1; border: var(--line) solid var(--inchiostro); background: var(--bianco);
+    cursor: pointer; overflow: hidden; }
+  .cella svg { display: block; width: 100%; height: 100%; }
+  .cella line, .cella path { fill: none; vector-effect: non-scaling-stroke; stroke-width: var(--line); }
+  .guida { stroke: var(--guida); }
+  .asse { stroke: var(--rosso); stroke-dasharray: 6 6; }
+  .anta, .anta4 { stroke: var(--inchiostro); stroke-linejoin: miter; }
+</style>
+</head>
+<body>
+<header>
+  <button data-rifai>Rifai</button>
+  <span class="sep"></span>
+  <button data-k="1.5">Lenta</button>
+  <button data-k="1" aria-pressed="true">Media</button>
+  <button data-k="0.6">Svelta</button>
+</header>
+
+<div class="cella" data-cella title="Tocca per rifare">
+  <svg viewBox="0 0 360 360" role="img" aria-label="Il vecchio simbolo di G&amp;A, gli angoli di due finestre in legno con gli intagli a coda di rondine, con le sue linee di costruzione">
+    <line class="guida" x1="159.9" y1="0" x2="304.21" y2="360"/>
+    <line class="guida" x1="267.77" y1="0" x2="123.46" y2="360"/>
+    <line class="guida" x1="0" y1="227.93" x2="360" y2="83.61"/>
+    <line class="guida" x1="0" y1="64.41" x2="360" y2="208.72"/>
+    <line class="guida" x1="0" y1="200.1" x2="360" y2="55.79"/>
+    <line class="guida" x1="83.61" y1="0" x2="227.93" y2="360"/>
+    <line class="guida" x1="208.72" y1="0" x2="64.41" y2="360"/>
+    <line class="guida" x1="55.79" y1="0" x2="200.1" y2="360"/>
+    <line class="guida" x1="236.54" y1="0" x2="92.23" y2="360"/>
+    <line class="guida" x1="0" y1="276.39" x2="360" y2="132.07"/>
+    <line class="guida" x1="0" y1="151.28" x2="360" y2="295.59"/>
+    <line class="guida" x1="0" y1="304.21" x2="360" y2="159.9"/>
+    <line class="guida" x1="132.07" y1="0" x2="276.39" y2="360"/>
+    <line class="guida" x1="295.59" y1="0" x2="151.28" y2="360"/>
+    <line class="guida" x1="0" y1="42.67" x2="360" y2="42.67"/>
+    <line class="guida" x1="42.67" y1="0" x2="42.67" y2="360"/>
+    <line class="guida" x1="0" y1="317.33" x2="360" y2="317.33"/>
+    <line class="guida" x1="0" y1="185.07" x2="360" y2="185.07"/>
+    <line class="guida" x1="317.33" y1="0" x2="317.33" y2="360"/>
+    <defs>
+      <!-- tutto tranne il quadrato degli assi: i pezzi che il taglio porta via -->
+      <clipPath id="fuori"><path clip-rule="evenodd" d="M-80 -80H440V440H-80Z M124.44 124.44V235.56H235.56V124.44Z"/></clipPath>
+    </defs>
+    <!-- FIG 03 -->
+    <g data-fig3>
+    <path class="anta" d="M235.56 42.67L185.07 42.67L185.07 131.57L195.19 127.52L195.19 142.65L185.07 138.6L185.07 153.73L195.19 149.68L195.19 164.67L185.07 160.62L185.07 170.96L199.24 170.96L195.19 181.07L210.32 181.07L206.27 170.96L221.4 170.96L217.35 181.07L232.48 181.07L228.43 170.96L235.56 170.96L235.56 42.67"/>
+    <path class="anta" d="M42.67 124.44L42.67 174.93L131.57 174.93L127.52 164.82L142.65 164.82L138.6 174.93L153.73 174.93L149.68 164.82L164.67 164.82L160.62 174.93L170.96 174.93L170.96 160.76L181.07 164.82L181.07 149.68L170.96 153.73L170.96 138.6L181.07 142.65L181.07 127.52L170.96 131.57L170.96 124.44L42.67 124.44"/>
+    <path class="anta" d="M124.44 317.33L174.93 317.33L174.93 228.43L164.81 232.48L164.81 217.35L174.93 221.4L174.93 206.27L164.81 210.32L164.81 195.33L174.93 199.38L174.93 189.04L160.76 189.04L164.81 178.93L149.68 178.93L153.73 189.04L138.6 189.04L142.65 178.93L127.52 178.93L131.57 189.04L124.44 189.04L124.44 317.33"/>
+    <path class="anta" d="M317.33 235.56L317.33 185.07L228.43 185.07L232.48 195.19L217.35 195.19L221.4 185.07L206.27 185.07L210.32 195.19L195.33 195.19L199.38 185.07L189.04 185.07L189.04 199.24L178.93 195.19L178.93 210.32L189.04 206.27L189.04 221.4L178.93 217.35L178.93 232.48L189.04 228.43L189.04 235.56L317.33 235.56"/>
+    </g>
+    <!-- i pezzi tagliati via (copie della FIG 03 fuori dal quadrato), riempiti dallo script -->
+    <g data-pezzi></g>
+    <!-- FIG 04 (dal file, portata sul centro della FIG 03) -->
+    <g data-fig4>
+      <path class="anta4" d="M235.56 124.44L235.56 170.96L228.44 170.96L232.49 181.07L217.35 181.07L221.4 170.96L206.27 170.96L210.33 181.07L195.19 181.07L199.25 170.96L185.08 170.96L185.08 160.62L195.19 164.67L195.19 149.68L185.08 153.73L185.08 138.6L195.19 142.65L195.19 127.52L185.08 131.57L185.08 124.44L235.56 124.44"/>
+      <path class="anta4" d="M170.96 138.6L170.96 153.73L181.07 149.68L181.07 164.81L170.96 160.76L170.96 174.93L160.62 174.93L164.68 164.81L149.68 164.81L153.74 174.93L138.61 174.93L142.65 164.81L127.51 164.81L131.57 174.93L124.44 174.93L124.44 124.44L170.96 124.44L170.96 131.57L181.07 127.52L181.07 142.65L170.96 138.6"/>
+      <path class="anta4" d="M164.82 195.33L164.82 210.32L174.93 206.27L174.93 221.4L164.82 217.35L164.82 232.48L174.93 228.43L174.93 235.56L124.45 235.56L124.45 189.04L131.58 189.04L127.52 178.93L142.66 178.93L138.61 189.04L153.74 189.04L149.69 178.93L164.82 178.93L160.77 189.04L174.93 189.04L174.93 199.38L164.82 195.33"/>
+      <path class="anta4" d="M235.56 185.07L235.56 235.56L189.05 235.56L189.05 228.43L178.94 232.48L178.94 217.35L189.05 221.4L189.05 206.27L178.94 210.32L178.94 195.18L189.05 199.24L189.05 185.07L199.39 185.07L195.33 195.18L210.33 195.18L206.27 185.07L221.4 185.07L217.35 195.18L232.49 195.18L228.44 185.07L235.56 185.07"/>
+    </g>
+    <!-- assi tratteggiati: sopra montanti e traversi, il taglio passa di qui -->
+    <line class="asse" x1="235.56" y1="0" x2="235.56" y2="360"/>
+    <line class="asse" x1="0" y1="124.44" x2="360" y2="124.44"/>
+    <line class="asse" x1="124.44" y1="0" x2="124.44" y2="360"/>
+    <line class="asse" x1="0" y1="235.56" x2="360" y2="235.56"/>
+  </svg>
+</div>
+
+<p class="nota">Passo 1 · le linee guida grigie si disegnano una dopo l'altra (40 ms) e, insieme, montanti e traversi, ognuno dal suo angolo esterno. Passo 2 · gli assi rossi tagliano la figura: i pezzi fuori scivolano via, resta la FIG 04. Clic sulla cella o Rifai per rivederla.</p>
+
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/DrawSVGPlugin.min.js"></script>
+<script>
+  gsap.registerPlugin(DrawSVGPlugin);
+  const RIDOTTO = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const NS = 'http://www.w3.org/2000/svg';
+  const svg = document.querySelector('.cella svg');
+  const defs = svg.querySelector('defs');
+  const guide = gsap.utils.toArray('.guida');
+  const fig3 = svg.querySelector('[data-fig3]');
+  const ante = gsap.utils.toArray(fig3.children);
+  const fig4 = svg.querySelector('[data-fig4]');
+
+  // assi: ognuno dietro una maschera con la sua copia piena, che è quella che si disegna
+  const tracce = gsap.utils.toArray('.asse').map((asse, i) => {
+    const m = document.createElementNS(NS, 'mask');
+    m.id = `m-asse-${i}`;
+    for (const [a, v] of Object.entries({ maskUnits: 'userSpaceOnUse', x: -10, y: -10, width: 380, height: 380 })) m.setAttribute(a, v);
+    const l = asse.cloneNode();
+    l.removeAttribute('class');
+    for (const [a, v] of Object.entries({ stroke: '#fff', 'stroke-width': 4 })) l.setAttribute(a, v);
+    m.append(l); defs.append(m);
+    asse.setAttribute('mask', `url(#${m.id})`);
+    return l;
+  });
+
+  // pezzi tagliati via: copia di ogni pezzo fuori dal quadrato degli assi; scivolano nel suo verso
+  const VERSO = [[0, -1], [-1, 0], [0, 1], [1, 0]];   // su, sinistra, giù, destra: l'ordine dei pezzi nel file (montante, traverso, montante, traverso)
+  const pezzi = ante.map((anta, i) => {
+    const g = document.createElementNS(NS, 'g');
+    const p = anta.cloneNode();
+    p.setAttribute('clip-path', 'url(#fuori)');
+    g.append(p); svg.querySelector('[data-pezzi]').append(g);
+    g.dataset.dx = VERSO[i][0]; g.dataset.dy = VERSO[i][1];
+    return g;
+  });
+
+  let k = 1, tl;
+
+  function gira() {
+    tl?.kill();
+    if (RIDOTTO) {
+      gsap.set([guide, tracce], { drawSVG: '100%' });
+      gsap.set([fig3, ...pezzi], { autoAlpha: 0 }); gsap.set(fig4, { autoAlpha: 1 });
+      return;
+    }
+    // da capo: FIG 03 accesa, pezzi e FIG 04 spenti, assi da disegnare
+    gsap.set(fig3, { autoAlpha: 1 }); gsap.set(fig4, { autoAlpha: 0 });
+    gsap.set(pezzi, { autoAlpha: 0, x: 0, y: 0 });
+    gsap.set(tracce, { drawSVG: '0%' });
+
+    tl = gsap.timeline();
+    // passo 1: le guide una dopo l'altra e, insieme, montanti e traversi, a velocità costante lungo il contorno
+    tl.fromTo(guide, { drawSVG: '0%' }, { drawSVG: '100%', duration: 1.1 * k, ease: 'power2.inOut', stagger: 0.04 * k }, 0)
+      .fromTo(ante, { drawSVG: '0%' }, { drawSVG: '100%', duration: 2.2 * k, ease: 'power1.inOut' }, 0.15 * k)
+      // passo 2: gli assi rossi attraversano la figura...
+      .to(tracce, { drawSVG: '100%', duration: 0.7 * k, ease: 'power2.inOut', stagger: 0.04 * k }, '+=0.25')
+      // ...e la tagliano: dentro resta la FIG 04, fuori i pezzi scivolano via e spariscono
+      .addLabel('taglio', '+=0.15')
+      .set(fig3, { autoAlpha: 0 }, 'taglio')
+      .set([fig4, ...pezzi], { autoAlpha: 1 }, 'taglio')
+      .to(pezzi, {
+        x: (_, g) => g.dataset.dx * 36, y: (_, g) => g.dataset.dy * 36, autoAlpha: 0,
+        duration: 0.8 * k, ease: 'power2.in',
+      }, 'taglio');
+  }
+
+  document.querySelector('[data-cella]').addEventListener('click', gira);
+  document.querySelector('[data-rifai]').addEventListener('click', gira);
+  for (const b of document.querySelectorAll('[data-k]')) b.addEventListener('click', () => {
+    k = +b.dataset.k;
+    for (const x of document.querySelectorAll('[data-k]')) x.setAttribute('aria-pressed', String(x === b));
+    gira();
+  });
+  gira();
+</script>
+</body>
+</html>

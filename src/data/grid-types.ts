@@ -101,8 +101,10 @@ export type Cell = CellBase & (
       type: 'text'; eyebrow?: string; title: string;
       /** Testo sotto il titolo: una stringa = paragrafo, un array = elenco di righe */
       body?: string | string[]; as?: 'h1' | 'h2' | 'p'; size?: 's' | 'm' | 'l';
-      /** foto sotto il paragrafo, in un carosello che gira da solo */
+      /** foto sotto il paragrafo, in un carosello che gira da solo (una sola: ferma) */
       immagini?: Array<{ image: ImageMetadata; alt: string }>;
+      /** sotto le foto: un altro paragrafo e un bottone */
+      after?: string; button?: Bottone;
     }
   | { type: 'list'; title: string; items: Array<string | { label: string; href: string }> }
   | { type: 'stat'; value: string; caption: string; /** il numero sale da 0 quando la cella entra in vista */ countUp?: boolean; /** h1 nascosto: la cella fa da hero di una pagina */ heading?: string }
@@ -138,6 +140,10 @@ export type Cell = CellBase & (
   /** la costruzione di un segno che si disegna da sola (SVG di Illustrator coi tratti vivi, `svg` = il file così
    *  com'è, lib/costruzione.ts): titolone, il disegno, paragrafo in fondo. `alt` descrive il disegno */
   | { type: 'costruzione'; svg: string; alt: string; eyebrow?: string; title?: string; body?: string }
+  /** l'evoluzione di un segno a passi (G&A: dai montanti e traversi del marchio storico al simbolo nuovo): il disegno a destra, a sinistra titolo e
+   *  testo del passo e un righello col passo attuale; un clic sul disegno fa il passo dopo (scripts/evoluzione.ts).
+   *  `svg` = il file annotato coi passi (data-passo, data-disegna…), così com'è; `alt` descrive il disegno */
+  | { type: 'evoluzione'; svg: string; alt: string; eyebrow?: string; passi: Array<{ title: string; body: string }> }
   /** cella 02 delle pagine progetto con la foto di contesto: titolo (h1) e descrizione, sotto la foto a tutta larghezza */
   | { type: 'contesto'; eyebrow?: string; title: string; body?: string; image: ImageMetadata; alt: string; fondo?: string }
   /** pagina d'errore: codice grande con glitch, titolo (h1) e link all'indice, su carta a quadretti */

@@ -16,6 +16,20 @@ contesto:
   alt: "Il primo logo di Purple Piper, dal vecchio sito di prima del 2018: scritta rossa in rilievo su fondo rosso, Progressive Rock e una croce bianca"
   fondo: "#e23736"
 cells:
+  # il sito sul telefono (screenshot di Roberto del 3/11/2026, 822×1140): testo in alto, sotto lo screenshot fermo,
+  # poi due righe e il bottone per il sito
+  - type: text
+    w: 4
+    h: 8
+    size: s
+    eyebrow: "Il sito"
+    title: "Una radio che si ascolta ovunque"
+    body: "Il vecchio sito funzionava su pochi dispositivi. Quello nuovo è **responsive**: la radio si ascolta dal telefono come dal computer, col **brano in onda in diretta**, il player e la **playlist** delle ultime ore."
+    immagini:
+      - image: ./sito-telefono.png
+        alt: "Il sito di Purple Piper sul telefono: il logo rosso sopra un dipinto con una figura alata, e sotto il pannello viola col tasto Live, il brano in onda, Playlist, Player e il motto In prog we trust"
+    after: "In fondo, i **link** alle case del prog: Arlequins, Prog Archives, Musicstack, Bandcamp e Discogs."
+    button: { label: "Visita il sito", href: "https://www.purplepiper.eu" }
   # la P del logo coi tratti vivi (file di Roberto del 2/11/2026), si disegna da sola: titolo e testo segnaposto, da scrivere
   - type: costruzione
     w: 4
@@ -23,7 +37,7 @@ cells:
     md: { w: 4, h: 6 }
     disegno: ./costruzione-p.svg
     alt: "Costruzione della P di Purple Piper: il tratteggio dell'ombra, il contorno rosso della lettera e i contorni viola del bordo"
-    title: "Come nasce la P"
+    title: "La nuova P"
     body: "Testo da scrivere."
   # la radio in diretta: la stessa della cella sul tavolo (un solo lettore per la pagina, scripts/radio.ts)
   - type: radio

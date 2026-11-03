@@ -52,8 +52,10 @@ const progetti = defineCollection({
         ...base, type: z.literal('text'), eyebrow: z.string().optional(), title: z.string(),
         body: z.union([z.string(), z.array(z.string())]).optional(),
         as: z.enum(['h2', 'p']).optional(), size: z.enum(['s', 'm', 'l']).optional(),
-        // foto sotto il paragrafo, in un carosello che gira da solo
-        immagini: z.array(z.strictObject({ image: image(), alt: z.string() })).min(2).optional(),
+        // foto sotto il paragrafo, in un carosello che gira da solo (una sola: ferma)
+        immagini: z.array(z.strictObject({ image: image(), alt: z.string() })).min(1).optional(),
+        // sotto le foto: un altro paragrafo e un bottone
+        after: z.string().optional(), button: bottone.optional(),
       }),
       z.strictObject({ ...base, type: z.literal('list'), title: z.string(), items: z.array(z.union([z.string(), z.strictObject({ label: z.string(), href: z.string() })])) }),
       // value anche numero in YAML (2024 senza virgolette)
@@ -100,6 +102,13 @@ const progetti = defineCollection({
       z.strictObject({
         ...base, type: z.literal('costruzione'), disegno: z.string().regex(/^\.\/costruzione-[\w-]+\.svg$/, 'disegno: ./costruzione-<nome>.svg'),
         alt: z.string(), eyebrow: z.string().optional(), title: z.string().optional(), body: z.string().optional(),
+      }),
+      // l'evoluzione di un segno a passi, uno per clic: `disegno` = SVG annotato coi passi (evoluzione-*.svg nella cartella
+      // del progetto, vedi scripts/evoluzione.ts), `passi` = titolo e testo di ognuno, tanti quanti i passi dell'SVG
+      z.strictObject({
+        ...base, type: z.literal('evoluzione'), disegno: z.string().regex(/^\.\/evoluzione-[\w-]+\.svg$/, 'disegno: ./evoluzione-<nome>.svg'),
+        alt: z.string(), eyebrow: z.string().optional(),
+        passi: z.array(z.strictObject({ title: z.string(), body: z.string() })).min(2),
       }),
     ]);
 

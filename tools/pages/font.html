@@ -1,8 +1,12 @@
 <!doctype html>
 <!--
-  Laboratorio: Schibsted Grotesk contro Archivo e Mona Sans, ognuno sotto il logotipo (Roberto Grafica Black).
-  Schibsted e logotipo dai file del sito (/fonts/), Archivo e Mona Sans da Google Fonts. Solo sviluppo: il sito non cambia.
+  Laboratorio: Archivo (quello del sito) contro Host Grotesk e Geist, in celle come quelle del sito sulla carta a quadretti:
+  titolone con la lente (normale e al contrario), titoletto, paragrafo coi **concetti**, cifre che contano, alfabeto.
+  Le etichette in mono si scambiano tra JetBrains Mono (quello del sito) e Geist Mono. Riga "cifre tabellari": misurata dal browser.
+  Archivo, JetBrains Mono e logotipo dai file del sito (/fonts/), Host Grotesk, Geist e Geist Mono da Google Fonts. Solo sviluppo.
+  Provato e tolto (3/11/2026): Hanken Grotesk (100–900), al posto di Host Grotesk.
     npx astro build && npm run vt:serve  →  http://localhost:4400/_vt/font.html  (anche dal telefono)
+  La versione di prima (Schibsted Grotesk contro Archivo e Mona Sans, ottobre 2026) è nella cronologia di git.
 -->
 <html lang="it">
 <head>
@@ -11,121 +15,287 @@
 <title>Font · laboratorio</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=Mona+Sans:ital,wdth,wght@0,75..125,200..900;1,75..125,200..900&display=swap">
+<!-- una richiesta per famiglia: se una non risponde, le altre arrivano lo stesso -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Host+Grotesk:ital,wght@0,300..800;1,300..800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@100..900&display=swap">
 <style>
   @font-face { font-family: 'Roberto Grafica'; src: url('/fonts/roberto-grafica-black.woff2') format('woff2'); font-weight: 900; font-display: block; }
-  @font-face { font-family: 'Schibsted Grotesk'; src: url('/fonts/schibsted-grotesk.woff2') format('woff2'); font-weight: 400 900; font-display: block; }
-  @font-face { font-family: 'Schibsted Grotesk'; src: url('/fonts/schibsted-grotesk-italic.woff2') format('woff2'); font-weight: 400 900; font-style: italic; font-display: block; }
+  @font-face { font-family: 'Archivo'; src: url('/fonts/archivo.woff2') format('woff2'); font-weight: 400 900; font-display: block; }
+  @font-face { font-family: 'JetBrains Mono'; src: url('/fonts/jetbrains-mono.woff2') format('woff2'); font-weight: 400 800; font-display: block; }
 
   :root {
-    --rosso: #e8432a; --chiaro: #f5f3f0; --nero: #1c1a17;
-    --inchiostro: var(--rosso); --bianco: var(--chiaro);
-    --m: 10px; --gap: var(--m); --pad: 20px; --line: 1px;
-    --peso: 500; --larghezza: 100;
+    --chiaro: #f5f3f0; --nero: #1c1a17; --rosso: #f03f24;
+    --inchiostro: var(--nero); --bianco: var(--chiaro);
+    --q: 25px; --line: 1px; --pad: calc(var(--q) * 0.4); --pad-label: calc(var(--q) * 1.24);
+    --titolone: 64px; --titoletto: 24px; --paragrafo: 16px; --corpo-mono: 11px;
+    --mono: 'JetBrains Mono'; --mono-spazio: 0.02em;
   }
-  html[data-inchiostro="bianco"] { --inchiostro: var(--chiaro); --bianco: var(--rosso); }
-  html[data-inchiostro="nero"] { --inchiostro: var(--nero); }
+  @media (max-width: 599px) { :root { --q: 18px; --titolone: 46px; --titoletto: 18px; --paragrafo: 15px; } }
+  html[data-mono-scelto="geist"] { --mono: 'Geist Mono'; --mono-spazio: 0.04em; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  html { background: var(--bianco); color: var(--inchiostro); -webkit-font-smoothing: antialiased; }
-  body { font-family: 'Schibsted Grotesk', sans-serif; }
+  html { color: var(--inchiostro); -webkit-font-smoothing: antialiased; }
+  /* la carta del tavolo: linee al 22% dell'inchiostro */
+  body {
+    min-height: 100vh; font-family: 'Archivo', sans-serif;
+    background-color: var(--bianco);
+    background-image:
+      linear-gradient(to right, color-mix(in srgb, var(--inchiostro) 22%, transparent) var(--line), transparent var(--line)),
+      linear-gradient(to bottom, color-mix(in srgb, var(--inchiostro) 22%, transparent) var(--line), transparent var(--line));
+    background-size: var(--q) var(--q);
+  }
+
+  .mono { font-family: var(--mono), monospace; font-size: var(--corpo-mono); line-height: 1.2; letter-spacing: var(--mono-spazio);
+    text-transform: uppercase; font-variant-numeric: tabular-nums; }
 
   /* barra dei comandi */
-  .bar { position: sticky; top: 0; z-index: 10; display: flex; flex-wrap: wrap; align-items: center; gap: var(--gap) calc(var(--gap) * 2);
-    padding: var(--gap); background: var(--bianco); border-bottom: var(--line) solid var(--inchiostro);
-    font: 500 11px/1.2 'Schibsted Grotesk', sans-serif; letter-spacing: .08em; text-transform: uppercase; }
-  .bar label { display: flex; align-items: center; gap: 8px; }
-  .bar input[type="range"] { accent-color: var(--inchiostro); width: 140px; }
-  .bar output { font-variant-numeric: tabular-nums; min-width: 3ch; }
-  .bar button { font: inherit; letter-spacing: inherit; text-transform: inherit; padding: 6px 10px; cursor: pointer;
-    border: var(--line) solid var(--inchiostro); background: var(--bianco); color: var(--inchiostro); }
-  .bar button[aria-pressed="true"] { background: var(--inchiostro); color: var(--bianco); }
+  .bar { position: sticky; top: 0; z-index: 10; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 20px;
+    padding: 10px var(--q); background: var(--inchiostro); color: var(--bianco); }
+  .bar .firma { font: 900 var(--q)/0.68 'Roberto Grafica'; padding-top: 0.06em; margin-right: 10px; }
+  .gruppo { display: flex; align-items: center; gap: 6px; }
+  .bar button { font: inherit; letter-spacing: inherit; text-transform: inherit; padding: 5px 8px;
+    border: var(--line) solid var(--bianco); background: none; color: var(--bianco); cursor: default; }
+  .bar button[aria-pressed="true"] { background: var(--bianco); color: var(--inchiostro); }
+  .bar input[type="text"] { font: 500 13px/1 'Archivo', sans-serif; padding: 5px 8px; width: min(320px, 100%);
+    border: var(--line) solid var(--bianco); background: none; color: var(--bianco); color-scheme: dark; }
 
-  /* un blocco per font */
-  .prova { padding: calc(var(--pad) * 2) var(--pad); border-bottom: var(--line) solid var(--inchiostro); container-type: inline-size; }
-  .prova__nome { font: 500 11px/1.2 'Schibsted Grotesk', sans-serif; letter-spacing: .08em; text-transform: uppercase; margin-bottom: var(--pad);
-    display: flex; justify-content: space-between; gap: var(--gap); }
-  .f { font-family: var(--f); font-weight: var(--peso); font-variation-settings: 'wdth' var(--larghezza); }
+  /* una colonna per font, larga un numero intero di quadretti */
+  .tavolo { display: grid; gap: var(--q); padding: var(--q); grid-template-columns: repeat(auto-fit, minmax(min(100%, calc(var(--q) * 17 - var(--line))), 1fr)); }
+  .colonna { display: grid; gap: var(--q); align-content: start; }
 
-  /* logotipo e font a confronto, stessa altezza delle maiuscole circa */
-  .logotipo { font-family: 'Roberto Grafica', sans-serif; font-weight: 900; font-size: 16cqi; line-height: .8; letter-spacing: 0; }
-  .titolone { font-size: 16cqi; line-height: .9; letter-spacing: -.02em; text-transform: uppercase; margin-top: .1em; }
-  .coppia { margin-top: calc(var(--pad) * 1.5); display: grid; grid-template-columns: auto 1fr; gap: 0 var(--pad); align-items: baseline; }
-  .coppia .logotipo { font-size: 6cqi; }
-  .coppia .f { font-size: 6cqi; line-height: 1; letter-spacing: -.01em; }
+  /* cella: fondo carta, filo da 1px, margini come sul sito */
+  .cell { position: relative; background: var(--bianco); border: var(--line) solid var(--inchiostro);
+    padding: var(--pad-label) var(--pad) var(--pad); container-type: inline-size; }
+  .cell--piena { background: var(--inchiostro); color: var(--bianco); border-color: var(--inchiostro); }
+  .cell__label { position: absolute; top: var(--pad); left: var(--pad); right: var(--pad); display: flex; justify-content: space-between; gap: 10px; }
+  .cell > * + * { margin-top: var(--q); }
 
-  .campioni { margin-top: calc(var(--pad) * 2); display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: calc(var(--pad) * 1.5); }
-  .h { font-size: clamp(28px, 4cqi, 56px); line-height: 1.02; letter-spacing: -.02em; text-wrap: balance; }
-  .p { font-size: 17px; line-height: 1.4; max-width: 46ch; }
-  .p em { font-style: italic; }
-  .mono { font-size: 11px; line-height: 1.2; letter-spacing: .08em; text-transform: uppercase; }
-  .cifre { font-size: clamp(32px, 4.5cqi, 64px); word-break: break-all; line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
-  .stack > * + * { margin-top: 12px; }
-  .alfabeto { margin-top: calc(var(--pad) * 1.5); font-size: 22px; line-height: 1.35; word-break: break-word; }
-  [contenteditable]:focus-visible { outline: var(--line) dashed var(--inchiostro); outline-offset: 4px; }
+  .f { font-family: var(--f), sans-serif; }
+  .titolone { font-weight: 900; line-height: 0.85; letter-spacing: -0.05em; font-size: var(--titolone); overflow-wrap: break-word; }
+  .titolone .riga { display: block; white-space: nowrap; }
+  .titoletto { font-weight: 500; line-height: 1; letter-spacing: -0.025em; font-size: var(--titoletto); text-wrap: balance; }
+  .paragrafo { max-width: 44ch; font-size: var(--paragrafo); line-height: 1.35; font-weight: 400; text-wrap: pretty; }
+  .paragrafo + .paragrafo { margin-top: 1.35em; }
+  .paragrafo strong { font-weight: 600; }
+  .cifra { font-size: var(--titolone); font-weight: 800; line-height: 0.85; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
+  .cifre { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+  .alfabeto { font-size: 20px; line-height: 1.35; font-weight: 400; overflow-wrap: anywhere; }
+  .pesi { display: grid; gap: 2px; font-size: 22px; line-height: 1.1; letter-spacing: -0.02em; }
+  .pesi span { display: flex; justify-content: space-between; gap: 10px; white-space: nowrap; overflow: hidden; }
+  .pesi .mono { align-self: center; }
+  .sì { color: inherit; }
+  .no { color: var(--rosso); }
+  [contenteditable]:focus-visible { outline: var(--line) dashed currentColor; outline-offset: 4px; }
 </style>
 </head>
 <body>
-<div class="bar">
-  <label>Peso <input type="range" id="peso" min="400" max="900" step="10" value="500"><output for="peso">500</output></label>
-  <label>Larghezza <input type="range" id="larghezza" min="75" max="125" step="1" value="100"><output for="larghezza">100</output></label>
-  <span>(solo Archivo e Mona Sans)</span>
-  <button type="button" data-ink="bianco" aria-pressed="false">Inverti</button>
-  <button type="button" data-ink="nero" aria-pressed="false">Nero</button>
-  <span>I testi si possono scrivere</span>
+<div class="bar mono">
+  <span class="firma" aria-hidden="true">ROBERTO</span>
+  <span class="gruppo">Lente
+    <button type="button" data-lente="normale" aria-pressed="true">Normale</button>
+    <button type="button" data-lente="inversa" aria-pressed="false">Al contrario</button>
+  </span>
+  <span class="gruppo">Fino a
+    <button type="button" data-fino="400" aria-pressed="true">400 (oggi)</button>
+    <button type="button" data-fino="100" aria-pressed="false">Il più sottile</button>
+  </span>
+  <span class="gruppo">Mono
+    <button type="button" data-mono="jetbrains" aria-pressed="true">JetBrains</button>
+    <button type="button" data-mono="geist" aria-pressed="false">Geist Mono</button>
+  </span>
+  <input type="text" id="titolo" value="Progetto identità per ristoranti e piccole aziende" aria-label="Testo del titolone" spellcheck="false">
 </div>
 
 <template id="tpl">
-  <section class="prova">
-    <div class="prova__nome"><span class="nome"></span><span class="nota"></span></div>
-    <div class="logotipo" aria-hidden="true">ROBERTO</div>
-    <div class="f titolone" contenteditable spellcheck="false">Roberto</div>
-    <div class="coppia">
-      <span class="logotipo">ROBERTO</span>
-      <span class="f" contenteditable spellcheck="false">Tanasi · graphic designer</span>
+  <div class="colonna">
+    <div class="cell">
+      <div class="cell__label mono"><span class="nome"></span><span class="nota"></span></div>
+      <h2 class="f titolone" data-titolone></h2>
     </div>
-    <div class="campioni">
-      <div class="stack">
-        <p class="f mono">03 · Identità visiva</p>
-        <p class="f h" contenteditable spellcheck="false">Progetto identità per ristoranti, hotel e piccole aziende</p>
-      </div>
-      <div class="stack">
-        <p class="f mono">Info</p>
-        <p class="f p" contenteditable spellcheck="false">Disegno marchi, cataloghi e siti a Itri, tra Formia e Latina. <em>Ogni progetto parte da un foglio a quadretti</em>, poi diventa un sistema: caratteri, colori, regole.</p>
-      </div>
-      <div class="stack">
-        <p class="f mono">Dal 2016 · 42 progetti</p>
-        <p class="f cifre">0123456789</p>
-        <p class="f mono">ore 14:07 · 41,2° N · v.1.5.61</p>
+    <div class="cell">
+      <div class="cell__label mono"><span>Info</span><span>→</span></div>
+      <p class="f titoletto" contenteditable spellcheck="false">Marchi, cataloghi e siti tra Itri, Formia e Latina</p>
+      <div>
+        <p class="f paragrafo" contenteditable spellcheck="false">Ogni progetto parte da un <strong>foglio a quadretti</strong>, poi diventa un sistema: caratteri, colori, regole. Lavoro con <strong>ristoranti, hotel e piccole aziende</strong> che vogliono farsi riconoscere.</p>
+        <p class="f paragrafo" contenteditable spellcheck="false">Disegno anche il <strong>sito</strong>, quando serve. Perché funzioni, non solo perché sia bello: àèéìòù «€ 1.250» · 3/4 · n° 42…</p>
       </div>
     </div>
-    <p class="f alfabeto" contenteditable spellcheck="false">ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz àèéìòù € &amp; @ ? ! → ←</p>
-  </section>
+    <div class="cell cell--piena">
+      <div class="cell__label mono"><span>Progetti</span><span class="tab"></span></div>
+      <div class="cifre"><span class="f cifra" data-conta>0</span><span class="mono">dal 2016</span></div>
+    </div>
+    <div class="cell">
+      <div class="cell__label mono"><span>Pesi</span><span class="escursione"></span></div>
+      <div class="f pesi"></div>
+    </div>
+    <div class="cell">
+      <div class="cell__label mono"><span>Alfabeto</span><span>ore 14:07 · 41,2° N</span></div>
+      <p class="f alfabeto" contenteditable spellcheck="false">ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz 0123456789 àèéìòù € &amp; @ ? ! → ← «»</p>
+    </div>
+  </div>
 </template>
 
+<main class="tavolo" id="tavolo"></main>
+
 <script>
-  const font = [
-    { nome: 'Schibsted Grotesk', f: "'Schibsted Grotesk'", nota: 'quello di oggi · 400–900, senza larghezza' },
-    { nome: 'Archivo', f: "'Archivo'", nota: 'Google Fonts · 100–900, larghezza 62–125' },
-    { nome: 'Mona Sans', f: "'Mona Sans'", nota: 'Google Fonts · 200–900, larghezza 75–125' },
+  const FONT = [
+    { nome: 'Archivo', f: "'Archivo'", min: 400, max: 900, nota: 'oggi · 400–900' },
+    { nome: 'Host Grotesk', f: "'Host Grotesk'", min: 300, max: 800, nota: '300–800' },
+    { nome: 'Geist', f: "'Geist'", min: 100, max: 900, nota: '100–900' },
   ];
+  const RAGGIO = 2.5, SMORZA = 90;   // come scripts/titoloni.ts: raggio in corpi del titolo, smorzamento in ms
+  const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const FINE = matchMedia('(hover: hover) and (pointer: fine)').matches;
+  const stato = { lente: 'normale', fino: 400 };
+  const html = document.documentElement;
+
+  const tavolo = document.getElementById('tavolo');
   const tpl = document.getElementById('tpl');
-  for (const { nome, f, nota } of font) {
-    const s = tpl.content.firstElementChild.cloneNode(true);
-    s.style.setProperty('--f', f);
-    s.querySelector('.nome').textContent = nome;
-    s.querySelector('.nota').textContent = nota;
+  const campo = document.getElementById('titolo');
+  const colonne = FONT.map((font, i) => {
+    const el = tpl.content.firstElementChild.cloneNode(true);
+    el.style.setProperty('--f', font.f);
+    el.querySelector('.nome').textContent = String(i + 1).padStart(2, '0') + ' · ' + font.nome;
+    el.querySelector('.nota').textContent = font.nota;
+    el.querySelector('.escursione').textContent = font.min + '–' + font.max;
+    const pesi = el.querySelector('.pesi');
+    for (let w = 100; w <= 900; w += 100) {
+      const s = document.createElement('span'), manca = w < font.min || w > font.max;
+      s.style.fontWeight = w;
+      // fuori dall'escursione del file il browser usa il peso più vicino: si vede, ma sbiadito
+      s.innerHTML = `<span>Ristorante</span><span class="mono">${w}${manca ? ' · non c’è' : ''}</span>`;
+      if (manca) s.style.opacity = 0.35;
+      pesi.append(s);
+    }
+    tavolo.append(el);
+    const titolo = el.querySelector('[data-titolone]');
+    return { font, el, titolo, cella: titolo.closest('.cell'), lettere: [], pesi: [] };
+  });
+
+  // [peso a riposo, peso al centro]. Normale: 500 → 900 come sul sito (col "più sottile": dal minimo del font).
+  // Al contrario: 900 → 400 come sul sito (col "più sottile": fino al minimo del font). 900 = il più nero che il font ha
+  function pesiDi(col) {
+    const sottile = Math.max(stato.fino, col.font.min), nero = col.font.max;
+    return stato.lente === 'normale' ? [stato.fino === 100 ? sottile : 500, nero] : [nero, sottile];
+  }
+
+  /* titolone: lettere in span e righe bloccate (come .lente__riga del sito), così le parole che ingrassano non cambiano riga.
+     Le righe si leggono col peso a riposo */
+  function componi() {
+    const parole = (campo.value.trim() || ' ').split(/\s+/);
+    for (const col of colonne) {
+      const t = col.titolo, base = pesiDi(col)[0];
+      t.textContent = '';
+      const spans = parole.map((p, i) => {
+        const w = document.createElement('span');
+        w.style.display = 'inline-block';
+        for (const ch of p) { const l = document.createElement('span'); l.textContent = ch; l.style.fontWeight = base; w.append(l); }
+        t.append(w);
+        if (i < parole.length - 1) t.append(' ');
+        return w;
+      });
+      const righe = [];
+      for (const w of spans) {
+        if (!righe.length || Math.abs(righe.at(-1).top - w.offsetTop) > 2) righe.push({ top: w.offsetTop, parole: [] });
+        righe.at(-1).parole.push(w);
+      }
+      t.textContent = '';
+      for (const r of righe) {
+        const riga = document.createElement('span');
+        riga.className = 'riga';
+        r.parole.forEach((w, i) => { riga.append(w); if (i < r.parole.length - 1) riga.append(' '); });
+        t.append(riga);
+      }
+      col.lettere = [...t.querySelectorAll('.riga > span > span')];
+      col.pesi = col.lettere.map(() => base);
+    }
+  }
+
+  /* lente: stesso calcolo di scripts/titoloni.ts (coseno sul raggio, peso che insegue con smorzamento esponenziale).
+     Il puntatore è letto in proporzione alla cella e riportato in tutte e tre: si confrontano nello stesso punto */
+  let pointer = null, loop = 0, prev = 0;
+  function frame(now) {
+    const dt = prev ? now - prev : 16;
+    prev = now;
+    let moving = false;
+    for (const col of colonne) {
+      const [base, centro] = pesiDi(col);
+      const R = RAGGIO * parseFloat(getComputedStyle(col.titolo).fontSize);
+      let p = null;
+      if (pointer) {
+        const c = col.cella.getBoundingClientRect();
+        p = { x: c.left + pointer.fx * c.width, y: c.top + pointer.fy * c.height };
+      }
+      // le posizioni si rileggono a ogni fotogramma: cambiando peso le lettere si spostano
+      const rects = p ? col.lettere.map(l => l.getBoundingClientRect()) : null;
+      col.lettere.forEach((l, i) => {
+        let target = base;
+        if (rects) {
+          const r = rects[i], d = Math.hypot(r.left + r.width / 2 - p.x, r.top + r.height / 2 - p.y);
+          if (d < R) target = base + (centro - base) * (0.5 + 0.5 * Math.cos((Math.PI * d) / R));
+        }
+        col.pesi[i] += (target - col.pesi[i]) * (1 - Math.exp(-dt / SMORZA));
+        if (Math.abs(col.pesi[i] - target) > 0.5) moving = true;
+        l.style.fontWeight = Math.round(col.pesi[i]);
+      });
+    }
+    loop = moving || pointer ? requestAnimationFrame(frame) : 0;
+    if (!loop) prev = 0;
+  }
+  const avvia = () => { if (!loop) loop = requestAnimationFrame(frame); };
+  if (FINE && !REDUCED) for (const col of colonne) {
+    col.cella.addEventListener('pointermove', e => {
+      const c = col.cella.getBoundingClientRect();
+      pointer = { fx: (e.clientX - c.left) / c.width, fy: (e.clientY - c.top) / c.height };
+      avvia();
+    });
+    col.cella.addEventListener('pointerleave', () => { pointer = null; avvia(); });
+  }
+
+  /* cifre tabellari: "1111" e "0000" con tnum devono essere larghi uguali; se no il numero che conta balla */
+  function tabellari(f) {
+    const s = document.createElement('span');
+    s.style.cssText = `position:absolute;visibility:hidden;font:800 100px ${f};font-variant-numeric:tabular-nums;white-space:nowrap`;
     document.body.append(s);
+    s.textContent = '1111'; const a = s.getBoundingClientRect().width;
+    s.textContent = '0000'; const b = s.getBoundingClientRect().width;
+    s.remove();
+    return Math.abs(a - b) < 0.5;
   }
-  for (const id of ['peso', 'larghezza']) {
-    const r = document.getElementById(id), o = r.nextElementSibling;
-    r.addEventListener('input', () => { document.documentElement.style.setProperty('--' + id, r.value); o.value = r.value; });
+
+  /* contatore: 0 → 142 e ricomincia, per vedere se le cifre ballano */
+  function conta() {
+    const cifre = document.querySelectorAll('[data-conta]');
+    if (REDUCED) { cifre.forEach(c => (c.textContent = '142')); return; }
+    let n = 0;
+    setInterval(() => { n = (n + 1) % 143; cifre.forEach(c => (c.textContent = n)); }, 60);
   }
-  const ink = document.querySelectorAll('[data-ink]');
-  for (const b of ink) b.addEventListener('click', () => {
-    const on = b.getAttribute('aria-pressed') !== 'true';
-    for (const x of ink) x.setAttribute('aria-pressed', 'false');
-    b.setAttribute('aria-pressed', String(on));
-    if (on) document.documentElement.dataset.inchiostro = b.dataset.ink; else delete document.documentElement.dataset.inchiostro;
+
+  function premi(attr, valore) {
+    for (const b of document.querySelectorAll(`.bar [${attr}]`)) b.setAttribute('aria-pressed', String(b.getAttribute(attr) === valore));
+  }
+  for (const b of document.querySelectorAll('.bar [data-lente]')) b.addEventListener('click', () => { stato.lente = b.dataset.lente; premi('data-lente', stato.lente); componi(); });
+  for (const b of document.querySelectorAll('.bar [data-fino]')) b.addEventListener('click', () => { stato.fino = +b.dataset.fino; premi('data-fino', b.dataset.fino); componi(); });
+  // data-mono sui bottoni, la scelta su <html> come data-mono-scelto (vedi CLAUDE.md, attributi data- dei bottoni diversi da quelli di <html>)
+  for (const b of document.querySelectorAll('.bar [data-mono]')) b.addEventListener('click', () => { html.dataset.monoScelto = b.dataset.mono; premi('data-mono', b.dataset.mono); });
+  campo.addEventListener('input', componi);
+  let attesa = 0, larghezza = innerWidth;
+  addEventListener('resize', () => {
+    if (innerWidth === larghezza) return;
+    larghezza = innerWidth;
+    clearTimeout(attesa);
+    attesa = setTimeout(componi, 150);
+  });
+
+  document.fonts.ready.then(() => {
+    componi();
+    for (const col of colonne) {
+      const si = tabellari(col.font.f);
+      const tab = col.el.querySelector('.tab');
+      tab.textContent = 'cifre tabellari: ' + (si ? 'sì' : 'no');
+      tab.className = 'tab ' + (si ? 'sì' : 'no');
+    }
+    conta();
   });
 </script>
 </body>

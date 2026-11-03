@@ -26,6 +26,7 @@ import AffissioneCell from './cells/AffissioneCell.astro';
 import ContestoCell from './cells/ContestoCell.astro';
 import SottologoCell from './cells/SottologoCell.astro';
 import CostruzioneCell from './cells/CostruzioneCell.astro';
+import EvoluzioneCell from './cells/EvoluzioneCell.astro';
 import RadioCell from './cells/RadioCell.astro';
 import ArchiveHeadCell from './cells/ArchiveHeadCell.astro';
 import TagsCell from './cells/TagsCell.astro';
@@ -69,7 +70,7 @@ if (cell.type === 'project' && !p) throw new Error(`[grid] progetto non trovato:
     {cell.type === 'svg' && <SvgCell svg={cell.svg} fit={cell.fit} riordina={cell.riordina} />}
     {cell.type === 'logotipo' && <LogotipoCell nudo={cell.frame === false} />}
     {cell.type === 'marquee' && <MarqueeCell text={cell.text} speed={cell.speed} ruotato={cell.ruotato} />}
-    {cell.type === 'text' && <TextCell title={cell.title} body={cell.body} as={cell.as} size={cell.size} immagini={cell.immagini} sizes={sizes} />}
+    {cell.type === 'text' && <TextCell title={cell.title} body={cell.body} as={cell.as} size={cell.size} immagini={cell.immagini} after={cell.after} button={cell.button} sizes={sizes} />}
     {cell.type === 'list' && <ListCell items={cell.items} />}
     {cell.type === 'stat' && <StatCell value={cell.value} caption={cell.caption} countUp={cell.countUp} heading={cell.heading} />}
     {cell.type === 'media' && <MediaCell image={cell.image} video={cell.video} overlay={cell.overlay} etichette={cell.etichette} alt={cell.alt} sizes={sizes} title={cell.caption} priority={!!cell.heroOf} seconda={cell.seconda} ingrandisci={cell.ingrandisci} />}
@@ -86,7 +87,8 @@ if (cell.type === 'project' && !p) throw new Error(`[grid] progetto non trovato:
     {cell.type === 'sottologo' && <SottologoCell logo={cell.logo} immagini={cell.immagini} title={cell.title} body={cell.body} sizes={sizes} />}
     {cell.type === 'radio' && <RadioCell togli={!!cell.nascosta} />}
     {cell.type === 'costruzione' && <CostruzioneCell svg={cell.svg} nome={`${Astro.url.pathname} · ${cell.id}`} alt={cell.alt} title={cell.title} body={cell.body} />}
-    {cell.type === 'contesto' && <ContestoCell title={cell.title} body={cell.body} image={cell.image} alt={cell.alt} fondo={cell.fondo} sizes={sizes} />}
+    {cell.type === 'evoluzione' && <EvoluzioneCell svg={cell.svg} nome={`${Astro.url.pathname} · ${cell.id}`} alt={cell.alt} passi={cell.passi} />}
+    {cell.type === 'contesto' &&<ContestoCell title={cell.title} body={cell.body} image={cell.image} alt={cell.alt} fondo={cell.fondo} sizes={sizes} />}
     {cell.type === 'error' && <ErrorCell code={cell.code} title={cell.title} />}
     {cell.type === 'archive-head' && <ArchiveHeadCell total={cell.total} />}
     {cell.type === 'tags' && <TagsCell tags={cell.tags} total={projects} />}
