@@ -17,22 +17,22 @@
      nella loro maschera (data-penna). Così com'è, il file è lo stato finale (senza JavaScript). -->
 <defs>
 <clipPath id="gea-evo-fuori"><path clip-rule="evenodd" d="M-80 -80H440V440H-80Z M124.44 124.44V235.56H235.56V124.44Z"/></clipPath>
-<mask id="gea-evo-asse-1" maskUnits="userSpaceOnUse" x="-10" y="-10" width="380" height="380"><line x1="235.56" y1="0" x2="235.56" y2="450" stroke="#fff" stroke-width="4" fill="none" data-penna=""/></mask>
-<mask id="gea-evo-asse-2" maskUnits="userSpaceOnUse" x="-10" y="-10" width="380" height="380"><line x1="0" y1="124.44" x2="360" y2="124.44" stroke="#fff" stroke-width="4" fill="none" data-penna=""/></mask>
-<mask id="gea-evo-asse-3" maskUnits="userSpaceOnUse" x="-10" y="-10" width="380" height="380"><line x1="124.44" y1="0" x2="124.44" y2="450" stroke="#fff" stroke-width="4" fill="none" data-penna=""/></mask>
-<mask id="gea-evo-asse-4" maskUnits="userSpaceOnUse" x="-10" y="-10" width="380" height="380"><line x1="0" y1="235.56" x2="360" y2="235.56" stroke="#fff" stroke-width="4" fill="none" data-penna=""/></mask>
-<mask id="gea-evo-asse3-1" maskUnits="userSpaceOnUse" x="-10" y="-10" width="380" height="380"><line x1="0" y1="120.77" x2="360" y2="120.77" data-da='{"x1": "0", "y1": "132.44", "x2": "360", "y2": "132.44"}' data-forme='[{"passo": 4, "fase": 2, "durata": 1.2, "attr": {"x1": "0", "y1": "120.77", "x2": "360", "y2": "120.77"}}]' stroke="#fff" stroke-width="4" fill="none" data-penna=""/></mask>
-<mask id="gea-evo-asse3-2" maskUnits="userSpaceOnUse" x="-10" y="-10" width="380" height="380"><line x1="239.23" y1="0" x2="239.23" y2="401.26" data-da='{"x1": "227.56", "y1": "0", "x2": "227.56", "y2": "401.26"}' data-forme='[{"passo": 4, "fase": 2, "durata": 1.2, "attr": {"x1": "239.23", "y1": "0", "x2": "239.23", "y2": "401.26"}}]' stroke="#fff" stroke-width="4" fill="none" data-penna=""/></mask>
-<mask id="gea-evo-asse3-3" maskUnits="userSpaceOnUse" x="-10" y="-10" width="380" height="380"><line x1="0" y1="239.23" x2="360" y2="239.23" data-da='{"x1": "0", "y1": "227.56", "x2": "360", "y2": "227.56"}' data-forme='[{"passo": 4, "fase": 2, "durata": 1.2, "attr": {"x1": "0", "y1": "239.23", "x2": "360", "y2": "239.23"}}]' stroke="#fff" stroke-width="4" fill="none" data-penna=""/></mask>
-<mask id="gea-evo-asse3-4" maskUnits="userSpaceOnUse" x="-10" y="-10" width="380" height="380"><line x1="120.77" y1="0" x2="120.77" y2="401.26" data-da='{"x1": "132.44", "y1": "0", "x2": "132.44", "y2": "401.26"}' data-forme='[{"passo": 4, "fase": 2, "durata": 1.2, "attr": {"x1": "120.77", "y1": "0", "x2": "120.77", "y2": "401.26"}}]' stroke="#fff" stroke-width="4" fill="none" data-penna=""/></mask>
-<mask id="gea-evo-trapezio-1" maskUnits="userSpaceOnUse" x="-10" y="-10" width="380" height="380"><path d="M157.66 132.44L146.12 132.44L132.1 167.47L157.66 167.47Z" stroke="#fff" stroke-width="4" fill="none" data-penna=""/></mask>
-<mask id="gea-evo-trapezio-2" maskUnits="userSpaceOnUse" x="-10" y="-10" width="380" height="380"><path d="M227.56 157.66L227.56 146.11L192.53 132.09L192.53 157.65Z" stroke="#fff" stroke-width="4" fill="none" data-penna=""/></mask>
-<mask id="gea-evo-trapezio-3" maskUnits="userSpaceOnUse" x="-10" y="-10" width="380" height="380"><path d="M202.34 227.56L213.88 227.56L227.9 192.53L202.34 192.53Z" stroke="#fff" stroke-width="4" fill="none" data-penna=""/></mask>
-<mask id="gea-evo-trapezio-4" maskUnits="userSpaceOnUse" x="-10" y="-10" width="380" height="380"><path d="M132.44 202.34L132.44 213.89L167.47 227.91L167.47 202.35Z" stroke="#fff" stroke-width="4" fill="none" data-penna=""/></mask>
-<mask id="gea-evo-asse5-1" maskUnits="userSpaceOnUse" x="-10" y="-10" width="380" height="380"><line x1="202.62" y1="0" x2="202.62" y2="401.26" stroke="#fff" stroke-width="4" fill="none" data-penna=""/></mask>
-<mask id="gea-evo-asse5-2" maskUnits="userSpaceOnUse" x="-10" y="-10" width="380" height="380"><line x1="0" y1="143.4" x2="360" y2="143.4" stroke="#fff" stroke-width="4" fill="none" data-penna=""/></mask>
-<mask id="gea-evo-asse5-3" maskUnits="userSpaceOnUse" x="-10" y="-10" width="380" height="380"><line x1="157.38" y1="0" x2="157.38" y2="401.26" stroke="#fff" stroke-width="4" fill="none" data-penna=""/></mask>
-<mask id="gea-evo-asse5-4" maskUnits="userSpaceOnUse" x="-10" y="-10" width="380" height="380"><line x1="0" y1="216.6" x2="360" y2="216.6" stroke="#fff" stroke-width="4" fill="none" data-penna=""/></mask>
+<mask id="gea-evo-asse-1" maskUnits="userSpaceOnUse" x="-10" y="-10" width="380" height="470"><line x1="235.56" y1="0" x2="235.56" y2="450" stroke="#fff" stroke-width="4" fill="none" data-penna=""/></mask>
+<mask id="gea-evo-asse-2" maskUnits="userSpaceOnUse" x="-10" y="-10" width="380" height="470"><line x1="0" y1="124.44" x2="360" y2="124.44" stroke="#fff" stroke-width="4" fill="none" data-penna=""/></mask>
+<mask id="gea-evo-asse-3" maskUnits="userSpaceOnUse" x="-10" y="-10" width="380" height="470"><line x1="124.44" y1="0" x2="124.44" y2="450" stroke="#fff" stroke-width="4" fill="none" data-penna=""/></mask>
+<mask id="gea-evo-asse-4" maskUnits="userSpaceOnUse" x="-10" y="-10" width="380" height="470"><line x1="0" y1="235.56" x2="360" y2="235.56" stroke="#fff" stroke-width="4" fill="none" data-penna=""/></mask>
+<mask id="gea-evo-asse3-1" maskUnits="userSpaceOnUse" x="-10" y="-10" width="380" height="470"><line x1="0" y1="120.77" x2="360" y2="120.77" data-da='{"x1": "0", "y1": "132.44", "x2": "360", "y2": "132.44"}' data-forme='[{"passo": 4, "fase": 2, "durata": 1.2, "attr": {"x1": "0", "y1": "120.77", "x2": "360", "y2": "120.77"}}]' stroke="#fff" stroke-width="4" fill="none" data-penna=""/></mask>
+<mask id="gea-evo-asse3-2" maskUnits="userSpaceOnUse" x="-10" y="-10" width="380" height="470"><line x1="239.23" y1="0" x2="239.23" y2="450" data-da='{"x1": "227.56", "y1": "0", "x2": "227.56", "y2": "450"}' data-forme='[{"passo": 4, "fase": 2, "durata": 1.2, "attr": {"x1": "239.23", "y1": "0", "x2": "239.23", "y2": "450"}}]' stroke="#fff" stroke-width="4" fill="none" data-penna=""/></mask>
+<mask id="gea-evo-asse3-3" maskUnits="userSpaceOnUse" x="-10" y="-10" width="380" height="470"><line x1="0" y1="239.23" x2="360" y2="239.23" data-da='{"x1": "0", "y1": "227.56", "x2": "360", "y2": "227.56"}' data-forme='[{"passo": 4, "fase": 2, "durata": 1.2, "attr": {"x1": "0", "y1": "239.23", "x2": "360", "y2": "239.23"}}]' stroke="#fff" stroke-width="4" fill="none" data-penna=""/></mask>
+<mask id="gea-evo-asse3-4" maskUnits="userSpaceOnUse" x="-10" y="-10" width="380" height="470"><line x1="120.77" y1="0" x2="120.77" y2="450" data-da='{"x1": "132.44", "y1": "0", "x2": "132.44", "y2": "450"}' data-forme='[{"passo": 4, "fase": 2, "durata": 1.2, "attr": {"x1": "120.77", "y1": "0", "x2": "120.77", "y2": "450"}}]' stroke="#fff" stroke-width="4" fill="none" data-penna=""/></mask>
+<mask id="gea-evo-trapezio-1" maskUnits="userSpaceOnUse" x="-10" y="-10" width="380" height="470"><path d="M157.66 132.44L146.12 132.44L132.1 167.47L157.66 167.47Z" stroke="#fff" stroke-width="4" fill="none" data-penna=""/></mask>
+<mask id="gea-evo-trapezio-2" maskUnits="userSpaceOnUse" x="-10" y="-10" width="380" height="470"><path d="M227.56 157.66L227.56 146.11L192.53 132.09L192.53 157.65Z" stroke="#fff" stroke-width="4" fill="none" data-penna=""/></mask>
+<mask id="gea-evo-trapezio-3" maskUnits="userSpaceOnUse" x="-10" y="-10" width="380" height="470"><path d="M202.34 227.56L213.88 227.56L227.9 192.53L202.34 192.53Z" stroke="#fff" stroke-width="4" fill="none" data-penna=""/></mask>
+<mask id="gea-evo-trapezio-4" maskUnits="userSpaceOnUse" x="-10" y="-10" width="380" height="470"><path d="M132.44 202.34L132.44 213.89L167.47 227.91L167.47 202.35Z" stroke="#fff" stroke-width="4" fill="none" data-penna=""/></mask>
+<mask id="gea-evo-asse5-1" maskUnits="userSpaceOnUse" x="-10" y="-10" width="380" height="470"><line x1="202.62" y1="0" x2="202.62" y2="450" stroke="#fff" stroke-width="4" fill="none" data-penna=""/></mask>
+<mask id="gea-evo-asse5-2" maskUnits="userSpaceOnUse" x="-10" y="-10" width="380" height="470"><line x1="0" y1="143.4" x2="360" y2="143.4" stroke="#fff" stroke-width="4" fill="none" data-penna=""/></mask>
+<mask id="gea-evo-asse5-3" maskUnits="userSpaceOnUse" x="-10" y="-10" width="380" height="470"><line x1="157.38" y1="0" x2="157.38" y2="450" stroke="#fff" stroke-width="4" fill="none" data-penna=""/></mask>
+<mask id="gea-evo-asse5-4" maskUnits="userSpaceOnUse" x="-10" y="-10" width="380" height="470"><line x1="0" y1="216.6" x2="360" y2="216.6" stroke="#fff" stroke-width="4" fill="none" data-penna=""/></mask>
 </defs>
 <g data-passo="1" data-disegna="scaglioni" data-durata="1.1" data-zoom="3" data-scala="2.4720" data-trasla="6" data-trasla-fase="2" data-trasla-durata="1" data-trasla-y="-60.06" data-via="6" data-via-fase="10" data-via-durata="0.6" data-tinta="guida" visibility="hidden" transform="translate(0 -60.06) matrix(2.47 0 0 2.47 -264.96 -264.96)">
 <line x1="159.9" y1="0" x2="340.29" y2="450" data-via="4" data-via-fase="1" data-via-durata="0.6" visibility="hidden"/>
@@ -56,12 +56,12 @@
 </g>
 <g data-passo="3" data-fase="3" data-disegna="scaglioni" data-durata="1.1" data-trasla="6" data-trasla-fase="2" data-trasla-durata="1" data-trasla-y="-60.06" data-via="6" data-via-fase="10" data-via-durata="0.6" data-tinta="guida" visibility="hidden" transform="translate(0 -60.06)">
 <line x1="0" y1="178.22" x2="360" y2="34.01" data-via="4" data-via-fase="1" data-via-durata="0.6" visibility="hidden"/>
-<line x1="194.97" y1="0" x2="14.54" y2="450" data-da='{"x1": "199.12", "y1": "0", "x2": "38.54", "y2": "401.26"}' data-forme='[{"passo": 4, "fase": 2, "durata": 1.2, "attr": {"x1": "194.97", "y1": "0", "x2": "14.54", "y2": "450"}}]'/>
-<line x1="181.78" y1="0" x2="342.52" y2="401.26" data-via="4" data-via-fase="1" data-via-durata="0.6" visibility="hidden"/>
+<line x1="194.97" y1="0" x2="14.54" y2="450" data-da='{"x1": "199.12", "y1": "0", "x2": "19.03", "y2": "450"}' data-forme='[{"passo": 4, "fase": 2, "durata": 1.2, "attr": {"x1": "194.97", "y1": "0", "x2": "14.54", "y2": "450"}}]'/>
+<line x1="181.78" y1="0" x2="360" y2="444.91" data-via="4" data-via-fase="1" data-via-durata="0.6" visibility="hidden"/>
 <line x1="0" y1="50.63" x2="360" y2="194.97" data-da='{"x1": "0", "y1": "55.05", "x2": "360", "y2": "199.12"}' data-forme='[{"passo": 4, "fase": 2, "durata": 1.2, "attr": {"x1": "0", "y1": "50.63", "x2": "360", "y2": "194.97"}}]'/>
 <line x1="0" y1="325.99" x2="360" y2="181.78" data-via="4" data-via-fase="1" data-via-durata="0.6" visibility="hidden"/>
-<line x1="309.37" y1="0" x2="128.95" y2="450" data-da='{"x1": "304.95", "y1": "0", "x2": "144.37", "y2": "401.26"}' data-forme='[{"passo": 4, "fase": 2, "durata": 1.2, "attr": {"x1": "309.37", "y1": "0", "x2": "128.95", "y2": "450"}}]'/>
-<line x1="34.01" y1="0" x2="194.75" y2="401.26" data-via="4" data-via-fase="1" data-via-durata="0.6" visibility="hidden"/>
+<line x1="309.37" y1="0" x2="128.95" y2="450" data-da='{"x1": "304.95", "y1": "0", "x2": "124.86", "y2": "450"}' data-forme='[{"passo": 4, "fase": 2, "durata": 1.2, "attr": {"x1": "309.37", "y1": "0", "x2": "128.95", "y2": "450"}}]'/>
+<line x1="34.01" y1="0" x2="214.28" y2="450" data-via="4" data-via-fase="1" data-via-durata="0.6" visibility="hidden"/>
 <line x1="0" y1="165.03" x2="360" y2="309.37" data-da='{"x1": "0", "y1": "160.88", "x2": "360", "y2": "304.95"}' data-forme='[{"passo": 4, "fase": 2, "durata": 1.2, "attr": {"x1": "0", "y1": "165.03", "x2": "360", "y2": "309.37"}}]'/>
 </g>
 <g data-passo="3" data-fase="5" data-compare="0.5" data-trasla="6" data-trasla-fase="2" data-trasla-durata="1" data-trasla-y="-60.06" data-tinta="pieno" style="--pieno: #f6c32b" transform="translate(0 -60.06)">
@@ -71,20 +71,20 @@
 <path d="M120.77 192.87L120.77 213.45L180 237.2L180 216.6L157.38 216.6L157.38 192.87Z" data-da='{"d": "M132.44 202.34L132.44 213.89L167.47 227.91L167.47 202.35L167.47 202.35L167.47 202.35Z"}' data-forme='[{"passo": 4, "fase": 2, "durata": 1.2, "attr": {"d": "M120.77 192.87L120.77 213.45L180 237.2L180 192.87L180 192.87L180 192.87Z"}}, {"passo": 5, "fase": 3, "durata": 1.0, "attr": {"d": "M120.77 192.87L120.77 213.45L180 237.2L180 216.6L157.38 216.6L157.38 192.87Z"}}]'/>
 </g>
 <g data-passo="4" data-disegna="scaglioni" data-durata="0.8" data-dopo="0.2" data-trasla="6" data-trasla-fase="2" data-trasla-durata="1" data-trasla-y="-60.06" data-via="6" data-via-fase="10" data-via-durata="0.6" data-tinta="guida" visibility="hidden" transform="translate(0 -60.06)">
-<line x1="192.87" y1="0" x2="192.87" y2="401.26"/>
+<line x1="192.87" y1="0" x2="192.87" y2="450"/>
 <line x1="0" y1="167.13" x2="360" y2="167.13"/>
 <line x1="0" y1="180" x2="360" y2="180"/>
-<line x1="167.13" y1="0" x2="167.13" y2="401.26"/>
-<line x1="180" y1="0" x2="180" y2="401.26"/>
+<line x1="167.13" y1="0" x2="167.13" y2="450"/>
+<line x1="180" y1="0" x2="180" y2="450"/>
 <line x1="0" y1="192.87" x2="360" y2="192.87"/>
 </g>
 <g data-passo="6" data-fase="3" data-disegna="scaglioni" data-durata="0.8" data-via="6" data-via-fase="10" data-via-durata="0.6" data-tinta="guida" visibility="hidden">
-<line x1="275.85" y1="0" x2="275.85" y2="381.27"/>
+<line x1="275.85" y1="0" x2="275.85" y2="450"/>
 <line x1="0" y1="189.77" x2="360" y2="189.77"/>
 <line x1="0" y1="199.45" x2="360" y2="199.45"/>
 <line x1="0" y1="232.52" x2="360" y2="232.52"/>
 <line x1="0" y1="251.33" x2="360" y2="251.33"/>
-<line x1="84.15" y1="0" x2="84.15" y2="381.27"/>
+<line x1="84.15" y1="0" x2="84.15" y2="450"/>
 <line x1="0" y1="255.85" x2="360" y2="255.85"/>
 <line x1="0" y1="228" x2="360" y2="228"/>
 <line x1="0" y1="212.77" x2="360" y2="212.77"/>
@@ -104,10 +104,10 @@
 <path d="M176.75 251.26C173.34 251.26 170.49 250.24 168.19 248.19C165.9 246.14 164.75 243.39 164.75 239.93C164.75 238.16 165.1 236.48 165.79 234.9C166.48 233.32 167.49 232.06 168.82 231.12L185.04 248.67C182.27 250.4 179.51 251.26 176.75 251.26M172.64 211.58C173.75 210.39 175.22 209.8 177.04 209.8C181.04 210.14 183.04 212.39 183.04 216.54C183.04 221.08 180.82 224.29 176.38 226.16C174.4 224.19 173.01 222.39 172.19 220.76C171.38 219.13 170.97 217.6 170.97 216.17C170.97 214.29 171.53 212.76 172.64 211.58M205.7 228L188.81 228L188.81 232.51C191.92 232.56 193.48 233.67 193.48 235.84C193.48 238.46 192.76 239.51 191.33 242.08L178.3 228.24C186.49 225.82 190.59 221.92 190.59 216.54C190.59 213.33 189.37 210.81 186.93 208.98C184.48 207.16 181.36 206.24 177.56 206.24C173.22 206.24 169.66 207.5 166.9 210.02C164.13 212.54 162.75 215.65 162.75 219.35C162.75 222.71 164.18 225.99 167.05 229.2C163.34 230.68 160.49 232.55 158.49 234.82C156.5 237.1 155.5 239.71 155.5 242.67C155.5 246.92 157.16 250.3 160.49 252.82C163.83 255.34 167.91 256.59 172.75 256.59C177.63 256.59 182.57 254.87 187.56 251.41L191.7 255.85L200.77 255.85L202.6 251.28C202 251.27 201.41 251.26 200.82 251.26C199.41 251.26 193.92 244.82 193.92 244.82C195.95 241.96 196.42 240.89 197.85 237.47C198.64 235.57 198.98 234.11 200.07 233.47C201.15 232.83 203.03 232.52 205.7 232.52L210.13 232.52L211.95 228L205.7 228"/>
 </g>
 <g data-passo="6" data-fase="6" data-disegna="scaglioni" data-durata="0.6" data-via="6" data-via-fase="10" data-via-durata="0.6" data-tinta="guida" visibility="hidden">
-<line x1="98.3" y1="0" x2="98.3" y2="381.27"/>
+<line x1="98.3" y1="0" x2="98.3" y2="450"/>
 <line x1="0" y1="272.6" x2="360" y2="272.6"/>
 <line x1="0" y1="282.55" x2="360" y2="282.55"/>
-<line x1="261.7" y1="0" x2="261.7" y2="381.27"/>
+<line x1="261.7" y1="0" x2="261.7" y2="450"/>
 </g>
 <g data-passo="6" data-fase="7" data-compare="0.3" data-uno-a-uno="" data-colore="6" data-colore-fase="10" data-colore-durata="0.6" data-colore-da="#f6c32b" data-tinta="pieno" style="--pieno: #4a4a48">
 <path d="M104.15 276.1C104.15 275.29 103.7 274.92 102.63 274.92L101.08 274.92L101.08 277.26L102.63 277.26C103.7 277.26 104.15 276.87 104.15 276.1M98.3 282.38L98.3 272.76L102.97 272.76C105.48 272.76 106.93 273.88 106.93 276.1C106.93 278.3 105.49 279.41 103 279.41L101.08 279.41L101.08 282.38L98.3 282.38"/>
@@ -169,9 +169,9 @@
 </g>
 <g data-passo="3" data-fase="2" data-disegna="scaglioni" data-durata="0.8" data-via="6" data-via-durata="0.5" data-tinta="rosso" data-tratteggio="" visibility="hidden">
 <line x1="0" y1="120.77" x2="360" y2="120.77" data-da='{"x1": "0", "y1": "132.44", "x2": "360", "y2": "132.44"}' data-forme='[{"passo": 4, "fase": 2, "durata": 1.2, "attr": {"x1": "0", "y1": "120.77", "x2": "360", "y2": "120.77"}}]' mask="url(#gea-evo-asse3-1)"/>
-<line x1="239.23" y1="0" x2="239.23" y2="401.26" data-da='{"x1": "227.56", "y1": "0", "x2": "227.56", "y2": "401.26"}' data-forme='[{"passo": 4, "fase": 2, "durata": 1.2, "attr": {"x1": "239.23", "y1": "0", "x2": "239.23", "y2": "401.26"}}]' mask="url(#gea-evo-asse3-2)"/>
+<line x1="239.23" y1="0" x2="239.23" y2="450" data-da='{"x1": "227.56", "y1": "0", "x2": "227.56", "y2": "450"}' data-forme='[{"passo": 4, "fase": 2, "durata": 1.2, "attr": {"x1": "239.23", "y1": "0", "x2": "239.23", "y2": "450"}}]' mask="url(#gea-evo-asse3-2)"/>
 <line x1="0" y1="239.23" x2="360" y2="239.23" data-da='{"x1": "0", "y1": "227.56", "x2": "360", "y2": "227.56"}' data-forme='[{"passo": 4, "fase": 2, "durata": 1.2, "attr": {"x1": "0", "y1": "239.23", "x2": "360", "y2": "239.23"}}]' mask="url(#gea-evo-asse3-3)"/>
-<line x1="120.77" y1="0" x2="120.77" y2="401.26" data-da='{"x1": "132.44", "y1": "0", "x2": "132.44", "y2": "401.26"}' data-forme='[{"passo": 4, "fase": 2, "durata": 1.2, "attr": {"x1": "120.77", "y1": "0", "x2": "120.77", "y2": "401.26"}}]' mask="url(#gea-evo-asse3-4)"/>
+<line x1="120.77" y1="0" x2="120.77" y2="450" data-da='{"x1": "132.44", "y1": "0", "x2": "132.44", "y2": "450"}' data-forme='[{"passo": 4, "fase": 2, "durata": 1.2, "attr": {"x1": "120.77", "y1": "0", "x2": "120.77", "y2": "450"}}]' mask="url(#gea-evo-asse3-4)"/>
 </g>
 <g data-passo="3" data-fase="4" data-disegna="insieme" data-durata="0.7" data-via="3" data-via-fase="5" data-via-durata="0.5" data-tinta="rosso" data-tratteggio="" visibility="hidden">
 <path d="M157.66 132.44L146.12 132.44L132.1 167.47L157.66 167.47Z" mask="url(#gea-evo-trapezio-1)"/>
@@ -180,9 +180,9 @@
 <path d="M132.44 202.34L132.44 213.89L167.47 227.91L167.47 202.35Z" mask="url(#gea-evo-trapezio-4)"/>
 </g>
 <g data-passo="5" data-disegna="scaglioni" data-durata="0.8" data-via="6" data-via-durata="0.5" data-tinta="rosso" data-tratteggio="" visibility="hidden">
-<line x1="202.62" y1="0" x2="202.62" y2="401.26" mask="url(#gea-evo-asse5-1)"/>
+<line x1="202.62" y1="0" x2="202.62" y2="450" mask="url(#gea-evo-asse5-1)"/>
 <line x1="0" y1="143.4" x2="360" y2="143.4" mask="url(#gea-evo-asse5-2)"/>
-<line x1="157.38" y1="0" x2="157.38" y2="401.26" mask="url(#gea-evo-asse5-3)"/>
+<line x1="157.38" y1="0" x2="157.38" y2="450" mask="url(#gea-evo-asse5-3)"/>
 <line x1="0" y1="216.6" x2="360" y2="216.6" mask="url(#gea-evo-asse5-4)"/>
 </g>
 <g data-passo="5" data-fase="2" data-disegna="insieme" data-durata="0.6" data-dopo="0.00" data-via="5" data-via-fase="4" data-via-durata="0.6" data-tinta="rosso" visibility="hidden">

@@ -42,6 +42,11 @@ export interface Affissione {
 /** Bottone sotto il testo di una cella (components/Bottone.astro): un link esterno si apre in una scheda nuova */
 export interface Bottone { label: string; href: string }
 
+/** un colore della cella palette; `secondario` = banda larga la metà */
+export interface Colore { nome: string; hex: string; secondario?: true }
+/** uno stato della cella palette: `nome` sul righello (Prima, Dopo), titolo e testo, i colori */
+export interface Palette { nome: string; title: string; body: string; colori: Colore[] }
+
 /** Colore di fondo della cella. */
 export type Tone = 'paper' | 'red';
 
@@ -144,6 +149,12 @@ export type Cell = CellBase & (
    *  testo del passo e un righello col passo attuale; un clic sul disegno fa il passo dopo (scripts/evoluzione.ts).
    *  `svg` = il file annotato coi passi (data-passo, data-disegna…), così com'è; `alt` descrive il disegno */
   | { type: 'evoluzione'; svg: string; alt: string; eyebrow?: string; passi: Array<{ title: string; body: string }> }
+  /** la palette di un marchio prima e dopo (G&A): a sinistra titolo e testo dello stato e il righello Prima · Dopo, a destra
+   *  i colori in bande, coi contrasti WCAG; un clic passa all'altro stato (scripts/palette.ts) */
+  | { type: 'palette'; eyebrow?: string; prima: Palette; dopo: Palette }
+  /** le collezioni di un marchio una alla volta (G&A: le linee di porte): foto, velo del colore della linea, logo bianco al
+   *  centro; un clic sulla foto fa la dopo, il righello porta a una collezione (scripts/collezioni.ts) */
+  | { type: 'collezioni'; eyebrow?: string; title?: string; body?: string; collezioni: Array<{ nome: string; colore: string; logo: ImageMetadata; foto: ImageMetadata; alt: string }> }
   /** cella 02 delle pagine progetto con la foto di contesto: titolo (h1) e descrizione, sotto la foto a tutta larghezza */
   | { type: 'contesto'; eyebrow?: string; title: string; body?: string; image: ImageMetadata; alt: string; fondo?: string }
   /** pagina d'errore: codice grande con glitch, titolo (h1) e link all'indice, su carta a quadretti */

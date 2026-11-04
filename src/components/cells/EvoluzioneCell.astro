@@ -6,6 +6,7 @@
 // Senza JavaScript: il disegno finito e il testo dell'ultimo passo. Sul telefono in colonna, il disegno sotto.
 import { pad2 } from '../../lib/format';
 import Paragrafi from '../Paragrafi.astro';
+import Righello from '../Righello.astro';
 
 interface Props {
   /** SVG annotato coi passi (data/projects.ts lo legge dalla cartella del progetto) */
@@ -41,13 +42,7 @@ const ultimo = passi.length - 1;
     </div>
     {/* righello: un quadratino di traccia per passo (un clic porta a quel passo, anche indietro), il quadrato pieno col
         numero sul passo attuale */}
-    <div class="righello" style={`--at: 1`} role="group" aria-label="Passi" data-righello>
-      {passi.map((p, i) => (
-        <button class="tacca" type="button" style={`--i: ${i / ultimo}`} aria-label={`Passo ${i + 1}: ${p.title}`}
-          aria-current={i === ultimo ? 'step' : undefined} data-vai={i + 1} />
-      ))}
-      <span class="cursore" aria-hidden="true"><span class="numero mono" data-numero>{pad2(passi.length)}</span></span>
-    </div>
+    <Righello voci={passi.map((p, i) => `Passo ${i + 1}: ${p.title}`)} attivo={ultimo} segno={pad2(passi.length)} nome="Passi" />
   </div>
   <button class="disegno" type="button" aria-label="Da capo" data-avanti><Fragment set:html={disegno} /></button>
 </div>
@@ -63,28 +58,6 @@ const ultimo = passi.length - 1;
   .passi { display: grid; }
   .passo { grid-area: 1 / 1; display: flex; flex-direction: column; gap: var(--m); }
   .passo:not(.is-attivo) { visibility: hidden; }
-
-  /* righello: filo rosso, un quadratino di traccia rosso per passo (bottoni: si torna a un passo), il quadrato pieno
-     che scorre sopra col numero (non prende i clic) */
-  .righello {
-    --lato: var(--riga-label);
-    position: relative; height: calc(var(--lato) * 2.6); color: var(--rosso);
-  }
-  /* il filo all'altezza del centro dei quadrati (border: agganciato ai pixel); dentro i quadratini non passa */
-  .righello::before { content: ''; position: absolute; left: 0; right: 0; bottom: calc(var(--lato) / 2); border-top: var(--line) solid; }
-  .tacca {
-    position: absolute; bottom: 0; left: calc(var(--i) * (100% - var(--lato)));
-    width: var(--lato); height: var(--lato); padding: 0;
-    border: var(--line) solid; background: var(--bianco); color: inherit;
-  }
-  /* si prende anche attorno: il quadratino è piccolo, il dito no */
-  .tacca::after { content: ''; position: absolute; inset: calc(var(--lato) * -0.8); }
-  .cursore {
-    position: absolute; bottom: 0; left: calc(var(--at) * (100% - var(--lato)));
-    width: var(--lato); height: var(--lato); background: currentColor; pointer-events: none;
-    transition: left 480ms var(--ease-morph);
-  }
-  .numero { position: absolute; bottom: calc(100% + var(--lato) * 0.4); left: 0; color: var(--inchiostro); font-variant-numeric: tabular-nums; }
 
   /* il disegno: tutta la sua metà, staccato dal testo da un filo */
   .disegno { position: relative; padding: 0; border: 0; border-left: var(--line) solid var(--inchiostro); background: none; overflow: hidden; }

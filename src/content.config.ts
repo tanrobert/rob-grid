@@ -18,6 +18,12 @@ const unit = z.number().int().positive();
 const colore = /^#[0-9a-f]{6}$/i;
 const span = { w: unit, h: unit };
 // bottone sotto il testo di una cella: un indirizzo del sito (/archivio) o esterno (https://…)
+const palette = z.strictObject({
+  nome: z.string(), title: z.string(), body: z.string(),
+  colori: z.array(z.strictObject({
+    nome: z.string(), hex: z.string().regex(colore, 'hex: "#rrggbb"'), secondario: z.literal(true).optional(),
+  })).min(1),
+});
 const bottone = z.strictObject({ label: z.string(), href: z.string().regex(/^(\/|https?:\/\/)/, 'href: "/pagina" o "https://…"') });
 
 // campi comuni a tutte le celle (sottoinsieme di CellBase in data/grid-types.ts)
@@ -109,6 +115,19 @@ const progetti = defineCollection({
         ...base, type: z.literal('evoluzione'), disegno: z.string().regex(/^\.\/evoluzione-[\w-]+\.svg$/, 'disegno: ./evoluzione-<nome>.svg'),
         alt: z.string(), eyebrow: z.string().optional(),
         passi: z.array(z.strictObject({ title: z.string(), body: z.string() })).min(2),
+      }),
+      // la palette prima e dopo, un clic per passare dall'una all'altra: il colore i di prima diventa il colore i di dopo,
+      // quelli in più (dopo ne ha almeno quanti prima) entrano allargandosi; `secondario` = banda larga la metà
+      z.strictObject({
+        ...base, type: z.literal('palette'), eyebrow: z.string().optional(), prima: palette, dopo: palette,
+      }).refine(c => c.dopo.colori.length >= c.prima.colori.length, 'palette: dopo deve avere almeno i colori di prima'),
+      // le collezioni una alla volta, un clic per passare: per ognuna la foto, il velo del suo colore e il logo (SVG a un
+      // colore, diventa bianco)
+      z.strictObject({
+        ...base, type: z.literal('collezioni'), eyebrow: z.string().optional(), title: z.string().optional(), body: z.string().optional(),
+        collezioni: z.array(z.strictObject({
+          nome: z.string(), colore: z.string().regex(colore, 'colore: "#rrggbb"'), logo: image(), foto: image(), alt: z.string(),
+        })).min(2),
       }),
     ]);
 

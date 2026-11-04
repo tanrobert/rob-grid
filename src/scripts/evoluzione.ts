@@ -82,8 +82,12 @@ export function initEvoluzioni(signal: AbortSignal) {
         const entrato = num(passo) <= k, uscito = num(via, Infinity) <= k;
         if ('disegna' in g.dataset) entrato ? pieni(tratti(g)) : gsap.set(tratti(g), { drawSVG: '0%' });
         if ('scivola' in g.dataset) gsap.set(pezzi(g), { x: 0, y: 0, opacity: 1 });
-        if (zoom) gsap.set(g, { scale: num(zoom) <= k ? num(scala, 1) : 1, svgOrigin: centro });
-        if (g.dataset.trasla) gsap.set(g, { y: num(g.dataset.trasla) <= k ? num(g.dataset.traslaY) : 0 });
+        // scala e posto insieme, senza smoothOrigin: rimettendo la scala a 1 col gruppo ancora salito, GSAP "compensava"
+        // l'origine e il gruppo restava spostato (le guide del passo 1, tornando da capo dopo il 6)
+        const posto: gsap.TweenVars = {};
+        if (zoom) Object.assign(posto, { scale: num(zoom) <= k ? num(scala, 1) : 1, svgOrigin: centro, smoothOrigin: false });
+        if (g.dataset.trasla) posto.y = num(g.dataset.trasla) <= k ? num(g.dataset.traslaY) : 0;
+        if (zoom || g.dataset.trasla) gsap.set(g, posto);
         if (colori.has(g)) g.style.setProperty('--pieno', num(g.dataset.colore) <= k ? colori.get(g)! : g.dataset.coloreDa!);
         if ('unoAUno' in g.dataset) gsap.set(g.children, { autoAlpha: 1 });
         gsap.set(g, { autoAlpha: entrato && !uscito && !('scivola' in g.dataset) ? 1 : 0 });
@@ -129,7 +133,7 @@ export function initEvoluzioni(signal: AbortSignal) {
           });
         }
         if (num(d.zoom) === k) metti(1, (t, tl) => {
-          tl.to(g, { scale: num(d.scala, 1), svgOrigin: centro, duration: ZOOM, ease: 'power2.inOut' }, t);
+          tl.to(g, { scale: num(d.scala, 1), svgOrigin: centro, smoothOrigin: false, duration: ZOOM, ease: 'power2.inOut' }, t);
           return t + ZOOM;
         });
         if (num(d.trasla) === k) metti(num(d.traslaFase, 1), (t, tl) => {

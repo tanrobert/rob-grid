@@ -1,0 +1,53 @@
+---
+// Righello delle celle a passi (evoluzione, palette): filo rosso, un quadratino di traccia per passo (bottone: un clic
+// porta a quel passo, anche indietro) e il quadrato pieno che scorre sul passo attuale, col suo segno sopra (il numero
+// del passo o il nome). Lo muovono gli script delle celle: --at (0…1) su [data-righello], il testo di [data-numero],
+// aria-current sui [data-vai] (che portano il numero del passo, da 1).
+interface Props {
+  /** nome di ogni passo, per gli screen reader */
+  voci: string[];
+  /** passo attuale, da 0 */
+  attivo: number;
+  /** il segno sopra il quadrato pieno al passo attuale */
+  segno: string;
+  /** nome del gruppo di bottoni */
+  nome: string;
+}
+const { voci, attivo, segno, nome } = Astro.props;
+const ultimo = voci.length - 1;
+---
+
+<div class="righello" style={`--at: ${attivo / ultimo}`} role="group" aria-label={nome} data-righello>
+  {voci.map((v, i) => (
+    <button class="tacca" type="button" style={`--i: ${i / ultimo}`} aria-label={v}
+      aria-current={i === attivo ? 'step' : undefined} data-vai={i + 1} />
+  ))}
+  <span class="cursore" aria-hidden="true"><span class="numero mono" data-numero>{segno}</span></span>
+</div>
+
+<style>
+  .righello {
+    --lato: var(--riga-label);
+    position: relative; height: calc(var(--lato) * 2.6); color: var(--rosso);
+  }
+  /* il filo all'altezza del centro dei quadrati (border: agganciato ai pixel); dentro i quadratini non passa */
+  .righello::before { content: ''; position: absolute; left: 0; right: 0; bottom: calc(var(--lato) / 2); border-top: var(--line) solid; }
+  .tacca {
+    position: absolute; bottom: 0; left: calc(var(--i) * (100% - var(--lato)));
+    width: var(--lato); height: var(--lato); padding: 0;
+    border: var(--line) solid; background: var(--bianco); color: inherit;
+  }
+  /* si prende anche attorno: il quadratino è piccolo, il dito no */
+  .tacca::after { content: ''; position: absolute; inset: calc(var(--lato) * -0.8); }
+  .cursore {
+    position: absolute; bottom: 0; left: calc(var(--at) * (100% - var(--lato)));
+    width: var(--lato); height: var(--lato); background: currentColor; pointer-events: none;
+    transition: left 480ms var(--ease-morph);
+  }
+  /* il segno parte dal quadrato a sinistra e finisce a filo del quadrato a destra, così in fondo non esce dalla cella */
+  .numero {
+    position: absolute; bottom: calc(100% + var(--lato) * 0.4); left: 0; translate: calc(var(--at) * (var(--lato) - 100%)) 0;
+    color: var(--inchiostro); font-variant-numeric: tabular-nums; white-space: nowrap;
+    transition: translate 480ms var(--ease-morph);
+  }
+</style>

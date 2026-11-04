@@ -100,7 +100,10 @@ def taglia(a, b):
     disegno sale e le linee devono continuare sotto (scelta di Roberto)"""
     if not ritaglia(a, b, LATO):
         return None
-    return ritaglia(a, b, LATO + SOTTO)
+    # la retta intera, non il segmento: certe linee delle tavole finiscono poco sotto il quadrato (la croce della
+    # tavola 19 a 401) e nel passo 6, salite, si vedevano finire prima delle altre
+    dx, dy = b[0] - a[0], b[1] - a[1]
+    return ritaglia((a[0] - 1000 * dx, a[1] - 1000 * dy), (b[0] + 1000 * dx, b[1] + 1000 * dy), LATO + SOTTO)
 
 
 def ritaglia(a, b, alto):
@@ -151,7 +154,7 @@ def maschere(nome, elementi):
     for i, el in enumerate(elementi, 1):
         id_ = f'gea-evo-{nome}-{i}'
         copia = el.replace('/>', ' stroke="#fff" stroke-width="4" fill="none" data-penna=""/>')
-        defs.append(f'<mask id="{id_}" maskUnits="userSpaceOnUse" x="-10" y="-10" width="{LATO + 20}" height="{LATO + 20}">{copia}</mask>')
+        defs.append(f'<mask id="{id_}" maskUnits="userSpaceOnUse" x="-10" y="-10" width="{LATO + 20}" height="{LATO + SOTTO + 20}">{copia}</mask>')
         vivi.append(el.replace('/>', f' mask="url(#{id_})"/>'))
     return defs, vivi
 

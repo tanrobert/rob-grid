@@ -1,0 +1,72 @@
+---
+// Le collezioni di un marchio, una alla volta (G&A: i loghi delle linee di porte). Per ogni collezione: la foto, poi un
+// velo leggero del colore della linea, poi il logo in bianco al centro. Il primo passo parte quando se ne vede metà, un
+// clic sulla foto fa la collezione dopo (dopo l'ultima da capo), i quadratini del righello portano a una collezione
+// (scripts/collezioni.ts). Senza JavaScript: la prima collezione, intera.
+// Il logo è l'SVG della linea usato come maschera: si colora col CSS, il file resta com'è uscito da Illustrator.
+import type { ImageMetadata } from 'astro';
+import { Image } from 'astro:assets';
+import { pad2 } from '../../lib/format';
+import Paragrafi from '../Paragrafi.astro';
+import Righello from '../Righello.astro';
+
+interface Props {
+  title?: string;
+  body?: string;
+  collezioni: Array<{ nome: string; colore: string; logo: ImageMetadata; foto: ImageMetadata; alt: string }>;
+  sizes?: string;
+}
+const { title, body, collezioni, sizes } = Astro.props;
+const n = collezioni.length;
+---
+
+<div class="collezioni" style={`--rapporto-foto: ${collezioni[0].foto.width / collezioni[0].foto.height}`} data-collezioni>
+  {/* sulla carta sopra titolo e testo, sotto il righello delle collezioni; in mezzo la foto */}
+  <div class="testo">
+    {title && <h2 class="titoletto">{title}</h2>}
+    {body && <div class="paragrafo"><Paragrafi testo={body} /></div>}
+  </div>
+  <button class="foto" type="button" aria-label={`${collezioni[0].nome}, avanti: ${collezioni[1 % n].nome}`} data-avanti>
+    {collezioni.map((c, i) => (
+      <span class:list={['scena', i === 0 && 'is-attiva']} style={`--colore: ${c.colore}`} data-scena data-nome={c.nome}>
+        <Image src={c.foto} alt={`Collezione ${c.nome}: ${c.alt}`} widths={[400, 700, 1000]} sizes={sizes}
+          loading="lazy" decoding="async" data-foto />
+        <span class="velo" data-velo />
+        <span class="logo" role="img" aria-label={`Logo ${c.nome}`} data-logo
+          style={`--logo: url("${c.logo.src}"); --rapporto: ${c.logo.width / c.logo.height}`} />
+      </span>
+    ))}
+  </button>
+  <div class="piede">
+    <Righello voci={collezioni.map(c => c.nome)} attivo={0} segno={pad2(1)} nome="Collezioni" />
+  </div>
+</div>
+
+<style>
+  /* sulla carta sopra titolo e testo, sotto il righello; in mezzo la foto a tutta larghezza fra due fili, nella sua
+     proporzione (intera): lo spazio che avanza va alla carta sotto il testo, e se manca la foto si accorcia e taglia */
+  .collezioni { position: absolute; inset: 0; display: flex; flex-direction: column; }
+  .testo { flex: 1 0 auto; display: flex; flex-direction: column; gap: var(--m); padding: var(--pad-label) var(--pad) var(--pad); }
+  .foto {
+    flex: 0 1 auto; min-height: 0; aspect-ratio: var(--rapporto-foto);
+    position: relative; padding: 0; overflow: hidden; background: none;
+    border: 0; border-block: var(--line) solid var(--inchiostro); container-type: size;
+  }
+  .piede { flex: none; padding: var(--pad-label) var(--pad) var(--pad); }
+
+  /* le scene una sopra l'altra: si vede quella attiva (e, mentre entra la dopo, quella di prima sotto) */
+  .scena { position: absolute; inset: 0; display: grid; place-items: center; visibility: hidden; }
+  .scena.is-attiva { visibility: visible; }
+  .scena > :global(img) { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  /* il velo: il colore della linea, leggero (trasparenza nel colore, così GSAP può portare l'opacità a 1) */
+  .velo { position: absolute; inset: 0; background: color-mix(in srgb, var(--colore) 58%, transparent); }
+  /* il logo al centro, bianco: dentro un riquadro largo al massimo due terzi e alto al massimo un quinto, così i loghi
+     larghi e quelli alti pesano più o meno uguale */
+  /* centrato dalla griglia della scena (niente translate: GSAP lo terrebbe per sempre nel suo transform) */
+  .logo {
+    position: relative;
+    width: min(66%, 20cqb * var(--rapporto)); aspect-ratio: var(--rapporto);
+    background: var(--chiaro);
+    mask: var(--logo) center / contain no-repeat;
+  }
+</style>

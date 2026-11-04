@@ -1,0 +1,125 @@
+---
+// La palette di un marchio prima e dopo (G&A: la prima cosa su cui è intervenuto Roberto). A sinistra titolo e testo
+// dello stato e il righello Prima · Dopo; a destra i colori in bande, ognuno col nome scritto nel colore che gli dà più
+// contrasto (fra quelli della stessa palette e il bianco), con l'HEX e il contrasto WCAG, calcolato qui.
+// Un clic sui colori (o sul righello) passa all'altro stato: le bande sfumano nei colori nuovi, i colori in più entrano
+// allargandosi (scripts/palette.ts). Il colore i di prima diventa il colore i di dopo.
+// Senza JavaScript: la palette di dopo. Sul telefono in colonna, le bande una sotto l'altra.
+import Paragrafi from '../Paragrafi.astro';
+import Righello from '../Righello.astro';
+import type { Palette, Colore } from '../../data/grid-types';
+
+interface Props {
+  prima: Palette;
+  dopo: Palette;
+}
+const { prima, dopo } = Astro.props;
+
+// contrasto WCAG 2: luminanza relativa dei due colori
+const luce = (hex: string) => {
+  const [r, g, b] = [1, 3, 5].map(i => {
+    const c = parseInt(hex.slice(i, i + 2), 16) / 255;
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+};
+const contrasto = (a: string, b: string) => {
+  const [chiaro, scuro] = [luce(a), luce(b)].sort((x, y) => y - x);
+  return (chiaro + 0.05) / (scuro + 0.05);
+};
+// per ogni colore: il testo che gli si legge meglio sopra, fra gli altri della palette e il bianco
+const BIANCO = '#ffffff';
+const scheda = (c: Colore, p: Palette) => {
+  const [testo, rapporto] = [...p.colori.map(x => x.hex).filter(h => h !== c.hex), BIANCO]
+    .map(h => [h, contrasto(c.hex, h)] as const)
+    .sort((x, y) => y[1] - x[1])[0];
+  return {
+    ...c, testo,
+    contrasto: `${rapporto.toLocaleString('it-IT', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}:1`,
+    livello: rapporto >= 7 ? 'AAA' : rapporto >= 4.5 ? 'AA' : '',
+  };
+};
+// le bande sono quelle di dopo; quelle che c'erano già hanno anche la scheda di prima. I secondari pesano la metà
+const bande = dopo.colori.map((c, i) => {
+  const vecchio = prima.colori[i];
+  const nuova = scheda(c, dopo), vecchia = vecchio && scheda(vecchio, prima);
+  const peso = c.secondario ? 1 : 2;
+  return {
+    nuova, vecchia,
+    stati: JSON.stringify([
+      vecchia ? { fondo: vecchia.hex, testo: vecchia.testo, peso: 2 } : { fondo: nuova.hex, testo: nuova.testo, peso: 0 },
+      { fondo: nuova.hex, testo: nuova.testo, peso },
+    ]),
+    peso,
+  };
+});
+const stati = [prima, dopo];
+---
+
+<div class="palette" data-palette>
+  <div class="testo">
+    <div class="passi" aria-live="polite">
+      {stati.map((s, i) => (
+        <div class:list={['passo', i === 1 && 'is-attivo']} data-testo>
+          <h2 class="titoletto">{s.title}</h2>
+          <div class="paragrafo"><Paragrafi testo={s.body} /></div>
+        </div>
+      ))}
+    </div>
+    <Righello voci={stati.map(s => s.nome)} attivo={1} segno={dopo.nome} nome="Palette" />
+  </div>
+  <ul class="colori" data-colori>
+    {bande.map(b => (
+      <li class="banda" style={`--fondo: ${b.nuova.hex}; --testo: ${b.nuova.testo}; flex-grow: ${b.peso}`} data-banda data-stati={b.stati}>
+        {[b.vecchia, b.nuova].map((s, i) => s && (
+          <span class:list={['scheda', i === 1 && 'is-attivo']} data-scheda={i}>
+            <span class="nome titoletto">{s.nome}</span>
+            <span class="dati mono">
+              <span>HEX <span class="valore">{s.hex.toUpperCase()}</span></span>
+              <span>Contrasto <span class="valore">{s.contrasto}</span>{s.livello && <> <span class="valore">· {s.livello}</span></>}</span>
+            </span>
+          </span>
+        ))}
+      </li>
+    ))}
+  </ul>
+</div>
+
+<style>
+  /* i colori a destra, due terzi della cella; staccati dal testo da un filo */
+  .palette { position: absolute; inset: 0; display: grid; grid-template: minmax(0, 1fr) / minmax(0, 1fr) minmax(0, 2fr); }
+  .testo { display: flex; flex-direction: column; justify-content: space-between; gap: var(--pad-label); padding: var(--pad-label) var(--pad) var(--pad); }
+
+  /* i testi uno sopra l'altro: la colonna è alta quanto il più lungo, cambiando stato niente salta */
+  .passi { display: grid; }
+  .passo { grid-area: 1 / 1; display: flex; flex-direction: column; gap: var(--m); transition: opacity 300ms, visibility 300ms; }
+  .passo:not(.is-attivo) { visibility: hidden; opacity: 0; }
+
+  .colori {
+    display: flex; margin: 0; padding: 0; list-style: none;
+    border-left: var(--line) solid var(--inchiostro); cursor: var(--cursore-mano);
+  }
+  /* una banda per colore: il fondo e il testo li porta GSAP (--fondo, --testo), la larghezza è flex-grow */
+  .banda {
+    position: relative; flex: 0 1 0; min-width: 0; overflow: hidden;
+    background: var(--fondo); color: var(--testo); container-type: inline-size;
+  }
+  /* le schede di prima e di dopo una sopra l'altra: quella che esce sfuma, poi entra l'altra, a banda già cresciuta */
+  .scheda {
+    position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: space-between;
+    padding: var(--pad-label) var(--pad) var(--pad);
+    transition: opacity 250ms, visibility 250ms;
+  }
+  .scheda.is-attivo { transition: opacity 300ms 600ms, visibility 0s; }
+  .scheda:not(.is-attivo) { visibility: hidden; opacity: 0; }
+  /* il nome rimpicciolisce nelle bande strette (i secondari sul tablet), così le parole non si spezzano */
+  .nome { font-size: min(var(--titoletto), 20cqi); }
+  .dati { display: flex; flex-direction: column; gap: 0.3em; }
+  .valore { white-space: nowrap; }
+
+  /* telefono: in colonna, le bande una sotto l'altra sotto il testo */
+  @media (max-width: 599px) {
+    .palette { grid-template: auto minmax(0, 1fr) / minmax(0, 1fr); }
+    .colori { flex-direction: column; border-left: 0; border-top: var(--line) solid var(--inchiostro); }
+  }
+</style>

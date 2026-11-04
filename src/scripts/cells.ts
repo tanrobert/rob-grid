@@ -65,6 +65,14 @@ export function initCells() {
   if (document.querySelector('[data-evoluzione]')) {
     import('./evoluzione').then(m => signal.aborted || m.initEvoluzioni(signal));
   }
+  // palette: i colori di prima e di dopo, un clic per passare dall'uno all'altro, solo se la cella c'è
+  if (document.querySelector('[data-palette]')) {
+    import('./palette').then(m => signal.aborted || m.initPalette(signal));
+  }
+  // collezioni: una alla volta, foto, velo e logo, un clic per la dopo, solo se la cella c'è
+  if (document.querySelector('[data-collezioni]')) {
+    import('./collezioni').then(m => signal.aborted || m.initCollezioni(signal));
+  }
   // affissioni: col mouse il velo sulla strada è un hover (CSS). Con più affissioni la scena cambia ogni 7 s,
   // insieme al suo testo, ferma fuori vista e col mouse sulla foto; un clic (o un tocco) passa alla successiva.
   // Con una sola il tocco accende e spegne il velo

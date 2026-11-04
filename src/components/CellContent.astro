@@ -27,6 +27,8 @@ import ContestoCell from './cells/ContestoCell.astro';
 import SottologoCell from './cells/SottologoCell.astro';
 import CostruzioneCell from './cells/CostruzioneCell.astro';
 import EvoluzioneCell from './cells/EvoluzioneCell.astro';
+import PaletteCell from './cells/PaletteCell.astro';
+import CollezioniCell from './cells/CollezioniCell.astro';
 import RadioCell from './cells/RadioCell.astro';
 import ArchiveHeadCell from './cells/ArchiveHeadCell.astro';
 import TagsCell from './cells/TagsCell.astro';
@@ -88,6 +90,8 @@ if (cell.type === 'project' && !p) throw new Error(`[grid] progetto non trovato:
     {cell.type === 'radio' && <RadioCell togli={!!cell.nascosta} />}
     {cell.type === 'costruzione' && <CostruzioneCell svg={cell.svg} nome={`${Astro.url.pathname} · ${cell.id}`} alt={cell.alt} title={cell.title} body={cell.body} />}
     {cell.type === 'evoluzione' && <EvoluzioneCell svg={cell.svg} nome={`${Astro.url.pathname} · ${cell.id}`} alt={cell.alt} passi={cell.passi} />}
+    {cell.type === 'palette' && <PaletteCell prima={cell.prima} dopo={cell.dopo} />}
+    {cell.type === 'collezioni' && <CollezioniCell title={cell.title} body={cell.body} collezioni={cell.collezioni} sizes={sizes} />}
     {cell.type === 'contesto' &&<ContestoCell title={cell.title} body={cell.body} image={cell.image} alt={cell.alt} fondo={cell.fondo} sizes={sizes} />}
     {cell.type === 'error' && <ErrorCell code={cell.code} title={cell.title} />}
     {cell.type === 'archive-head' && <ArchiveHeadCell total={cell.total} />}
