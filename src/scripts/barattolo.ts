@@ -229,7 +229,7 @@ async function avvia(root: HTMLElement, signal: AbortSignal) {
   const carta = root.querySelector<HTMLCanvasElement>('[data-carta]')!, cc = carta.getContext('2d')!;
   const ombra = root.querySelector<HTMLCanvasElement>('[data-ombra]')!;
   const parola = root.querySelector<HTMLElement>('[data-parola]')!;
-  const didascalia = root.querySelector<HTMLElement>('.caption');
+  const didascalia = root.querySelector<HTMLElement>('.coda-info');
   const titolo = root.querySelector<HTMLElement>('.titolo');
   const cella = root.closest<HTMLElement>('.cell') ?? root;
   // il segnaposto subito; la foto, se c'è, quando è scaricata (applica)

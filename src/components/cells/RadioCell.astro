@@ -4,6 +4,8 @@
 // in onda e il prossimo. Un solo lettore per la pagina (scripts/radio.ts): la cella sul tavolo e quella nella pagina
 // del progetto comandano la stessa radio e mostrano lo stesso stato. I testi degli stati sono tutti qui, lo script
 // cambia solo data-stato. Senza JavaScript il bottone non c'è (non farebbe nulla).
+// Fuori dal tavolo (foglio di Purple Piper) in fondo la coda "Aggiungi il player alla home": solo lei mette la radio sul
+// tavolo (4/11/2026, scelta di Roberto; prima compariva da sola quando partiva), un altro clic la toglie.
 import { radio } from '../../data/radio';
 import Close from '../../assets/close.svg';
 
@@ -22,6 +24,14 @@ const { togli = false } = Astro.props;
     <span class="s s--onda">In onda · ferma</span>
     <span class="s s--errore">Non risponde · riprova</span>
   </button>
+  {!togli && (
+    <button class="coda-info casa" type="button" aria-pressed="false" data-radio-casa hidden>
+      <span class="coda-info__testo">
+        <span class="c c--no">Aggiungi il player alla home</span>
+        <span class="c c--si">Nella home · togli</span>
+      </span>
+    </button>
+  )}
   {/* il brano in onda da solo, il prossimo dopo "Successivo" */}
   {[['ora', ''], ['dopo', 'Successivo']].map(([k, chi]) => (
     <p class="brano mono" aria-live={k === 'ora' ? 'polite' : undefined} hidden>
@@ -75,6 +85,16 @@ const { togli = false } = Astro.props;
   .titolo:not(.is-scorre) :is(.serie + .serie, .stacco) { display: none; }
   .titolo.is-scorre .nastro { animation: radio-scorre var(--durata, 20s) linear infinite; }
   @keyframes radio-scorre { to { transform: translate3d(-50%, 0, 0); } }
+  /* la coda (global.css): sopra il bottone a tutta cella, filo e scritta in carta come il resto della radio, al centro.
+     Il contenuto le lascia il suo spazio */
+  .casa {
+    z-index: 2; justify-content: center; padding: 0 var(--pad);
+    background: none; color: inherit; font: inherit; border-width: var(--line) 0 0; border-color: currentColor;
+  }
+  .casa[hidden] { display: none; }
+  .radio:has(> .casa:not([hidden])) { padding-bottom: calc(var(--coda-info) + var(--pad)); }
+  .c { display: none; }
+  .radio[data-casa="no"] .c--no, .radio[data-casa="si"] .c--si { display: inline; }
   /* la ✕ come quella delle hero (.cell__go, global.css): un bottone, quindi senza il suo aspetto */
   .cell__go { background: none; border: 0; padding: 0; color: inherit; }
 </style>

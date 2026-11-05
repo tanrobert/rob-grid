@@ -4,7 +4,9 @@
      (montante e traverso, intagli a coda di rondine) diventano il cuore del simbolo nuovo.
      Ogni gruppo figlio dell'svg dice cosa fa e quando. data-passo = passo in cui entra, data-fase = fase del passo
      (le fasi una dopo l'altra, ognuna dura quanto la sua azione più lunga), poi l'azione:
-       data-disegna="scaglioni|insieme" + data-durata (+ data-dopo, ritardo nella fase): i tratti si disegnano
+       data-disegna="scaglioni|insieme" + data-durata (+ data-dopo, ritardo nella fase): i tratti si disegnano;
+       data-disegna="penna": il data-spirale si disegna in una corsa sola; ogni <g data-entra> (frazione della corsa)
+       si disegna quando la penna arriva lì (i quadrati della spirale)
        data-compare="durata" compare (vuoto: di colpo) · data-scivola: i figli scivolano via nel loro data-verso
      data-via = passo in cui sparisce (data-via-fase, data-via-durata: di colpo se manca).
      data-zoom = passo in cui si ingrandisce di data-scala attorno al centro (fase 1, insieme al primo svanire).
@@ -13,7 +15,7 @@
      data-trasla = passo in cui il gruppo sale o scende di data-trasla-y (data-trasla-fase, data-trasla-durata).
      data-colore = passo in cui --pieno passa da data-colore-da al colore del file. data-uno-a-uno: compare un figlio
      alla volta (le lettere).
-     data-tinta = colore (guida, segno, rosso, pieno con --pieno). I tratteggiati si disegnano con la copia piena
+     data-tinta = colore (guida, segno, rosso; pieno e contorno con --pieno). I tratteggiati si disegnano con la copia piena
      nella loro maschera (data-penna). Così com'è, il file è lo stato finale (senza JavaScript). -->
 <defs>
 <clipPath id="gea-evo-fuori"><path clip-rule="evenodd" d="M-80 -80H440V440H-80Z M124.44 124.44V235.56H235.56V124.44Z"/></clipPath>
@@ -65,10 +67,16 @@
 <line x1="0" y1="165.03" x2="360" y2="309.37" data-da='{"x1": "0", "y1": "160.88", "x2": "360", "y2": "304.95"}' data-forme='[{"passo": 4, "fase": 2, "durata": 1.2, "attr": {"x1": "0", "y1": "165.03", "x2": "360", "y2": "309.37"}}]'/>
 </g>
 <g data-passo="3" data-fase="5" data-compare="0.5" data-trasla="6" data-trasla-fase="2" data-trasla-durata="1" data-trasla-y="-60.06" data-tinta="pieno" style="--pieno: #f6c32b" transform="translate(0 -60.06)">
-<path d="M167.13 120.77L146.55 120.77L122.8 180L157.38 180L157.38 143.4L167.13 143.4Z" data-da='{"d": "M157.66 132.44L146.12 132.44L132.1 167.47L157.66 167.47L157.66 167.47L157.66 167.47Z"}' data-forme='[{"passo": 4, "fase": 2, "durata": 1.2, "attr": {"d": "M167.13 120.77L146.55 120.77L122.8 180L167.13 180L167.13 180L167.13 180Z"}}, {"passo": 5, "fase": 3, "durata": 1.0, "attr": {"d": "M167.13 120.77L146.55 120.77L122.8 180L157.38 180L157.38 143.4L167.13 143.4Z"}}]'/>
-<path d="M239.23 167.13L239.23 146.55L180 122.8L180 143.4L202.63 143.4L202.63 167.13Z" data-da='{"d": "M227.56 157.66L227.56 146.11L192.53 132.09L192.53 157.65L192.53 157.65L192.53 157.65Z"}' data-forme='[{"passo": 4, "fase": 2, "durata": 1.2, "attr": {"d": "M239.23 167.13L239.23 146.55L180 122.8L180 167.13L180 167.13L180 167.13Z"}}, {"passo": 5, "fase": 3, "durata": 1.0, "attr": {"d": "M239.23 167.13L239.23 146.55L180 122.8L180 143.4L202.63 143.4L202.63 167.13Z"}}]'/>
-<path d="M192.87 239.23L213.45 239.23L237.2 180L202.63 180L202.63 216.6L192.87 216.6Z" data-da='{"d": "M202.34 227.56L213.88 227.56L227.9 192.53L202.34 192.53L202.34 192.53L202.34 192.53Z"}' data-forme='[{"passo": 4, "fase": 2, "durata": 1.2, "attr": {"d": "M192.87 239.23L213.45 239.23L237.2 180L192.87 180L192.87 180L192.87 180Z"}}, {"passo": 5, "fase": 3, "durata": 1.0, "attr": {"d": "M192.87 239.23L213.45 239.23L237.2 180L202.63 180L202.63 216.6L192.87 216.6Z"}}]'/>
-<path d="M120.77 192.87L120.77 213.45L180 237.2L180 216.6L157.38 216.6L157.38 192.87Z" data-da='{"d": "M132.44 202.34L132.44 213.89L167.47 227.91L167.47 202.35L167.47 202.35L167.47 202.35Z"}' data-forme='[{"passo": 4, "fase": 2, "durata": 1.2, "attr": {"d": "M120.77 192.87L120.77 213.45L180 237.2L180 192.87L180 192.87L180 192.87Z"}}, {"passo": 5, "fase": 3, "durata": 1.0, "attr": {"d": "M120.77 192.87L120.77 213.45L180 237.2L180 216.6L157.38 216.6L157.38 192.87Z"}}]'/>
+<path d="M167.13 120.77L146.55 120.77L122.8 180L157.38 180L157.38 143.4L167.13 143.4Z" data-da='{"d": "M157.66 132.44L146.12 132.44L132.1 167.47L157.66 167.47L157.66 167.47L157.66 167.47Z"}' data-forme='[{"passo": 4, "fase": 2, "durata": 1.2, "attr": {"d": "M167.13 120.77L146.55 120.77L122.8 180L167.13 180L167.13 180L167.13 180Z"}}, {"passo": 5, "fase": 3, "durata": 0, "attr": {"d": "M167.13 120.77L146.55 120.77L122.8 180L157.38 180L157.38 143.4L167.13 143.4Z"}}]'/>
+<path d="M239.23 167.13L239.23 146.55L180 122.8L180 143.4L202.63 143.4L202.63 167.13Z" data-da='{"d": "M227.56 157.66L227.56 146.11L192.53 132.09L192.53 157.65L192.53 157.65L192.53 157.65Z"}' data-forme='[{"passo": 4, "fase": 2, "durata": 1.2, "attr": {"d": "M239.23 167.13L239.23 146.55L180 122.8L180 167.13L180 167.13L180 167.13Z"}}, {"passo": 5, "fase": 3, "durata": 0, "attr": {"d": "M239.23 167.13L239.23 146.55L180 122.8L180 143.4L202.63 143.4L202.63 167.13Z"}}]'/>
+<path d="M192.87 239.23L213.45 239.23L237.2 180L202.63 180L202.63 216.6L192.87 216.6Z" data-da='{"d": "M202.34 227.56L213.88 227.56L227.9 192.53L202.34 192.53L202.34 192.53L202.34 192.53Z"}' data-forme='[{"passo": 4, "fase": 2, "durata": 1.2, "attr": {"d": "M192.87 239.23L213.45 239.23L237.2 180L192.87 180L192.87 180L192.87 180Z"}}, {"passo": 5, "fase": 3, "durata": 0, "attr": {"d": "M192.87 239.23L213.45 239.23L237.2 180L202.63 180L202.63 216.6L192.87 216.6Z"}}]'/>
+<path d="M120.77 192.87L120.77 213.45L180 237.2L180 216.6L157.38 216.6L157.38 192.87Z" data-da='{"d": "M132.44 202.34L132.44 213.89L167.47 227.91L167.47 202.35L167.47 202.35L167.47 202.35Z"}' data-forme='[{"passo": 4, "fase": 2, "durata": 1.2, "attr": {"d": "M120.77 192.87L120.77 213.45L180 237.2L180 192.87L180 192.87L180 192.87Z"}}, {"passo": 5, "fase": 3, "durata": 0, "attr": {"d": "M120.77 192.87L120.77 213.45L180 237.2L180 216.6L157.38 216.6L157.38 192.87Z"}}]'/>
+</g>
+<g data-passo="5" data-fase="3" data-compare="" data-via="5" data-via-fase="4" data-via-durata="0.8" data-tinta="pieno" style="--pieno: #f6c32b" visibility="hidden">
+<path d="M157.38 180L167.13 180L167.13 143.4L157.38 143.4Z"/>
+<path d="M180 143.4L180 167.13L202.63 167.13L202.63 143.4Z"/>
+<path d="M202.63 180L192.87 180L192.87 216.6L202.63 216.6Z"/>
+<path d="M180 216.6L180 192.87L157.38 192.87L157.38 216.6Z"/>
 </g>
 <g data-passo="4" data-disegna="scaglioni" data-durata="0.8" data-dopo="0.2" data-trasla="6" data-trasla-fase="2" data-trasla-durata="1" data-trasla-y="-60.06" data-via="6" data-via-fase="10" data-via-durata="0.6" data-tinta="guida" visibility="hidden" transform="translate(0 -60.06)">
 <line x1="192.87" y1="0" x2="192.87" y2="450"/>
@@ -89,7 +97,7 @@
 <line x1="0" y1="228" x2="360" y2="228"/>
 <line x1="0" y1="212.77" x2="360" y2="212.77"/>
 </g>
-<g data-passo="6" data-fase="4" data-disegna="insieme" data-durata="1.4" data-via="6" data-via-fase="5" data-via-durata="0.4" data-tinta="segno" visibility="hidden">
+<g data-passo="6" data-fase="4" data-disegna="insieme" data-durata="1.4" data-via="6" data-via-fase="5" data-via-durata="0.4" data-tinta="contorno" style="--pieno: #f6c32b" visibility="hidden">
 <path d="M271.01 190.61C268.8 190.61 267 192.41 267 194.61C267 196.82 268.8 198.62 271.01 198.62C273.21 198.62 275.01 196.82 275.01 194.61C275.01 192.41 273.21 190.61 271.01 190.61ZM271.01 199.45C268.34 199.45 266.17 197.28 266.17 194.61C266.17 191.94 268.34 189.77 271.01 189.77C273.67 189.77 275.85 191.94 275.85 194.61C275.85 197.28 273.67 199.45 271.01 199.45Z"/>
 <path d="M271.62 193.96C271.62 193.63 271.44 193.48 270.97 193.48L270.28 193.48L270.28 194.44L270.97 194.44C271.44 194.44 271.62 194.29 271.62 193.96ZM271.63 196.67L270.9 195.36L270.28 195.36L270.28 196.67L269.09 196.67L269.09 192.56L271.14 192.56C272.2 192.56 272.81 193.04 272.81 193.96C272.81 194.49 272.56 194.92 272.06 195.16L272.92 196.67L271.63 196.67Z"/>
 <path d="M227.63 228L236.73 204.26L237.13 204.26L246.04 228L227.63 228ZM269.7 250.74C268.69 250.35 268.01 249.56 267.69 248.38L247.36 197.91L244.5 190.8L226.87 190.8L225.06 195.32C228.11 195.35 230.25 195.48 231.47 195.71C232.82 195.97 233.49 196.47 233.49 197.19C233.49 197.39 233.45 197.61 233.39 197.88C233.32 198.14 233.19 198.53 233 199.06L232.52 200.32L221.42 228L213.25 248.39C213.18 248.59 213.1 248.77 213.02 248.94L210.25 255.85L229.07 255.85L229.07 251.33C225.53 251.33 223.08 251.2 221.7 250.94C220.32 250.68 219.64 250.18 219.64 249.46C219.64 249.27 219.67 249.04 219.73 248.78C219.8 248.51 219.93 248.12 220.13 247.6L225.88 232.52L247.79 232.52L253.44 247.6C253.64 248.12 253.76 248.51 253.83 248.78C253.9 249.04 253.93 249.27 253.93 249.46C253.93 250.18 253.26 250.68 251.91 250.94C250.58 251.2 248.13 251.33 244.6 251.33L244.6 255.85L275.85 255.85L275.85 251.33C272.76 251.33 270.72 251.14 269.7 250.74Z"/>
@@ -185,13 +193,58 @@
 <line x1="157.38" y1="0" x2="157.38" y2="450" mask="url(#gea-evo-asse5-3)"/>
 <line x1="0" y1="216.6" x2="360" y2="216.6" mask="url(#gea-evo-asse5-4)"/>
 </g>
-<g data-passo="5" data-fase="2" data-disegna="insieme" data-durata="0.6" data-dopo="0.00" data-via="5" data-via-fase="4" data-via-durata="0.6" data-tinta="rosso" visibility="hidden">
+<g data-passo="5" data-fase="2" data-disegna="insieme" data-durata="0.6" data-via="5" data-via-fase="5" data-via-durata="0.6" data-tinta="rosso" visibility="hidden">
 <path d="M143.4 143.4L216.6 143.4L216.6 216.6L143.4 216.6Z"/>
 </g>
-<g data-passo="5" data-fase="2" data-disegna="insieme" data-durata="0.6" data-dopo="0.45" data-via="5" data-via-fase="4" data-via-durata="0.6" data-tinta="rosso" visibility="hidden">
-<path d="M157.38 143.38L202.62 143.38L202.62 216.62L157.38 216.62Z"/>
+<g data-passo="5" data-fase="2" data-disegna="penna" data-durata="2.6" data-dopo="0.45" data-via="5" data-via-fase="5" data-via-durata="0.6" data-tinta="rosso" visibility="hidden">
+<path d="M157.42 143.42C182.34 143.42 202.53 163.66 202.53 188.63C202.53 204.07 190.05 216.58 174.65 216.58C165.14 216.58 157.42 208.85 157.42 199.31C157.42 193.41 162.19 188.63 168.08 188.63C171.71 188.63 174.65 191.59 174.65 195.23C174.65 197.48 172.83 199.31 170.58 199.31C169.2 199.31 168.08 198.18 168.08 196.8C168.08 195.93 168.78 195.23 169.64 195.23C170.16 195.23 170.58 195.65 170.58 196.17C170.58 196.52 170.3 196.8 169.95 196.8C169.78 196.8 169.64 196.66 169.64 196.48C169.64 196.31 169.78 196.17 169.96 196.17" data-spirale=""/>
+<g data-entra="0.0000">
+<path d="M157.42 143.42L202.53 143.42L202.53 188.63"/>
+<path d="M157.42 143.42L157.42 188.63L202.53 188.63"/>
 </g>
-<g data-passo="5" data-fase="2" data-disegna="insieme" data-durata="1.8" data-dopo="0.90" data-via="5" data-via-fase="4" data-via-durata="0.6" data-tinta="rosso" visibility="hidden">
-<path d="M157.42 143.42C182.34 143.42 202.53 163.66 202.53 188.63M174.65 216.58C190.05 216.58 202.53 204.07 202.53 188.63M157.42 199.31C157.42 208.85 165.14 216.58 174.65 216.58M168.08 188.63C162.19 188.63 157.42 193.41 157.42 199.31M168.08 188.63C171.71 188.63 174.65 191.59 174.65 195.23M170.58 199.31C172.83 199.31 174.65 197.48 174.65 195.23M170.58 199.31C169.2 199.31 168.08 198.18 168.08 196.8M169.64 195.23C168.78 195.23 168.08 195.93 168.08 196.8M169.64 195.23C170.16 195.23 170.58 195.65 170.58 196.17M169.64 196.17L170.58 196.17M169.64 196.8L169.64 195.23M169.95 196.17L169.95 196.8M169.95 196.48L169.64 196.48M170.58 196.8L168.08 196.8M170.58 195.23L170.58 199.31M168.08 195.23L174.65 195.23M168.08 199.31L168.08 188.63M174.65 199.31L157.42 199.31M174.67 188.63L174.67 216.59M157.42 188.63L202.53 188.63M157.42 143.42L202.58 143.42M157.47 216.58L202.58 216.58M202.58 143.42L202.58 216.62M157.42 143.42L157.42 216.62M169.95 196.8C170.3 196.8 170.58 196.52 170.58 196.17M169.95 196.8C169.78 196.8 169.64 196.66 169.64 196.48M169.96 196.17C169.78 196.17 169.64 196.31 169.64 196.48"/>
+<g data-entra="0.3830">
+<path d="M202.53 188.63L202.53 216.58L174.65 216.58"/>
+<path d="M202.53 188.63L174.65 188.63L174.65 216.58"/>
+</g>
+<g data-entra="0.6197">
+<path d="M174.65 216.58L157.42 216.58L157.42 199.31"/>
+<path d="M174.65 216.58L174.65 199.31L157.42 199.31"/>
+</g>
+<g data-entra="0.7660">
+<path d="M157.42 199.31L157.42 188.63L168.08 188.63"/>
+<path d="M157.42 199.31L168.08 199.31L168.08 188.63"/>
+</g>
+<g data-entra="0.8564">
+<path d="M168.08 188.63L174.65 188.63L174.65 195.23"/>
+<path d="M168.08 188.63L168.08 195.23L174.65 195.23"/>
+</g>
+<g data-entra="0.9123">
+<path d="M174.65 195.23L174.65 199.31L170.58 199.31"/>
+<path d="M174.65 195.23L170.58 195.23L170.58 199.31"/>
+</g>
+<g data-entra="0.9468">
+<path d="M170.58 199.31L168.08 199.31L168.08 196.8"/>
+<path d="M170.58 199.31L170.58 196.8L168.08 196.8"/>
+</g>
+<g data-entra="0.9681">
+<path d="M168.08 196.8L168.08 195.23L169.64 195.23"/>
+<path d="M168.08 196.8L169.64 196.8L169.64 195.23"/>
+</g>
+<g data-entra="0.9813">
+<path d="M169.64 195.23L170.58 195.23L170.58 196.17"/>
+<path d="M169.64 195.23L169.64 196.17L170.58 196.17"/>
+</g>
+<g data-entra="0.9893">
+<path d="M170.58 196.17L170.58 196.8L169.95 196.8"/>
+<path d="M170.58 196.17L169.95 196.17L169.95 196.8"/>
+</g>
+<g data-entra="0.9947">
+<path d="M169.95 196.8L169.64 196.8L169.64 196.48"/>
+<path d="M169.95 196.8L169.95 196.48L169.64 196.48"/>
+</g>
+<g data-entra="0.9973">
+<path d="M169.64 196.48L169.64 196.17L169.96 196.17"/>
+<path d="M169.64 196.48L169.96 196.48L169.96 196.17"/>
+</g>
 </g>
 </svg>

@@ -1,0 +1,18 @@
+---
+// Coda informativa che porta da un'altra parte (es. Visita il sito): l'ultima riga della cella, piena d'inchiostro,
+// col testo al centro e la freccia delle celle (stili in global.css, .coda-info--link). Chi la usa lascia in fondo
+// lo spazio della coda (--coda-info). Un link esterno si apre in una scheda nuova.
+import Arrow from '../assets/arrow.svg';
+
+interface Props {
+  href: string;
+  label: string;
+}
+const { href, label } = Astro.props;
+const esterno = /^https?:\/\//.test(href);
+---
+
+<a class="coda-info coda-info--link" href={href} target={esterno ? '_blank' : undefined} rel={esterno ? 'noopener' : undefined}>
+  <span class="coda-info__testo">{label}</span>
+  <Arrow aria-hidden="true" />
+</a>

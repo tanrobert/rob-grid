@@ -1,0 +1,49 @@
+---
+// Le versioni di un logo, una alla volta (G&A: dalla completa verticale al solo marchio, poi le orizzontali). Sopra il
+// titoletto della versione e sotto di lui le parti che ha (MARCHIO + LOGOTIPO + …), in mezzo il logo, grande quanto
+// la cella permette e centrato, sotto il righello. Un clic sul logo passa alla versione dopo: la parte che manca sfuma
+// via, il resto si ricentra (e cambia misura, se nella versione è più grande), quella che arriva compare; titoletto e
+// parti cambiano col passo; i quadratini del righello portano a una versione (scripts/versioni.ts).
+// Provate e tolte (4/11/2026, scelte di Roberto) le etichette accanto alle parti, con e senza linee guida: le parti
+// sotto il titoletto lasciano tutta la cella al logo.
+// I pezzi e i loro posti li ricava lib/versioni.ts dagli SVG di Illustrator. Senza JavaScript: la prima versione.
+import { versioni, ORDINE } from '../../lib/versioni';
+import { pad2 } from '../../lib/format';
+import Righello from '../Righello.astro';
+
+interface Props {
+  /** le versioni, nell'ordine: titoletto e SVG grezzo (data/projects.ts li legge dalla cartella del progetto) */
+  versioni: Array<{ title: string; svg: string; nome: string }>;
+  alt: string;
+}
+const { versioni: elenco, alt } = Astro.props;
+const v = versioni(elenco.map(e => ({ svg: e.svg, nome: e.nome })));
+// le parti di ogni versione, nell'ordine dall'alto
+const parti = v.posti.map(posti => ORDINE.filter(p => posti.some((t, i) => t && v.parti[i] === p)).join(' + '));
+const dati = JSON.stringify({ posti: v.posti, titoli: elenco.map(e => e.title), parti });
+---
+
+<div class="versioni" data-versioni={dati}>
+  <div class="testo" aria-live="polite">
+    <h2 class="titoletto" data-titolo>{elenco[0].title}</h2>
+    <p class="mono" data-parti>{parti[0]}</p>
+  </div>
+  <button class="logo" type="button" aria-label={`${elenco[0].title}, avanti: ${elenco[1 % elenco.length].title}`} data-avanti>
+    <svg class="palco" viewBox={`0 0 ${v.w} ${v.h}`} role="img" aria-label={alt}><Fragment set:html={v.pezzi} /></svg>
+  </button>
+  <div class="piede">
+    <Righello voci={elenco.map(e => e.title)} attivo={0} segno={pad2(1)} nome="Versioni del logo" />
+  </div>
+</div>
+
+<style>
+  /* sulla carta sopra titoletto e parti, sotto il righello; in mezzo il logo, centrato (scelta di Roberto) */
+  .versioni { position: absolute; inset: 0; display: flex; flex-direction: column; }
+  .testo { display: flex; flex-direction: column; gap: var(--m); padding: var(--pad-label) var(--pad) 0; }
+  .logo {
+    position: relative; flex: 1 1 0; min-height: 0;
+    padding: 0; border: 0; background: none; color: inherit;
+  }
+  .palco { position: absolute; inset: var(--pad-label) var(--pad); width: calc(100% - 2 * var(--pad)); height: calc(100% - 2 * var(--pad-label)); }
+  .piede { flex: none; padding: var(--pad-label) var(--pad) var(--pad); }
+</style>

@@ -13,8 +13,8 @@ type Img = { default: ImageMetadata };
 const byFolder = (files: Record<string, Img>) =>
   new Map(Object.entries(files).map(([p, m]) => [p.split('/').at(-2)!, m.default]));
 const covers = byFolder(import.meta.glob<Img>('../content/progetti/*/copertina.{png,jpg,jpeg,webp}', { eager: true }));
-// SVG delle celle costruzione ed evoluzione, così come sono (per cartella e nome: "purple-piper/costruzione-p.svg")
-const disegni = new Map(Object.entries(import.meta.glob<string>('../content/progetti/*/{costruzione,evoluzione}-*.svg', { query: '?raw', import: 'default', eager: true }))
+// SVG delle celle costruzione, evoluzione e versioni, così come sono (per cartella e nome: "purple-piper/costruzione-p.svg")
+const disegni = new Map(Object.entries(import.meta.glob<string>('../content/progetti/*/{costruzione,evoluzione,versione}-*.svg', { query: '?raw', import: 'default', eager: true }))
   .map(([p, svg]) => [p.split('/').slice(-2).join('/'), svg]));
 
 /** Tavola Photoshop: 600 px per unità della forma */
@@ -38,10 +38,18 @@ export const projects: Project[] = (await getCollection('progetti')).map(({ id: 
     image: image ?? dummyImg,
     cells: data.cells?.map((c, i) => {
       const id = c.id ?? `c${i + 1}`;
+      const leggi = (d: string) => {
+        const file = `${slug}/${d.slice(2)}`, svg = disegni.get(file);
+        if (!svg) throw new Error(`[progetti] ${slug} · ${id}: manca ${file}`);
+        return svg;
+      };
+      if (c.type === 'versioni') {
+        return { ...c, id, versioni: c.versioni.map(v => ({ title: v.title, nome: `${slug} · ${id} · ${v.logo}`, svg: leggi(v.logo) })) };
+      }
       if (c.type !== 'costruzione' && c.type !== 'evoluzione') return { ...c, id };
-      const file = `${slug}/${c.disegno.slice(2)}`, svg = disegni.get(file);
-      if (!svg) throw new Error(`[progetti] ${slug} · ${id}: manca ${file}`);
-      return { ...c, id, svg };
+      // costruzione: uno o più disegni affiancati
+      if (c.type === 'costruzione') return { ...c, id, svg: [c.disegno].flat().map(leggi) };
+      return { ...c, id, svg: leggi(c.disegno) };
     }),
   };
 });

@@ -1,13 +1,16 @@
 ---
-// La costruzione di un segno (Purple Piper: la P del logo) che si disegna da sola: titolone in alto, il disegno in
-// mezzo, il paragrafo in fondo. L'SVG è quello di Illustrator coi tratti vivi, preparato al build (lib/costruzione.ts)
-// e disegnato da scripts/costruzione.ts quando entra in vista; un clic lo rifà. Senza JavaScript è già completo.
+// La costruzione di un segno che si disegna da sola (Purple Piper: la croce e la P del logo): titolone in alto, i disegni
+// in mezzo, il paragrafo in fondo. Gli SVG sono quelli di Illustrator coi tratti vivi, preparati al build
+// (lib/costruzione.ts) e disegnati da scripts/costruzione.ts quando entrano in vista, tutti insieme; un clic li rifà.
+// Più disegni stanno uno sotto l'altro, dall'alto in basso (4/11/2026, scelta di Roberto: la croce sopra la P), alla
+// stessa scala (un'unità del file è uguale in tutti: viewBox stretti sul disegno) e centrati. Senza JavaScript sono già
+// completi.
 import { costruzione } from '../../lib/costruzione';
 import Paragrafi from '../Paragrafi.astro';
 
 interface Props {
-  /** SVG grezzo (data/projects.ts lo legge dalla cartella del progetto) */
-  svg: string;
+  /** SVG grezzi (data/projects.ts li legge dalla cartella del progetto), dall'alto in basso */
+  svg: string[];
   /** nome per gli errori di build e per gli id delle maschere: progetto · cella */
   nome: string;
   alt: string;
@@ -15,24 +18,36 @@ interface Props {
   body?: string;
 }
 const { svg, nome, alt, title, body } = Astro.props;
-const disegno = costruzione(svg, { nome, alt });
+const uno = svg.length === 1;
+const disegni = svg.map((raw, i) => {
+  const [, , w, h] = raw.match(/<svg\b[^>]*viewBox="([^"]+)"/)?.[1].split(/[\s,]+/).map(Number) ?? [];
+  return { w, h, html: costruzione(raw, { nome: uno ? nome : `${nome} · ${i + 1}`, alt: uno ? alt : undefined }) };
+});
 ---
 
 <div class="costruzione" data-costruzione>
   {title && <div class="testo"><h2 class="titolo titolone" data-lente="inversa">{title}</h2></div>}
-  <div class="disegno"><Fragment set:html={disegno} /></div>
+  <div class="disegno" role={uno ? undefined : 'img'} aria-label={uno ? undefined : alt} data-disegni>
+    {disegni.map(d => (
+      <div class="foglio" style={`--w: ${d.w}; --h: ${d.h}`}><Fragment set:html={d.html} /></div>
+    ))}
+  </div>
   {body && <div class="body paragrafo"><Paragrafi testo={body} /></div>}
 </div>
 
 <style>
-  /* in colonna: titolone, il disegno in tutto lo spazio che resta (mai più basso di così: se il testo non ci sta
+  /* in colonna: titolone, i disegni in tutto lo spazio che resta (mai più basso di così: se il testo non ci sta
      cresce la cella, scripts/mosaico.ts), il paragrafo in fondo */
   .costruzione { position: absolute; inset: 0; display: grid; grid-template: auto minmax(60cqi, 1fr) auto / minmax(0, 1fr); }
   .testo { padding: var(--pad-label) var(--pad) 0; pointer-events: none; }
-  .disegno { position: relative; cursor: var(--cursore-mano); }
-  .disegno > :global(svg) {
-    position: absolute; inset: var(--pad);
-    width: calc(100% - 2 * var(--pad)); height: calc(100% - 2 * var(--pad));
+  /* i disegni in colonna, centrati: ognuno alto in proporzione alla sua altezza nel file (stessa scala), la larghezza
+     viene dalla proporzione; se non ci sta, il disegno si rimpicciolisce dentro il suo riquadro */
+  .disegno {
+    position: relative; cursor: var(--cursore-mano);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--pad-label);
+    padding: var(--pad); min-height: 0;
   }
+  .foglio { flex: var(--h) 1 0; min-height: 0; aspect-ratio: var(--w) / var(--h); max-width: 100%; }
+  .foglio > :global(svg) { display: block; width: 100%; height: 100%; }
   .body { padding: var(--pad); }
 </style>

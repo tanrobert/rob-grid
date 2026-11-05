@@ -25,7 +25,7 @@ const { title, body, image, alt, fondo, sizes } = Astro.props;
   </div>
   {fondo ? (
     <div class="foto foto--fondo" style={{ background: fondo }} data-intero>
-      <Image src={image} alt={alt} loading="eager" decoding="async" />
+      <Image src={image} alt={alt} loading="eager" decoding="async" class:list={[image.format === 'svg' && 'vettoriale']} />
     </div>
   ) : (
     <div class="foto">
@@ -44,6 +44,9 @@ const { title, body, image, alt, fondo, sizes } = Astro.props;
      mezza cella; la foto alla sua misura, più piccola solo se non ci sta. Se il campo non ci sta esce dal fondo e
      scripts/mosaico.ts (data-intero) allunga la cella */
   .contesto--fondo { grid-template-rows: auto minmax(50cqi, 1fr); }
-  .foto--fondo { display: grid; place-items: center; padding: var(--pad); }
+  /* il campo è al massimo quadrato, posato sul fondo della cella: se avanza spazio resta carta sotto il testo (G&A) */
+  .foto--fondo { display: grid; place-items: center; padding: var(--pad); align-self: end; height: 100%; max-height: 100cqi; }
   .foto--fondo img { position: static; width: auto; height: auto; max-width: 100%; max-height: 100%; object-fit: contain; }
+  /* un disegno SVG non ha una sua misura: piccolo, al 60% del campo */
+  .foto--fondo img.vettoriale { width: 60%; }
 </style>

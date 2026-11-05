@@ -7,7 +7,9 @@
  * un passo è fatto di fasi, una dopo l'altra (data-fase, con una pausa in mezzo), e ogni fase dura quanto la sua azione
  * più lunga. Azioni di un gruppo nel passo in cui entra (data-passo):
  * - data-disegna="scaglioni|insieme" + data-durata, data-dopo: i tratti si disegnano (DrawSVG; i tratteggiati con la
- *   copia piena nella loro maschera, data-penna), a scaglioni uno dopo l'altro o tutti insieme;
+ *   copia piena nella loro maschera, data-penna), a scaglioni uno dopo l'altro o tutti insieme; "penna": il
+ *   data-spirale in una corsa sola, e ogni <g data-entra> si disegna quando la penna arriva lì (la spirale aurea e i
+ *   quadrati in cui entra);
  * - data-compare="durata": compare, sfumando (vuoto: di colpo);
  * - data-scivola: i pezzi scivolano via, ognuno nel suo data-verso, e svaniscono;
  * e nei passi dopo: data-via (sparisce, data-via-fase, data-via-durata) e data-zoom (si ingrandisce di data-scala
@@ -33,6 +35,8 @@ const PAUSA = 0.15;      // s tra una fase e l'altra
 const SCIVOLA = 36;      // unità del disegno di cui scivolano i pezzi tagliati
 const VIA = 0.8;         // s dei pezzi che scivolano
 const ZOOM = 1.2;        // s dello zoom
+const PENNA_EASE = 'power1.inOut';   // la corsa della spirale (data-disegna="penna")
+const QUADRATO = 0.45;   // s di ogni quadrato della spirale, da quando la penna ci entra
 
 type Azione = (t: number, tl: gsap.core.Timeline) => number;   // aggiunge alla timeline da t, restituisce quando finisce
 
@@ -62,8 +66,8 @@ export function initEvoluzioni(signal: AbortSignal) {
     const forme = [...svg.querySelectorAll<SVGElement>('[data-forme]')].map(el => ({
       el, da: JSON.parse(el.dataset.da!) as Record<string, string>, tappe: JSON.parse(el.dataset.forme!) as Tappa[],
     }));
-    // i tratti di un gruppo; un tratteggiato si disegna con la penna della sua maschera
-    const tratti = (g: SVGGElement) => [...g.children].map(el => {
+    // i tratti di un gruppo; un tratteggiato si disegna con la penna della sua maschera; nella penna, tutti i tracciati
+    const tratti = (g: SVGGElement) => g.dataset.disegna === 'penna' ? [...g.querySelectorAll('path')] : [...g.children].map(el => {
       const m = el.getAttribute('mask')?.match(/#([^)]+)/)?.[1];
       return m ? svg.querySelector(`#${CSS.escape(m)} [data-penna]`)! : el;
     });
@@ -71,6 +75,21 @@ export function initEvoluzioni(signal: AbortSignal) {
     // tratti disegnati per intero: senza il tratteggio di DrawSVG, che con lo zoom (tratti che non si ingrandiscono)
     // lascerebbe dei buchi
     const pieni = (els: Element[]) => gsap.set(els, { clearProps: 'strokeDasharray,strokeDashoffset' });
+    // tratti che si disegnano col tratteggio in pixel dello schermo: DrawSVG lo misura in unità del disegno, ma con
+    // non-scaling-stroke il browser lo applica in pixel, e su un tratto lungo lo schema si ripete (la spirale
+    // compariva a pezzi). Il vuoto è lungo quanto tutto il tratto, così non si ripete
+    const traccia = (tl: gsap.core.Timeline, els: SVGGeometryElement[], durata: number, ease: string, at: number) => {
+      const p = { v: 0 };
+      tl.fromTo(p, { v: 0 }, {
+        v: 1, duration: durata, ease, onUpdate: () => {
+          for (const el of els) {
+            const lungo = el.getTotalLength() * (el.getScreenCTM()?.a ?? 1) + 1;
+            el.style.strokeDasharray = `${p.v * lungo}px ${lungo}px`;
+            el.style.strokeDashoffset = '0px';
+          }
+        },
+      }, at);
+    };
 
     /** il disegno coi passi 1…k fatti e gli altri da fare */
     function stato(k: number) {
@@ -101,7 +120,26 @@ export function initEvoluzioni(signal: AbortSignal) {
       for (const g of gruppi) {
         const d = g.dataset, fase = num(d.fase, 1);
         if (num(d.passo) === k) {
-          if (d.disegna) {
+          if (d.disegna === 'penna') metti(fase, (t, tl) => {
+            // la spirale in una corsa sola; ogni quadrato parte quando la penna arriva al suo data-entra (frazione della
+            // lunghezza: con l'ease, il tempo si trova cercando all'indietro)
+            const dopo = num(d.dopo), durata = num(d.durata, 1), ease = gsap.parseEase(PENNA_EASE);
+            const quando = (f: number) => {
+              let a = 0, b = 1;
+              for (let i = 0; i < 30; i++) { const m = (a + b) / 2; if (ease(m) < f) a = m; else b = m; }
+              return a * durata;
+            };
+            tl.set(g, { autoAlpha: 1 }, t);
+            traccia(tl, [g.querySelector<SVGPathElement>('[data-spirale]')!], durata, PENNA_EASE, t + dopo);
+            let fine = t + dopo + durata;
+            for (const q of g.querySelectorAll<SVGGElement>('[data-entra]')) {
+              const da = t + dopo + quando(+q.dataset.entra!);
+              traccia(tl, [...q.querySelectorAll<SVGPathElement>('path')], QUADRATO, 'power2.out', da);
+              fine = Math.max(fine, da + QUADRATO);
+            }
+            return fine;
+          });
+          else if (d.disegna) {
             const els = tratti(g), dopo = num(d.dopo), durata = num(d.durata, 1);
             const passo = d.disegna === 'scaglioni' && els.length > 1 ? Math.min(SCAGLIONE, SCAGLIONI / (els.length - 1)) : 0;
             metti(fase, (t, tl) => {

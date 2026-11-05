@@ -69,6 +69,10 @@ export function initCells() {
   if (document.querySelector('[data-palette]')) {
     import('./palette').then(m => signal.aborted || m.initPalette(signal));
   }
+  // versioni del logo: una alla volta, le parti che vanno e vengono, un clic per la dopo, solo se la cella c'è
+  if (document.querySelector('[data-versioni]')) {
+    import('./versioni').then(m => signal.aborted || m.initVersioni(signal));
+  }
   // collezioni: una alla volta, foto, velo e logo, un clic per la dopo, solo se la cella c'è
   if (document.querySelector('[data-collezioni]')) {
     import('./collezioni').then(m => signal.aborted || m.initCollezioni(signal));
@@ -101,33 +105,39 @@ export function initCells() {
     giraDaSola(foto, 7000, avanti, signal, { fermaSopra: true });
   });
 
-  // caroselli delle celle di testo: gira sempre, da destra a sinistra, una foto ogni CAROSELLO ms (fermo solo fuori
-  // vista); un clic passa alla dopo. In fondo al nastro una copia della prima: arrivati lì si torna all'inizio senza
-  // transizione, così il giro non si riavvolge all'indietro
+  // caroselli delle celle di testo e media: gira sempre, da destra a sinistra, una foto ogni CAROSELLO ms (fermo solo
+  // fuori vista e con una foto aperta in grande); un clic passa alla dopo, o la ingrandisce se le foto si ingrandiscono.
+  // In fondo al nastro una copia della prima: arrivati lì si torna all'inizio senza transizione, così il giro non si
+  // riavvolge all'indietro. Le foto fuori vista sono inert: il tasto Tab non ci arriva
   const CAROSELLO = 4000;
   document.querySelectorAll<HTMLElement>('[data-carosello]').forEach(car => {
     const nastro = car.firstElementChild as HTMLElement;
     const n = nastro.children.length;
     const copia = nastro.firstElementChild!.cloneNode(true) as HTMLElement;
     copia.setAttribute('aria-hidden', 'true');
-    copia.querySelector('img')!.alt = '';
+    const img = copia.querySelector('img')!;
+    img.alt = '';
+    for (const a of ['data-ingrandisci', 'tabindex', 'role', 'aria-label']) img.removeAttribute(a);
     nastro.append(copia);
+    const foto = [...nastro.children];
     let i = 0;
     const vai = (j: number, salto = false) => {
       nastro.classList.toggle('is-salto', salto);
       if (salto) void nastro.offsetWidth;
       nastro.style.setProperty('--foto', String(i = j));
+      foto.forEach((f, k) => f.toggleAttribute('inert', k !== j));
       if (salto) { void nastro.offsetWidth; nastro.classList.remove('is-salto'); }
     };
     // initCells riparte (un foglio nuovo sopra): si riprende dalla foto dov'era
     const era = Number(nastro.style.getPropertyValue('--foto')) || 0;
     vai(era < n ? era : 0, true);
     const avanti = () => {
+      if (document.querySelector('dialog.grande[open]')) return;   // una foto aperta in grande (scripts/ingrandisci)
       if (i === n) vai(0, true);  // la transizione verso la copia non è finita (scheda nascosta): riparto da capo
       vai(i + 1);
     };
     nastro.addEventListener('transitionend', e => { if (e.target === nastro && i === n) vai(0, true); }, { signal });
-    giraDaSola(car, CAROSELLO, avanti, signal);
+    giraDaSola(car, CAROSELLO, avanti, signal, { clic: !car.querySelector('[data-ingrandisci]') });
     teardown.push(() => copia.remove());
   });
 

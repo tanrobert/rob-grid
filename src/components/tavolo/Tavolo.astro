@@ -296,6 +296,9 @@ const sagoma = (c: Cell) => (c.frame === false && c.type === 'svg' ? svgs[c.svg]
   :global(.is-intro) .pezzo__ombra {
     scale: calc(1 + var(--su) * 0.035);
     translate: calc(var(--su) * var(--q) * 0.55) calc(var(--su) * var(--q) * 0.55);
+    /* posata (--su 0) l'ombra sparisce subito, non a fine intro di tutte le celle: sotto la R e ROBERTO, senza
+       fondo, si vedrebbe dai bordi delle lettere finché non è caduta l'ultima cella. Presa la rimette pezzi.ts */
+    opacity: clamp(0, var(--su) * 1000, 1);
     animation: ombra-compare 160ms step-end var(--attesa) backwards;
   }
   @property --su { syntax: '<number>'; inherits: true; initial-value: 0; }

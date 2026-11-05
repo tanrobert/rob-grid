@@ -30,13 +30,16 @@ cells:
         alt: "Il sito di Purple Piper sul telefono: il logo rosso sopra un dipinto con una figura alata, e sotto il pannello viola col tasto Live, il brano in onda, Playlist, Player e il motto In prog we trust"
     after: "In fondo, i **link** alle case del prog: Arlequins, Prog Archives, Musicstack, Bandcamp e Discogs."
     button: { label: "Visita il sito", href: "https://www.purplepiper.eu" }
-  # la P del logo coi tratti vivi (file di Roberto del 2/11/2026), si disegna da sola: titolo e testo segnaposto, da scrivere
+  # la croce barbata e la P del logo coi colori (file di Roberto del 4/11/2026), la croce sopra la P, disegnate insieme, una cosa
+  # alla volta: contorno, buco, linea sfumata, il rosso, poi cade l'ombra (gruppo "ombra"). La P: sorgenti/purple-piper/p-live.svg,
+  # testo in tracciati con tools/svg-testo-tracciati.py; la croce (stessi spessori della P) così com'è, con le stesse annotazioni. Prima la P di costruzione coi tratti vivi
+  # (costruzione-p.svg, 2/11/2026), ancora nella cartella. Alta 8 per starci tutte e due. Titolo e testo da scrivere
   - type: costruzione
     w: 4
-    h: 6
-    md: { w: 4, h: 6 }
-    disegno: ./costruzione-p.svg
-    alt: "Costruzione della P di Purple Piper: il tratteggio dell'ombra, il contorno rosso della lettera e i contorni viola del bordo"
+    h: 8
+    md: { w: 4, h: 8 }
+    disegno: [./costruzione-croce.svg, ./costruzione-p-live.svg]
+    alt: "La croce barbata e la P di Purple Piper, rosse con il contorno nero, una linea interna che sfuma dal viola al cremisi e l'ombra nera in basso a sinistra"
     title: "La nuova P"
     body: "Testo da scrivere."
   # la radio in diretta: la stessa della cella sul tavolo (un solo lettore per la pagina, scripts/radio.ts)

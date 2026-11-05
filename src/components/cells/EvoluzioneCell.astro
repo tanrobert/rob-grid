@@ -67,6 +67,8 @@ const ultimo = passi.length - 1;
   .disegno :global([data-tinta="guida"]) { stroke: color-mix(in srgb, var(--inchiostro) 30%, var(--bianco)); }
   .disegno :global([data-tinta="segno"]) { stroke: var(--inchiostro); }
   .disegno :global([data-tinta="rosso"]) { stroke: var(--rosso); }
+  /* contorni nel colore del file (--pieno sul gruppo): G&A che si traccia in giallo prima di riempirsi */
+  .disegno :global([data-tinta="contorno"]) { stroke: var(--pieno); }
   /* campiture: il colore lo dà il file (--pieno sul gruppo, es. il giallo G&A), senza contorno */
   .disegno :global([data-tinta="pieno"] path) { fill: var(--pieno); stroke: none; }
   .disegno :global([data-tratteggio] line), .disegno :global([data-tratteggio] path) { stroke-dasharray: 6 6; }

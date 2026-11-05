@@ -25,6 +25,9 @@
   /* retino dei fogli aperti: carta piena con un foro ogni 4px (components/foglio, foto ingrandite) */
   --retino: radial-gradient(circle at 2px 2px, transparent 0 0.9px, var(--bianco) 1.1px) 0 0 / 4px 4px;
 
+  /* altezza della coda informativa (.coda-info): chi la usa le lascia questo spazio in fondo alla cella */
+  --coda-info: 40px;
+
   /* modulo di base */
   --m:    10px;
   --gap:  var(--m);
@@ -400,6 +403,29 @@ p { text-wrap: pretty; }
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
+/* Coda informativa (4/11/2026, scelta di Roberto: prima il barattolo di Kiale): l'ultima riga di una cella, con le
+   informazioni di quello che si vede (nome, contatore, comandi), staccata dal resto da un filo d'inchiostro a tutta
+   larghezza. Testo a sinistra, il resto a destra; chi la usa aggiunge i suoi comandi */
+.coda-info {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  display: flex; justify-content: space-between; align-items: center; gap: var(--m);
+  padding: 0 0 0 var(--pad); min-height: var(--coda-info);
+  border-top: var(--line) solid var(--inchiostro);
+}
+.coda-info__testo {
+  font-weight: 500; font-size: 15px; letter-spacing: -0.01em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+/* coda che porta da un'altra parte (components/CodaLink, es. Visita il sito): piena d'inchiostro, testo al centro
+   con la freccia delle celle */
+.coda-info--link {
+  justify-content: center; padding: 0 var(--pad);
+  background: var(--inchiostro); color: var(--bianco);
+  text-decoration: none;
+}
+.coda-info--link svg { width: var(--riga-label); height: var(--riga-label); flex: none; }
+.coda-info--link svg * { fill: currentColor; }
+
 /* ── Media: foto piena ───────────────────────────────── */
 /* Solo la foto: niente effetti né hover (ottobre 2026). Niente filtri né blend mode: su mobile rendevano lo
    scroll scattoso (soprattutto in archivio, 20 foto). Effetti provati e salvati in tools/effetti/:
@@ -409,6 +435,19 @@ p { text-wrap: pretty; }
 /* un logo non si taglia: intero anche se la forma della cella non è quella della tavola */
 .duo .duo__overlay { position: absolute; inset: 0; object-fit: contain; }
 /* due foto una sopra l'altra (MediaCell `seconda`), metà cella ciascuna, divise dal filo */
+/* carosello delle foto (celle di testo e media): le foto in fila, attaccate, una per volta; cells.ts sposta il nastro
+   di una foto con `--foto`. Classi col nome del carosello: `.nastro` e `.foto` ci sono già, scoped, in altre celle */
+.carosello { position: relative; overflow: clip; cursor: var(--cursore-mano); }
+.carosello--fermo { cursor: auto; }
+.carosello__nastro {
+  position: absolute; inset: 0; display: flex;
+  translate: calc(var(--foto, 0) * -100%) 0;
+  transition: translate 700ms cubic-bezier(0.65, 0, 0.35, 1);
+}
+.carosello__nastro.is-salto { transition: none; }
+.carosello__foto { flex: 0 0 100%; position: relative; }
+.carosello__foto img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.duo > .carosello { position: absolute; inset: 0; }
 .duo--pila { display: flex; flex-direction: column; }
 .duo--pila img { flex: 1 1 0; min-height: 0; }
 .duo--pila img + img { border-top: var(--line) solid var(--inchiostro); }

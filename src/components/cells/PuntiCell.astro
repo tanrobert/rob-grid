@@ -1,0 +1,78 @@
+---
+// Una cella divisa in riquadri da un filo (G&A: i quattro obiettivi del restyling, dalla tavola 4), ognuno con un
+// titoletto e un paragrafo in fondo, come le celle di testo. In riga quando la cella è larga, due per riga su una
+// cella media (2×2), uno sotto l'altro su una stretta e sempre sul telefono (4/11/2026, scelta di Roberto). I riquadri
+// si dividono la cella in parti uguali (12×3, tablet 8×8, telefono 4×10: sul telefono l'icona e il testo con poca aria in mezzo, come sul computer,
+// 5/11/2026; con 4×16 erano quadrati alti il doppio del testo). Righe `1fr`, che non scendono sotto il contenuto: se un
+// testo non ci sta, la griglia esce dalla cella e la cella si allunga (scripts/mosaico.ts).
+// `icona` (5/11/2026, scelta di Roberto): un disegno a fil di linea rossa in alto nel riquadro, decorativo. Tutte alte 100
+// unità, così hanno la stessa altezza; il filo resta di 1px a ogni misura (non-scaling-stroke).
+import Paragrafi from '../Paragrafi.astro';
+
+type Icona = 'frecce' | 'cerchio-quadrato' | 'quadrati' | 'mirino';
+interface Props {
+  punti: Array<{ title: string; body: string; icona?: Icona }>;
+}
+const { punti } = Astro.props;
+
+const CERCHIO = 'M0 50A50 50 0 1 0 100 50A50 50 0 1 0 0 50Z';
+const ICONE: Record<Icona, { w: number; d: string }> = {
+  // doppia freccia: una linea e due punte a 45°
+  frecce: { w: 140, d: 'M0 50H140M50 0L0 50L50 100M90 0L140 50L90 100' },
+  // un cerchio e un quadrato che condividono il diametro
+  'cerchio-quadrato': { w: 150, d: `${CERCHIO}M50 0H150V100H50Z` },
+  // quattro quadrati
+  quadrati: { w: 100, d: 'M0 0H100V100H0ZM50 0V100M0 50H100' },
+  // mirino: cerchio e croce
+  mirino: { w: 100, d: `${CERCHIO}M50 0V100M0 50H100` },
+};
+---
+
+<div class="punti" style={`--n: ${punti.length}`}>
+  {punti.map(p => (
+    <div class="punto">
+      {p.icona && (
+        <svg class="punto__icona" viewBox={`0 0 ${ICONE[p.icona].w} 100`} style={`aspect-ratio: ${ICONE[p.icona].w} / 100`} aria-hidden="true">
+          <path d={ICONE[p.icona].d} />
+        </svg>
+      )}
+      <h2 class="titoletto">{p.title}</h2>
+      <div class="paragrafo"><Paragrafi testo={p.body} /></div>
+    </div>
+  ))}
+</div>
+
+<style>
+  /* la cella è il contenitore (global.css, .cell): una colonna, poi due, poi tutti in riga */
+  .punti {
+    position: absolute; inset: 0;
+    display: grid; grid-template-columns: minmax(0, 1fr); grid-auto-rows: 1fr;
+  }
+  /* il testo in fondo al riquadro, come nelle celle di testo; in alto il posto della riga di testa della cella */
+  .punto {
+    display: flex; flex-direction: column; justify-content: flex-end; gap: var(--m);
+    padding: var(--pad-label) var(--pad) var(--pad);
+  }
+  /* in alto nel riquadro, il testo resta in fondo */
+  .punto__icona {
+    height: calc(var(--quadretto) * 3); width: auto; align-self: flex-start; margin-bottom: auto; flex: none; overflow: visible;
+    fill: none; stroke: var(--rosso); stroke-width: var(--line);
+  }
+  .punto__icona path { vector-effect: non-scaling-stroke; }
+  /* i fili tra i riquadri: bordi (agganciati ai pixel reali), mai sul lato della cella, che ha già il suo */
+  .punto + .punto { border-top: var(--line) solid var(--inchiostro); }
+  /* sul telefono (griglia a 4 colonne, sotto 600px: lib/grid.ts) sempre in colonna, anche se la cella è larga 480 e più */
+  @media (min-width: 600px) {
+    @container (min-width: 480px) {
+      .punti { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .punto + .punto { border-top: 0; }
+      .punto:nth-child(even) { border-left: var(--line) solid var(--inchiostro); }
+      .punto:nth-child(n + 3) { border-top: var(--line) solid var(--inchiostro); }
+    }
+    @container (min-width: 900px) {
+      .punti { grid-template-columns: repeat(var(--n), minmax(0, 1fr)); }
+      .punto:nth-child(n + 3) { border-top: 0; }
+      .punto + .punto { border-left: var(--line) solid var(--inchiostro); }
+    }
+  }
+</style>

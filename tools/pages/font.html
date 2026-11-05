@@ -1,10 +1,12 @@
 <!doctype html>
 <!--
-  Laboratorio: Archivo (quello del sito) contro Host Grotesk e Geist, in celle come quelle del sito sulla carta a quadretti:
-  titolone con la lente (normale e al contrario), titoletto, paragrafo coi **concetti**, cifre che contano, alfabeto.
-  Le etichette in mono si scambiano tra JetBrains Mono (quello del sito) e Geist Mono. Riga "cifre tabellari": misurata dal browser.
-  Archivo, JetBrains Mono e logotipo dai file del sito (/fonts/), Host Grotesk, Geist e Geist Mono da Google Fonts. Solo sviluppo.
-  Provato e tolto (3/11/2026): Hanken Grotesk (100–900), al posto di Host Grotesk.
+  Laboratorio: Archivo (quello del sito, 400–900, 41 KB) contro Manrope (200–800, OFL, parte latina 24 KB, senza corsivo),
+  in celle come quelle del sito sulla carta a quadretti: titolone con la lente (normale e al contrario), titoletto,
+  paragrafo coi **concetti**, cifre che contano, alfabeto. Etichette in JetBrains Mono (quello del sito). Riga "cifre tabellari": misurata dal browser.
+  Archivo, JetBrains Mono e logotipo dai file del sito (/fonts/), Manrope da Google Fonts. Solo sviluppo.
+  Provati e tolti: Hanken Grotesk (3/11/2026); Host Grotesk, Geist, Geist Mono e Google Sans Flex (5/11/2026). Di Google Sans Flex
+  (wght 1–1000, wdth 25–151, opsz, ROND; niente GRAD su Google Fonts) c'erano anche titolone a larghezza e lente compensata
+  con la larghezza: tutto nella cronologia di git. Parte latina: solo wght 51 KB · wght+wdth 119 KB · tutti gli assi ~1 MB.
     npx astro build && npm run vt:serve  →  http://localhost:4400/_vt/font.html  (anche dal telefono)
   La versione di prima (Schibsted Grotesk contro Archivo e Mona Sans, ottobre 2026) è nella cronologia di git.
 -->
@@ -15,10 +17,7 @@
 <title>Font · laboratorio</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<!-- una richiesta per famiglia: se una non risponde, le altre arrivano lo stesso -->
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Host+Grotesk:ital,wght@0,300..800;1,300..800&display=swap">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@100..900&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap">
 <style>
   @font-face { font-family: 'Roberto Grafica'; src: url('/fonts/roberto-grafica-black.woff2') format('woff2'); font-weight: 900; font-display: block; }
   @font-face { font-family: 'Archivo'; src: url('/fonts/archivo.woff2') format('woff2'); font-weight: 400 900; font-display: block; }
@@ -32,7 +31,6 @@
     --mono: 'JetBrains Mono'; --mono-spazio: 0.02em;
   }
   @media (max-width: 599px) { :root { --q: 18px; --titolone: 46px; --titoletto: 18px; --paragrafo: 15px; } }
-  html[data-mono-scelto="geist"] { --mono: 'Geist Mono'; --mono-spazio: 0.04em; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html { color: var(--inchiostro); -webkit-font-smoothing: antialiased; }
   /* la carta del tavolo: linee al 22% dell'inchiostro */
@@ -97,11 +95,7 @@
   </span>
   <span class="gruppo">Fino a
     <button type="button" data-fino="400" aria-pressed="true">400 (oggi)</button>
-    <button type="button" data-fino="100" aria-pressed="false">Il più sottile</button>
-  </span>
-  <span class="gruppo">Mono
-    <button type="button" data-mono="jetbrains" aria-pressed="true">JetBrains</button>
-    <button type="button" data-mono="geist" aria-pressed="false">Geist Mono</button>
+    <button type="button" data-fino="1" aria-pressed="false">Il più sottile</button>
   </span>
   <input type="text" id="titolo" value="Progetto identità per ristoranti e piccole aziende" aria-label="Testo del titolone" spellcheck="false">
 </div>
@@ -140,8 +134,7 @@
 <script>
   const FONT = [
     { nome: 'Archivo', f: "'Archivo'", min: 400, max: 900, nota: 'oggi · 400–900' },
-    { nome: 'Host Grotesk', f: "'Host Grotesk'", min: 300, max: 800, nota: '300–800' },
-    { nome: 'Geist', f: "'Geist'", min: 100, max: 900, nota: '100–900' },
+    { nome: 'Manrope', f: "'Manrope'", min: 200, max: 800, nota: '200–800' },
   ];
   const RAGGIO = 2.5, SMORZA = 90;   // come scripts/titoloni.ts: raggio in corpi del titolo, smorzamento in ms
   const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -176,7 +169,7 @@
   // Al contrario: 900 → 400 come sul sito (col "più sottile": fino al minimo del font). 900 = il più nero che il font ha
   function pesiDi(col) {
     const sottile = Math.max(stato.fino, col.font.min), nero = col.font.max;
-    return stato.lente === 'normale' ? [stato.fino === 100 ? sottile : 500, nero] : [nero, sottile];
+    return stato.lente === 'normale' ? [stato.fino === 1 ? sottile : 500, nero] : [nero, sottile];
   }
 
   /* titolone: lettere in span e righe bloccate (come .lente__riga del sito), così le parole che ingrassano non cambiano riga.
@@ -276,13 +269,11 @@
   }
   for (const b of document.querySelectorAll('.bar [data-lente]')) b.addEventListener('click', () => { stato.lente = b.dataset.lente; premi('data-lente', stato.lente); componi(); });
   for (const b of document.querySelectorAll('.bar [data-fino]')) b.addEventListener('click', () => { stato.fino = +b.dataset.fino; premi('data-fino', b.dataset.fino); componi(); });
-  // data-mono sui bottoni, la scelta su <html> come data-mono-scelto (vedi CLAUDE.md, attributi data- dei bottoni diversi da quelli di <html>)
-  for (const b of document.querySelectorAll('.bar [data-mono]')) b.addEventListener('click', () => { html.dataset.monoScelto = b.dataset.mono; premi('data-mono', b.dataset.mono); });
   campo.addEventListener('input', componi);
-  let attesa = 0, larghezza = innerWidth;
+  let attesa = 0, finestra = innerWidth;
   addEventListener('resize', () => {
-    if (innerWidth === larghezza) return;
-    larghezza = innerWidth;
+    if (innerWidth === finestra) return;
+    finestra = innerWidth;
     clearTimeout(attesa);
     attesa = setTimeout(componi, 150);
   });

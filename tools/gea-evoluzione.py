@@ -21,9 +21,9 @@ Passi (vocabolario degli attributi in testa al file SVG e a scripts/evoluzione.t
   4. FIG 05 (tavola 19): svaniscono il contorno della FIG 04 e le guide che non c'entrano, si disegna la croce; poi i
      trapezi crescono verso il centro fino ai pezzi della FIG 05, le guide sui loro lati obliqui scorrono sulle rette
      nuove e gli assi rossi si allargano fino al riquadro;
-  5. rifinire il simbolo (tavola 20): gli assi rossi del rettangolo aureo, poi quadrato, rettangolo e spirale; il
-     rettangolo toglie a ogni pezzo il suo angolo interno (lo scalino si apre dall'angolo) e si arriva alla FIG 06 F
-     (tavola 21), mentre la costruzione della spirale svanisce;
+  5. rifinire il simbolo (tavola 20): gli assi rossi del rettangolo aureo, poi il quadrato e la spirale, che parte
+     dall'angolo in alto a sinistra e traccia ogni quadrato che attraversa; finita lei, gli angoli interni dei pezzi
+     che il rettangolo toglie sfumano via e resta la FIG 06 F (tavola 21); poi la costruzione svanisce;
   6. simbolo + logotipo (tavole 25 e 26): svaniscono i tratteggi rossi, tutto sale per fare posto al testo (le linee
      continuano sotto), poi riga per riga le linee di costruzione e le lettere in giallo (G&A prima a contorno);
      alla fine il testo diventa grigio G&A e le linee di costruzione svaniscono: resta il logo.
@@ -379,9 +379,9 @@ trapezi = [f'<path d="{poligono(t)}"/>' for t, _ in trapezi4]   # contorni del p
 # ── passo 5: rifinire il simbolo (tavola 20: rettangolo aureo e spirale) e FIG 06 F (tavola 21) ─────────────────────────
 # Il rettangolo aureo al centro toglie a ogni pezzo il suo angolo interno: la FIG 06 ha 6 vertici, uno scalino. Perché la
 # forma possa crescere, tutte le forme del pezzo (trapezio, FIG 05, FIG 06) hanno 6 vertici: nel trapezio e nella FIG 05
-# i tre dello scalino stanno sovrapposti nell'angolo interno, e nel passo 5 si aprono.
+# i tre dello scalino stanno sovrapposti nell'angolo interno, e nel passo 5 si aprono di colpo (sotto l'angolo tolto).
 pezzi6 = [vertici(g, m17) for g in disegni(21, 'Livello 1', 'f') if g.get('fill') and g['fill'][2] < 0.5]
-gialli = []
+gialli, tagli5 = [], []
 for t, f in trapezi4:
     s6 = min(pezzi6, key=lambda v: math.dist(baricentro(v), baricentro(f)))
     if len(s6) != 6:
@@ -397,11 +397,15 @@ for t, f in trapezi4:
     scalino = [s6[(prima + k) % 6] for k in (1, 2, 3)]
     sei = lambda v, tre: v[:i] + tre + v[i + 1:]
     t6, f6, g6 = sei(t, [t[i]] * 3), sei(f, [f[i]] * 3), sei(f, scalino)
+    # finita la spirale il pezzo diventa di colpo la FIG 06 e quello che il rettangolo gli toglie (l'angolo interno fino
+    # allo scalino) resta un pezzo a sé, che sfuma via (scelta di Roberto: niente scalino che si apre)
     gialli.append(f'<path d="{poligono(g6)}" '
-                  + forme({'d': poligono(t6)}, (4, 2, 1.2, {'d': poligono(f6)}), (5, 3, 1.0, {'d': poligono(g6)})) + '/>')
+                  + forme({'d': poligono(t6)}, (4, 2, 1.2, {'d': poligono(f6)}), (5, 3, 0, {'d': poligono(g6)})) + '/>')
+    tagli5.append(f'<path d="{poligono([scalino[0], f[i], scalino[2], scalino[1]])}"/>')
 
 assi5 = senza_doppioni(linee(20, m17)[1])
-# costruzione della spirale: il quadrato, il rettangolo aureo, la spirale con le suddivisioni (tratti pieni, senza doppioni)
+# costruzione della spirale (tavola 20, tratti pieni): il quadrato e la spirale; il rettangolo aureo e le suddivisioni
+# no, li disegnano i quadrati della spirale
 costruzione5, viste5 = [], set()
 for g in disegni(20, 'Gridlines'):
     if (len(g['items']) == 1 and g['items'][0][0] == 'l') or str(g.get('dashes', '')).startswith('[ 12'):
@@ -410,9 +414,51 @@ for g in disegni(20, 'Gridlines'):
     if d5 not in viste5:
         viste5.add(d5)
         costruzione5.append((g['rect'].width * g['rect'].height, len(g['items']), d5))
-# prima il quadrato (il più grande), poi il rettangolo, per ultima la spirale (la più articolata)
-costruzione5.sort(key=lambda c: (c[1] > 1, -c[0]))
-costruzione5 = [f'<path d="{d5}"/>' for _, _, d5 in costruzione5]
+costruzione5.sort(key=lambda c: (c[1] > 1, -c[0]))   # quadrato, rettangolo, spirale
+if len(costruzione5) != 3:
+    sys.exit(f'tavola 20: {len(costruzione5)} tracciati di costruzione, attesi quadrato, rettangolo e spirale')
+quadrato5 = f'<path d="{costruzione5[0][2]}"/>'
+# la spirale: i suoi archi (un quarto di cerchio ciascuno) messi in fila dall'angolo in alto a sinistra del rettangolo,
+# ognuno nel verso in cui la penna lo percorre. Ogni arco unisce due angoli opposti del suo quadrato: il quadrato si
+# disegna mentre la penna lo attraversa, coi due lati da una parte e i due dall'altra, che si chiudono dove arriva l'arco
+archi = []
+for pezzo in re.findall(r'M[^M]+', costruzione5[2][2]):
+    if 'C' in pezzo:
+        v = [float(x) for x in re.findall(r'-?[\d.]+', pezzo)]
+        archi.append([(v[0], v[1]), (v[2], v[3]), (v[4], v[5]), (v[6], v[7])])
+rett5 = [float(x) for x in re.findall(r'-?[\d.]+', costruzione5[1][2])]
+inizio = (min(rett5[0::2]), min(rett5[1::2]))   # l'angolo in alto a sinistra del rettangolo aureo
+fila, qui = [], inizio
+while archi:
+    arco = min(archi, key=lambda a: min(math.dist(a[0], qui), math.dist(a[3], qui)))
+    archi.remove(arco)
+    if math.dist(arco[3], qui) < math.dist(arco[0], qui):
+        arco = arco[::-1]
+    if math.dist(arco[0], qui) > 0.1:
+        sys.exit(f'tavola 20: la spirale si interrompe in {qui}')
+    fila.append(arco)
+    qui = arco[3]
+def lunghezza(a, c1, c2, b, n=200):
+    """lunghezza di una curva di Bézier cubica (spezzata fitta)"""
+    pt = lambda t: tuple((1 - t) ** 3 * p0 + 3 * (1 - t) ** 2 * t * p1 + 3 * (1 - t) * t ** 2 * p2 + t ** 3 * p3
+                         for p0, p1, p2, p3 in zip(a, c1, c2, b))
+    return sum(math.dist(pt(i / n), pt((i + 1) / n)) for i in range(n))
+
+
+# la spirale è un tracciato solo, che la penna percorre in una corsa; ogni quadrato ha in data-entra il punto della
+# corsa (frazione della lunghezza) in cui la penna ci entra, e da lì si disegna
+lunghi5 = [lunghezza(*arco) for arco in fila]
+spirale5 = [f'<path d="M{n2(fila[0][0][0])} {n2(fila[0][0][1])}'
+            + ''.join(f'C{n2(c1[0])} {n2(c1[1])} {n2(c2[0])} {n2(c2[1])} {n2(b[0])} {n2(b[1])}' for _, c1, c2, b in fila)
+            + '" data-spirale=""/>']
+for k, (a, c1, c2, b) in enumerate(fila):
+    # centro dell'arco: l'angolo del quadrato da cui il primo tratto parte di traverso; l'arco gira verso l'angolo opposto
+    centro_a = (a[0], b[1]) if abs(c1[1] - a[1]) < abs(c1[0] - a[0]) else (b[0], a[1])
+    gobba = (a[0] + b[0] - centro_a[0], a[1] + b[1] - centro_a[1])
+    p = lambda *q: 'M' + 'L'.join(f'{n2(x)} {n2(y)}' for x, y in q)
+    # dall'angolo dove entra la penna, due lati da una parte e due dall'altra
+    spirale5 += [f'<g data-entra="{sum(lunghi5[:k]) / sum(lunghi5):.4f}">',
+                 f'<path d="{p(a, gobba, b)}"/>', f'<path d="{p(a, centro_a, b)}"/>', '</g>']
 defs_a2, assi2_vivi = maschere('asse', assi2)
 defs_a3, assi3_vivi = maschere('asse3', assi3)
 defs_t, trapezi_vivi = maschere('trapezio', trapezi)
@@ -483,7 +529,9 @@ righe = [
     '     (montante e traverso, intagli a coda di rondine) diventano il cuore del simbolo nuovo.',
     "     Ogni gruppo figlio dell'svg dice cosa fa e quando. data-passo = passo in cui entra, data-fase = fase del passo",
     "     (le fasi una dopo l'altra, ognuna dura quanto la sua azione più lunga), poi l'azione:",
-    '       data-disegna="scaglioni|insieme" + data-durata (+ data-dopo, ritardo nella fase): i tratti si disegnano',
+    '       data-disegna="scaglioni|insieme" + data-durata (+ data-dopo, ritardo nella fase): i tratti si disegnano;',
+    '       data-disegna="penna": il data-spirale si disegna in una corsa sola; ogni <g data-entra> (frazione della corsa)',
+    '       si disegna quando la penna arriva lì (i quadrati della spirale)',
     '       data-compare="durata" compare (vuoto: di colpo) · data-scivola: i figli scivolano via nel loro data-verso',
     '     data-via = passo in cui sparisce (data-via-fase, data-via-durata: di colpo se manca).',
     '     data-zoom = passo in cui si ingrandisce di data-scala attorno al centro (fase 1, insieme al primo svanire).',
@@ -492,7 +540,7 @@ righe = [
     '     data-trasla = passo in cui il gruppo sale o scende di data-trasla-y (data-trasla-fase, data-trasla-durata).',
     '     data-colore = passo in cui --pieno passa da data-colore-da al colore del file. data-uno-a-uno: compare un figlio',
     '     alla volta (le lettere).',
-    '     data-tinta = colore (guida, segno, rosso, pieno con --pieno). I tratteggiati si disegnano con la copia piena',
+    '     data-tinta = colore (guida, segno, rosso; pieno e contorno con --pieno). I tratteggiati si disegnano con la copia piena',
     "     nella loro maschera (data-penna). Così com'è, il file è lo stato finale (senza JavaScript). -->",
     '<defs>',
     f'<clipPath id="gea-evo-fuori"><path clip-rule="evenodd" d="{fuori}"/></clipPath>',
@@ -502,11 +550,14 @@ righe = [
             trasforma=f'{su} {zoom}'),
     *gruppo(f'data-passo="3" data-fase="3" data-disegna="scaglioni" data-durata="1.1" {TRASLA} {VIA6} data-tinta="guida"', guide3, True, trasforma=su),
     *gruppo(f'data-passo="3" data-fase="5" data-compare="0.5" {TRASLA} data-tinta="pieno" style="--pieno: {GIALLO}"', gialli, trasforma=su),
+    # passo 5, finita la spirale: gli angoli che il rettangolo aureo toglie ai pezzi compaiono insieme alla FIG 06 e sfumano
+    *gruppo(f'data-passo="5" data-fase="3" data-compare="" data-via="5" data-via-fase="4" data-via-durata="0.8" data-tinta="pieno" '
+            f'style="--pieno: {GIALLO}"', tagli5, True),
     *gruppo(f'data-passo="4" data-disegna="scaglioni" data-durata="0.8" data-dopo="0.2" {TRASLA} {VIA6} data-tinta="guida"', croce, True, trasforma=su),
     # passo 6: per ogni riga le sue linee di costruzione, poi le lettere (G&A prima a contorno) in giallo; alla fine grigio
     *gruppo(f'data-passo="6" data-fase="3" data-disegna="scaglioni" data-durata="0.8" {VIA6} data-tinta="guida"', linee25['ga'], True),
     *gruppo('data-passo="6" data-fase="4" data-disegna="insieme" data-durata="1.4" data-via="6" data-via-fase="5" data-via-durata="0.4" '
-            'data-tinta="segno"', contorni25, True),
+            f'data-tinta="contorno" style="--pieno: {GIALLO}"', contorni25, True),
     *gruppo(f'data-passo="6" data-fase="5" data-compare="0.5" {COLORE6} data-tinta="pieno" style="--pieno: {GRIGIO}"', lettere25['ga']),
     *gruppo(f'data-passo="6" data-fase="6" data-disegna="scaglioni" data-durata="0.6" {VIA6} data-tinta="guida"', linee25['porte'], True),
     *gruppo(f'data-passo="6" data-fase="7" data-compare="0.3" data-uno-a-uno="" {COLORE6} data-tinta="pieno" style="--pieno: {GRIGIO}"',
@@ -527,16 +578,18 @@ righe = [
             'data-tinta="rosso" data-tratteggio=""', trapezi_vivi, True),
     *gruppo('data-passo="5" data-disegna="scaglioni" data-durata="0.8" data-via="6" data-via-durata="0.5" '
             'data-tinta="rosso" data-tratteggio=""', assi5_vivi, True),
-    # quadrato, rettangolo e spirale uno dopo l'altro (la spirale più lenta), poi svaniscono: resta la FIG 06 F
-    *[r for k, el in enumerate(costruzione5) for r in gruppo(
-        f'data-passo="5" data-fase="2" data-disegna="insieme" data-durata="{1.8 if k == len(costruzione5) - 1 else 0.6}" '
-        f'data-dopo="{0.45 * k:.2f}" data-via="5" data-via-fase="4" data-via-durata="0.6" data-tinta="rosso"', [el], True)],
+    # il quadrato, poi la spirale dall'angolo in alto a sinistra, coi suoi quadrati che si tracciano mentre la penna li
+    # attraversa; svaniscono dopo i tagli: resta la FIG 06 F
+    *gruppo('data-passo="5" data-fase="2" data-disegna="insieme" data-durata="0.6" '
+            'data-via="5" data-via-fase="5" data-via-durata="0.6" data-tinta="rosso"', [quadrato5], True),
+    *gruppo('data-passo="5" data-fase="2" data-disegna="penna" data-durata="2.6" data-dopo="0.45" '
+            'data-via="5" data-via-fase="5" data-via-durata="0.6" data-tinta="rosso"', spirale5, True),
     '</svg>',
 ]
 with open(SVG, 'w', encoding='utf-8', newline='\n') as f:
     f.write('\n'.join(righe) + '\n')
 print(f'passo 6: sale di {SU:.1f}, scala {k25:.4f}, scarto simbolo {scarto25:.3f}, linee ' + str({n: len(v) for n, v in linee25.items()}) + ', lettere ' + str({n: len(v) for n, v in lettere25.items()}))
-print(f'passo 5: assi {len(assi5)}, costruzione {len(costruzione5)}')
+print(f'passo 5: assi {len(assi5)}, archi della spirale {len(fila)}, tagli {len(tagli5)}')
 print(f'passo 4: croce {len(croce)}, guide che scorrono {spostate}, riquadro {[round(v, 1) for v in riquadro5]}')
 print(f'{os.path.relpath(SVG)}: guide {len(guide1)} (- {len(via1)} al centro) + {len(guide3)} nuove (su {tutte3}), assi {len(assi2)} + {len(assi3)}, '
       f'trapezi {len(trapezi)}, zoom ×{ZOOM:.4f}, scarto FIG 04 {scarto:.3f}, versi {VERSO}')

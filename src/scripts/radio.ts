@@ -7,8 +7,9 @@
  * prossimo si vedono subito, anche da ferma (invogliano ad ascoltare): si leggono quando una cella radio entra in
  * vista e poi ogni GIRO ms finché ce n'è una in vista e la pagina non è nascosta. Logica degli stati ripresa dal sito
  * purplepiper.eu (purplepiper-astro, RadioPlayer.astro).
- * Sul tavolo la radio è nascosta (grid-types, `nascosta`): quando parte compare sotto la cella di Purple Piper, così la
- * si ferma anche da lì; fermata resta, la sua ✕ la ferma e la toglie. Ricordato per la visita (sessionStorage).
+ * Sul tavolo la radio è nascosta (grid-types, `nascosta`): la coda "Aggiungi il player alla home" della cella nel foglio
+ * di Purple Piper la fa comparire sotto la cella del progetto (4/11/2026: prima compariva da sola quando partiva), un
+ * altro clic la toglie; la sua ✕ sul tavolo la ferma e la toglie. Ricordato per la visita (sessionStorage).
  */
 import { tavolo } from './tavolo';
 import { compare, sparisce } from './tavolo/pezzi';
@@ -31,12 +32,18 @@ let scadenza: number | undefined;
 let lettura: number | undefined;
 /** le celle radio che si vedono adesso */
 const inVista = new Set<Element>();
+/** la radio è sul tavolo (la cella c'è anche sotto i fogli aperti da un link diretto) */
+let inCasa = false;
+try { inCasa = !!sessionStorage.getItem(SUL_TAVOLO); } catch { /* niente memoria */ }
 
 const celle = () => document.querySelectorAll<HTMLElement>('[data-radio]');
 
 function mostra() {
   celle().forEach(c => {
     c.dataset.stato = stato;
+    c.dataset.casa = inCasa ? 'si' : 'no';
+    const casa = c.querySelector<HTMLButtonElement>('[data-radio-casa]');
+    if (casa) { casa.hidden = false; casa.setAttribute('aria-pressed', String(inCasa)); }
     const tasto = c.querySelector<HTMLButtonElement>('[data-radio-tasto]')!;
     tasto.hidden = false;
     tasto.setAttribute('aria-pressed', String(stato === 'attesa' || stato === 'onda'));
@@ -98,10 +105,11 @@ function leggiQuando() {
 const pezzo = () => tavolo?.pezzi.find(p => p.el.querySelector('[data-radio]'));
 
 function sulTavolo(si: boolean) {
-  const p = pezzo();
-  if (!tavolo || !p || p.el.hidden === !si) return;
-  if (si) compare(tavolo, p); else sparisce(tavolo, p);
+  inCasa = si;
   try { if (si) sessionStorage.setItem(SUL_TAVOLO, 'si'); else sessionStorage.removeItem(SUL_TAVOLO); } catch { /* resta per questa pagina */ }
+  const p = pezzo();
+  if (tavolo && p && p.el.hidden === si) { if (si) compare(tavolo, p); else sparisce(tavolo, p); }
+  mostra();
 }
 
 function ferma() {
@@ -113,7 +121,6 @@ function ferma() {
 function premi() {
   if (stato !== 'fermo' && stato !== 'errore') { ferma(); return; }
   const questo = ++tentativo;
-  sulTavolo(true);
   vai('attesa');
   audio.src = stream;
   audio.play().catch((e: DOMException) => {
@@ -133,7 +140,7 @@ audio.addEventListener('error', () => {
 });
 document.addEventListener('visibilitychange', leggiQuando);
 // ricaricata la pagina durante la visita: la radio (ferma) è ancora sul tavolo, dove era rimasta (memoria del tavolo)
-try { if (sessionStorage.getItem(SUL_TAVOLO)) { const p = pezzo(); if (p) p.el.hidden = false; } } catch { /* niente memoria */ }
+if (inCasa) { const p = pezzo(); if (p) p.el.hidden = false; }
 
 export function initRadio(signal: AbortSignal) {
   celle().forEach(c => {
@@ -141,6 +148,7 @@ export function initRadio(signal: AbortSignal) {
     statoUrl ||= c.dataset.statoUrl ?? '';
     c.querySelector('[data-radio-tasto]')!.addEventListener('click', premi, { signal });
     c.querySelector('[data-radio-togli]')?.addEventListener('click', () => { ferma(); sulTavolo(false); }, { signal });
+    c.querySelector('[data-radio-casa]')?.addEventListener('click', () => sulTavolo(!inCasa), { signal });
   });
   // le celle nuove (un foglio appena montato) prendono lo stato di adesso
   mostra();

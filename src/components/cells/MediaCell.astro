@@ -19,14 +19,19 @@ interface Props {
   priority?: boolean;
   /** seconda foto sotto la prima, nella stessa cella: ognuna a tutta larghezza, metà altezza */
   seconda?: { image: ImageMetadata; alt: string };
+  /** altre foto a turno con la prima: carosello delle celle (global.css, cells.ts), che gira da solo ogni 4 s */
+  immagini?: Array<{ image: ImageMetadata; alt: string }>;
   /** le foto (non video né disegni) si ingrandiscono al clic, sopra il retino (scripts/ingrandisci.ts) */
   ingrandisci?: boolean;
 }
-const { image, video, overlay, alt, sizes, title, priority = false, seconda, ingrandisci } = Astro.props;
+const { image, video, overlay, alt, sizes, title, priority = false, seconda, immagini, ingrandisci } = Astro.props;
 const grande = (testo: string) => ingrandisci ? { 'data-ingrandisci': '', tabindex: 0, role: 'button' as const, 'aria-label': `Ingrandisci: ${testo}` } : {};
 // un disegno SVG (es. una grafica del cliente) va così com'è, intero sulla carta: etichette scure
 const disegno = !video && image?.format === 'svg';
 const etichette = disegno ? 'scure' : Astro.props.etichette;
+// carosello: la foto della cella e poi le altre (solo foto: niente video né disegni)
+const giro = image && !video && !disegno && immagini?.length ? [{ image, alt }, ...immagini] : undefined;
+const misure = [400, 800, 1200, 1600, 2400];
 const inPublic = (file?: string) => !!file && file !== video && fs.existsSync(path.join(process.cwd(), 'public', file));
 // se accanto all'mp4 (H.264, per tutti) c'è lo stesso nome in .webm (AV1, molto più leggero), chi lo sa leggere usa quello
 const webm = video?.replace(/\.mp4$/, '.webm');
@@ -45,8 +50,18 @@ const poster = inPublic(posterWebp) ? posterWebp
     </video>
   ) : disegno ? (
     <img class="duo__disegno" src={image.src} width={image.width} height={image.height} alt={alt} loading={priority ? 'eager' : 'lazy'} decoding="async" />
+  ) : giro ? (
+    <div class="carosello" data-carosello>
+      <div class="carosello__nastro">
+        {giro.map((f, i) => (
+          <div class="carosello__foto">
+            <Image src={f.image} alt={f.alt} {...grande(f.alt)} widths={misure} sizes={sizes} loading={priority && i === 0 ? 'eager' : 'lazy'} decoding="async" />
+          </div>
+        ))}
+      </div>
+    </div>
   ) : image && (
-    <Image src={image} alt={alt} {...grande(alt)} widths={[400, 800, 1200, 1600, 2400]} sizes={sizes} loading={priority ? 'eager' : 'lazy'} fetchpriority={priority ? 'high' : undefined} decoding="async" />
+    <Image src={image} alt={alt} {...grande(alt)} widths={misure} sizes={sizes} loading={priority ? 'eager' : 'lazy'} fetchpriority={priority ? 'high' : undefined} decoding="async" />
   )}
   {seconda && (
     <Image src={seconda.image} alt={seconda.alt} {...grande(seconda.alt)} widths={[400, 800, 1200, 1600]} sizes={sizes} loading="lazy" decoding="async" />
@@ -55,7 +70,7 @@ const poster = inPublic(posterWebp) ? posterWebp
   {overlay?.format === 'svg' ? (
     <img class="duo__overlay" src={overlay.src} width={overlay.width} height={overlay.height} alt="" loading={priority ? 'eager' : 'lazy'} decoding="async" />
   ) : overlay && (
-    <Image class="duo__overlay" src={overlay} alt="" widths={[400, 800, 1200, 1600, 2400]} sizes={sizes} loading={priority ? 'eager' : 'lazy'} decoding="async" />
+    <Image class="duo__overlay" src={overlay} alt="" widths={misure} sizes={sizes} loading={priority ? 'eager' : 'lazy'} decoding="async" />
   )}
 </div>
 

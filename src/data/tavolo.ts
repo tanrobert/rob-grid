@@ -60,9 +60,9 @@ export const tavolo: Cell[] = [
   // altri progetti (dal 25/10/2026; Luca Lebone dal 26/10): dopo le celle che portano in giro (archivio, Bio, extra),
   // così quelle restano attorno al marchio
   projectCell('purple', 'purple-piper'),
-  // la radio Purple Piper (2/11/2026): nascosta finché il visitatore non la fa partire (dal foglio di Purple Piper),
-  // allora compare attaccata sotto la cella del progetto (scelta di Roberto; provata posata sopra il suo fondo) e
-  // continua mentre si aprono i fogli; la ✕ la ferma e la toglie (un solo lettore, scripts/radio.ts)
+  // la radio Purple Piper (2/11/2026): nascosta finché il visitatore non la aggiunge (coda "Aggiungi il player alla home"
+  // nel foglio di Purple Piper, dal 4/11/2026), allora compare attaccata sotto la cella del progetto (scelta di Roberto;
+  // provata posata sopra il suo fondo); la ✕ la ferma e la toglie (un solo lettore, scripts/radio.ts)
   { id: 'radio', type: 'radio', w: 4, h: 2, q: { w: 16, h: 5 }, eyebrow: 'Radio live player', nascosta: { sotto: 'purple', y: 0 } },
   projectCell('gea', 'gea'),
   projectCell('torre', 'la-torre-rossa'),

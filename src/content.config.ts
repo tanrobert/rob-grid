@@ -17,13 +17,14 @@ import { z } from 'astro/zod';
 const unit = z.number().int().positive();
 const colore = /^#[0-9a-f]{6}$/i;
 const span = { w: unit, h: unit };
-// bottone sotto il testo di una cella: un indirizzo del sito (/archivio) o esterno (https://…)
+// coda-link in fondo a una cella (components/CodaLink, es. Visita il sito): un indirizzo del sito (/archivio) o esterno (https://…)
 const palette = z.strictObject({
   nome: z.string(), title: z.string(), body: z.string(),
   colori: z.array(z.strictObject({
     nome: z.string(), hex: z.string().regex(colore, 'hex: "#rrggbb"'), secondario: z.literal(true).optional(),
   })).min(1),
 });
+const fileCostruzione = z.string().regex(/^\.\/costruzione-[\w-]+\.svg$/, 'disegno: ./costruzione-<nome>.svg');
 const bottone = z.strictObject({ label: z.string(), href: z.string().regex(/^(\/|https?:\/\/)/, 'href: "/pagina" o "https://…"') });
 
 // campi comuni a tutte le celle (sottoinsieme di CellBase in data/grid-types.ts)
@@ -51,6 +52,8 @@ const progetti = defineCollection({
       z.strictObject({
         ...base, type: z.literal('media'), image: image().optional(), video: z.string().optional(), alt: z.string(), caption: z.string().optional(),
         seconda: z.strictObject({ image: image(), alt: z.string() }).optional(),
+        // altre foto a turno con la prima, in un carosello che gira da solo (cells.ts)
+        immagini: z.array(z.strictObject({ image: image(), alt: z.string() })).min(1).optional(),
         // le foto si ingrandiscono al clic (scripts/ingrandisci.ts)
         ingrandisci: z.literal(true).optional(),
       }),
@@ -60,7 +63,7 @@ const progetti = defineCollection({
         as: z.enum(['h2', 'p']).optional(), size: z.enum(['s', 'm', 'l']).optional(),
         // foto sotto il paragrafo, in un carosello che gira da solo (una sola: ferma)
         immagini: z.array(z.strictObject({ image: image(), alt: z.string() })).min(1).optional(),
-        // sotto le foto: un altro paragrafo e un bottone
+        // sotto le foto: un altro paragrafo; button = coda in fondo alla cella
         after: z.string().optional(), button: bottone.optional(),
       }),
       z.strictObject({ ...base, type: z.literal('list'), title: z.string(), items: z.array(z.union([z.string(), z.strictObject({ label: z.string(), href: z.string() })])) }),
@@ -104,9 +107,10 @@ const progetti = defineCollection({
       // la radio Purple Piper in diretta (data/radio.ts): logo, bottone, brano in onda
       z.strictObject({ ...base, type: z.literal('radio'), eyebrow: z.string().optional() }),
       // la costruzione di un segno che si disegna da sola: `disegno` = SVG coi tratti vivi nella cartella del progetto,
-      // chiamato costruzione-*.svg (data/projects.ts lo legge)
+      // chiamato costruzione-*.svg (data/projects.ts lo legge), o più SVG da affiancare, da sinistra a destra
       z.strictObject({
-        ...base, type: z.literal('costruzione'), disegno: z.string().regex(/^\.\/costruzione-[\w-]+\.svg$/, 'disegno: ./costruzione-<nome>.svg'),
+        ...base, type: z.literal('costruzione'),
+        disegno: z.union([fileCostruzione, z.array(fileCostruzione).min(1)]),
         alt: z.string(), eyebrow: z.string().optional(), title: z.string().optional(), body: z.string().optional(),
       }),
       // l'evoluzione di un segno a passi, uno per clic: `disegno` = SVG annotato coi passi (evoluzione-*.svg nella cartella
@@ -115,6 +119,23 @@ const progetti = defineCollection({
         ...base, type: z.literal('evoluzione'), disegno: z.string().regex(/^\.\/evoluzione-[\w-]+\.svg$/, 'disegno: ./evoluzione-<nome>.svg'),
         alt: z.string(), eyebrow: z.string().optional(),
         passi: z.array(z.strictObject({ title: z.string(), body: z.string() })).min(2),
+      }),
+      // una cella divisa in riquadri da un filo, ognuno con titoletto e paragrafo (gli obiettivi di un progetto)
+      z.strictObject({
+        ...base, type: z.literal('punti'), eyebrow: z.string().optional(),
+        punti: z.array(z.strictObject({
+          title: z.string(), body: z.string(),
+          // icona a fil di linea rossa in alto nel riquadro (PuntiCell)
+          icona: z.enum(['frecce', 'cerchio-quadrato', 'quadrati', 'mirino']).optional(),
+        })).min(2),
+      }),
+      // le versioni di un logo, una alla volta: `logo` = SVG di Illustrator nella cartella del progetto, chiamato
+      // versione-*.svg (data/projects.ts lo legge); la prima versione ha tutte le parti (lib/versioni.ts)
+      z.strictObject({
+        ...base, type: z.literal('versioni'), eyebrow: z.string().optional(), alt: z.string(),
+        versioni: z.array(z.strictObject({
+          title: z.string(), logo: z.string().regex(/^\.\/versione-[\w-]+\.svg$/, 'logo: ./versione-<nome>.svg'),
+        })).min(2),
       }),
       // la palette prima e dopo, un clic per passare dall'una all'altra: il colore i di prima diventa il colore i di dopo,
       // quelli in più (dopo ne ha almeno quanti prima) entrano allargandosi; `secondario` = banda larga la metà

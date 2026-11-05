@@ -39,7 +39,7 @@ export interface Affissione {
   body?: string;
 }
 
-/** Bottone sotto il testo di una cella (components/Bottone.astro): un link esterno si apre in una scheda nuova */
+/** Coda in fondo a una cella che porta altrove (components/CodaLink.astro): un link esterno si apre in una scheda nuova */
 export interface Bottone { label: string; href: string }
 
 /** un colore della cella palette; `secondario` = banda larga la metà */
@@ -108,13 +108,15 @@ export type Cell = CellBase & (
       body?: string | string[]; as?: 'h1' | 'h2' | 'p'; size?: 's' | 'm' | 'l';
       /** foto sotto il paragrafo, in un carosello che gira da solo (una sola: ferma) */
       immagini?: Array<{ image: ImageMetadata; alt: string }>;
-      /** sotto le foto: un altro paragrafo e un bottone */
+      /** sotto le foto: un altro paragrafo; button = coda in fondo alla cella (CodaLink) */
       after?: string; button?: Bottone;
     }
   | { type: 'list'; title: string; items: Array<string | { label: string; href: string }> }
   | { type: 'stat'; value: string; caption: string; /** il numero sale da 0 quando la cella entra in vista */ countUp?: boolean; /** h1 nascosto: la cella fa da hero di una pagina */ heading?: string }
   | { type: 'media'; image?: ImageMetadata; video?: string; overlay?: ImageMetadata; etichette?: 'scure'; alt: string; caption?: string;
       /** un'altra foto sotto la prima, nella stessa cella (metà altezza ciascuna) */ seconda?: { image: ImageMetadata; alt: string };
+      /** altre foto a turno con la prima, in un carosello che gira da solo (con `ingrandisci` il clic ingrandisce, non passa alla dopo) */
+      immagini?: Array<{ image: ImageMetadata; alt: string }>;
       /** le foto si ingrandiscono al clic, sopra il retino (scripts/ingrandisci.ts) */ ingrandisci?: true }
   | { type: 'project'; slug: string }
   | { type: 'clock' }
@@ -142,9 +144,10 @@ export type Cell = CellBase & (
   | { type: 'sottologo'; logo: string; immagini: Array<{ image: ImageMetadata; alt: string; lato?: 'sinistra' }>; eyebrow?: string; title?: string; body?: string }
   /** la radio Purple Piper in diretta (data/radio.ts, scripts/radio.ts): logo, bottone, brano in onda e prossimo */
   | { type: 'radio'; eyebrow?: string }
-  /** la costruzione di un segno che si disegna da sola (SVG di Illustrator coi tratti vivi, `svg` = il file così
-   *  com'è, lib/costruzione.ts): titolone, il disegno, paragrafo in fondo. `alt` descrive il disegno */
-  | { type: 'costruzione'; svg: string; alt: string; eyebrow?: string; title?: string; body?: string }
+  /** la costruzione di un segno che si disegna da sola (SVG di Illustrator coi tratti vivi, `svg` = i file così
+   *  come sono, affiancati da sinistra a destra, lib/costruzione.ts): titolone, i disegni, paragrafo in fondo.
+   *  `alt` descrive tutti i disegni insieme */
+  | { type: 'costruzione'; svg: string[]; alt: string; eyebrow?: string; title?: string; body?: string }
   /** l'evoluzione di un segno a passi (G&A: dai montanti e traversi del marchio storico al simbolo nuovo): il disegno a destra, a sinistra titolo e
    *  testo del passo e un righello col passo attuale; un clic sul disegno fa il passo dopo (scripts/evoluzione.ts).
    *  `svg` = il file annotato coi passi (data-passo, data-disegna…), così com'è; `alt` descrive il disegno */
@@ -152,6 +155,12 @@ export type Cell = CellBase & (
   /** la palette di un marchio prima e dopo (G&A): a sinistra titolo e testo dello stato e il righello Prima · Dopo, a destra
    *  i colori in bande, coi contrasti WCAG; un clic passa all'altro stato (scripts/palette.ts) */
   | { type: 'palette'; eyebrow?: string; prima: Palette; dopo: Palette }
+  /** le versioni di un logo, una alla volta (G&A): titoletto, il logo con le parti indicate da etichette e linee guida,
+   *  il righello; un clic passa alla dopo (lib/versioni.ts, scripts/versioni.ts). `svg` = il file così com'è */
+  | { type: 'versioni'; eyebrow?: string; alt: string; versioni: Array<{ title: string; svg: string; nome: string }> }
+  /** una cella divisa in riquadri da un filo, ognuno con titoletto e paragrafo (G&A: gli obiettivi del restyling):
+   *  in riga, 2×2 su una cella media, in colonna su una stretta */
+  | { type: 'punti'; eyebrow?: string; punti: Array<{ title: string; body: string; icona?: 'frecce' | 'cerchio-quadrato' | 'quadrati' | 'mirino' }> }
   /** le collezioni di un marchio una alla volta (G&A: le linee di porte): foto, velo del colore della linea, logo bianco al
    *  centro; un clic sulla foto fa la dopo, il righello porta a una collezione (scripts/collezioni.ts) */
   | { type: 'collezioni'; eyebrow?: string; title?: string; body?: string; collezioni: Array<{ nome: string; colore: string; logo: ImageMetadata; foto: ImageMetadata; alt: string }> }

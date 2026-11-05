@@ -99,7 +99,9 @@ export function prendi(t: Tavolo, p: Pezzo, sx: number, sy: number, touch: boole
   gsap.to(el, { scale: 1.035, duration: T(0.18), ease: 'power2.out' });
   // a terra l'ombra è nascosta (Tavolo.astro): si mostra presa. overwrite: la posa di prima non la rinasconde
   if (p.ombra) {
+    // opacity: durante l'intro l'ombra di una cella posata è trasparente (Tavolo.astro)
     p.ombra.style.visibility = 'inherit';
+    p.ombra.style.opacity = '1';
     gsap.to(p.ombra, { x: t.v.q * 0.55, y: t.v.q * 0.55, duration: T(0.18), ease: 'power2.out', overwrite: true });
   }
   InertiaPlugin.track(el, 'x,y');
@@ -141,7 +143,7 @@ export function lascia(t: Tavolo, pr: Presa, vx: number, vy: number) {
     gsap.to(el, { scale: 1, duration: T(0.18), ease: 'power2.inOut' });
     if (p.ombra) {
       const ombra = p.ombra;
-      gsap.to(ombra, { x: 0, y: 0, duration: T(0.18), ease: 'power2.inOut', onComplete: () => { ombra.style.visibility = ''; } });
+      gsap.to(ombra, { x: 0, y: 0, duration: T(0.18), ease: 'power2.inOut', onComplete: () => { ombra.style.visibility = ombra.style.opacity = ''; } });
     }
     t.salva();
   };
