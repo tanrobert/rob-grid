@@ -23,6 +23,10 @@ const { project: p } = Astro.props;
 // se il marchio non è mio, lo dico in chiaro sotto la descrizione
 const marchio = p.marchio === 'cliente' ? 'Marchio esistente, del cliente.' : typeof p.marchio === 'object' ? `Marchio di ${p.marchio.di}.` : '';
 const descrizione = [p.description, marchio].filter(Boolean).join(' ');
+/** contesto col campo colorato: accanto alla hero e alto come lei; se non ci sta, sul computer orizzontale a tutta
+    larghezza, sul tablet 4×5 (orizzontale, un testo lungo come quello di Purple Piper non ci stava) */
+const contestoFondo = (hero: { w: number; h: number }, cols: number) =>
+  hero.w + 4 <= cols ? { w: 4, h: hero.h } : cols === COLS.lg ? { w: cols, h: 3 } : { w: 4, h: 5 };
 const heroSpan = scaleShape(p.shape ?? (p.featured ? { w: 4, h: 4 } : { w: 2, h: 2 }), 2);
 
 // progetto precedente e successivo nell'ordine dell'archivio (dal più recente), in giro: dopo l'ultimo il primo
@@ -36,9 +40,10 @@ const siblingCell = (id: string, label: string, step: number): Cell => {
 const cells: Cell[] = [
   { id: 'hero', type: 'media', ...heroSpan, heroOf: `/progetti/${p.slug}`, image: p.image, video: p.video, overlay: p.overlay, etichette: p.etichette, alt: `${p.title} · ${senzaSegni(p.description)}` },
   // con la foto di contesto la cella si allunga: il testo e, sotto, la foto. Con `fondo` il campo colorato prende lo
-  // spazio che resta e la cella è alta quanto la hero quando le sta accanto (2/11/2026, scelta di Roberto); se no 5
+  // spazio che resta e la cella è alta quanto la hero quando le sta accanto (2/11/2026, scelta di Roberto); se no
+  // orizzontale, a tutta larghezza e bassa, il testo a sinistra e il campo a destra (6/11/2026, scelta di Roberto, G&A)
   p.contesto
-    ? { id: 'progetto', type: 'contesto', w: 4, h: p.contesto.fondo ? heroSpan.h : 7, ...(p.contesto.fondo && { md: { w: 4, h: heroSpan.md.w + 4 <= COLS.md ? heroSpan.md.h : 5 }, sm: { w: 4, h: 5 } }), eyebrow: 'Contesto', title: p.title, body: descrizione, image: p.contesto.foto, alt: p.contesto.alt, fondo: p.contesto.fondo }
+    ? { id: 'progetto', type: 'contesto', w: 4, h: 7, ...(p.contesto.fondo && { ...contestoFondo(heroSpan, COLS.lg), md: contestoFondo(heroSpan.md, COLS.md), sm: { w: 4, h: 5 } }), eyebrow: 'Contesto', title: p.title, body: descrizione, image: p.contesto.foto, alt: p.contesto.alt, fondo: p.contesto.fondo }
     : { id: 'progetto', type: 'text', w: 4, h: 2, as: 'h1', size: 's', eyebrow: 'Progetto', title: p.title, body: descrizione },
   // celle proprie del progetto (cells in index.md); finché non ci sono, il segnaposto
   ...(p.cells ?? [{ id: 'nota', type: 'text', w: 4, h: 2, size: 's', title: 'Contenuto segnaposto: qui andranno immagini, processo e risultati.' }]),

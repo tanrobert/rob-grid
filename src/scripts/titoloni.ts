@@ -10,9 +10,10 @@
  *   ad area attorno al puntatore, 900 al centro e 500 al bordo (raggio = RAGGIO corpi). Gli a capo si
  *   bloccano alla prima passata (righe a filo, nowrap), se no le parole che ingrassano cambiano riga.
  *   Solo con mouse, mai con prefers-reduced-motion.
- * - Lente al contrario (29/10/2026, scelta di Roberto) sui titoloni delle celle coi mockup (data-lente="inversa":
- *   barattoli, telefono, sticker, affissioni, sottologo): sono già Black, attorno al puntatore si assottigliano fino a 400. Non si misurano
- *   (corpo fisso, --titolone); le lettere sottili sono più strette, quindi le righe bloccate non escono mai.
+ * - Titoli delle celle coi mockup (data-lente="inversa": barattoli, telefono, sticker, affissioni, sottologo,
+ *   costruzione): corpo fisso (--titolone), non si misurano. Dal 29/10/2026 erano Black e la lente li assottigliava
+ *   fino a 400 (lente al contrario); dal 6/11/2026, in prova, sono a 600 come i titoletti e la lente li ingrassa
+ *   fino a 900 come gli altri. Il nome dell'attributo è rimasto quello di prima.
  */
 
 import { REDUCED, FINE } from './preferenze';
@@ -29,7 +30,10 @@ const INVERSA = '.cell [data-lente="inversa"]';
 
 const titles = () => [...document.querySelectorAll<HTMLElement>(SELECTOR)];
 /** peso fuori dalla lente e al suo centro */
-const pesi = (title: HTMLElement): [number, number] => (title.matches(INVERSA) ? [900, 400] : [500, 900]);
+// i titoli delle celle coi mockup partono dal peso che hanno (600, come i titoletti) e ingrassano fino a 900 come gli
+// altri (in prova dal 6/11/2026; prima erano Black e la lente li assottigliava fino a 400)
+const pesi = (title: HTMLElement): [number, number] =>
+  title.matches(INVERSA) ? [parseFloat(getComputedStyle(title).fontWeight) || 600, 900] : [500, 900];
 
 // ── Misura ────────────────────────────────────────────────
 

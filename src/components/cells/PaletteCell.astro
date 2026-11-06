@@ -1,10 +1,13 @@
 ---
 // La palette di un marchio prima e dopo (G&A: la prima cosa su cui è intervenuto Roberto). A sinistra titolo e testo
-// dello stato e il righello Prima · Dopo; a destra i colori in bande, ognuno col nome scritto nel colore che gli dà più
-// contrasto (fra quelli della stessa palette e il bianco), con l'HEX e il contrasto WCAG, calcolato qui.
-// Un clic sui colori (o sul righello) passa all'altro stato: le bande sfumano nei colori nuovi, i colori in più entrano
-// allargandosi (scripts/palette.ts). Il colore i di prima diventa il colore i di dopo.
-// Senza JavaScript: la palette di dopo. Sul telefono in colonna, le bande una sotto l'altra.
+// dello stato e il righello Prima · Dopo; a destra i colori a scacchi, due terzi della cella (6/11/2026, scelta di Roberto:
+// prima erano bande), ognuno col nome scritto nel colore che gli dà più contrasto (fra quelli della stessa palette e il
+// bianco), con l'HEX e il contrasto WCAG, calcolato qui. Sopra i colori principali, sotto i secondari: con due e due,
+// quattro riquadri uguali.
+// Un clic sui colori (o sul righello) passa all'altro stato: i colori sfumano nei nuovi, quelli di sopra si accorciano e
+// i secondari salgono da sotto (scripts/palette.ts). Il colore i di prima diventa il colore i di dopo; un principale
+// che prima non c'era entra allargandosi.
+// Senza JavaScript: la palette di dopo. Sul telefono in colonna, i colori sotto il testo.
 import Paragrafi from '../Paragrafi.astro';
 import Righello from '../Righello.astro';
 import type { Palette, Colore } from '../../data/grid-types';
@@ -39,20 +42,20 @@ const scheda = (c: Colore, p: Palette) => {
     livello: rapporto >= 7 ? 'AAA' : rapporto >= 4.5 ? 'AA' : '',
   };
 };
-// le bande sono quelle di dopo; quelle che c'erano già hanno anche la scheda di prima. I secondari pesano la metà
+// i riquadri sono quelli di dopo; quelli che c'erano già hanno anche la scheda di prima. Nella riga di sotto (i
+// secondari) la larghezza non cambia: la riga entra tutta insieme da sotto
 const bande = dopo.colori.map((c, i) => {
   const vecchio = prima.colori[i];
   const nuova = scheda(c, dopo), vecchia = vecchio && scheda(vecchio, prima);
-  const peso = c.secondario ? 1 : 2;
   return {
-    nuova, vecchia,
+    nuova, vecchia, secondario: !!c.secondario,
     stati: JSON.stringify([
-      vecchia ? { fondo: vecchia.hex, testo: vecchia.testo, peso: 2 } : { fondo: nuova.hex, testo: nuova.testo, peso: 0 },
-      { fondo: nuova.hex, testo: nuova.testo, peso },
+      vecchia ? { fondo: vecchia.hex, testo: vecchia.testo, peso: 1 } : { fondo: nuova.hex, testo: nuova.testo, peso: c.secondario ? 1 : 0 },
+      { fondo: nuova.hex, testo: nuova.testo, peso: 1 },
     ]),
-    peso,
   };
 });
+const righe = [bande.filter(b => !b.secondario), bande.filter(b => b.secondario)].filter(r => r.length);
 const stati = [prima, dopo];
 ---
 
@@ -68,9 +71,11 @@ const stati = [prima, dopo];
     </div>
     <Righello voci={stati.map(s => s.nome)} attivo={1} segno={dopo.nome} nome="Palette" />
   </div>
-  <ul class="colori" data-colori>
-    {bande.map(b => (
-      <li class="banda" style={`--fondo: ${b.nuova.hex}; --testo: ${b.nuova.testo}; flex-grow: ${b.peso}`} data-banda data-stati={b.stati}>
+  <div class="colori" data-colori data-intero style={`--righe: ${righe.length}`}>
+    {righe.map((riga, n) => (
+    <ul class:list={['riga', n === 1 && 'riga--sotto']}>
+    {riga.map(b => (
+      <li class="banda" style={`--fondo: ${b.nuova.hex}; --testo: ${b.nuova.testo}`} data-banda data-stati={b.stati}>
         {[b.vecchia, b.nuova].map((s, i) => s && (
           <span class:list={['scheda', i === 1 && 'is-attivo']} data-scheda={i}>
             <span class="nome titoletto">{s.nome}</span>
@@ -82,26 +87,37 @@ const stati = [prima, dopo];
         ))}
       </li>
     ))}
-  </ul>
+    </ul>
+    ))}
+  </div>
 </div>
 
 <style>
-  /* i colori a destra, due terzi della cella; staccati dal testo da un filo */
-  .palette { position: absolute; inset: 0; display: grid; grid-template: minmax(0, 1fr) / minmax(0, 1fr) minmax(0, 2fr); }
-  .testo { display: flex; flex-direction: column; justify-content: space-between; gap: var(--pad-label); padding: var(--pad-label) var(--pad) var(--pad); }
+  /* i colori a destra, due terzi della cella, il testo nel terzo che resta; staccati da un filo. Riquadri non per forza
+     quadrati (6/11/2026, Roberto: "anche rettangoli orizzontali, a seconda di come serve") */
+  .palette { position: absolute; inset: 0; display: flex; }
+  .testo { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; justify-content: space-between; gap: var(--pad-label); padding: var(--pad-label) var(--pad) var(--pad); }
 
   /* i testi uno sopra l'altro: la colonna è alta quanto il più lungo, cambiando stato niente salta */
   .passi { display: grid; }
   .passo { grid-area: 1 / 1; display: flex; flex-direction: column; gap: var(--m); transition: opacity 300ms, visibility 300ms; }
   .passo:not(.is-attivo) { visibility: hidden; opacity: 0; }
 
+  /* --sotto (0 prima, 1 dopo, GSAP): la riga di sopra si accorcia di quanto sale quella di sotto, che arriva dal fondo
+     (fuori dal riquadro dei colori, nascosta). Con una riga sola --righe è 1 e la riga di sopra resta piena */
   .colori {
-    display: flex; margin: 0; padding: 0; list-style: none;
+    --sotto: 1;
+    position: relative; flex: 2 1 0; min-width: 0; overflow: hidden;
     border-left: var(--line) solid var(--inchiostro); cursor: var(--cursore-mano);
   }
-  /* una banda per colore: il fondo e il testo li porta GSAP (--fondo, --testo), la larghezza è flex-grow */
+  .riga {
+    position: absolute; left: 0; right: 0; top: 0; display: flex; margin: 0; padding: 0; list-style: none;
+    height: calc(100% - (1 - 1 / var(--righe)) * 100% * var(--sotto));
+  }
+  .riga--sotto { top: auto; bottom: 0; height: 50%; translate: 0 calc((1 - var(--sotto)) * 100%); }
+  /* un riquadro per colore: il fondo e il testo li porta GSAP (--fondo, --testo), la larghezza è flex-grow */
   .banda {
-    position: relative; flex: 0 1 0; min-width: 0; overflow: hidden;
+    position: relative; flex: 1 1 0; min-width: 0; overflow: hidden;
     background: var(--fondo); color: var(--testo); container-type: inline-size;
   }
   /* le schede di prima e di dopo una sopra l'altra: quella che esce sfuma, poi entra l'altra, a banda già cresciuta */
@@ -112,14 +128,16 @@ const stati = [prima, dopo];
   }
   .scheda.is-attivo { transition: opacity 300ms 600ms, visibility 0s; }
   .scheda:not(.is-attivo) { visibility: hidden; opacity: 0; }
-  /* il nome rimpicciolisce nelle bande strette (i secondari sul tablet), così le parole non si spezzano */
+  /* il nome rimpicciolisce nei riquadri stretti, così le parole non si spezzano */
   .nome { font-size: min(var(--titoletto), 20cqi); }
   .dati { display: flex; flex-direction: column; gap: 0.3em; }
   .valore { white-space: nowrap; }
 
-  /* telefono: in colonna, le bande una sotto l'altra sotto il testo */
+  /* telefono: in colonna, i colori sotto il testo, almeno in 3:2, poi lo spazio che resta (data-intero: se non ci stanno la
+     cella cresce) */
   @media (max-width: 599px) {
-    .palette { grid-template: auto minmax(0, 1fr) / minmax(0, 1fr); }
-    .colori { flex-direction: column; border-left: 0; border-top: var(--line) solid var(--inchiostro); }
+    .palette { flex-direction: column; }
+    .testo { flex: none; }
+    .colori { flex: 1 0 auto; aspect-ratio: 3 / 2; border-left: 0; border-top: var(--line) solid var(--inchiostro); }
   }
 </style>

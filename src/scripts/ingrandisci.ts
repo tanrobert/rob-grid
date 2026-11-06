@@ -55,6 +55,8 @@ async function apri(src: HTMLImageElement) {
   aperta = src;
   foto.src = src.currentSrc || src.src;
   foto.alt = src.alt;
+  // parte tagliata come nella cella (una foto del carosello può essere posata sul bordo di sotto, `taglio: sopra`)
+  foto.style.objectPosition = getComputedStyle(src).objectPosition;
   gsap.set(foto, al(src.getBoundingClientRect()));
   gsap.set(retino, { opacity: 0 });
   dialog.showModal();

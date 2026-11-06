@@ -7,6 +7,9 @@ export const COLS = { lg: 12, md: 8, sm: 4 } as const;
 export const BREAKPOINTS = { md: 600, lg: 1024 } as const;
 /** Quadretto massimo dei fogli da 600px in su: quello del tavolo (Q.lg in lib/tavolo.ts, --qf-max in Foglio.astro) */
 export const QF_MAX = 25;
+/** Pagine progetto (Foglio centrato, in prova dal 6/11/2026): sempre le colonne minime (12 computer, 8 tablet) e il
+    quadretto che cresce con la finestra fino a questo (--qf-max in Foglio.astro); oltre, ai lati si vede il tavolo */
+export const QF_MAX_PROGETTI = 28;
 /** Altezza massima di una cella, in unità */
 const MAX_H = 24;
 
@@ -38,13 +41,13 @@ export function spanStyle(cell: Cell): string {
 /** `sizes` per <Image>: larghezza reale della cella a ogni breakpoint (components/foglio). Una cella larga w unità
     è 4w−1 quadretti; il foglio è largo 4·colonne+1 quadretti, quindi finché il quadretto segue la finestra la cella
     ne è una frazione fissa, da QF_MAX in su (oltre si aggiungono colonne) ha una misura fissa in px. Sul telefono
-    il foglio non ha margini ai lati (4·colonne−1 quadretti, components/foglio) */
-export function mediaSizes(cell: Cell): string {
+    il foglio non ha margini ai lati (4·colonne−1 quadretti, components/foglio). Pagine progetto: qfMax = QF_MAX_PROGETTI */
+export function mediaSizes(cell: Cell, qfMax = QF_MAX): string {
   const { lg, md, sm } = resolveSpans(cell);
   const q = (w: number) => 4 * w - 1;
   const vw = (w: number, cols: number, quadretti = 4 * cols + 1) => `${((q(w) / quadretti) * 100).toFixed(2)}vw`;
-  const px = (w: number) => `${q(w) * QF_MAX}px`;
-  const fisso = (cols: number) => (4 * cols + 1) * QF_MAX;
+  const px = (w: number) => `${q(w) * qfMax}px`;
+  const fisso = (cols: number) => (4 * cols + 1) * qfMax;
   return [
     `(min-width: ${fisso(COLS.lg)}px) ${px(lg.w)}`,
     `(min-width: ${BREAKPOINTS.lg}px) ${vw(lg.w, COLS.lg)}`,

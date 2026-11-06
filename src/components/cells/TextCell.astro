@@ -58,7 +58,8 @@ const text = caret ? title.slice(0, -1) : title;
   }
   .text--l .title { font-size: clamp(24px, min(8.4cqi, 13cqb), 72px); line-height: 1.02; }
   .text--m .title { font-size: clamp(28px, min(22cqi, 34cqb), 128px); letter-spacing: -0.04em; }
-  .text--s .title { font-size: var(--titoletto); }
+  /* peso dei titoletti (.titoletto, global.css): 600 dal 6/11/2026 */
+  .text--s .title { font-size: var(--titoletto); font-weight: 600; }
 
   .body--list { list-style: none; }
 

@@ -1,13 +1,16 @@
 ---
 import type { Cell as CellData } from '../data/grid-types';
 import CellContent from './CellContent.astro';
+import { mediaSizes, QF_MAX_PROGETTI } from '../lib/grid';
 
 interface Props {
   cells: CellData[];
   /** Archivio: i progetti ricevono data-tags per i filtri */
   filterable?: boolean;
+  /** Pagine progetto: colonne fisse e quadretto che cresce (components/foglio), le foto si misurano su quello */
+  centrato?: boolean;
 }
-const { cells, filterable = false } = Astro.props;
+const { cells, filterable = false, centrato = false } = Astro.props;
 
 const ids = new Set<string>();
 for (const c of cells) {
@@ -22,6 +25,6 @@ const projects = cells.filter(c => c.type === 'project').length;
 
 <div class="grid" data-filterable={filterable ? '' : undefined}>
   {cells.map((cell, i) => (
-    <CellContent cell={cell} index={i} filterable={filterable} priority={i === firstProject} projects={projects} />
+    <CellContent cell={cell} index={i} filterable={filterable} priority={i === firstProject} projects={projects} sizes={centrato ? mediaSizes(cell, QF_MAX_PROGETTI) : undefined} />
   ))}
 </div>

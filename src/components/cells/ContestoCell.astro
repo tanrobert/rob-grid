@@ -2,7 +2,8 @@
 // Cella 02 delle pagine progetto quando il progetto ha una foto di contesto (`contesto` nell'index.md): titolo del
 // progetto (h1) e descrizione in alto, come la cella di testo piccola, e sotto la foto a tutta larghezza, a filo dei
 // lati e del fondo della cella. Con `fondo` (immagini piccole, es. un vecchio banner): la foto intera, alla sua misura
-// (mai ingrandita), al centro di un campo del suo colore.
+// (mai ingrandita), al centro di un campo del suo colore. Cella orizzontale (6/11/2026, G&A): il testo in una metà,
+// la foto o il campo nell'altra, come il ridisegno.
 import type { ImageMetadata } from 'astro';
 import { Image } from 'astro:assets';
 import Paragrafi from '../Paragrafi.astro';
@@ -49,4 +50,18 @@ const { title, body, image, alt, fondo, sizes } = Astro.props;
   .foto--fondo img { position: static; width: auto; height: auto; max-width: 100%; max-height: 100%; object-fit: contain; }
   /* un disegno SVG non ha una sua misura: piccolo, al 60% del campo */
   .foto--fondo img.vettoriale { width: 60%; }
+
+  /* cella orizzontale (almeno il doppio larga che alta): testo a sinistra, foto o campo a destra, metà e metà (Roberto:
+     "più spazio al testo, meno alla forma"), staccati da un filo.
+     Il campo prende tutta l'altezza; la foto al centro, alla sua misura o più piccola, il disegno alto il 60% del campo */
+  @container (min-aspect-ratio: 2 / 1) {
+    .contesto, .contesto--fondo { grid-template: minmax(0, 1fr) / minmax(0, 1fr) minmax(0, 1fr); }
+    .foto { border-left: var(--line) solid var(--inchiostro); }
+    .foto--fondo { display: block; align-self: stretch; max-height: none; }
+    .foto--fondo img {
+      position: absolute; inset: 0; margin: auto;
+      max-width: calc(100% - var(--pad) * 2); max-height: calc(100% - var(--pad) * 2);
+    }
+    .foto--fondo img.vettoriale { width: auto; height: 60%; }
+  }
 </style>

@@ -45,7 +45,7 @@ function turni(pezzi: Pezzo[]) {
     });
 }
 
-/** Intro: la carta compare a giri dal centro del tavolo, al massimo 8 (crocini-in, global.css): su una finestra
+/** Intro: la carta compare a giri dal centro del tavolo, al massimo 8 (carta-in, global.css): su una finestra
     grande un giro copre più moduli */
 function giri(v: Vista) {
   const S = v.q * PER_UNITA, x = ox(v), y = oy(v);

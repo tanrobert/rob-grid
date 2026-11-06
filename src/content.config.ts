@@ -52,8 +52,9 @@ const progetti = defineCollection({
       z.strictObject({
         ...base, type: z.literal('media'), image: image().optional(), video: z.string().optional(), alt: z.string(), caption: z.string().optional(),
         seconda: z.strictObject({ image: image(), alt: z.string() }).optional(),
-        // altre foto a turno con la prima, in un carosello che gira da solo (cells.ts)
-        immagini: z.array(z.strictObject({ image: image(), alt: z.string() })).min(1).optional(),
+        // altre foto a turno con la prima, in un carosello che gira da solo (cells.ts). taglio: sopra = la foto
+        // resta posata sul bordo di sotto e, se non ci sta, perde solo la parte alta
+        immagini: z.array(z.strictObject({ image: image(), alt: z.string(), taglio: z.literal('sopra').optional() })).min(1).optional(),
         // le foto si ingrandiscono al clic (scripts/ingrandisci.ts)
         ingrandisci: z.literal(true).optional(),
       }),
@@ -119,6 +120,19 @@ const progetti = defineCollection({
         ...base, type: z.literal('evoluzione'), disegno: z.string().regex(/^\.\/evoluzione-[\w-]+\.svg$/, 'disegno: ./evoluzione-<nome>.svg'),
         alt: z.string(), eyebrow: z.string().optional(),
         passi: z.array(z.strictObject({ title: z.string(), body: z.string() })).min(2),
+      }),
+      // un marchio ridisegnato, in un'animazione sola: `disegno` = SVG annotato (ridisegno-*.svg nella cartella del
+      // progetto, generato da uno script in tools/, vedi scripts/ridisegno.ts)
+      z.strictObject({
+        ...base, type: z.literal('ridisegno'), disegno: z.string().regex(/^\.\/ridisegno-[\w-]+\.svg$/, 'disegno: ./ridisegno-<nome>.svg'),
+        alt: z.string(), eyebrow: z.string().optional(), title: z.string().optional(), body: z.string().optional(),
+      }),
+      // un disegno che si compone da solo (la firma che si scrive, le parti di un marchio che arrivano): `disegno` = SVG
+      // annotato (animato-*.svg nella cartella del progetto, vedi scripts/animato.ts), `fondo` = colore sotto il disegno
+      z.strictObject({
+        ...base, type: z.literal('animato'), disegno: z.string().regex(/^\.\/animato-[\w-]+\.svg$/, 'disegno: ./animato-<nome>.svg'),
+        alt: z.string(), eyebrow: z.string().optional(), title: z.string().optional(), body: z.string().optional(),
+        fondo: z.string().regex(/^#[0-9a-f]{6}$/i).optional(),
       }),
       // una cella divisa in riquadri da un filo, ognuno con titoletto e paragrafo (gli obiettivi di un progetto)
       z.strictObject({

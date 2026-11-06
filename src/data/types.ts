@@ -15,6 +15,9 @@ export interface Project {
       Tavola Photoshop: w×600 × h×600 px, margini 300 sopra/sotto e 200 ai lati. */
   shape?: Span;
   image?: ImageMetadata;
+  /** Proporzione (larghezza / altezza) di quello che la cella mostra, video o copertina (data/projects.ts): sul tavolo
+      la cella ha questa proporzione, in quadretti. Senza copertina non c'è */
+  proporzione?: number;
   /** Video in loop (percorso in /public), mostrato al posto di `image`, che gli fa da poster */
   video?: string;
   /** SVG o PNG trasparente sopra video o copertina (es. il logo sopra il video), stessa tavola */

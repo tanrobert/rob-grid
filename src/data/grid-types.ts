@@ -115,8 +115,9 @@ export type Cell = CellBase & (
   | { type: 'stat'; value: string; caption: string; /** il numero sale da 0 quando la cella entra in vista */ countUp?: boolean; /** h1 nascosto: la cella fa da hero di una pagina */ heading?: string }
   | { type: 'media'; image?: ImageMetadata; video?: string; overlay?: ImageMetadata; etichette?: 'scure'; alt: string; caption?: string;
       /** un'altra foto sotto la prima, nella stessa cella (metà altezza ciascuna) */ seconda?: { image: ImageMetadata; alt: string };
-      /** altre foto a turno con la prima, in un carosello che gira da solo (con `ingrandisci` il clic ingrandisce, non passa alla dopo) */
-      immagini?: Array<{ image: ImageMetadata; alt: string }>;
+      /** altre foto a turno con la prima, in un carosello che gira da solo (con `ingrandisci` il clic ingrandisce, non passa alla dopo).
+       *  taglio 'sopra': posata sul bordo di sotto, se non ci sta perde solo la parte alta */
+      immagini?: Array<{ image: ImageMetadata; alt: string; taglio?: 'sopra' }>;
       /** le foto si ingrandiscono al clic, sopra il retino (scripts/ingrandisci.ts) */ ingrandisci?: true }
   | { type: 'project'; slug: string }
   | { type: 'clock' }
@@ -152,6 +153,13 @@ export type Cell = CellBase & (
    *  testo del passo e un righello col passo attuale; un clic sul disegno fa il passo dopo (scripts/evoluzione.ts).
    *  `svg` = il file annotato coi passi (data-passo, data-disegna…), così com'è; `alt` descrive il disegno */
   | { type: 'evoluzione'; svg: string; alt: string; eyebrow?: string; passi: Array<{ title: string; body: string }> }
+  /** un marchio ridisegnato in un'animazione sola (G&A: zoom sul braccio di sinistra del vecchio, il braccio cambia
+   *  forma, zoom indietro sul nuovo): titoletto e paragrafo, sotto il disegno. `svg` = il file annotato, così com'è
+   *  (scripts/ridisegno.ts); `alt` descrive il disegno */
+  | { type: 'ridisegno'; svg: string; alt: string; eyebrow?: string; title?: string; body?: string }
+  /** un disegno che si compone da solo quando entra in vista (la firma che si scrive, le parti di un marchio che arrivano):
+   *  SVG annotato (scripts/animato.ts), `fondo` = colore del campo sotto il disegno */
+  | { type: 'animato'; svg: string; alt: string; eyebrow?: string; title?: string; body?: string; fondo?: string }
   /** la palette di un marchio prima e dopo (G&A): a sinistra titolo e testo dello stato e il righello Prima · Dopo, a destra
    *  i colori in bande, coi contrasti WCAG; un clic passa all'altro stato (scripts/palette.ts) */
   | { type: 'palette'; eyebrow?: string; prima: Palette; dopo: Palette }

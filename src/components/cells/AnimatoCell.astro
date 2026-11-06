@@ -1,0 +1,55 @@
+---
+// Un disegno che si compone da solo (G&A, 6/11/2026: la firma che si scrive, il marchio dei 90 anni che arriva a pezzi).
+// Titoletto e paragrafo in alto, sotto il disegno, intero e centrato, staccato da un filo (con `fondo` su un campo di
+// quel colore). Parte quando se ne vede metà, ricomincia ogni volta che torna in vista, un clic lo rifà
+// (scripts/animato.ts, che legge le annotazioni dell'SVG: vocabolario in testa allo script).
+// Senza JavaScript, o con riduci movimento: il disegno finito, così com'è nel file.
+import Paragrafi from '../Paragrafi.astro';
+
+interface Props {
+  /** SVG annotato (data/projects.ts lo legge dalla cartella del progetto) */
+  svg: string;
+  alt: string;
+  title?: string;
+  body?: string;
+  fondo?: string;
+}
+const { svg, alt, title, body, fondo } = Astro.props;
+
+const attr = (s: string) => s.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+const hash = (s: string) => [...s].reduce((h, c) => (h * 33 + c.charCodeAt(0)) >>> 0, 5381).toString(36);
+// il <style> di Illustrator nella pagina vale per tutti: le sue classi (cls-1…) prendono un prefisso di questo disegno.
+// Via prologo, commenti e id di Illustrator (con due disegni nella pagina sarebbero doppi)
+const prefisso = `animato-${hash(svg)}`;
+const disegno = svg
+  .replace(/<\?xml[^>]*\?>\s*/, '')
+  .replace(/<!--[\s\S]*?-->\s*/g, '')
+  .replace(/\s(id|data-name)="[^"]*"/g, '')
+  .replace(/\bcls-(\d+)\b/g, `${prefisso}-$1`)
+  .replace('<svg ', `<svg role="img" aria-label="${attr(alt)}" data-disegno `);
+---
+
+<div class="animato" data-animato>
+  {(title || body) && (
+    <div class="testo">
+      {title && <h2 class="titoletto">{title}</h2>}
+      {body && <div class="paragrafo"><Paragrafi testo={body} /></div>}
+    </div>
+  )}
+  <button class="disegno" type="button" aria-label="Da capo" data-rifai style={fondo ? `background: ${fondo}` : undefined}>
+    <Fragment set:html={disegno} />
+  </button>
+</div>
+
+<style>
+  /* in colonna: il testo, poi il disegno in tutto lo spazio che resta (mai più basso di metà cella: se il testo non ci
+     sta cresce la cella, scripts/mosaico.ts) */
+  .animato { position: absolute; inset: 0; display: grid; grid-template: auto minmax(50cqi, 1fr) / minmax(0, 1fr); }
+  .testo { display: flex; flex-direction: column; gap: var(--m); padding: var(--pad-label) var(--pad) var(--pad); }
+  .disegno {
+    position: relative; padding: 0; border: 0; border-top: var(--line) solid var(--inchiostro);
+    background: none; overflow: hidden;
+  }
+  /* il disegno intero, al centro, a un quadretto dai bordi */
+  .disegno > :global(svg) { position: absolute; inset: var(--pad); width: calc(100% - var(--pad) * 2); height: calc(100% - var(--pad) * 2); }
+</style>

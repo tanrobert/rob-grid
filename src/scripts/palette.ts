@@ -1,9 +1,10 @@
 /**
  * Cella `palette` (G&A: i colori di prima e quelli nuovi). Import dinamico da cells.ts, solo se la cella c'è.
  * Si parte da prima; quando se ne vede metà, dopo una pausa, passa da sola a dopo. Poi un clic sui colori passa
- * all'altro stato, i quadratini del righello portano a quello. Cambiando stato le bande sfumano nei colori dell'altro
- * (--fondo e --testo, GSAP) e cambiano larghezza (flex-grow: i colori in più entrano allargandosi da zero); le schede
- * con nome e dati sfumano coi loro tempi CSS (PaletteCell.astro). Riduci movimento: il cambio è di colpo.
+ * all'altro stato, i quadratini del righello portano a quello. Cambiando stato i riquadri sfumano nei colori dell'altro
+ * (--fondo e --testo, GSAP), la riga dei secondari sale da sotto mentre quella di sopra si accorcia (--sotto) e un
+ * principale nuovo entra allargandosi (flex-grow da zero); le schede con nome e dati sfumano coi loro tempi CSS
+ * (PaletteCell.astro). Riduci movimento: il cambio è di colpo.
  * initCells riparte (un foglio sopra): la cella resta dov'era (data-fatto), e se è già cambiata una volta (data-mossa)
  * non passa più da sola.
  */
@@ -42,6 +43,9 @@ export function initPalette(signal: AbortSignal) {
         gsap.killTweensOf(b.el);
         anima ? gsap.to(b.el, { ...v, duration: T(DURATA), ease: 'power2.inOut' }) : gsap.set(b.el, v);
       }
+      gsap.killTweensOf(colori);
+      const sotto = { '--sotto': k };
+      anima ? gsap.to(colori!, { ...sotto, duration: T(DURATA), ease: 'power2.inOut' }) : gsap.set(colori!, sotto);
       stato = k;
     }
 

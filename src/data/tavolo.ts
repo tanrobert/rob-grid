@@ -1,6 +1,7 @@
 import type { Cell } from './grid-types';
 import { projects, getProject } from './projects';
 import { pad2 } from '../lib/format';
+import { inProporzione } from '../lib/tavolo';
 import { extraCells } from './extra';
 
 /*
@@ -22,11 +23,13 @@ import { extraCells } from './extra';
  * ─────────────────────────────────────────────────────────────────────
  */
 
-// cella progetto: la misura è la forma del progetto (uguale in archivio e nella hero)
+// cella progetto: sul tavolo, in quadretti, nella proporzione di quello che mostra (video o copertina) e grande più o
+// meno quanto la sua forma (6/11/2026, scelta di Roberto: niente più moduli di 4 quadretti, la copertina si vede intera).
+// Senza copertina vera la forma × 4. Archivio e hero restano sulla forma in unità
 function projectCell(id: string, slug: string): Cell {
-  const shape = getProject(slug)?.shape;
+  const p = getProject(slug), shape = p?.shape;
   if (!shape) throw new Error(`[tavolo] il progetto "${slug}" non ha una forma (shape nel suo index.md)`);
-  return { id, type: 'project', slug, ...shape };
+  return { id, type: 'project', slug, ...shape, ...(p.proporzione && { q: inProporzione(shape, p.proporzione) }) };
 }
 
 export const tavolo: Cell[] = [

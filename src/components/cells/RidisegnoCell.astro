@@ -1,0 +1,68 @@
+---
+// Un marchio ridisegnato in un'animazione sola (G&A, 6/11/2026, idea di Roberto): il marchio storico al centro, zoom sul
+// braccio di sinistra mentre gli altri tre spariscono, i vertici e i lati del braccio segnati in rosso, il braccio che
+// prende le misure esatte (la FIG 03), poi zoom indietro e i tre bracci ridisegnati compaiono. Titoletto e paragrafo
+// in alto e il disegno sotto, staccato da un filo; nella cella orizzontale il testo a sinistra e il disegno a destra. Parte quando se ne vede metà, ricomincia ogni volta che torna in
+// vista; sotto il testo il righello Prima · Dopo (6/11/2026, scelta di Roberto, come la palette): Dopo fa il ridisegno,
+// Prima lo riavvolge fino al marchio storico, un clic sul disegno passa all'altro (scripts/ridisegno.ts, che legge
+// l'SVG annotato: vedi il generatore in tools/).
+// Senza JavaScript, o con riduci movimento: il marchio nuovo.
+import Paragrafi from '../Paragrafi.astro';
+import Righello from '../Righello.astro';
+
+interface Props {
+  /** SVG annotato (data/projects.ts lo legge dalla cartella del progetto) */
+  svg: string;
+  alt: string;
+  title?: string;
+  body?: string;
+}
+const { svg, alt, title, body } = Astro.props;
+
+const attr = (s: string) => s.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+// commenti via (finirebbero nella pagina)
+const disegno = svg
+  .replace(/<!--[\s\S]*?-->\s*/g, '')
+  .replace('<svg ', `<svg role="img" aria-label="${attr(alt)}" data-disegno `);
+---
+
+<div class="ridisegno" data-ridisegno>
+  <div class="testo">
+    {(title || body) && (
+      <div class="parole">
+        {title && <h2 class="titoletto">{title}</h2>}
+        {body && <div class="paragrafo"><Paragrafi testo={body} /></div>}
+      </div>
+    )}
+    <Righello voci={['Prima', 'Dopo']} attivo={1} segno="Dopo" nome="Ridisegno" />
+  </div>
+  <button class="disegno" type="button" aria-label="Prima o dopo" data-rifai><Fragment set:html={disegno} /></button>
+</div>
+
+<style>
+  /* in colonna: il testo, poi il disegno in tutto lo spazio che resta (mai più basso di così: se il testo non ci sta
+     cresce la cella, scripts/mosaico.ts) */
+  .ridisegno { position: absolute; inset: 0; display: grid; grid-template: auto minmax(60cqi, 1fr) / minmax(0, 1fr); }
+  .testo { display: flex; flex-direction: column; justify-content: space-between; gap: var(--pad-label); padding: var(--pad-label) var(--pad) var(--pad); }
+  .parole { display: flex; flex-direction: column; gap: var(--m); }
+  .disegno { position: relative; padding: 0; border: 0; border-top: var(--line) solid var(--inchiostro); background: none; overflow: hidden; }
+  .disegno > :global(svg) { position: absolute; inset: 0; width: 100%; height: 100%; }
+  /* i segni del braccio che cambia (scripts/ridisegno.ts): lati e quadratini dei vertici in rosso, le guide (i lati
+     principali allungati) come quelle dell'evoluzione */
+  .disegno :global([data-guide] *) { vector-effect: non-scaling-stroke; stroke-width: var(--line); }
+  .disegno :global(.guida) { stroke: color-mix(in srgb, var(--inchiostro) 30%, var(--bianco)); }
+  .disegno :global(.lati) { fill: none; stroke: var(--rosso); }
+  .disegno :global(.vertice) { fill: var(--bianco); stroke: var(--rosso); }
+
+  /* cella orizzontale (6/11/2026, G&A 8×5, scelta di Roberto): come l'evoluzione, il testo a sinistra e il disegno a
+     destra, alto quanto la cella e largo un quadretto meno (cqb = l'altezza della cella), mai più di due terzi */
+  @container (min-aspect-ratio: 6 / 5) {
+    .ridisegno { grid-template: minmax(0, 1fr) / minmax(0, 1fr) min(100cqb - var(--quadretto), 66cqi); }
+    .disegno { border-top: 0; border-left: var(--line) solid var(--inchiostro); }
+  }
+  /* molto larga (6/11/2026, G&A 12×3, scelta di Roberto: più orizzontale possibile): testo e disegno metà e metà,
+     come il contesto ("più spazio al testo, meno alla forma"); gli zoom sul braccio sono larghi (fino a 2,9:1) */
+  @container (min-aspect-ratio: 2 / 1) {
+    .ridisegno { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  }
+</style>

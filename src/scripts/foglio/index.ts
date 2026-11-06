@@ -194,7 +194,7 @@ async function entra(f: Foglio, { da = null as HTMLElement | null, sostituito = 
 
   const fine = f.hero.getBoundingClientRect();
   if (retino) gsap.to(retino, { opacity: 1, duration: T(0.3), ease: 'power1.out' });
-  // la carta del tavolo (quadretti e crocini) se ne va mentre arriva il retino; poi la tiene nascosta Tavolo.astro
+  // la carta del tavolo (i quadretti) se ne va mentre arriva il retino; poi la tiene nascosta Tavolo.astro
   if (dalTavolo && !retinoPieno && tavolo) gsap.fromTo(tavolo.v.carta, { opacity: 1 }, { opacity: 0, duration: T(0.3), ease: 'power1.out', clearProps: 'opacity' });
   // i dettagli arrivano quando il foglio è quasi al suo posto, uno dopo l'altro
   const gap = parseFloat(getComputedStyle(f.el).getPropertyValue('--gap')) || 20;

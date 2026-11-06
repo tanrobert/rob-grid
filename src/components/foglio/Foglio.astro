@@ -24,7 +24,7 @@ const recapiti: Cell = { id: 'recapiti', type: 'contatti', w: 4, h: 2, tone: 're
 {!pagina && <div class="retino" data-retino aria-hidden="true"></div>}
 <main id="main" class:list={['foglio', pagina && 'foglio--pagina', centrato && 'foglio--centrato']} data-foglio={pagina ? undefined : ''}>
   <slot />
-  <Grid cells={[...cells, recapiti]} filterable={filterable} />
+  <Grid cells={[...cells, recapiti]} filterable={filterable} centrato={centrato} />
 </main>
 
 <style>
@@ -41,6 +41,15 @@ const recapiti: Cell = { id: 'recapiti', type: 'contatti', w: 4, h: 2, tone: 're
     --q-testo: var(--qf);
   }
   @media (max-width: 599px) { :global(html:is(.ha-foglio, .ha-pagina) body) { --qf-max: 100vw; } }
+  /* pagine progetto (in prova dal 6/11/2026, scelta di Roberto): la composizione è fatta a mano, quindi sempre le
+     colonne minime (12 computer, 8 tablet) e, sugli schermi larghi, il quadretto che cresce invece delle colonne in
+     più: la stessa disposizione su ogni computer. Fino a QF_MAX_PROGETTI (lib/grid.ts, 28px: finestre da 1372px; 40 e 32 erano troppo grandi),
+     oltre ai lati si vede il tavolo. Sul body (:has) perché il quadretto lo usano anche righello e testi; i fogli
+     sotto nella pila sono hidden, quindi conta solo quello in cima */
+  @media (min-width: 600px) {
+    :global(html.ha-foglio body:has(.foglio--centrato:not([hidden]))) { --qf-max: 28px; }
+    .foglio.foglio--centrato { --cols-max: var(--cols); }
+  }
   /* telefono, fogli sopra il tavolo (1/11/2026, scelta di Roberto: più spazio alle celle): niente margini ai lati, le
      celle toccano i bordi dello schermo. Le 4 colonne riempiono la finestra (4·4−1 quadretti); gli spazi tra le celle,
      in verticale e tra due affiancate, restano di un quadretto. 1fr: i pixel che l'arrotondamento del quadretto
@@ -69,26 +78,20 @@ const recapiti: Cell = { id: 'recapiti', type: 'contatti', w: 4, h: 2, tone: 're
      Non nell'archivio: filtrando le colonne usate cambiano e tutta la griglia si sposterebbe */
   .foglio--centrato :global(.grid) { grid-template-columns: repeat(auto-fit, var(--u)); justify-content: center; }
 
-  /* pagina vera: la carta del tavolo (quadretti e crocini ogni 4) agganciata al foglio, che riempie almeno la
-     finestra. La carta sborda ai lati di un numero intero di moduli: le linee cadono sui bordi delle celle e i
-     crocini sui moduli, senza calcoli sulla larghezza della finestra (lo scroll orizzontale lo taglia html) */
+  /* pagina vera: la carta del tavolo (solo quadretti, crocini tolti il 6/11/2026) agganciata al foglio, che riempie
+     almeno la finestra. La carta sborda ai lati di un numero intero di quadretti: le linee cadono sui bordi delle
+     celle, senza calcoli sulla larghezza della finestra (lo scroll orizzontale lo taglia html) */
   .foglio--pagina { min-height: 100dvh; isolation: isolate; }
-  .foglio--pagina::before, .foglio--pagina::after {
+  .foglio--pagina::before {
     content: '';
     position: absolute; z-index: -1;
     top: 0; bottom: 0; left: calc(var(--qf) * -400); right: calc(var(--qf) * -400);
     pointer-events: none;
-  }
-  .foglio--pagina::before {
     --carta-ink: var(--carta-tinta);
     background-image:
       linear-gradient(to right, var(--carta-ink) var(--line-dp), transparent var(--line-dp)),
       linear-gradient(to bottom, var(--carta-ink) var(--line-dp), transparent var(--line-dp));
     background-size: var(--qf) var(--qf);
-  }
-  .foglio--pagina::after {
-    background: var(--crocini-ink);
-    mask: var(--crocini-forma) 0 0 / calc(var(--qf) * 4) calc(var(--qf) * 4) repeat;
   }
 
   /* carta piena con un foro ogni 4px: si intravede il tavolo, ma senza mezze tinte (niente rosa) */

@@ -9,7 +9,7 @@
   /* carta del sito (fondo di pagina e celle, scritte sulle celle piene) */
   --bianco: var(--chiaro);
   --nero:   hsl(36 10% 10%);    /* = #1c1a17 */
-  /* inchiostro del sito. Unico colore di ruolo: testi, fili, crocini e celle piene usano questo, non --nero */
+  /* inchiostro del sito. Unico colore di ruolo: testi, fili e celle piene usano questo, non --nero */
   --inchiostro: var(--nero);
 
   /* due font (fonts.css): Archivo variabile per titoli e testi (in prova dal 25/10/2026 al posto di Schibsted Grotesk),
@@ -49,13 +49,6 @@
 
   /* colonne delle pagine (12, 8, 4): il foglio (components/foglio) ne ricava quadretto e unità */
   --cols: 12;
-  /* crocini di registro, come maschera (il colore lo dà var(--inchiostro)): uno per tile, all'angolo in alto a
-     sinistra (i bracci escono dai bordi e rientrano dal lato opposto). SVG senza viewBox: le coordinate restano in
-     px qualunque sia la misura del tile. Carta del tavolo e della pagina vera */
-  --crocini-forma: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='5' height='1'/%3E%3Crect width='1' height='5'/%3E%3Crect x='100%25' width='4' height='1' transform='translate(-4 0)'/%3E%3Crect y='100%25' width='1' height='4' transform='translate(0 -4)'/%3E%3C/svg%3E");
-  /* colore dei crocini: un po' più leggeri dell'inchiostro pieno (27/10/2026), più vicini alle linee dei quadretti
-     (22%) ma ancora riconoscibili sopra di esse */
-  --crocini-ink: color-mix(in srgb, var(--inchiostro) 55%, transparent);
   /* colore delle linee dei quadretti (carta del tavolo, foglio, 404): si dà a --carta-ink dove serve, che è
      registrato e non si eredita (sotto) */
   --carta-tinta: color-mix(in srgb, var(--inchiostro) 22%, transparent);
@@ -72,7 +65,8 @@
 }
 
 /* Tre livelli di testo nelle celle, tutti sul quadretto (30/10/2026, scelta di Roberto): stesse misure in celle di
-   larghezza diversa e quasi uguali a ogni finestra, tra un minimo e un massimo. Col quadretto da 25: 64 · 24 · 16.
+   larghezza diversa e quasi uguali a ogni finestra, tra un minimo e un massimo. Col quadretto da 25: 40 · 24 · 16
+   (titolone 64 fino al 6/11/2026: sulla pagina Kiale a Roberto sembrava "troppo poco serio").
    - titolone: celle coi mockup (barattoli, telefono, sticker, affissioni, sottologo); va a capo dove capita
      (29/10/2026: "i testi si possono sempre cambiare")
    - titoletto: celle di testo piccole (TextCell 's'), contesto, titolino delle affissioni
@@ -84,19 +78,19 @@
    Anche sulla copia della hero che vola tra tavolo e foglio (.in-volo, scripts/foglio): passa dalle misure dell'uno
    a quelle dell'altro */
 :root, .tavolo, html:is(.ha-foglio, .ha-pagina) body, .in-volo {
-  --titolone: calc(clamp(46px, var(--q-testo) * 2.55, 64px) * var(--zoom, 1));
+  /* in prova dal 6/11/2026: titoloni come i titoletti delle altre celle (prima Black 900, interlinea 0.85, spaziatura
+     -0.05em, corpo clamp(30px, quadretto × 1.6, 40px); fino a quel giorno 46–64px) */
+  --titolone: var(--titoletto);
   --titoletto: calc(clamp(18px, var(--q-testo) * 0.96, 24px) * var(--zoom, 1));
   --paragrafo: calc(clamp(15px, var(--q-testo) * 0.64, 16px) * var(--zoom, 1));
   /* il quadretto vero, senza clamp: nel foglio --qf, sul tavolo quello di base × zoom (= --q) */
   --quadretto: calc(var(--q-testo) * var(--zoom, 1));
-  /* margine interno delle celle, uguale sui quattro lati: numero, occhiello, freccia/✕, testi e didascalie partono
-     tutti alla stessa distanza dal bordo (28/10/2026). In proporzione al quadretto (31/10/2026, scelta di Roberto):
-     10px col quadretto da 25, e allargando la finestra o lo zoom del tavolo le cose non si spostano nella cella */
-  --pad: calc(var(--quadretto) * 0.4);
-  /* margine dei disegni che riempiono la cella (occhio, ghiera, globo): un po' più largo */
-  --pad-disegno: calc(var(--pad) + 12px);
-  /* inizio del contenuto, sotto la riga di testa (2 margini + 11px col quadretto da 25): anche lui in proporzione */
-  --pad-label: calc(var(--quadretto) * 1.24);
+  /* margine interno delle celle, uguale sui quattro lati e per tutto (testi, disegni, numero, occhiello, freccia/✕,
+     didascalie): un quadretto (5/11/2026, scelta di Roberto: più aria; prima 0,4). Così anche dentro la cella le
+     cose stanno sulle linee della carta, e zoom o finestra non le spostano */
+  --pad: var(--quadretto);
+  /* inizio del contenuto: la riga di testa sta nel primo quadretto, il contenuto parte dal secondo */
+  --pad-label: calc(var(--quadretto) * 2);
   /* corpo delle scritte .mono (linguette, occhielli, didascalie) e riga di testa delle celle (numero · occhiello,
      freccia/✕), alta quanto lui: 11px, sul tavolo × zoom (1/11/2026) come margini e testi, così rimpicciolendo
      numero e occhiello restano in proporzione alla cella. La barra, la firma e lo zoom stanno fuori da .tavolo:
@@ -104,8 +98,9 @@
   --corpo-mono: calc(11px * var(--zoom, 1));
   --riga-label: var(--corpo-mono);
 }
-.titolone { font-family: var(--font-testo); font-weight: 900; line-height: 0.85; letter-spacing: -0.05em; font-size: var(--titolone); }
-.titoletto { font-family: var(--font-testo); font-weight: 500; line-height: 1; letter-spacing: -0.025em; font-size: var(--titoletto); }
+.titolone, .titoletto { font-family: var(--font-testo); font-weight: 600; line-height: 1; letter-spacing: -0.025em; }
+.titolone { font-size: var(--titolone); }
+.titoletto { font-size: var(--titoletto); }
 .paragrafo { max-width: 44ch; font-size: var(--paragrafo); line-height: 1.35; }
 a[href], button, [role="button"], [role="switch"], label[for], summary, select { cursor: var(--cursore-mano); }
 @supports (width: round(down, 1px, 1px)) {
@@ -206,7 +201,8 @@ a { color: inherit; text-decoration: none; }
 a, button, [role="button"] { touch-action: manipulation; }
 img, video, svg { display: block; max-width: 100%; }
 
-h1, h2, h3, h4 { font-weight: 500; text-wrap: balance; }
+/* titoli: a capo solo a riga piena (6/11/2026, scelta di Roberto: niente text-wrap: balance, mandava a capo prima) */
+h1, h2, h3, h4 { font-weight: 500; }
 p { text-wrap: pretty; }
 
 :focus-visible { outline: 2px solid var(--inchiostro); outline-offset: 3px; }
@@ -261,31 +257,34 @@ p { text-wrap: pretty; }
 .skip-link:focus { top: var(--gap); }
 
 /* ── Griglia delle pagine (components/foglio: --u e --gap in quadretti, larghezza = un numero intero di colonne,
-   almeno --cols: auto-fill le conta) ── */
+   almeno --cols: auto-fill le conta). Colonne a moduli, righe a quadretti (5/11/2026): una cella alta h unità
+   prende 4h righe, l'ultima è lo spazio sotto di lei (margine), e il mosaico la allunga di un quadretto alla volta ── */
 .grid {
   position: relative;
   display: grid;
   grid-template-columns: repeat(auto-fill, var(--u));
-  grid-auto-rows: var(--u);
+  grid-auto-rows: var(--gap);
   grid-auto-flow: row dense;
-  gap: var(--gap);
+  column-gap: var(--gap);
 }
+.grid > .cell { margin-bottom: var(--gap); }
 
 /* ── Cella ────────────────────────────────────────────── */
 .cell {
   position: relative;
-  grid-column: span var(--w);
-  /* --piu: righe aggiunte da scripts/mosaico.ts se il testo non ci sta */
-  /* --riga: solo le celle di coda, messa da scripts/mosaico.ts (prima riga sotto le altre) */
-  grid-row: var(--riga, auto) / span calc(var(--h) + var(--piu, 0));
+  /* lati in unità al breakpoint corrente (--cw, --hu: le media query sotto cambiano solo questi). --ch serve al
+     disegno del filo nell'intro. --piu: quadretti aggiunti da scripts/mosaico.ts se il testo non ci sta.
+     --riga: solo le celle di coda, messa da scripts/mosaico.ts (prima riga sotto le altre) */
+  --cw: var(--w, 1);
+  --hu: var(--h, 1);
+  --ch: calc(var(--hu) + var(--piu, 0) / 4);
+  grid-column: span var(--cw);
+  grid-row: var(--riga, auto) / span calc(var(--hu) * 4 + var(--piu, 0));
   container-type: size;
   overflow: clip;
-  /* stesso colore della pagina: la cella non ha un fondo suo, ma copre i crocini della griglia */
+  /* stesso colore della pagina: la cella non ha un fondo suo, ma copre la carta */
   background: var(--bianco);
   color: var(--inchiostro);
-  /* lati in unità al breakpoint corrente: servono al disegno del filo nell'intro */
-  --cw: var(--w, 1);
-  --ch: calc(var(--h, 1) + var(--piu, 0));
 }
 
 /* ── Cella della 404 (dopo .cell, che ha il suo fondo): la carta a quadretti della pagina vera, coi quadretti
@@ -301,8 +300,8 @@ p { text-wrap: pretty; }
 }
 /* colore registrato: nell'intro i quadretti sfumano col fondo (fill-in) invece di comparire di colpo */
 @property --carta-ink { syntax: '<color>'; inherits: false; initial-value: transparent; }
-@media (max-width: 1023px) { .cell { grid-column: span var(--w-md); grid-row: var(--riga, auto) / span calc(var(--h-md) + var(--piu, 0)); --cw: var(--w-md, 1); --ch: calc(var(--h-md, 1) + var(--piu, 0)); } }
-@media (max-width: 599px)  { .cell { grid-column: span var(--w-sm); grid-row: var(--riga, auto) / span calc(var(--h-sm) + var(--piu, 0)); --cw: var(--w-sm, 1); --ch: calc(var(--h-sm, 1) + var(--piu, 0)); } }
+@media (max-width: 1023px) { .cell { --cw: var(--w-md, 1); --hu: var(--h-md, 1); } }
+@media (max-width: 599px)  { .cell { --cw: var(--w-sm, 1); --hu: var(--h-sm, 1); } }
 @media (min-width: 1024px) { .cell.hide-lg { display: none; } }
 @media (min-width: 600px) and (max-width: 1023px) { .cell.hide-md { display: none; } }
 @media (max-width: 599px) { .cell.hide-sm { display: none; } }
@@ -487,7 +486,7 @@ p { text-wrap: pretty; }
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
 /* carta del tavolo (components/tavolo): a giri dal centro. --giro = quanti giri sono comparsi (il giro n sfuma tra n e n+1) */
 @property --giro { syntax: '<number>'; inherits: false; initial-value: 0; }
-@keyframes crocini-in { from { --giro: 0; } to { --giro: 8; } }
+@keyframes carta-in { from { --giro: 0; } to { --giro: 8; } }
 
 /* posizione del vertice di partenza sul perimetro (in unità, in senso orario dall'alto a sinistra).
    Il filo va a velocità costante: la durata cresce col perimetro, le celle piccole compaiono prima.
@@ -515,7 +514,7 @@ p { text-wrap: pretty; }
   animation-delay: calc(var(--i) * var(--t-scaglione));
 }
 .is-intro .cell {
-  /* il fondo (rosso o bianco che copre i crocini) entra col contenuto */
+  /* il fondo (pieno o bianco che copre la carta) entra col contenuto */
   animation: fill-in var(--t-fill) var(--ease-out) backwards;
   animation-delay: var(--attesa);
 }

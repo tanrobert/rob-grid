@@ -13,8 +13,8 @@ import { giraDaSola } from './giro';
 
 let cleanup: (() => void) | null = null;
 
-// animazioni d'ingresso (global.css): finite quando il filo ha chiuso il giro, il contenuto è entrato e i crocini sono comparsi
-const INTRO = ['frame-draw', 'fill-in', 'fade-in', 'crocini-in', 'pezzo-atterra', 'ombra-compare'];
+// animazioni d'ingresso (global.css): finite quando il filo ha chiuso il giro, il contenuto è entrato e la carta è comparsa
+const INTRO = ['frame-draw', 'fill-in', 'fade-in', 'carta-in', 'pezzo-atterra', 'ombra-compare'];
 function introDone(cell?: Element) {
   const anims = (cell ? cell.getAnimations({ subtree: true }) : document.getAnimations())
     .filter(a => a instanceof CSSAnimation && INTRO.includes(a.animationName));
@@ -64,6 +64,14 @@ export function initCells() {
   // evoluzioni: il segno che cambia a passi, un clic alla volta, solo se la cella c'è
   if (document.querySelector('[data-evoluzione]')) {
     import('./evoluzione').then(m => signal.aborted || m.initEvoluzioni(signal));
+  }
+  // ridisegni: il marchio che cambia in un'animazione sola, solo se la cella c'è
+  if (document.querySelector('[data-ridisegno]')) {
+    import('./ridisegno').then(m => signal.aborted || m.initRidisegni(signal));
+  }
+  // disegni che si compongono da soli (firma, marchio dei 90 anni di G&A), solo se la cella c'è
+  if (document.querySelector('[data-animato]')) {
+    import('./animato').then(m => signal.aborted || m.initAnimati(signal));
   }
   // palette: i colori di prima e di dopo, un clic per passare dall'uno all'altro, solo se la cella c'è
   if (document.querySelector('[data-palette]')) {
@@ -318,7 +326,7 @@ export function initCells() {
     const measure = () => {
       const cs = getComputedStyle(grid);
       const cols = cs.gridTemplateColumns.split(' ').length;
-      const u = parseFloat(cs.gridAutoRows);
+      const u = parseFloat(cs.gridTemplateColumns);  // un modulo (le righe sono quadretti)
       set('cols', pad2(cols));
       set('u', `${u.toFixed(1)}px`);
       set('gap', cs.columnGap);

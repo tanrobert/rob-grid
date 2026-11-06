@@ -3,8 +3,8 @@ import { BREAKPOINTS } from './grid';
 
 /*
  * Tavolo: la home come tavolo da lavoro su carta quadrettata (prototipo: tools/pages/tavolo.html).
- * Misure in quadretti: 1 unità della griglia di oggi = 4 quadretti, e i crocini ogni 4 quadretti
- * cadono sul vecchio modulo. Funzioni pure: le usano la build (disposizione senza JavaScript) e il
+ * Misure in quadretti: 1 unità della griglia dei fogli = 4 quadretti. Sulla carta niente crocini (dal 6/11/2026):
+ * le celle si misurano a quadretti (i progetti nella proporzione di quello che mostrano, `inProporzione`). Funzioni pure: le usano la build (disposizione senza JavaScript) e il
  * browser (disposizione per la finestra vera, Riordina).
  */
 
@@ -18,6 +18,22 @@ export const ZOOM_MIN = 0.5, ZOOM_PASSO = 0.25;
 
 /** Misura di una cella sul tavolo: `q` scritto a mano, se no le unità × 4 */
 export const inQuadretti = (cell: Cell): Span => cell.q ?? { w: cell.w * PER_UNITA, h: cell.h * PER_UNITA };
+
+/**
+ * Misura in quadretti di una cella con la proporzione `r` (larghezza / altezza) e un'area vicina a quella della forma
+ * in unità (`shape` × 4 × 4): fra le coppie di lati interi conta prima la proporzione (peso 4), poi l'area.
+ * Così 6×4 con una foto 3:2 resta 24×16, una 4:3 su 3×2 diventa 12×9 invece di essere tagliata a 12×8.
+ */
+export function inProporzione(shape: Span, r: number): Span {
+  const area = shape.w * shape.h * PER_UNITA ** 2;
+  let best: Span = { w: shape.w * PER_UNITA, h: shape.h * PER_UNITA }, score = Infinity;
+  for (let h = 2; h <= 80; h++) {
+    const w = Math.max(1, Math.round(h * r));
+    const s = 4 * Math.abs(Math.log(w / h / r)) + Math.abs(Math.log((w * h) / area));
+    if (s < score) { score = s; best = { w, h }; }
+  }
+  return best;
+}
 
 export interface Posto { x: number; y: number }
 interface Rect extends Posto, Span {}
@@ -93,7 +109,7 @@ const ATTORNO = 2 * PER_UNITA;
  * Confine del tavolo: il foglio quadrettato, oltre il quale c'è solo inchiostro. Stesse proporzioni della
  * finestra, grande almeno FOGLIO_MIN finestre e abbastanza da tenere le celle (`posti`) più ATTORNO:
  * più celle ci sono, più è grande. Misure in quadretti di base (`q`), quindi lo zoom non lo cambia.
- * Restituisce le metà dei lati, arrotondate al modulo: il bordo cade su una fila di crocini.
+ * Restituisce le metà dei lati, in quadretti interi.
  */
 export function confine(pezzi: Span[], posti: Posto[], { vw, vh, q }: Finestra): Posto {
   let x = 0, y = 0;
@@ -103,8 +119,7 @@ export function confine(pezzi: Span[], posti: Posto[], { vw, vh, q }: Finestra):
   });
   const fx = vw / 2 / q, fy = vh / 2 / q;
   const k = Math.max(FOGLIO_MIN, (x + ATTORNO) / fx, (y + ATTORNO) / fy);
-  const modulo = (n: number) => Math.ceil(n / PER_UNITA) * PER_UNITA;
-  return { x: modulo(fx * k), y: modulo(fy * k) };
+  return { x: Math.ceil(fx * k), y: Math.ceil(fy * k) };
 }
 
 /** Finestre tipo della disposizione scritta al build (senza JavaScript), una per breakpoint */

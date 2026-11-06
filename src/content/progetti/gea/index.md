@@ -12,30 +12,9 @@ contesto:
   alt: "Il vecchio marchio di G&A: gli angoli di due finestre in legno affiancate, gialli, di ognuna un pezzo di montante e uno di traverso uniti dagli intagli a coda di rondine; sopra G&A e sotto Porte per interni, in grigio"
   fondo: "#e8e6e3"
 cells:
-  # biglietti da visita e carta intestata (la copertina di prima, sorgenti/gea/copertina-vecchia.png, ridotta a 1600 px):
-  # cella di riempimento, 8×5 (5/11/2026, scelta di Roberto: alta come la palette, che a 16 colonne le sta accanto;
-  # prima 8×8), la prima dell'elenco: la griglia (row dense) riempie i buchi
-  # nell'ordine dell'elenco, così a 12 colonne riempie lei la riga accanto al contesto (la hero 12×8 prende la riga
-  # intera), prima che ci finisca la palette (8×5)
-  - type: media
-    w: 8
-    h: 5
-    sm: { w: 4, h: 4 }
-    image: ./cancelleria.jpg
-    alt: "Biglietti da visita di G&A, uno bianco e uno giallo, su una cartellina col simbolo e il logo e le linee di costruzione, appoggiati su doghe di legno scuro e vetro"
-    ingrandisci: true
-    # gli altri mockup, a turno con la cancelleria ogni 4 s; il clic ingrandisce la foto in vista (5/11/2026, scelta di
-    # Roberto). Originali in sorgenti/gea/mockup-*.png, ridotti a 1600 px
-    immagini:
-      - image: ./mockup-spilla.jpg
-        alt: "Spilla gialla col simbolo di G&A sul taschino di una giacca grigio scuro"
-      - image: ./mockup-insegna.jpg
-        alt: "Insegna di G&A Porte per interni sulla facciata di un edificio: il simbolo giallo e la scritta bianca"
-      - image: ./mockup-casco.jpg
-        alt: "Casco da cantiere grigio col logo giallo di G&A, su fondo giallo"
   # gli obiettivi del restyling (tavola 4 di sorgenti/gea/gea-tavole.ai, "Obiettivi di allineamento"): una cella divisa
-  # in quattro riquadri da un filo, in riga a 12 colonne, 2×2 sul tablet, in colonna sul telefono (scelta di Roberto del
-  # 4/11/2026). Larga quanto la pagina, così a 12 colonne va sotto contesto e cancelleria e prima della palette
+  # in quattro riquadri da un filo, in riga sul computer, 2×2 sul tablet, in colonna sul telefono (scelta di Roberto del
+  # 4/11/2026). La prima dell'elenco (6/11/2026; provata 8×8 in 2×2 accanto al contesto e tornata in riga)
   - type: punti
     w: 12
     h: 3
@@ -55,11 +34,12 @@ cells:
       - title: "Ottimizzazione tecnica e funzionale"
         icona: mirino
         body: "Perfezionare la **palette cromatica** e i **contrasti**: scalabilità, nitidezza e **leggibilità immediata** in qualsiasi dimensione o contesto."
-  # la palette prima e dopo (tavole 5-9 di sorgenti/gea/gea-tavole.ai): il primo intervento sul marchio, quindi la prima
-  # cella. Un clic passa da una all'altra; i contrasti li calcola la cella (WCAG: nelle tavole c'erano numeri un po' diversi).
+  # la palette prima e dopo (tavole 5-9 di sorgenti/gea/gea-tavole.ai): il primo intervento sul marchio, quindi subito dopo
+  # gli obiettivi, larga quanto la pagina (6/11/2026, prima 8×5 accanto alle versioni). Un clic passa da una all'altra; i
+  # contrasti li calcola la cella (WCAG: nelle tavole c'erano numeri un po' diversi).
   # Colori di prima dal logo vecchio, nuovi dalle tavole 8-9. Testi: bozza
   - type: palette
-    w: 8
+    w: 12
     h: 5
     md: { w: 8, h: 5 }
     sm: { w: 4, h: 8 }
@@ -80,24 +60,20 @@ cells:
         - { nome: "Grigio Antracite", hex: "#4a4a48" }
         - { nome: "Grigio Pietra", hex: "#d1d1cf", secondario: true }
         - { nome: "Bianco Gesso", hex: "#f5f2ec", secondario: true }
-  # le versioni del logo, una alla volta (versione-*.svg, le risorse esportate da Illustrator il 4/11/2026): la prima ha
-  # tutte le parti, le altre ne tolgono (si ricentrano) o le spostano (le orizzontali). Le parti di ogni versione le trova la
-  # cella (lib/versioni.ts). 4×5 accanto alla palette (8×5: fanno la riga), sul tablet accanto al contesto (alto 5).
-  # Le parti stanno sotto il titoletto, così il logo prende tutta la larghezza
-  - type: versioni
-    w: 4
-    h: 5
-    md: { w: 4, h: 5 }
+  # il marchio storico ridisegnato (6/11/2026, idea di Roberto; tavola 15, dalla FIG 01 alla FIG 03): zoom sul braccio di
+  # sinistra, il braccio che prende le misure della FIG 03, zoom indietro sulla FIG 03 intera, quella da cui parte
+  # l'evoluzione (scripts/ridisegno.ts). Disegno generato da tools/gea-ridisegno.mjs (da logo-vecchio.svg e dalla FIG 03 di
+  # evoluzione-simbolo.svg). 12×4, testo e disegno metà e metà, sotto il testo il righello Prima · Dopo (6/11/2026: prima 8×5 accanto al contesto, prima ancora quadrata 8×8; il contesto ora è orizzontale e il ridisegno sta al suo posto, dopo la palette), prima dell'evoluzione. Testo: bozza
+  - type: ridisegno
+    w: 12
+    h: 4
+    md: { w: 8, h: 5 }
     sm: { w: 4, h: 6 }
-    eyebrow: "Versioni del logo"
-    alt: "Il logo di G&A: il marchio giallo, sotto o accanto il logotipo G&A in grigio, il descrittore Porte per interni e la firma Gruppo Gelfù"
-    versioni:
-      - { title: "Logo completo verticale", logo: ./versione-verticale-completa.svg }
-      - { title: "Logo verticale", logo: ./versione-verticale.svg }
-      - { title: "Marchio e logotipo", logo: ./versione-marchio-logotipo.svg }
-      - { title: "Marchio", logo: ./versione-marchio.svg }
-      - { title: "Logo orizzontale", logo: ./versione-orizzontale.svg }
-      - { title: "Logo orizzontale compatto", logo: ./versione-orizzontale-compatta.svg }
+    eyebrow: "Marchio"
+    title: "Ridisegnare il marchio"
+    body: "Prima di cambiarlo, il marchio storico va **ridisegnato con misure esatte**: i quattro pezzi tutti uguali, le **code di rondine** e gli incastri della stessa misura. Si parte dal **traverso** di sinistra. Testo di prova."
+    disegno: ./ridisegno-marchio.svg
+    alt: "Il marchio storico di G&A, quattro pezzi gialli di montanti e traversi uniti dalle code di rondine, ridisegnato: il traverso di sinistra si ingrandisce, i suoi vertici segnati in rosso si spostano fino alle misure esatte, poi torna al suo posto tra gli altri tre pezzi ridisegnati"
   # l'evoluzione del simbolo, un passo per clic (scripts/evoluzione.ts): disegno dalle tavole di sorgenti/gea/gea-tavole.ai
   # (evoluzione-simbolo.svg, coi passi annotati). Larga: è il cuore del progetto (scelte di Roberto: alta 7, larga quanto
   # la riga di hero e contesto, 12; il disegno resta alto quanto la cella, lo spazio in più va al testo; sul tablet 8×5).
@@ -123,12 +99,32 @@ cells:
         body: "Un **rettangolo aureo** al centro, con la sua **spirale**, scava i quattro pezzi: si apre il vuoto del simbolo. Testo di prova."
       - title: "Simbolo e logotipo"
         body: "Sotto il simbolo, riga per riga, **G&A** e il payoff, costruiti sulle stesse linee. Alla fine il testo prende il **grigio** G&A. Testo di prova."
+  # le versioni del logo, una alla volta (versione-*.svg, le risorse esportate da Illustrator il 4/11/2026): la prima ha
+  # tutte le parti, le altre ne tolgono (si ricentrano) o le spostano (le orizzontali). Le parti di ogni versione le trova la
+  # cella (lib/versioni.ts). 6×6 (6/11/2026: prima delle collezioni, sopra il catalogo, accanto alle collezioni), sul tablet 4×5 accanto al contesto.
+  # Le parti stanno sotto il titoletto, così il logo prende tutta la larghezza
+  - type: versioni
+    w: 6
+    h: 6
+    md: { w: 4, h: 5 }
+    sm: { w: 4, h: 6 }
+    eyebrow: "Versioni del logo"
+    alt: "Il logo di G&A: il marchio giallo, sotto o accanto il logotipo G&A in grigio, il descrittore Porte per interni e la firma Gruppo Gelfù"
+    versioni:
+      - { title: "Logo completo verticale", logo: ./versione-verticale-completa.svg }
+      - { title: "Logo verticale", logo: ./versione-verticale.svg }
+      - { title: "Marchio e logotipo", logo: ./versione-marchio-logotipo.svg }
+      - { title: "Marchio", logo: ./versione-marchio.svg }
+      - { title: "Logo orizzontale", logo: ./versione-orizzontale.svg }
+      - { title: "Logo orizzontale compatto", logo: ./versione-orizzontale-compatta.svg }
+      # ricavata da versione-marchio-logotipo.svg (6/11/2026): solo le forme grigie, viewBox stretto sul logotipo
+      - { title: "Logotipo", logo: ./versione-logotipo.svg }
   # le collezioni, una alla volta (scripts/collezioni.ts): foto, velo del colore della linea, logo bianco al centro. Loghi
   # e foto in collezioni/ (foto dal catalogo: originali in sorgenti/gea/collezioni, quelle a doppia pagina tagliate alla
-  # metà con la porta, ridotte a 1000 px), colori da sorgenti/gea/collezioni-colori.svg. Prima del catalogo, con lui fa la riga; alta 8 (con 7 la foto perdeva sopra e sotto)
+  # metà con la porta, ridotte a 1000 px), colori da sorgenti/gea/collezioni-colori.svg. Dopo le versioni (6/11/2026, scelta di Roberto: più grande, una volta e mezza): 6×12 a destra, a sinistra versioni 6×6 e catalogo 6×6
   - type: collezioni
-    w: 4
-    h: 8
+    w: 6
+    h: 12
     md: { w: 4, h: 8 }
     sm: { w: 4, h: 7 }
     eyebrow: "Collezioni"
@@ -148,13 +144,63 @@ cells:
       - { nome: "Filomuro in linea", colore: "#bca27d", logo: ./collezioni/filomuro-in-linea.svg, foto: ./collezioni/filomuro-in-linea.jpg, alt: "porta a filo muro nella parete grigia di un loft" }
       - { nome: "Panto", colore: "#cc9478", logo: ./collezioni/panto.svg, foto: ./collezioni/panto.jpg, alt: "porta bianca con riquadri orizzontali in una stanza chiara" }
       - { nome: "Blindati", colore: "#4a413a", logo: ./collezioni/blindati.svg, foto: ./collezioni/blindati.jpg, alt: "portoncino d'ingresso in legno scuro tra due lanterne e due piante" }
-  # il catalogo 2026: due mockup delle doppie pagine (sorgenti/gea/catalogo-*.png, 4500×3000, ridotti a 1600 px) in un
-  # carosello sotto il testo, come le etichette di Kiale. Larga 8 perché le foto sono 3:2 e le pagine si leggano; alta 8 come le collezioni accanto. Testo: bozza
-  - type: text
-    w: 8
-    h: 8
+  # biglietti da visita e carta intestata (la copertina di prima, sorgenti/gea/copertina-vecchia.png, ridotta a 1600 px):
+  # fa da tappabuchi (6/11/2026, scelta di Roberto: scambiata col catalogo, ordine e misure): 6×6 sotto le versioni, accanto alle collezioni
+  - type: media
+    w: 6
+    h: 6
     md: { w: 8, h: 7 }
     sm: { w: 4, h: 6 }
+    image: ./cancelleria.jpg
+    alt: "Biglietti da visita di G&A, uno bianco e uno giallo, su una cartellina col simbolo e il logo e le linee di costruzione, appoggiati su doghe di legno scuro e vetro"
+    ingrandisci: true
+    # gli altri mockup, a turno con la cancelleria ogni 4 s; il clic ingrandisce la foto in vista (5/11/2026, scelta di
+    # Roberto). Originali in sorgenti/gea/mockup-*.png, ridotti a 1600 px
+    immagini:
+      - image: ./mockup-spilla.jpg
+        alt: "Spilla gialla col simbolo di G&A sul taschino di una giacca grigio scuro"
+      - image: ./mockup-insegna.jpg
+        alt: "Insegna di G&A Porte per interni sulla facciata di un edificio: il simbolo giallo e la scritta bianca"
+      - image: ./mockup-casco.jpg
+        alt: "Casco da cantiere grigio col logo giallo di G&A, su fondo giallo"
+      # 3:4 (originale in sorgenti/gea/mockup-portachiavi.png, 960×1280): nella cella si taglia sopra, il portachiavi resta intero
+      - image: ./mockup-portachiavi.jpg
+        alt: "Portachiavi in acciaio a forma di simbolo di G&A, appeso alla chiave nella serratura di una porta grigio scuro"
+        taglio: sopra
+  # due celle quadrate prima del catalogo (6/11/2026, richiesta di Roberto), disegni annotati per scripts/animato.ts:
+  # sorgenti con testo vivo e annotazioni in sorgenti/gea (firma.svg, 90-anni.svg), in tracciati con
+  # python tools/svg-testo-tracciati.py auto sorgenti/gea/<nome>.svg src/content/progetti/gea/animato-<nome>.svg --glifi
+  # la firma che si scrive (Golden Hopes), lettera dopo lettera. Testo: bozza
+  - type: animato
+    w: 6
+    h: 6
+    md: { w: 4, h: 5 }
+    sm: { w: 4, h: 6 }
+    eyebrow: "Firma"
+    title: "Qualità da metterci la firma"
+    body: "La firma di **Antonio Gelfù** entra nel marchio: una **garanzia** scritta a mano su ogni porta. Testo di prova."
+    disegno: ./animato-firma.svg
+    alt: "La firma Antonio Gelfù, scritta a mano in grigio antracite e tagliata da un tratto obliquo"
+  # il marchio circolare dei 90 anni: arrivano il 90 e G&A, gira la scritta, si scrive la firma, poi lo svolazzo sotto e Dal 1936.
+  # Sull'antracite di G&A (ha scritte bianche e grigio chiaro). Testo: bozza
+  - type: animato
+    w: 6
+    h: 6
+    md: { w: 4, h: 5 }
+    sm: { w: 4, h: 6 }
+    eyebrow: "90 anni"
+    title: "Celebrare i 90 anni"
+    body: "Dal **1936** a oggi: un marchio circolare per l'anniversario, con il **90** al centro e la firma di famiglia. Testo di prova."
+    disegno: ./animato-90-anni.svg
+    alt: "Il marchio dei 90 anni di G&A: un grande 90 giallo in corsivo, in alto G&A, attorno la scritta Anni di porte di qualità ed eccellenza, sopra la firma Gelfù su uno svolazzo grigio chiaro e sotto Dal 1936"
+    fondo: "#4a4a48"
+  # il catalogo 2026: due mockup delle doppie pagine (sorgenti/gea/catalogo-*.png, 4500×3000, ridotti a 1600 px) in un
+  # carosello sotto il testo, come le etichette di Kiale. L'ultima cella, a tutta larghezza (6/11/2026, scelta di Roberto: scambiata con la cancelleria, ordine e misure; prima 6×6 accanto alle collezioni, 8×8 prima ancora). Testo: bozza
+  - type: text
+    w: 12
+    h: 8
+    md: { w: 8, h: 5 }
+    sm: { w: 4, h: 4 }
     size: s
     eyebrow: "Print · catalogo"
     title: "Il catalogo 2026"

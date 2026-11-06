@@ -35,7 +35,7 @@ const coord = (n: number, pos: string, neg: string) => `${Math.abs(n).toFixed(2)
   /* stesso riquadro dell'occhio (EyeCell): il globo ha la sua stessa misura */
   .sphere {
     position: absolute; inset: 0;
-    padding: var(--pad-disegno);
+    padding: var(--pad);
     cursor: var(--cursore-aperta);
     /* col dito si gira solo in orizzontale: il gesto verticale resta allo scroll della pagina */
     touch-action: pan-y;

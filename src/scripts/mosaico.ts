@@ -1,9 +1,9 @@
 /**
  * Mosaico dei fogli: il paragrafo non si rimpicciolisce mai per starci (scelta di Roberto, 30/10/2026), è la cella
- * che cresce. Se una riga di testo esce dalla cella, la cella si allunga di una riga della griglia (4 quadretti:
- * i bordi restano sulle righe, allineati alle celle accanto) finché ci sta. I testi cambiano spesso: così non va
+ * che cresce. Se il testo esce dalla cella, la cella si allunga dei quadretti che mancano (le righe della griglia
+ * sono quadretti dal 5/11/2026: i bordi restano sulla carta) finché ci sta. I testi cambiano spesso: così non va
  * ritoccata a mano la misura delle celle a ogni testo nuovo.
- * - Le righe in più sono `--piu` sulla cella (global.css: grid-row span --h + --piu), rifatte da capo al resize.
+ * - I quadretti in più sono `--piu` sulla cella (global.css: grid-row span 4·h + --piu), rifatti da capo al resize.
  * - Solo nei fogli e nella pagina vera (.grid): sul tavolo le celle hanno posti fissi in quadretti.
  * - Celle di coda (`coda`, data-coda: precedente/successivo, recapiti): sempre dopo la composizione, sulla prima riga
  *   libera sotto tutte le altre (--riga), non nei buchi che la griglia `dense` riempirebbe. Senza JavaScript restano
@@ -12,14 +12,17 @@
  *   (didascalie dei progetti, nomi sotto i barattoli, titoli solo per gli screen reader).
  */
 
-const MAX_PIU = 12;
+const MAX_PIU = 48;  // quadretti (12 unità)
+const MAX_GIRI = 6;
 const ATTESA = 150;  // ms senza resize prima di rimisurare
 // il logotipo ha il riquadro rifilato sull'inchiostro: le righe del testo escono per costruzione
-const FUORI = '[aria-hidden="true"], .cell__label, .caption, .sr-only, .logotipo, svg';
+// la coda informativa sta nella sua striscia in fondo, dentro il margine per costruzione
+const FUORI = '[aria-hidden="true"], .cell__label, .caption, .coda-info, .sr-only, .logotipo, svg';
 
-/** di quanti px il testo (o un blocco `data-intero`) della cella esce dal suo rettangolo (0 = ci sta) */
-function esce(cella: HTMLElement, rg: Range) {
-  const r = cella.getBoundingClientRect();
+/** di quanti px il testo (o un blocco `data-intero`) della cella entra nel margine `pad` (0 = ci sta) */
+function esce(cella: HTMLElement, rg: Range, pad: number) {
+  const b = cella.getBoundingClientRect();
+  const r = { top: b.top + pad, bottom: b.bottom - pad };
   const testi = document.createTreeWalker(cella, NodeFilter.SHOW_TEXT);
   let fuori = 0;
   for (let n = testi.nextNode(); n; n = testi.nextNode()) {
@@ -29,7 +32,7 @@ function esce(cella: HTMLElement, rg: Range) {
     if (t.height) fuori = Math.max(fuori, r.top - t.top, t.bottom - r.bottom);
   }
   // blocchi con un'altezza minima che non si devono tagliare (es. il campo quadrato della cella contesto)
-  cella.querySelectorAll('[data-intero]').forEach(el => { fuori = Math.max(fuori, el.getBoundingClientRect().bottom - r.bottom); });
+  cella.querySelectorAll('[data-intero]').forEach(el => { fuori = Math.max(fuori, el.getBoundingClientRect().bottom - b.bottom); });
   return fuori > 0.5 ? fuori : 0;
 }
 
@@ -42,16 +45,21 @@ function allunga(daCapo: boolean, griglie = [...document.querySelectorAll<HTMLEl
     .filter(c => c.getClientRects().length && !c.querySelector('.text--l'));
   if (daCapo) celle.forEach(c => metti(c, 0));
   const rg = document.createRange();
-  // a giri: prima tutte le letture, poi tutte le scritture (una sola misura della pagina per giro).
-  // Se una riga in più non fa uscire meno testo (numeri e titoli che crescono con la cella) la si toglie e basta
-  let corte = new Map<HTMLElement, number>(celle.map(c => [c, Infinity]));  // cella → px fuori al giro prima
-  for (let giro = 0; corte.size && giro <= MAX_PIU; giro++) {
-    const misure = [...corte].map(([c, prima]) => [c, prima, esce(c, rg)] as const);
+  // un quadretto: il passo delle righe e il margine interno delle celle (--pad, global.css)
+  const q = parseFloat(getComputedStyle(griglie[0] ?? document.body).gridAutoRows) || 25;
+  // a giri: prima tutte le letture, poi tutte le scritture (una sola misura della pagina per giro). Di solito basta
+  // un giro: la cella cresce dei quadretti che mancano. Se crescere non fa uscire meno testo (numeri e titoli che
+  // crescono con la cella) l'ultimo passo si toglie e basta
+  type Prova = { prima: number; passo: number };
+  let corte = new Map<HTMLElement, Prova>(celle.map(c => [c, { prima: Infinity, passo: 0 }]));
+  for (let giro = 0; corte.size && giro <= MAX_GIRI; giro++) {
+    const misure = [...corte].map(([c, p]) => [c, p, esce(c, rg, q)] as const);
     corte = new Map();
-    for (const [c, prima, fuori] of misure) {
+    for (const [c, { prima, passo }, fuori] of misure) {
       if (!fuori) continue;
-      if (fuori >= prima - 0.5) { metti(c, piu(c) - 1); continue; }
-      if (giro < MAX_PIU) { metti(c, piu(c) + 1); corte.set(c, fuori); }
+      if (fuori >= prima - 0.5) { metti(c, piu(c) - passo); continue; }
+      const n = Math.min(Math.ceil((fuori - 0.5) / q), MAX_PIU - piu(c));
+      if (n > 0 && giro < MAX_GIRI) { metti(c, piu(c) + n); corte.set(c, { prima: fuori, passo: n }); }
     }
   }
 }
@@ -68,20 +76,21 @@ export function chiudiCoda(grid: HTMLElement) {
   const altre = celle.filter(c => !coda.includes(c) && c.offsetParent);
   if (!altre.length) return;
   const s = getComputedStyle(grid);
-  const gap = parseFloat(s.rowGap);
-  const passo = parseFloat(s.gridAutoRows) + gap;  // righe e colonne hanno la stessa misura (--u)
-  const colonne = s.gridTemplateColumns.split(' ').length;
-  const unita = (px: number) => Math.max(1, Math.round((px + gap) / passo));
-  const prima = unita(Math.max(...altre.map(c => c.offsetTop + c.offsetHeight))) + 1;  // linee della griglia da 1
+  // righe = quadretti (lo spazio sotto la cella è il suo margine, uno), colonne = moduli più lo spazio tra due
+  const q = parseFloat(s.gridAutoRows), gap = parseFloat(s.columnGap);
+  const colonne = s.gridTemplateColumns.split(' ');
+  const passo = parseFloat(colonne[0]) + gap;
+  const righe = (px: number) => Math.max(1, Math.round((px + q) / q));
+  const prima = righe(Math.max(...altre.map(c => c.offsetTop + c.offsetHeight))) + 1;  // linee della griglia da 1
   const prese = new Set<string>();
   const libero = (r: number, k: number, w: number, h: number) => {
     for (let i = 0; i < h; i++) for (let j = 0; j < w; j++) if (prese.has(`${r + i},${k + j}`)) return false;
     return true;
   };
   for (const c of coda.filter(c => c.offsetParent)) {
-    const w = Math.min(unita(c.offsetWidth), colonne), h = unita(c.offsetHeight);
+    const w = Math.min(Math.max(1, Math.round((c.offsetWidth + gap) / passo)), colonne.length), h = righe(c.offsetHeight);
     for (let r = prima; ; r++) {
-      const k = Array.from({ length: colonne - w + 1 }, (_, k) => k).find(k => libero(r, k, w, h));
+      const k = Array.from({ length: colonne.length - w + 1 }, (_, k) => k).find(k => libero(r, k, w, h));
       if (k === undefined) continue;
       for (let i = 0; i < h; i++) for (let j = 0; j < w; j++) prese.add(`${r + i},${k + j}`);
       c.style.setProperty('--riga', String(r));

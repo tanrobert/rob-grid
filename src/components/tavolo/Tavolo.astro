@@ -166,8 +166,8 @@ const sagoma = (c: Cell) => (c.frame === false && c.type === 'svg' ? svgs[c.svg]
   /* mano chiusa mentre si porta il tavolo o una cella (gesti.ts), anche sopra le celle-link (se no la manina) */
   .tavolo.is-panning, .tavolo.is-panning :global(*) { cursor: var(--cursore-chiusa); }
 
-  /* carta: quadretti e crocini (ogni 4 quadretti, sul modulo della griglia di prima). Uno strato più grande
-     della finestra di un modulo per lato, che si sposta solo del resto rispetto al modulo: le linee sembrano
+  /* carta: solo quadretti (crocini tolti il 6/11/2026, scelta di Roberto: le celle si misurano a quadretti, non più a
+     moduli di 4). Uno strato più grande della finestra di un modulo (4 quadretti) per lato, che si sposta solo del resto rispetto al modulo: le linee sembrano
      infinite e il browser non ridisegna nulla. Senza JavaScript il centro del tavolo è al centro della finestra.
      Colori dalle variabili: seguono l'inversione e il contrasto alto */
   .tavolo__carta {
@@ -184,20 +184,12 @@ const sagoma = (c: Cell) => (c.frame === false && c.type === 'svg' ? svgs[c.svg]
     will-change: transform;
     pointer-events: none;
   }
-  /* col foglio aperto la carta sparisce: dai fori del retino si vedono le celle, non quadretti e crocini (1/11/2026).
+  /* col foglio aperto la carta sparisce: dai fori del retino si vedono le celle, non i quadretti (1/11/2026).
      Aprendo e chiudendo sfuma col retino (scripts/foglio) */
   :global(html:not(.is-tavolo)) .tavolo__carta { opacity: 0; }
-  /* crocini: la forma è una maschera (un SVG senza colore, centrato sull'angolo di ogni modulo: i bracci escono
-     dai bordi e rientrano dal lato opposto), il colore è l'inchiostro schiarito (--crocini-ink, global.css) */
-  .tavolo__carta::after {
-    content: '';
-    position: absolute; inset: 0;
-    background: var(--crocini-ink);
-    mask: var(--crocini-forma) 0 0 / var(--modulo) var(--modulo) repeat;
-  }
   /* intro: la carta compare a giri quadrati dal centro del tavolo (--ox, --oy: lo scrive scripts/tavolo/vista.ts),
      un modulo per giro (o più, --passo-giro, se la finestra è grande): il giro n sfuma mentre --giro va da n
-     a n+1 (crocini-in, global.css), e a intro finita --giro torna a coprire tutto */
+     a n+1 (carta-in, global.css), e a intro finita --giro torna a coprire tutto */
   :global(.is-intro) .tavolo__carta {
     --ox: 50%; --oy: 50%;
     --giro: 1000;
@@ -208,7 +200,7 @@ const sagoma = (c: Cell) => (c.frame === false && c.type === 'svg' ? svgs[c.svg]
       linear-gradient(to right, transparent calc(var(--ox) - var(--a)), var(--c) calc(var(--ox) - var(--b)), var(--c) calc(var(--ox) + var(--b)), transparent calc(var(--ox) + var(--a))),
       linear-gradient(to bottom, transparent calc(var(--oy) - var(--a)), var(--c) calc(var(--oy) - var(--b)), var(--c) calc(var(--oy) + var(--b)), transparent calc(var(--oy) + var(--a)));
     mask-composite: intersect;
-    animation: crocini-in 960ms linear backwards;
+    animation: carta-in 960ms linear backwards;
   }
   /* fuori dal foglio: bande di inchiostro grandi quanto la finestra, accostate al bordo da scripts/tavolo/vista.ts.
      Solo col JavaScript (senza, il tavolo non si sposta e il bordo non serve) */
@@ -220,7 +212,7 @@ const sagoma = (c: Cell) => (c.frame === false && c.type === 'svg' ? svgs[c.svg]
     will-change: transform;
     pointer-events: none;
   }
-  /* margine: grande quanto la griglia, l'outline copre il quadretto attorno (carta senza linee né crocini) */
+  /* margine: grande quanto la griglia, l'outline copre il quadretto attorno (carta senza linee) */
   .tavolo__bordo > .tavolo__margine {
     inset: auto; left: 0; top: 0;
     background: none;
