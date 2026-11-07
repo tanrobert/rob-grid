@@ -17,19 +17,24 @@ interface Props {
   title?: string;
   /** Hero della pagina: caricata subito, deve esserci già quando il foglio si apre */
   priority?: boolean;
-  /** seconda foto sotto la prima, nella stessa cella: ognuna a tutta larghezza, metà altezza */
-  seconda?: { image: ImageMetadata; alt: string };
+  /** altre foto sotto la prima, nella stessa cella, in colonna: ognuna a tutta larghezza, stessa altezza; i disegni SVG
+      così come sono, interi, alti in proporzione */
+  pila?: Array<{ image: ImageMetadata; alt: string }>;
   /** altre foto a turno con la prima: carosello delle celle (global.css, cells.ts), che gira da solo ogni 4 s.
       taglio 'sopra': posata sul bordo di sotto, se non ci sta perde solo la parte alta */
   immagini?: Array<{ image: ImageMetadata; alt: string; taglio?: 'sopra' }>;
   /** le foto (non video né disegni) si ingrandiscono al clic, sopra il retino (scripts/ingrandisci.ts) */
   ingrandisci?: boolean;
+  /** colore del campo sotto un disegno SVG (es. il logo di Caleidoscopio sul fondo del suo sito): etichette chiare */
+  fondo?: string;
 }
-const { image, video, overlay, alt, sizes, title, priority = false, seconda, immagini, ingrandisci } = Astro.props;
+const { image, video, overlay, alt, sizes, title, priority = false, pila, immagini, ingrandisci, fondo } = Astro.props;
 const grande = (testo: string) => ingrandisci ? { 'data-ingrandisci': '', tabindex: 0, role: 'button' as const, 'aria-label': `Ingrandisci: ${testo}` } : {};
-// un disegno SVG (es. una grafica del cliente) va così com'è, intero sulla carta: etichette scure
+// un disegno SVG (es. una grafica del cliente) va così com'è, intero sulla carta: etichette scure (chiare sul `fondo`)
 const disegno = !video && image?.format === 'svg';
-const etichette = disegno ? 'scure' : Astro.props.etichette;
+const etichette = disegno && !fondo ? 'scure' : Astro.props.etichette;
+// in pila un disegno prende spazio in proporzione alla sua altezza (le foto 1, tagliate): i disegni alla stessa larghezza
+const alto = (img: ImageMetadata) => `flex-grow: ${(img.height / img.width).toFixed(3)}`;
 // carosello: la foto della cella e poi le altre (solo foto: niente video né disegni)
 const giro: Props['immagini'] = image && !video && !disegno && immagini?.length ? [{ image, alt }, ...immagini] : undefined;
 const misure = [400, 800, 1200, 1600, 2400];
@@ -43,14 +48,14 @@ const poster = inPublic(posterWebp) ? posterWebp
   : image && video ? (await getImage({ src: image, width: 1280, format: 'webp' })).src : undefined;
 ---
 
-<div class:list={['duo', seconda && 'duo--pila']} data-etichette={etichette}>
+<div class:list={['duo', pila && 'duo--pila']} data-etichette={etichette} style={fondo && `background: ${fondo}`}>
   {video ? (
     <video data-autoplay muted loop playsinline preload="none" poster={poster} aria-label={alt || undefined}>
       {conWebm && <source src={webm} type='video/webm; codecs="av01.0.05M.08"' />}
       <source src={video} type="video/mp4" />
     </video>
   ) : disegno ? (
-    <img class="duo__disegno" src={image.src} width={image.width} height={image.height} alt={alt} loading={priority ? 'eager' : 'lazy'} decoding="async" />
+    <img class="duo__disegno" src={image.src} width={image.width} height={image.height} alt={alt} loading={priority ? 'eager' : 'lazy'} decoding="async" style={pila && alto(image)} />
   ) : giro ? (
     <div class="carosello" data-carosello>
       <div class="carosello__nastro">
@@ -64,9 +69,11 @@ const poster = inPublic(posterWebp) ? posterWebp
   ) : image && (
     <Image src={image} alt={alt} {...grande(alt)} widths={misure} sizes={sizes} loading={priority ? 'eager' : 'lazy'} fetchpriority={priority ? 'high' : undefined} decoding="async" />
   )}
-  {seconda && (
-    <Image src={seconda.image} alt={seconda.alt} {...grande(seconda.alt)} widths={[400, 800, 1200, 1600]} sizes={sizes} loading="lazy" decoding="async" />
-  )}
+  {pila?.map(f => f.image.format === 'svg' ? (
+    <img class="duo__disegno" src={f.image.src} width={f.image.width} height={f.image.height} alt={f.alt} loading="lazy" decoding="async" style={alto(f.image)} />
+  ) : (
+    <Image src={f.image} alt={f.alt} {...grande(f.alt)} widths={[400, 800, 1200, 1600]} sizes={sizes} loading="lazy" decoding="async" />
+  ))}
   {/* un SVG va così com'è: nitido a ogni zoom, niente WebP in più misure */}
   {overlay?.format === 'svg' ? (
     <img class="duo__overlay" src={overlay.src} width={overlay.width} height={overlay.height} alt="" loading={priority ? 'eager' : 'lazy'} decoding="async" />

@@ -1,6 +1,6 @@
 /**
  * Cella "barattolo" (components/cells/BarattoloCell.astro): mockup veri, l'etichetta piatta avvolta sul cilindro
- * misurato nel PSD (tools/barattolo-mockup.py), che gira trascinando e si sfoglia con ‹ ›. Laboratorio:
+ * misurato nel PSD (tools/barattolo-mockup.py), che gira trascinando e si sfoglia col righello. Laboratorio:
  * tools/pages/barattolo.html, da cui viene questo codice.
  * - Ogni barattolo ha il suo vaso, centrato e grande RIEMPIE dello spazio che ci sta (29/10/2026: alla stessa scala
  *   del vaso alto i vasetti bassi restavano piccoli; 6/11/2026 un po' più piccoli). Sfogliando la misura può cambiare.
@@ -18,7 +18,7 @@
  *   sul lato), col colore del bordo: se resta la stessa cambia solo il colore, se cambia esce e rientra col barattolo.
  * - Ombra a terra nostra, una sola per tutti i vasi (quelle dei mockup non si usano): un'ellisse sfumata in una tela
  *   sua, ferma; sfogliando sparisce col barattolo che esce e torna con quello che entra.
- * - Bordo dell'etichetta (SVG del progetto) in grande in fondo alla cella, subito sopra la didascalia, coi tagli verso
+ * - Bordo dell'etichetta (SVG del progetto) in grande in fondo alla cella, subito sopra il righello, coi tagli verso
  *   l'alto (29/10/2026; prima in verticale sul lato destro), in una tela sotto (`carta`): la
  *   scena del barattolo ha il bordo dentro il fondo (si vede attraverso il vetro e l'ombra ci cade sopra) ed è
  *   ritagliata sulla sagoma del vaso, così fuori resta la carta. Cambiando barattolo il bordo cambia colore e forma:
@@ -39,8 +39,8 @@ type Immagine = CanvasImageSource & { width: number; height: number };
 const OGNI_MS = 4500;            // da soli, il barattolo dopo ogni tanto…
 const PAUSA_MS = 10000;          // …e dopo un gesto aspettano un po' di più
 const COPERCHIO = '#8a5236';     // marrone dei coperchi Kiale
-// Tutti i vasi al centro, grandi RIEMPIE (6/11/2026, scelta di Roberto: più piccoli e centrati; dal 29/10 il vaso alto
-// andava dal titolo alla didascalia)
+// Tutti i vasi al centro, grandi RIEMPIE (6/11/2026, scelte di Roberto: centrati, poi più grandi, che salgono un poco sulla
+// parola corsiva: la tela parte quasi dalla cima della parola, BarattoloCell; dal 29/10 il vaso alto andava dal titolo alla righello)
 const MOCKUP: Record<string, { fondo: Livello[]; sopra: Livello[] }> = {
   // Food Jar Mockup 2: il contenuto ha un livello suo (maschera), il coperchio una maschera da colorare
   'vaso-basso': {
@@ -59,8 +59,10 @@ const BORDO_4MM = 11.34;         // 4 mm in punti (le unità degli SVG da Illust
 const BORDO_MAX = 13;            // la fascia più alta, in punti: larghezza delle maschere
 const BORDO_MS = 520;            // cambio di colore e forma
 const OMBRA = { y: 0.02, rx: 0.62, ry: 0.08 };   // ombra a terra, in larghezze del vetro: sopra il fondo, raggi
-const RIEMPIE = 0.72;        // quanto dello spazio dei barattoli occupa il vaso (in larghezza il vetro, in altezza dalla cima al fondo; 0,85 fino al 6/11/2026)
-const BORDO_FUORI = 1.5;         // la fascia esce un poco dal fondo della cella, in punti
+const RIEMPIE = 0.86;        // quanto dello spazio dei barattoli occupa il vaso (in larghezza il vetro, in altezza dalla cima al fondo; 0,72 per qualche ora il 6/11/2026)
+// la fascia entra appena nel piede (del suo colore, sotto): si vede tutta la sua altezza e fra i due non resta un filo
+// di carta. Fino al 7/11/2026 usciva di 1,5 punti dal fondo della cella, quindi tagliata
+const BORDO_FUORI = 0.1;
 
 const tela = (w = 0, h = 0): Canvas => Object.assign(document.createElement('canvas'), { width: w, height: h });
 const carica = (src: string) => new Promise<HTMLImageElement>((ok, ko) => {
@@ -225,7 +227,10 @@ async function avvia(root: HTMLElement, signal: AbortSignal) {
   const carta = root.querySelector<HTMLCanvasElement>('[data-carta]')!, cc = carta.getContext('2d')!;
   const ombra = root.querySelector<HTMLCanvasElement>('[data-ombra]')!;
   const parola = root.querySelector<HTMLElement>('[data-parola]')!;
-  const didascalia = root.querySelector<HTMLElement>('.coda-info');
+  // righello dei barattoli (BarattoloCell), nel piede sotto la fascia del bordo
+  const righello = root.querySelector<HTMLElement>('[data-righello]'), numero = root.querySelector('[data-numero]');
+  const tacche = [...root.querySelectorAll<HTMLButtonElement>('[data-vai]')];
+  const piede = root.querySelector<HTMLElement>('.piede');
   const cella = root.closest<HTMLElement>('.cell') ?? root;
   // il segnaposto subito; la foto, se c'è, quando è scaricata (applica)
   const interni: Immagine[] = voci.map(texturaInterno), foto = voci.map(() => false);
@@ -267,7 +272,7 @@ async function avvia(root: HTMLElement, signal: AbortSignal) {
     carta.width = ombra.width = Math.round(rc.width * dpr); carta.height = ombra.height = Math.round(rc.height * dpr);
     // posizione di layout (la vetrina sta a 0,0 della cella): il rettangolo vero includerebbe lo spostamento dello sfogliare
     ox = Math.round(cv.offsetLeft * dpr); oy = Math.round(cv.offsetTop * dpr);
-    // pixel reali per unità del ritaglio. Il canvas va dal testo (titolo e parola) alla didascalia. In larghezza conta
+    // pixel reali per unità del ritaglio. Il canvas va dal testo (titolo e parola) al righello. In larghezza conta
     // solo il vetro (`largo`): l'ombra ai lati può uscire, sfuma nella cella. Il vaso sta al centro dello spazio tra il
     // testo e la fascia del bordo (fino alle punte), grande RIEMPIE
     const alto = G.piede - G.cima;
@@ -329,8 +334,8 @@ async function avvia(root: HTMLElement, signal: AbortSignal) {
   function dipingiBordo(adesso: number) {
     cc.clearRect(0, 0, carta.width, carta.height);
     const { da, a } = bordo, dpr = carta.width / Math.max(1, root.clientWidth);
-    // sopra la didascalia, che resta sulla carta
-    const larga = carta.width, sotto = Math.round((didascalia?.offsetHeight ?? 0) * dpr);
+    // sopra il piede col righello (del colore della fascia: la fascia ci entra appena, coperta)
+    const larga = carta.width, sotto = Math.round((piede?.offsetHeight ?? 0) * dpr);
     const k = carta.width * BORDO_QUOTA / BORDO_4MM, mh = Math.min(carta.height - sotto, Math.ceil(BORDO_MAX * k));
     if ((a || da) && larga > 0 && mh > 0) {
       const p = da ? Math.min(1, (adesso - bordo.t) / BORDO_MS) : 1, e = p < 0.5 ? 2 * p * p : 1 - (-2 * p + 2) ** 2 / 2;
@@ -490,12 +495,18 @@ async function avvia(root: HTMLElement, signal: AbortSignal) {
   root.addEventListener('focusout', () => { fuoco = false; }, opz);
 
   // sfoglia: il barattolo esce di lato e il prossimo entra (di colpo con riduci movimento); conta l'ultimo clic
-  const nome = root.querySelector('[data-nome]'), conta = root.querySelector('[data-conta]');
+  const nome = root.querySelector('[data-nome]');
   let turno = 0, voluto = 0;
+  // righello: il quadrato salta subito sul barattolo scelto, il barattolo arriva quando è scaricato
+  function scriviRighello(i: number) {
+    righello?.style.setProperty('--at', String(i / Math.max(1, n - 1)));
+    if (numero) numero.textContent = `${pad2(i + 1)} · ${voci[i].nome}`;
+    tacche.forEach((t, j) => { if (j === i) t.setAttribute('aria-current', 'step'); else t.removeAttribute('aria-current'); });
+  }
   function scriviNome() {
     // solo se cambia: il nome sta in una regione aria-live
     if (nome && nome.textContent !== voci[at].nome) nome.textContent = voci[at].nome;
-    if (conta) conta.textContent = `${pad2(at + 1)}/${pad2(n)}`;
+    scriviRighello(at);
     cv.setAttribute('aria-label', `${voci[at].nome}: trascina per girare il barattolo`);
   }
   // la parola del barattolo in vista: maschera e colore del bordo (il colore passa da solo, con la transizione CSS)
@@ -503,6 +514,8 @@ async function avvia(root: HTMLElement, signal: AbortSignal) {
     const src = voci[at].parola, c = bordo.a?.colore;
     if (src) parola.style.setProperty('--parola', `url("${src}")`);
     if (c) parola.style.setProperty('--parola-colore', `rgb(${c.join(' ')})`);
+    // il piede col righello, sotto la fascia, dello stesso colore (BarattoloCell)
+    if (c) piede?.style.setProperty('--fascia', `rgb(${c.join(' ')})`);
     parola.style.opacity = src && c ? '1' : '0';
   }
   async function sfoglia(p: number, daSolo = false) {
@@ -510,6 +523,7 @@ async function avvia(root: HTMLElement, signal: AbortSignal) {
     // il nome nuovo si annuncia solo se l'ha chiesto chi visita: ogni 4,5 s sarebbe un disturbo per lo screen reader
     nome?.setAttribute('aria-live', daSolo ? 'off' : 'polite');
     const mio = ++turno, verso = p > 0 ? -1 : 1, i = voluto = (voluto + p + n) % n;
+    scriviRighello(i);
     const pronto = scarica(i).catch(() => null);
     cv.getAnimations().forEach(a => a.cancel()); ombra.getAnimations().forEach(a => a.cancel()); parola.getAnimations().forEach(a => a.cancel());
     // l'uscita resta ferma alla fine (fill) finché il barattolo nuovo non è pronto, poi si toglie
@@ -533,14 +547,14 @@ async function avvia(root: HTMLElement, signal: AbortSignal) {
     if (!REDUCED) ombra.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 260, delay: 60, easing: 'ease-out', fill: 'backwards' });
     if (!REDUCED && cambia && voci[at].parola) parola.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 260, delay: 60, easing: 'ease-out', fill: 'backwards' });
   }
-  root.querySelectorAll<HTMLElement>('[data-passo]').forEach(b => b.addEventListener('click', () => sfoglia(+b.dataset.passo!), opz));
+  tacche.forEach(t => t.addEventListener('click', () => { const p = +t.dataset.vai! - 1 - voluto; if (p) sfoglia(p); }, opz));
 
   // in vista: gira; fuori: fermo. Misura nuova al resize
   const io = new IntersectionObserver(([e]) => { inVista = e.isIntersecting; if (inVista) muovi(); });
   io.observe(cv);
   const ro = new ResizeObserver(() => { prepara(); muovi(); });
   ro.observe(cv);
-  // initCells riparte (un foglio nuovo sopra): si ricomincia dal primo barattolo, anche nella didascalia
+  // initCells riparte (un foglio nuovo sopra): si ricomincia dal primo barattolo, anche nel righello
   scriviNome();
   programma();
   signal.addEventListener('abort', () => { io.disconnect(); ro.disconnect(); cancelAnimationFrame(raf); clearTimeout(timer); });

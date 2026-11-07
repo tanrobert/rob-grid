@@ -13,6 +13,7 @@ import { initGesti } from './gesti';
 import { leggi, scrivi } from './memoria';
 import { initMatita, type Matita } from './matita';
 import { initSuono } from '../suono';
+import { initScuro } from './scuro';
 import { initPiede } from './piede';
 
 gsap.registerPlugin(InertiaPlugin);
@@ -29,6 +30,8 @@ export interface Tavolo {
   confina(): void;
   /** tutte le celle al loro posto alla misura del quadretto di adesso */
   posaTutti(): void;
+  /** la disposizione di adesso è quella pensata: da qui si misura se il tavolo è scombinato */
+  inOrdine(): void;
   salva(): void;
 }
 
@@ -59,6 +62,20 @@ function initTavolo(el: HTMLElement): Tavolo {
   const pezzi = leggiPezzi(v.mondo);
   const versione = el.dataset.versione ?? '';
   let mosso = false;  // qualcosa è cambiato: da ricordare (anche a metà inerzia, se si cambia pagina)
+  /** posizioni della disposizione pensata, in quadretti */
+  let ordine: Record<string, [number, number]> = {};
+  const posizioni = () => Object.fromEntries(pezzi.map(p => [p.id, [p.gx, p.gy] as [number, number]]));
+  // il tasto Riordina della barra c'è solo col tavolo scombinato (7/11/2026, scelta di Roberto): una cella in vista
+  // fuori dal suo posto. Vista e zoom non contano. La R al centro riordina sempre
+  const tastoRiordina = document.querySelector<HTMLElement>('[data-attrezzi] [data-riordina]');
+  const scombinato = () => pezzi.some(p => !p.el.hidden && (p.gx !== ordine[p.id]?.[0] || p.gy !== ordine[p.id]?.[1]));
+  const mostraRiordina = () => {
+    if (!tastoRiordina) return;
+    const via = !scombinato();
+    // premuto da tastiera sparisce sotto il fuoco: il fuoco passa al tasto dopo
+    if (via && document.activeElement === tastoRiordina) document.querySelector<HTMLElement>('[data-attrezzi] [data-suono]')?.focus();
+    tastoRiordina.hidden = via;
+  };
 
   const t: Tavolo = {
     v, pezzi, zTop: 0, signal: ac.signal,
@@ -73,12 +90,14 @@ function initTavolo(el: HTMLElement): Tavolo {
       limita(v);
     },
     posaTutti: () => pezzi.forEach(p => posa(p, v.q)),
+    inOrdine: () => { ordine = posizioni(); },
     salva: () => {
       mosso = true;
       scrivi({
         v: versione, q: v.q, pan: [v.pan.x / v.q, v.pan.y / v.q],
-        pos: Object.fromEntries(pezzi.map(p => [p.id, [p.gx, p.gy, p.z]])),
+        pos: Object.fromEntries(pezzi.map(p => [p.id, [p.gx, p.gy, p.z]])), ordine,
       });
+      mostraRiordina();
     },
   };
 
@@ -94,6 +113,9 @@ function initTavolo(el: HTMLElement): Tavolo {
     }
   } else disponi(t);
   t.confina();
+  // memoria di prima che ci fosse `ordine`: in ordine com'è
+  ordine = saved?.ordine ?? posizioni();
+  mostraRiordina();
 
   // da qui le posizioni sono quelle di GSAP (transform), non più quelle del build
   el.classList.add('is-vivo');
@@ -108,6 +130,7 @@ function initTavolo(el: HTMLElement): Tavolo {
   const attrezzi = document.querySelector<HTMLElement>('[data-attrezzi]');
   if (attrezzi) {
     attrezzi.hidden = false;
+    initScuro(ac.signal);
     initSuono(ac.signal);
   }
   // Riordina: il tasto della barra e la R al centro

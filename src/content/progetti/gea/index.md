@@ -2,7 +2,7 @@
 title: "G&A Porte per interni"
 tags: [Imprese, Prodotto, Logo, Web, Print]
 period: "dal 2026"
-description: "Brand e sito per un'azienda che produce porte su misura, casa madre di Spazioquadro."
+description: "Brand e sito per un'azienda che produce porte su misura, casa madre di Spazioquadro.\n\nIl marchio storico parlava di **falegnameria**: quello nuovo parla di **porte**."
 featured: true
 shape: { w: 6, h: 4 }
 # il marchio di prima (SVG di Illustrator, 3/11/2026): intero e piccolo in un quadrato grigio molto chiaro in fondo
@@ -11,6 +11,7 @@ contesto:
   foto: ./logo-vecchio.svg
   alt: "Il vecchio marchio di G&A: gli angoli di due finestre in legno affiancate, gialli, di ognuna un pezzo di montante e uno di traverso uniti dagli intagli a coda di rondine; sopra G&A e sotto Porte per interni, in grigio"
   fondo: "#e8e6e3"
+  didascalia: "Logo originale · vettorializzato"
 cells:
   # gli obiettivi del restyling (tavola 4 di sorgenti/gea/gea-tavole.ai, "Obiettivi di allineamento"): una cella divisa
   # in quattro riquadri da un filo, in riga sul computer, 2×2 sul tablet, in colonna sul telefono (scelta di Roberto del
@@ -71,7 +72,7 @@ cells:
     sm: { w: 4, h: 6 }
     eyebrow: "Marchio"
     title: "Ridisegnare il marchio"
-    body: "Prima di cambiarlo, il marchio storico va **ridisegnato con misure esatte**: i quattro pezzi tutti uguali, le **code di rondine** e gli incastri della stessa misura. Si parte dal **traverso** di sinistra. Testo di prova."
+    body: "Prima di cambiarlo, il marchio storico va **ridisegnato con misure esatte**: i quattro pezzi tutti uguali, le **code di rondine** e gli incastri della stessa misura. Del vecchio segno resta l'idea: **quattro pezzi che si incastrano**."
     disegno: ./ridisegno-marchio.svg
     alt: "Il marchio storico di G&A, quattro pezzi gialli di montanti e traversi uniti dalle code di rondine, ridisegnato: il traverso di sinistra si ingrandisce, i suoi vertici segnati in rosso si spostano fino alle misure esatte, poi torna al suo posto tra gli altri tre pezzi ridisegnati"
   # l'evoluzione del simbolo, un passo per clic (scripts/evoluzione.ts): disegno dalle tavole di sorgenti/gea/gea-tavole.ai
@@ -88,7 +89,7 @@ cells:
     alt: "Il simbolo di G&A che cambia: gli angoli di due finestre in legno del marchio storico, montanti e traversi con gli intagli a coda di rondine e le linee di costruzione, tagliati dagli assi degli incastri fino al quadrato centrale"
     passi:
       - title: "Montanti e traversi"
-        body: "Il marchio storico: gli **angoli** di due finestre in legno affiancate. Di ognuna si vede un pezzo di **montante** e uno di **traverso**, uniti dagli intagli a **coda di rondine**. Testo di prova."
+        body: "Il marchio storico: gli **angoli** di due finestre in legno affiancate, uniti dagli intagli a **coda di rondine**. Un incastro da **falegnameria**, da cassetti e cassapanche: non parla di porte."
       - title: "Il taglio"
         body: "Gli **assi** degli incastri tagliano la figura: resta il **cuore**, dove i quattro pezzi si incastrano. Testo di prova."
       - title: "Le code di rondine"
@@ -96,7 +97,7 @@ cells:
       - title: "Verso il centro"
         body: "I trapezi crescono verso il centro fin quasi a toccarsi: tra loro resta una **croce** sottile. Testo di prova."
       - title: "Rifinire il simbolo"
-        body: "Un **rettangolo aureo** al centro, con la sua **spirale**, scava i quattro pezzi: si apre il vuoto del simbolo. Testo di prova."
+        body: "Un **rettangolo aureo**, con la sua **spirale**, scava il centro: fra i quattro pezzi resta un **vuoto** nelle proporzioni di una **porta**."
       - title: "Simbolo e logotipo"
         body: "Sotto il simbolo, riga per riga, **G&A** e il payoff, costruiti sulle stesse linee. Alla fine il testo prende il **grigio** G&A. Testo di prova."
   # le versioni del logo, una alla volta (versione-*.svg, le risorse esportate da Illustrator il 4/11/2026): la prima ha

@@ -15,6 +15,7 @@ contesto:
   foto: ./logo-pre-2018.png
   alt: "Il primo logo di Purple Piper, dal vecchio sito di prima del 2018: scritta rossa in rilievo su fondo rosso, Progressive Rock e una croce bianca"
   fondo: "#e23736"
+  didascalia: "Logo originale · prima del 2018"
 cells:
   # il sito sul telefono (screenshot di Roberto del 3/11/2026, 822×1140): testo in alto, sotto lo screenshot fermo,
   # poi due righe e il bottone per il sito
@@ -29,7 +30,7 @@ cells:
       - image: ./sito-telefono.png
         alt: "Il sito di Purple Piper sul telefono: il logo rosso sopra un dipinto con una figura alata, e sotto il pannello viola col tasto Live, il brano in onda, Playlist, Player e il motto In prog we trust"
     after: "In fondo, i **link** alle case del prog: Arlequins, Prog Archives, Musicstack, Bandcamp e Discogs."
-    button: { label: "Visita il sito", href: "https://www.purplepiper.eu" }
+    button: { label: "Visita il sito della web radio Purple Piper", href: "https://www.purplepiper.eu" }
   # la croce barbata e la P del logo coi colori (file di Roberto del 4/11/2026), la croce sopra la P, disegnate insieme, una cosa
   # alla volta: contorno, buco, linea sfumata, il rosso, poi cade l'ombra (gruppo "ombra"). La P: sorgenti/purple-piper/p-live.svg,
   # testo in tracciati con tools/svg-testo-tracciati.py; la croce (stessi spessori della P) così com'è, con le stesse annotazioni. Prima la P di costruzione coi tratti vivi
@@ -40,8 +41,8 @@ cells:
     md: { w: 4, h: 8 }
     disegno: [./costruzione-croce.svg, ./costruzione-p-live.svg]
     alt: "La croce barbata e la P di Purple Piper, rosse con il contorno nero, una linea interna che sfuma dal viola al cremisi e l'ombra nera in basso a sinistra"
-    title: "La nuova P"
-    body: "Testo da scrivere."
+    title: "Il nuovo stile del logotipo"
+    body: "La **croce barbata** e la **P** ridisegnate con gli stessi spessori: un **contorno nero** deciso, il **rosso** del marchio e dentro una linea che sfuma dal **viola** al cremisi.\n\nL'**ombra** in basso stacca il segno dal fondo, come il **rilievo** del primo logo."
   # la radio in diretta: la stessa della cella sul tavolo (un solo lettore per la pagina, scripts/radio.ts)
   - type: radio
     w: 4
@@ -49,33 +50,69 @@ cells:
     label: false
     eyebrow: "Radio live player"
   # merchandising (materiali di Roberto del 2/11/2026; originali in sorgenti/purple-piper, foto ridotte a 1600 px):
-  # le due grafiche SVG così come sono, ognuna con la sua maglia, e le spille
-  # le due maglie nella stessa cella, una sopra l'altra: la viola di schiena (tagliata in orizzontale attorno al motto:
-  # provata intera il 2/11/2026, Roberto la preferisce tagliata), sotto la bianca
+  # le maglie con le spille, poi le due grafiche SVG così come sono
+  # le due maglie e in mezzo le spille (6/11/2026, scelta di Roberto), nella stessa cella, una sopra l'altra: la viola di
+  # schiena (tagliata in orizzontale attorno al motto: provata intera il 2/11/2026, Roberto la preferisce tagliata), le
+  # spille, la bianca. Larga 5 (6/11/2026: prima 6, con le due maglie)
   - type: media
-    w: 6
+    w: 5
     h: 8
     sm: { w: 4, h: 6 }
     image: ./maglia-motto.jpg
     alt: "Maglia viola di Purple Piper vista di schiena, col motto In prog we trust tra le croci rosse"
     ingrandisci: true
-    seconda:
-      image: ./maglia-cerchio.jpg
-      alt: "Maglia bianca di Purple Piper con la grafica circolare, le PP al centro e la scritta Purple Piper Progressive Rock, su pannelli fonoassorbenti viola"
-  # la grafica circolare e sotto, nella stessa cella, le spille
+    pila:
+      - image: ./spille.jpg
+        alt: "Spille viola di Purple Piper con le PP rosse, alcune girate sul retro"
+      - image: ./maglia-cerchio.jpg
+        alt: "Maglia bianca di Purple Piper con la grafica circolare, le PP al centro e la scritta Purple Piper Progressive Rock, su pannelli fonoassorbenti viola"
+  # le due grafiche nella stessa cella (6/11/2026, scelta di Roberto): sopra il cerchio, sotto il motto In prog we trust,
+  # così come sono (SVG), alla stessa larghezza; alta quanto la cella delle maglie accanto
   - type: media
     w: 4
-    h: 8
+    h: 12.25
     image: ./cerchio-pp.svg
     alt: "Grafica circolare di Purple Piper: le PP al centro, due croci e attorno la scritta Purple Piper Progressive Rock"
-    ingrandisci: true
-    seconda:
-      image: ./spille.jpg
-      alt: "Spille viola di Purple Piper con le PP rosse, alcune girate sul retro"
-  # sotto il cerchio, larga come lui: stretta 2 la griglia (row dense) la portava nel buco accanto alla hero
+    pila:
+      - image: ./in-prog-we-trust.svg
+        alt: "Il motto In prog we trust, rosso con le croci, in colonna"
+  # i due colori del logo (gli stessi della radio, data/radio.ts) che sfumano, il rosso sopra e il viola sotto (6/11/2026,
+  # idea di Roberto): alta e stretta, accanto alle maglie. Dopo le grafiche, se no la griglia (row dense) la mette più in alto.
+  # Nomi provvisori
+  - type: sfumatura
+    w: 3
+    h: 8
+    sm: { w: 4, h: 7 }
+    colori:
+      - { nome: "Rosso Piper", hex: "#a90009" }
+      - { nome: "Viola Purple", hex: "#543962" }
+  # Caleidoscopio (6/11/2026, idea di Roberto): il progetto parallelo nato dai dati della radio, l'archivio di copertine
+  # progressive (caleidoscopio.astro). Sopra il muro di copertine che si alternano (60 pescate a caso dall'archivio, 160 px,
+  # 210 KB: node tools/caleidoscopio-copertine.mjs per un'altra pescata), sotto metà e metà il testo e il logo sul fondo
+  # del sito (--bg di Caleidoscopio, hsl(24 22% 7%)), giallo com'è
+  - type: copertine
+    w: 12
+    h: 3
+    md: { w: 8, h: 3 }
+    sm: { w: 4, h: 3 }
+    cartella: /caleidoscopio/copertine
+    alt: "Copertine di dischi progressive dall'archivio di Caleidoscopio, che si alternano"
+  - type: text
+    w: 6
+    h: 3
+    md: { w: 4, h: 4 }
+    sm: { w: 4, h: 2 }
+    size: s
+    eyebrow: "Progetto parallelo"
+    title: "Caleidoscopio"
+    body: "Nato dai **dati di Purple Piper**: gli artisti passati in radio diventano un archivio di **copertine progressive**, oltre 11.000 album di più di 1.500 artisti, da sfogliare e cercare."
+    button: { label: "Visita il sito del progetto Caleidoscopio", href: "https://caleidoscopio-mu.vercel.app/" }
   - type: media
-    w: 4
-    h: 7
-    image: ./in-prog-we-trust.svg
-    alt: "Il motto In prog we trust, rosso con le croci, in colonna"
+    w: 6
+    h: 3
+    md: { w: 4, h: 4 }
+    sm: { w: 4, h: 2 }
+    image: ./caleidoscopio-logo.svg
+    fondo: "#16110e"
+    alt: "Il logo di Caleidoscopio, giallo sul fondo scuro del sito"
 ---

@@ -30,6 +30,8 @@ import RidisegnoCell from './cells/RidisegnoCell.astro';
 import AnimatoCell from './cells/AnimatoCell.astro';
 import EvoluzioneCell from './cells/EvoluzioneCell.astro';
 import PaletteCell from './cells/PaletteCell.astro';
+import SfumaturaCell from './cells/SfumaturaCell.astro';
+import CopertineCell from './cells/CopertineCell.astro';
 import VersioniCell from './cells/VersioniCell.astro';
 import PuntiCell from './cells/PuntiCell.astro';
 import CollezioniCell from './cells/CollezioniCell.astro';
@@ -76,10 +78,10 @@ if (cell.type === 'project' && !p) throw new Error(`[grid] progetto non trovato:
     {cell.type === 'svg' && <SvgCell svg={cell.svg} fit={cell.fit} riordina={cell.riordina} />}
     {cell.type === 'logotipo' && <LogotipoCell nudo={cell.frame === false} />}
     {cell.type === 'marquee' && <MarqueeCell text={cell.text} speed={cell.speed} ruotato={cell.ruotato} />}
-    {cell.type === 'text' && <TextCell title={cell.title} body={cell.body} as={cell.as} size={cell.size} immagini={cell.immagini} after={cell.after} button={cell.button} sizes={sizes} />}
+    {cell.type === 'text' && <TextCell title={cell.title} body={cell.body} as={cell.as} size={cell.size} immagini={cell.immagini} ingrandisci={cell.ingrandisci} after={cell.after} button={cell.button} sizes={sizes} />}
     {cell.type === 'list' && <ListCell items={cell.items} />}
     {cell.type === 'stat' && <StatCell value={cell.value} caption={cell.caption} countUp={cell.countUp} heading={cell.heading} />}
-    {cell.type === 'media' && <MediaCell image={cell.image} video={cell.video} overlay={cell.overlay} etichette={cell.etichette} alt={cell.alt} sizes={sizes} title={cell.caption} priority={!!cell.heroOf} seconda={cell.seconda} immagini={cell.immagini} ingrandisci={cell.ingrandisci} />}
+    {cell.type === 'media' && <MediaCell image={cell.image} video={cell.video} overlay={cell.overlay} etichette={cell.etichette} alt={cell.alt} sizes={sizes} title={cell.caption} priority={!!cell.heroOf} pila={cell.pila} immagini={cell.immagini} ingrandisci={cell.ingrandisci} fondo={cell.fondo} />}
     {cell.type === 'clock' && <ClockCell />}
     {cell.type === 'meter' && <MeterCell />}
     {cell.type === 'cursor' && <CursorCell />}
@@ -88,7 +90,7 @@ if (cell.type === 'project' && !p) throw new Error(`[grid] progetto non trovato:
     {cell.type === 'globe' && <GlobeCell />}
     {cell.type === 'barattolo' && <BarattoloCell barattoli={cell.barattoli} title={cell.title} body={cell.body} />}
     {cell.type === 'telefono' && <TelefonoCell video={cell.video} alt={cell.alt} title={cell.title} body={cell.body} logo={cell.logo} logoAlt={cell.logoAlt} />}
-    {cell.type === 'sticker' && <StickerCell immagini={cell.immagini} alt={cell.alt} title={cell.title} body={cell.body} button={cell.button} />}
+    {cell.type === 'sticker' && <StickerCell immagini={cell.immagini} alt={cell.alt} title={cell.title} body={cell.body} button={cell.button} testata={cell.testata} />}
     {cell.type === 'affissione' && <AffissioneCell affissioni={cell.affissioni} title={cell.title} sizes={sizes} />}
     {cell.type === 'sottologo' && <SottologoCell logo={cell.logo} immagini={cell.immagini} title={cell.title} body={cell.body} sizes={sizes} />}
     {cell.type === 'radio' && <RadioCell togli={!!cell.nascosta} />}
@@ -97,10 +99,12 @@ if (cell.type === 'project' && !p) throw new Error(`[grid] progetto non trovato:
     {cell.type === 'ridisegno' && <RidisegnoCell svg={cell.svg} alt={cell.alt} title={cell.title} body={cell.body} />}
     {cell.type === 'animato' && <AnimatoCell svg={cell.svg} alt={cell.alt} title={cell.title} body={cell.body} fondo={cell.fondo} />}
     {cell.type === 'palette' && <PaletteCell prima={cell.prima} dopo={cell.dopo} />}
+    {cell.type === 'sfumatura' && <SfumaturaCell colori={cell.colori} />}
+    {cell.type === 'copertine' && <CopertineCell cartella={cell.cartella} alt={cell.alt} righe={cell.righe} />}
     {cell.type === 'versioni' && <VersioniCell versioni={cell.versioni} alt={cell.alt} />}
     {cell.type === 'punti' && <PuntiCell punti={cell.punti} />}
     {cell.type === 'collezioni' && <CollezioniCell title={cell.title} body={cell.body} collezioni={cell.collezioni} sizes={sizes} />}
-    {cell.type === 'contesto' &&<ContestoCell title={cell.title} body={cell.body} image={cell.image} alt={cell.alt} fondo={cell.fondo} sizes={sizes} />}
+    {cell.type === 'contesto' &&<ContestoCell title={cell.title} body={cell.body} image={cell.image} alt={cell.alt} fondo={cell.fondo} didascalia={cell.didascalia} sizes={sizes} />}
     {cell.type === 'error' && <ErrorCell code={cell.code} title={cell.title} />}
     {cell.type === 'archive-head' && <ArchiveHeadCell total={cell.total} />}
     {cell.type === 'tags' && <TagsCell tags={cell.tags} total={projects} />}

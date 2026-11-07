@@ -2,7 +2,8 @@ import type { ImageMetadata } from 'astro';
 import type { SvgName } from './svgs';
 import type { TagCount } from '../lib/tags';
 
-/** Unità occupate da una cella: w = colonne, h = righe (unità piccola: la cella quadrata di base è 2×2). */
+/** Unità occupate da una cella: w = colonne, h = righe (unità piccola: la cella quadrata di base è 2×2). Nei fogli h
+    può essere a quarti (un quarto = un quadretto: le righe della griglia sono quadretti), es. le hero dei progetti. */
 export interface Span {
   w: number;
   h: number;
@@ -108,13 +109,16 @@ export type Cell = CellBase & (
       body?: string | string[]; as?: 'h1' | 'h2' | 'p'; size?: 's' | 'm' | 'l';
       /** foto sotto il paragrafo, in un carosello che gira da solo (una sola: ferma) */
       immagini?: Array<{ image: ImageMetadata; alt: string }>;
+      /** le foto si ingrandiscono al clic, sopra il retino (scripts/ingrandisci.ts), invece di passare alla dopo */
+      ingrandisci?: true;
       /** sotto le foto: un altro paragrafo; button = coda in fondo alla cella (CodaLink) */
       after?: string; button?: Bottone;
     }
   | { type: 'list'; title: string; items: Array<string | { label: string; href: string }> }
   | { type: 'stat'; value: string; caption: string; /** il numero sale da 0 quando la cella entra in vista */ countUp?: boolean; /** h1 nascosto: la cella fa da hero di una pagina */ heading?: string }
   | { type: 'media'; image?: ImageMetadata; video?: string; overlay?: ImageMetadata; etichette?: 'scure'; alt: string; caption?: string;
-      /** un'altra foto sotto la prima, nella stessa cella (metà altezza ciascuna) */ seconda?: { image: ImageMetadata; alt: string };
+      /** colore del campo sotto un disegno SVG (con le etichette chiare) */ fondo?: string;
+      /** altre foto sotto la prima, nella stessa cella, in colonna (stessa altezza ciascuna) */ pila?: Array<{ image: ImageMetadata; alt: string }>;
       /** altre foto a turno con la prima, in un carosello che gira da solo (con `ingrandisci` il clic ingrandisce, non passa alla dopo).
        *  taglio 'sopra': posata sul bordo di sotto, se non ci sta perde solo la parte alta */
       immagini?: Array<{ image: ImageMetadata; alt: string; taglio?: 'sopra' }>;
@@ -133,8 +137,9 @@ export type Cell = CellBase & (
    *  `logo`: SVG del cliente (testo in tracciati) in basso a sinistra, sopra la mano, con la sua descrizione `logoAlt` */
   | { type: 'telefono'; video: string; alt: string; eyebrow?: string; title?: string; body?: string | string[]; logo?: ImageMetadata; logoAlt?: string }
   /** sticker (WebP col bordo bianco, tools/sticker.mjs) in un nastro infinito sotto il titolone, da destra a
-   *  sinistra (solo CSS), e un paragrafo in fondo. `alt` descrive l'insieme */
-  | { type: 'sticker'; immagini: ImageMetadata[]; alt: string; eyebrow?: string; title?: string; body?: string; button?: Bottone }
+   *  sinistra (solo CSS), e un paragrafo in fondo. `alt` descrive l'insieme. `testata`: forma dietro occhiello e titolo
+   *  (scritte in carta), che sborda dalla cella: se ne vede solo il lato di sotto */
+  | { type: 'sticker'; immagini: ImageMetadata[]; alt: string; eyebrow?: string; title?: string; body?: string; button?: Bottone; testata?: ImageMetadata }
   /** affissioni nella loro strada, una dopo l'altra (sfumano ogni tanto, il testo sotto cambia con loro): per ognuna la foto
    *  intera e, sopra, la stessa col solo cartellone scontornato; passando sulla foto la strada si schiarisce (al tocco si
    *  accende e si spegne). Titolone in alto, in fondo il paragrafo di ogni affissione col suo titolino `subtitle` */
@@ -163,6 +168,12 @@ export type Cell = CellBase & (
   /** la palette di un marchio prima e dopo (G&A): a sinistra titolo e testo dello stato e il righello Prima · Dopo, a destra
    *  i colori in bande, coi contrasti WCAG; un clic passa all'altro stato (scripts/palette.ts) */
   | { type: 'palette'; eyebrow?: string; prima: Palette; dopo: Palette }
+  /** due colori che sfumano l'uno nell'altro, il primo sopra e il secondo sotto (Purple Piper), nome e HEX al centro dei
+   *  quadrati in alto e in basso; la sfumatura ondeggia (scripts/sfumatura.ts) */
+  | { type: 'sfumatura'; colori: [Pick<Colore, 'nome' | 'hex'>, Pick<Colore, 'nome' | 'hex'>] }
+  /** un muro di copertine quadrate che si alternano veloci (Caleidoscopio): `cartella` in public/, `righe` (3) alte
+   *  quanto la cella (scripts/copertine.ts) */
+  | { type: 'copertine'; cartella: string; alt: string; righe?: number }
   /** le versioni di un logo, una alla volta (G&A): titoletto, il logo con le parti indicate da etichette e linee guida,
    *  il righello; un clic passa alla dopo (lib/versioni.ts, scripts/versioni.ts). `svg` = il file così com'è */
   | { type: 'versioni'; eyebrow?: string; alt: string; versioni: Array<{ title: string; svg: string; nome: string }> }
@@ -173,7 +184,7 @@ export type Cell = CellBase & (
    *  centro; un clic sulla foto fa la dopo, il righello porta a una collezione (scripts/collezioni.ts) */
   | { type: 'collezioni'; eyebrow?: string; title?: string; body?: string; collezioni: Array<{ nome: string; colore: string; logo: ImageMetadata; foto: ImageMetadata; alt: string }> }
   /** cella 02 delle pagine progetto con la foto di contesto: titolo (h1) e descrizione, sotto la foto a tutta larghezza */
-  | { type: 'contesto'; eyebrow?: string; title: string; body?: string; image: ImageMetadata; alt: string; fondo?: string }
+  | { type: 'contesto'; eyebrow?: string; title: string; body?: string; image: ImageMetadata; alt: string; fondo?: string; didascalia?: string }
   /** pagina d'errore: codice grande con glitch, titolo (h1) e link all'indice, su carta a quadretti */
   | { type: 'error'; code: string; title: string }
   /** recapiti (email, luogo, P.IVA, versione): cella del tavolo e dei fogli */

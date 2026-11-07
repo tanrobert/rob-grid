@@ -77,9 +77,21 @@ export function initCells() {
   if (document.querySelector('[data-palette]')) {
     import('./palette').then(m => signal.aborted || m.initPalette(signal));
   }
+  // sfumatura: due colori che sfumano ondeggiando, solo se la cella c'è
+  if (document.querySelector('[data-sfumatura]')) {
+    import('./sfumatura').then(m => signal.aborted || m.initSfumature(signal));
+  }
+  // copertine: il muro che si alterna (Caleidoscopio), solo se la cella c'è
+  if (document.querySelector('[data-copertine]')) {
+    import('./copertine').then(m => signal.aborted || m.initCopertine(signal));
+  }
   // versioni del logo: una alla volta, le parti che vanno e vengono, un clic per la dopo, solo se la cella c'è
   if (document.querySelector('[data-versioni]')) {
     import('./versioni').then(m => signal.aborted || m.initVersioni(signal));
+  }
+  // icone degli obiettivi (cella punti): un'animazione col mouse sul riquadro, solo col mouse e senza riduci movimento
+  if (FINE && !REDUCED && document.querySelector('svg[data-icona]')) {
+    import('./punti').then(m => signal.aborted || m.initPunti(signal));
   }
   // collezioni: una alla volta, foto, velo e logo, un clic per la dopo, solo se la cella c'è
   if (document.querySelector('[data-collezioni]')) {

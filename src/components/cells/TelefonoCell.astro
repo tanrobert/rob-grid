@@ -34,7 +34,7 @@ const schermo = `--x: ${G.left}%; --y: ${G.top}%; --w: ${G.width}%; --h: ${G.hei
       {Array.isArray(body) && body.map(p => <p class="body paragrafo">{p}</p>)}
     </div>
   )}
-  <div class="mano" style={schermo}>
+  <div class="mano" style={schermo} data-intero>
     <video data-autoplay muted loop playsinline preload="none" poster={pubblico(poster) ? poster : undefined} aria-label={alt}>
       {webm !== video && pubblico(webm) && <source src={webm} type='video/webm; codecs="av01.0.05M.08"' />}
       <source src={video} type="video/mp4" />
@@ -44,28 +44,29 @@ const schermo = `--x: ${G.left}%; --y: ${G.top}%; --w: ${G.width}%; --h: ${G.hei
   {logo && <img class="logo" src={logo.src} alt={logoAlt ?? ''} width={logo.width} height={logo.height} loading="lazy" decoding="async" />}
 </div>
 <style>
-  /* in colonna: titolo grande in alto, sotto mano e telefono, che salgono sull'ultima riga del titolo fino a metà
-     (resta leggibile perché è grande: scelta di Roberto del 29/10/2026). Il testo lungo va in una cella sua */
+  /* in colonna: titolo e paragrafo in alto, sotto mano e telefono. Senza paragrafo salgono sull'ultima riga del
+     titolo fino a metà (scelta di Roberto del 29/10/2026) */
   .telefono {
     position: absolute; inset: 0;
     display: flex; flex-direction: column;
+    /* un quadretto fra il testo e il telefono; il resto lo decide il mosaico (la cella cresce, data-intero) */
+    gap: var(--pad);
   }
   .testo {
     display: flex; flex-direction: column; gap: var(--m);
     padding: var(--pad-label) var(--pad) 0;
   }
-  .titolo {
-    /* la mano sale fin quasi a metà dell'ultima riga */
+  .titolo:last-child {
+    /* solo titolo: la mano sale fin quasi a metà dell'ultima riga */
     margin-bottom: -0.43em;
   }
-  /* mano e telefono posati sul lato basso (il polso esce dalla cella): tutta l'altezza che resta, più mezza riga
-     del titolo (margine negativo del titolo); spostati un poco a destra del centro, così a sinistra c'è posto per
-     il logo (30/10/2026, scelta di Roberto) */
+  /* mano e telefono posati sul lato basso (il polso esce dalla cella), sotto il testo, centrati e alti 95cqi
+     (6/11/2026, scelta di Roberto: prima riempivano lo spazio che restava, spostati a destra per il logo).
+     data-intero: se il testo li spinge fuori, la cella cresce (scripts/mosaico.ts) invece di schiacciarli */
   .mano {
     position: relative; z-index: 1;
-    flex: 1; min-height: 0; align-self: center;
+    flex: none; height: 95cqi; margin-top: auto; align-self: center;
     aspect-ratio: var(--rapporto);
-    translate: 14% 0;
   }
   .mano video {
     position: absolute; left: var(--x); top: var(--y); width: var(--w); height: var(--h);

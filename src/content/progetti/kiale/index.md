@@ -37,12 +37,14 @@ cells:
       - { nome: "Vellutata di carote, patate e piselli", mockup: vaso-alto, etichetta: ./etichette/vellutata-carote-patate-piselli.webp, bordo: ./etichette/vellutata-carote-patate-piselli.svg, parola: ./etichette/parola-vellutate.svg, interno: ./etichette/interno-carote-patate-piselli.webp, tipo: crema, dentro: "#ffa83c" }
       - { nome: "Vellutata di zucca e patate", mockup: vaso-alto, etichetta: ./etichette/vellutata-zucca-patate.webp, bordo: ./etichette/vellutata-zucca-patate.svg, parola: ./etichette/parola-vellutate.svg, interno: ./etichette/interno-zucca-patate.webp, tipo: crema, dentro: "#ffb83a" }
   # il testo delle etichette, in una cella sua dopo i barattoli (il titolo dei barattoli è corto e grande), con le foto
-  # dei vasetti veri sotto il paragrafo, in un carosello che gira da solo (originali in sorgenti/kiale/foto-etichette, ridotte a 1600 px)
+  # dei vasetti veri sotto il paragrafo, in un carosello che gira da solo (originali in sorgenti/kiale/foto-etichette, ridotte a 1600 px);
+  # un clic ingrandisce la foto in vista (6/11/2026, scelta di Roberto: prima passava alla dopo)
   - type: text
     w: 4
     h: 5
     size: s
     title: "Le etichette"
+    ingrandisci: true
     body: "Confetture, composte, sott'olio, sughi pronti e vellutate: per ogni prodotto **la stessa struttura**, con ingredienti a sinistra, nome al centro e valori nutrizionali a destra.\n\nCambiano **colori e illustrazione**. Due formati: **14×6 cm** per i vasetti, **14×9 cm** per le vellutate."
     immagini:
       - image: ./etichette-scaffale.jpg
@@ -55,52 +57,50 @@ cells:
         alt: "Una scatola regalo con i vasetti di Kiale: filetti di melanzane e di carote, pomodoro fresco e confettura di albicocche"
   # canale WhatsApp: registrazione dello schermo (tema chiaro, primi 11 secondi: ffmpeg -t 11) con un margine bianco attorno (gli angoli tondi
   # non tagliano ora e tasti), messa in prospettiva nello schermo del telefono da tools/telefono-mockup.py ("sorgenti/mockup/mockup-tel-3.psd"
-  # → public/telefono e public/media/kiale-canale). Cella stretta come i barattoli, testo sopra il telefono. Testo: bozza
+  # → public/telefono e public/media/kiale-canale). Cella stretta come i barattoli: titolo e testo sopra, il telefono sotto
+  # (6/11/2026: il testo, che stava in una cella sua dopo il telefono, è entrato qui). Testo: bozza
   - type: telefono
     w: 4
     h: 6
     md: { w: 4, h: 6 }
     sm: { w: 4, h: 6 }
     eyebrow: "Social · canale WhatsApp"
-    title: "Il menù, ogni giorno sul canale"
+    title: "Il menù ogni giorno, sul canale WhatsApp"
+    body: "Per il canale WhatsApp di Kiale **una card fissa per il menù del giorno**: primi, secondi e contorni, con lo stesso stile delle etichette.\n\nCambiano i piatti, **la pagina resta riconoscibile**."
     video: /media/kiale-canale.mp4
     # logo del canale, versione verticale (da Illustrator, già espanso, 30/10/2026)
     logo: ./canale-whatsapp.svg
     logoAlt: "Kiale · canale WhatsApp · menù giornaliero"
     alt: "Il canale WhatsApp di Kiale food service scorre sul telefono: una card del menù del giorno dopo l'altra"
-  # il testo del canale, in una cella sua dopo il telefono (il titolo del telefono è corto e grande)
-  - type: text
-    w: 4
-    h: 3
-    size: s
-    title: "Il canale WhatsApp"
-    body: "Per il canale WhatsApp di Kiale **una card fissa per il menù del giorno**: primi, secondi e contorni, con lo stesso stile delle etichette.\n\nCambiano i piatti, **la pagina resta riconoscibile**."
   # sito web: i piatti di kiale.it come sticker in un nastro infinito, da destra a sinistra (foto scontornate del sito, kiale-astro/src/assets/img,
-  # passate da tools/sticker.mjs: bordo bianco, stessa superficie)
+  # passate da tools/sticker.mjs: bordo bianco, stessa superficie). Dal 6/11/2026 i migliori dell'asporto (primi, secondi e contorni),
+  # più i mini burger e la coppetta di polpo del buffet
   - type: sticker
     w: 4
-    h: 6
-    md: { w: 4, h: 6 }
-    sm: { w: 4, h: 6 }
+    h: 4
+    md: { w: 4, h: 4 }
+    sm: { w: 4, h: 4 }
     eyebrow: "Web · sito"
     title: "Kiale.it, sul web come sul banco"
     # testo: bozza dal sito (pagine e descrizioni di kiale-astro)
     body: "Per kiale.it un sito in **tre pagine**: la home, l'asporto con primi, secondi e contorni pronti ogni giorno, e i buffet per eventi e feste.\n\nUn sito web **in espansione** che raccoglie una parte delle preparazioni di Kiale food service. Ogni piatto **scontornato**, come sul banco."
     button: { label: "Visita il sito", href: "https://kiale.it" }
-    alt: "I piatti del sito di Kiale, uno sull'altro come sticker: coppette, burger, pokè, fritti, pasta, dolci"
+    # il rettangolo verde a bordi grezzi dietro occhiello e titolo (6/11/2026, scelta di Roberto)
+    testata: ./rettangolo-grezzo.svg
+    alt: "I piatti del sito di Kiale come sticker, uno dopo l'altro: pasta, pokè, pollo con patate, verdure grigliate, mini burger"
     immagini:
-      - ./piatti/coppetta-polpo-patate.webp
+      - ./piatti/fusilli-pomodorini-provola.webp
       - ./piatti/tris-mini-burger.webp
+      - ./piatti/alette-pollo-patate-novelle.webp
       - ./piatti/poke.webp
-      - ./piatti/ciambella.webp
-      - ./piatti/fritti-misti.webp
+      - ./piatti/carciofi-insalata.webp
       - ./piatti/pomodori-ripieni-riso-patate.webp
-      - ./piatti/farfalle-pesto-pomodorini.webp
-      - ./piatti/cornetto-salato.webp
-      - ./piatti/coppetta-riso-zucchine-gamberi.webp
+      - ./piatti/coppetta-polpo-patate.webp
+      - ./piatti/cotoletta-pollo-patate-novelle.webp
       - ./piatti/mix-verdure-grigliate.webp
-      - ./piatti/tris-gamberi.webp
-      - ./piatti/pasticcini-crema.webp
+      - ./piatti/farfalle-pesto-pomodorini.webp
+      - ./piatti/riso-cantonese.webp
+      - ./piatti/peperoni-gratinati-forno-olive.webp
   # affissioni a Itri, una dopo l'altra: per ognuna la foto intera e la stessa col solo cartellone (sorgenti/kiale/affissione-*.png,
   # ridotte a 1500 px); passando sulla foto la strada si schiarisce
   - type: affissione
@@ -149,15 +149,37 @@ cells:
       - image: ./zio-checco-busta.webp
         lato: sinistra
         alt: "Una mano regge una busta arancione da asporto col timbro I panini di Zio Checco da Kiale e la scritta Pronti da gustare"
-  # cella riempitiva: i tre adesivi del banco in colonna (sorgenti/kiale/adesivi.png, 600×1200, allargato con margini
-  # trasparenti alla proporzione della cella 2×3, 7:11 quadretti: la foto va in cover e così non si taglia). Ultima: la
-  # griglia dense la infila nel primo buco libero. Senza numero: sulle immagini la linguetta è bianca e non si leggerebbe
+  # tappabuchi: i quattro bollini del banco, ognuno in una cella quadrata 2×2 (SVG di Illustrator, originali con il testo vivo
+  # in sorgenti/kiale/bollini, testo in tracciati con tools/svg-testo-tracciati.py auto; 6/11/2026, al posto della cella coi
+  # tre adesivi in PNG). Senza numero, filo né fondo, il bollino grande quanto la cella; la griglia dense li infila nei buchi
   - type: media
     w: 2
-    h: 3
+    h: 2
     label: false
-    image: ./adesivi.png
-    alt: "Tre adesivi di Kiale: Cucina tradizionale come a casa, L'antispreco Kiale e Prodotti artigianali"
+    frame: false
+    image: ./bollino-ricette-tradizionali.svg
+    alt: "Bollino di Kiale: Ricette tradizionali, con forchetta e cucchiaio"
+  - type: media
+    w: 2
+    h: 2
+    label: false
+    frame: false
+    image: ./bollino-prodotto-artigianale.svg
+    alt: "Bollino di Kiale: Prodotto artigianale, con un cuore"
+  - type: media
+    w: 2
+    h: 2
+    label: false
+    frame: false
+    image: ./bollino-antispreco.svg
+    alt: "Bollino di Kiale: L'antispreco, col marchio Kiale"
+  - type: media
+    w: 2
+    h: 2
+    label: false
+    frame: false
+    image: ./bollino-cucina-tradizionale.svg
+    alt: "Bollino di Kiale: Cucina tradizionale come a casa"
   # foto della tavolata (sorgenti/kiale/dsc1827-tavolata.jpg, 5324×3642, ridotta a 1600): circa 3:2 come la 4×3
   - type: media
     w: 4

@@ -27,7 +27,7 @@ const disegni = svg.map((raw, i) => {
 
 <div class="costruzione" data-costruzione>
   {title && <div class="testo"><h2 class="titolo titolone" data-lente="inversa">{title}</h2></div>}
-  <div class="disegno" role={uno ? undefined : 'img'} aria-label={uno ? undefined : alt} data-disegni>
+  <div class="disegno" role={uno ? undefined : 'img'} aria-label={uno ? undefined : alt} data-disegni style={`--somma: ${disegni.reduce((t, d) => t + d.h, 0)}`}>
     {disegni.map(d => (
       <div class="foglio" style={`--w: ${d.w}; --h: ${d.h}`}><Fragment set:html={d.html} /></div>
     ))}
@@ -41,13 +41,19 @@ const disegni = svg.map((raw, i) => {
   .costruzione { position: absolute; inset: 0; display: grid; grid-template: auto minmax(60cqi, 1fr) auto / minmax(0, 1fr); }
   .testo { padding: var(--pad-label) var(--pad) 0; pointer-events: none; }
   /* i disegni in colonna, centrati: ognuno alto in proporzione alla sua altezza nel file (stessa scala), la larghezza
-     viene dalla proporzione; se non ci sta, il disegno si rimpicciolisce dentro il suo riquadro */
+     viene dalla proporzione; se non ci sta, il disegno si rimpicciolisce dentro il suo riquadro. Non riempiono lo
+     spazio (6/11/2026, scelta di Roberto: più piccoli): sopra e sotto due vuoti che ne prendono ognuno il 20%
+     (--vuoto, in parti dell'altezza dei disegni, --somma), quindi i disegni ne hanno circa il 70% */
   .disegno {
+    --vuoto: 0.2;
     position: relative; cursor: var(--cursore-mano);
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--pad-label);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
     padding: var(--pad); min-height: 0;
   }
-  .foglio { flex: var(--h) 1 0; min-height: 0; aspect-ratio: var(--w) / var(--h); max-width: 100%; }
+  .disegno::before, .disegno::after { content: ''; flex: calc(var(--somma) * var(--vuoto)) 1 0; }
+  .foglio { flex: var(--h) 1 0; min-height: 0; aspect-ratio: var(--w) / var(--h); max-width: 70%; }
+  /* lo spazio solo fra un disegno e l'altro (con gap lo prenderebbero anche i vuoti) */
+  .foglio + .foglio { margin-top: var(--pad-label); }
   .foglio > :global(svg) { display: block; width: 100%; height: 100%; }
   .body { padding: var(--pad); }
 </style>

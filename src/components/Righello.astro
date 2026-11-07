@@ -22,32 +22,40 @@ const ultimo = voci.length - 1;
     <button class="tacca" type="button" style={`--i: ${i / ultimo}`} aria-label={v}
       aria-current={i === attivo ? 'step' : undefined} data-vai={i + 1} />
   ))}
-  <span class="cursore" aria-hidden="true"><span class="numero mono" data-numero>{segno}</span></span>
+  <span class="cursore" aria-hidden="true"></span>
+  <span class="numero mono" aria-hidden="true" data-numero>{segno}</span>
 </div>
 
 <style>
+  /* colori di base: segno rosso, quadratini sulla carta, numero d'inchiostro; chi lo posa su un campo colorato li
+     cambia (--righello-segno, --righello-fondo, --righello-testo: il barattolo, bianco sulla fascia) */
   .righello {
     --lato: var(--riga-label);
-    position: relative; height: calc(var(--lato) * 2.6); color: var(--rosso);
+    position: relative; height: calc(var(--lato) * 2.6); color: var(--righello-segno, var(--rosso));
+    /* contenitore: quadrato e numero si spostano con translate in cqw (vedi sotto) */
+    container-type: inline-size;
   }
   /* il filo all'altezza del centro dei quadrati (border: agganciato ai pixel); dentro i quadratini non passa */
   .righello::before { content: ''; position: absolute; left: 0; right: 0; bottom: calc(var(--lato) / 2); border-top: var(--line) solid; }
   .tacca {
     position: absolute; bottom: 0; left: calc(var(--i) * (100% - var(--lato)));
     width: var(--lato); height: var(--lato); padding: 0;
-    border: var(--line) solid; background: var(--bianco); color: inherit;
+    border: var(--line) solid; background: var(--righello-fondo, var(--bianco)); color: inherit;
   }
   /* si prende anche attorno: il quadratino è piccolo, il dito no */
   .tacca::after { content: ''; position: absolute; inset: calc(var(--lato) * -0.8); }
+  /* quadrato e numero scorrono solo con translate, coi tempi uguali: animati dal compositore, insieme. Prima il quadrato
+     andava con left (sul thread principale) e il numero, figlio suo, con translate: quando il thread principale era
+     occupato (il barattolo che ridisegna) i due andavano fuori passo e il testo tremava (7/11/2026) */
   .cursore {
-    position: absolute; bottom: 0; left: calc(var(--at) * (100% - var(--lato)));
+    position: absolute; bottom: 0; left: 0; translate: calc(var(--at) * (100cqw - var(--lato))) 0;
     width: var(--lato); height: var(--lato); background: currentColor; pointer-events: none;
-    transition: left 480ms var(--ease-morph);
+    transition: translate 480ms var(--ease-morph);
   }
   /* il segno parte dal quadrato a sinistra e finisce a filo del quadrato a destra, così in fondo non esce dalla cella */
   .numero {
-    position: absolute; bottom: calc(100% + var(--lato) * 0.4); left: 0; translate: calc(var(--at) * (var(--lato) - 100%)) 0;
-    color: var(--inchiostro); font-variant-numeric: tabular-nums; white-space: nowrap;
+    position: absolute; bottom: calc(var(--lato) * 1.4); left: 0; translate: calc(var(--at) * (100cqw - 100%)) 0;
+    color: var(--righello-testo, var(--inchiostro)); font-variant-numeric: tabular-nums; white-space: nowrap; pointer-events: none;
     transition: translate 480ms var(--ease-morph);
   }
 </style>

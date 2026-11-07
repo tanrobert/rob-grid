@@ -5,6 +5,10 @@
 // in fondo alla cella.
 // Senza JavaScript: la lunghezza di una serie (larghezze + spazi, in cqi) si conosce al build, il nastro si sposta di
 // esattamente una serie e riparte (due serie nel markup). Fermo fuori vista e con riduci movimento (.loop).
+// `testata` (6/11/2026, Kiale: il rettangolo verde a bordi grezzi): la forma dietro occhiello e titolo, stirata sulla
+// testa e più larga della cella di un quadretto per lato, così il taglio della cella ne lascia vedere solo il lato di
+// sotto, fino a metà dei piatti. Occhiello e titolo diventano color carta (global.css). L'SVG deve avere
+// preserveAspectRatio="none", se no non si stira.
 import type { ImageMetadata } from 'astro';
 import { Image } from 'astro:assets';
 import Paragrafi from '../Paragrafi.astro';
@@ -17,27 +21,36 @@ interface Props {
   body?: string;
   /** coda in fondo alla cella (es. Visita il sito): CodaLink */
   button?: { label: string; href: string };
+  testata?: ImageMetadata;
 }
-const { immagini, alt, title, body, button } = Astro.props;
+const { immagini, alt, title, body, button, testata } = Astro.props;
 
 const SCALA = 0.07;    // cqi per pixel dello sticker (uno sticker da 800 px è largo 56cqi)
 const SPAZIO = 3;      // tra un piatto e l'altro, cqi
-const VELOCITA = 14;   // cqi al secondo
+const VELOCITA = 24;   // cqi al secondo (14 fino al 6/11/2026: Roberto lo voleva più veloce)
 let seme = 7;
 const caso = () => (seme = seme * 16807 % 2147483647) / 2147483647;
-const piatti = immagini.map(img => ({ img, w: img.width * SCALA, y: (caso() - 0.5) * 14, r: (caso() - 0.5) * 18 }));
+// tutti sulla stessa riga, centrati in altezza (6/11/2026, scelta di Roberto: prima saltavano su e giù di ±7cqi), appena girati
+const piatti = immagini.map(img => ({ img, w: img.width * SCALA, r: (caso() - 0.5) * 12 }));
 const serie = piatti.reduce((s, p) => s + p.w + SPAZIO, 0);
+// metà del nastro (alto quanto il piatto più alto), dove finisce la testata
+const mezzoNastro = Math.max(...piatti.map(p => p.img.height * SCALA)) / 2;
 ---
 
-<div class="sticker">
-  {title && <div class="testo"><h2 class="titolo titolone" data-lente="inversa">{title}</h2></div>}
+<div class:list={['sticker', testata && 'sticker--testata']} style={testata && `--mezzo-nastro: ${mezzoNastro.toFixed(2)}cqi`}>
+  {title && (
+    <div class="testo">
+      {testata && <span class="testata" style={`--testata: url("${testata.src}")`} aria-hidden="true" />}
+      <h2 class="titolo titolone" data-lente="inversa">{title}</h2>
+    </div>
+  )}
   <div class="nastro" role="img" aria-label={alt}>
     <div class="traccia loop" style={`--serie: ${serie.toFixed(2)}cqi; --durata: ${(serie / VELOCITA).toFixed(1)}s`}>
       {[0, 1].map(() => piatti.map(p => (
         <Image
           src={p.img} alt="" widths={[320, 640]} sizes="(min-width: 600px) 280px, 70vw" loading="lazy" decoding="async"
           class="piatto"
-          style={`width: ${p.w.toFixed(2)}cqi; margin-right: ${SPAZIO}cqi; translate: 0 ${p.y.toFixed(1)}cqi; rotate: ${p.r.toFixed(1)}deg`}
+          style={`width: ${p.w.toFixed(2)}cqi; margin-right: ${SPAZIO}cqi; rotate: ${p.r.toFixed(1)}deg`}
         />
       )))}
     </div>
@@ -51,17 +64,30 @@ const serie = piatti.reduce((s, p) => s + p.w + SPAZIO, 0);
      paragrafo in fondo. La colonna resta larga quanto la cella: il nastro (max-content) la allargherebbe e il titolo
      non andrebbe a capo */
   .sticker { position: absolute; inset: 0; display: grid; grid-template: auto auto minmax(0, 1fr) / minmax(0, 1fr); }
-  .testo { padding: var(--pad-label) var(--pad) 0; pointer-events: none; }
+  .testo { position: relative; padding: var(--pad-label) var(--pad) 0; pointer-events: none; }
   .titolo {
+    position: relative;
     margin-bottom: -0.5em;
   }
+  /* la testata: sopra e ai lati fuori dalla cella di un quadretto, sotto fino a metà dei piatti (il nastro parte dal
+     fondo della .testo; 6/11/2026, scelta di Roberto: prima un quadretto e poi 1,6 sotto il titolo) */
+  .testata {
+    position: absolute; z-index: 0;
+    inset: calc(var(--pad) * -1) calc(var(--pad) * -1) calc(var(--mezzo-nastro) * -1);
+    background: var(--testata) center / 100% 100% no-repeat;
+  }
+  .sticker--testata .titolo { color: var(--bianco); }
   .nastro { position: relative; z-index: 1; display: flex; align-items: center; }
   .traccia {
     display: flex; align-items: center; width: max-content;
     animation: sticker-scorre var(--durata) linear infinite;
+    /* un livello suo dall'inizio: il nastro scorre sulla scheda grafica senza ridisegnare i piatti */
+    will-change: transform;
   }
   .piatto { flex: none; height: auto; }
-  .body { align-self: end; padding: 0 var(--pad) var(--pad); }
+  /* almeno un quadretto sotto il nastro. safe: se non ci sta esce dal fondo (non sopra il nastro), e il mosaico
+     (scripts/mosaico.ts) allunga la cella */
+  .body { align-self: safe end; padding: var(--pad); }
   /* con la coda (Visita il sito) il paragrafo le sta sopra */
   .sticker:has(> .coda-info) .body { padding-bottom: calc(var(--coda-info) + var(--pad)); }
   @keyframes sticker-scorre { to { transform: translateX(calc(var(--serie) * -1)); } }

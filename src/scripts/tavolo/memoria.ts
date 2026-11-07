@@ -14,6 +14,8 @@ export interface Salvato {
   pan: [number, number];
   /** id → [x, y, ordine sopra/sotto], in quadretti */
   pos: Record<string, [number, number, number]>;
+  /** id → [x, y] della disposizione pensata (l'ultimo Riordina o la prima): dice se il tavolo è scombinato */
+  ordine?: Record<string, [number, number]>;
 }
 
 export function leggi(v: string): Salvato | null {

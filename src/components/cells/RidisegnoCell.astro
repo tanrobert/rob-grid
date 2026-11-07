@@ -1,7 +1,7 @@
 ---
 // Un marchio ridisegnato in un'animazione sola (G&A, 6/11/2026, idea di Roberto): il marchio storico al centro, zoom sul
-// braccio di sinistra mentre gli altri tre spariscono, i vertici e i lati del braccio segnati in rosso, il braccio che
-// prende le misure esatte (la FIG 03), poi zoom indietro e i tre bracci ridisegnati compaiono. Titoletto e paragrafo
+// braccio di sinistra mentre gli altri tre spariscono (il braccio resta quello del file, imperfezioni comprese), poi
+// tutti insieme ancoraggi, maniglie e lati in rosso, e il braccio che prende le misure esatte (la FIG 03), poi zoom indietro e i tre bracci ridisegnati compaiono. Titoletto e paragrafo
 // in alto e il disegno sotto, staccato da un filo; nella cella orizzontale il testo a sinistra e il disegno a destra. Parte quando se ne vede metà, ricomincia ogni volta che torna in
 // vista; sotto il testo il righello Prima · Dopo (6/11/2026, scelta di Roberto, come la palette): Dopo fa il ridisegno,
 // Prima lo riavvolge fino al marchio storico, un clic sul disegno passa all'altro (scripts/ridisegno.ts, che legge
@@ -53,6 +53,9 @@ const disegno = svg
   .disegno :global(.guida) { stroke: color-mix(in srgb, var(--inchiostro) 30%, var(--bianco)); }
   .disegno :global(.lati) { fill: none; stroke: var(--rosso); }
   .disegno :global(.vertice) { fill: var(--bianco); stroke: var(--rosso); }
+  /* le maniglie delle curve, come in Illustrator: asta e pallino */
+  .disegno :global(.maniglia) { stroke: var(--rosso); }
+  .disegno :global(.presa) { fill: var(--rosso); stroke: none; }
 
   /* cella orizzontale (6/11/2026, G&A 8×5, scelta di Roberto): come l'evoluzione, il testo a sinistra e il disegno a
      destra, alto quanto la cella e largo un quadretto meno (cqb = l'altezza della cella), mai più di due terzi */

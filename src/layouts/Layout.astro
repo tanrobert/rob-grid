@@ -48,6 +48,8 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
         var root = document.documentElement;
         // js: il tavolo resta nascosto finché scripts/tavolo non l'ha disposto per la finestra vera
         root.classList.add('js');
+        // tavolo scuro (scripts/tavolo/scuro.ts), prima del primo disegno: niente lampo chiaro
+        try { if (localStorage.getItem('scuro') === 'si') root.dataset.scuro = ''; } catch (e) {}
 
         // Arrivo da una pagina del sito (clic, non ricarica): niente intro. Su una pagina con foglio il foglio
         // entra dalla cella del tavolo che l'ha aperto (scripts/foglio): fino ad allora resta nascosto (in-arrivo)

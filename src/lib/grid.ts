@@ -13,21 +13,28 @@ export const QF_MAX_PROGETTI = 28;
 /** Altezza massima di una cella, in unità */
 const MAX_H = 24;
 
-const clamp = (n: number, max: number) => Math.max(1, Math.min(Math.round(n), max));
+/** larghezze in unità intere; altezze anche a quarti (righe a quadretti: un quarto di unità = un quadretto) */
+const clamp = (n: number, max: number, passo = 1) => Math.max(1, Math.min(Math.round(n / passo) * passo, max));
 
 export function resolveSpans(cell: Cell): Record<keyof typeof COLS, Span> {
-  const lg = { w: clamp(cell.w, COLS.lg), h: clamp(cell.h, MAX_H) };
-  const md = { w: clamp(cell.md?.w ?? lg.w, COLS.md), h: clamp(cell.md?.h ?? lg.h, MAX_H) };
-  const sm = { w: clamp(cell.sm?.w ?? md.w, COLS.sm), h: clamp(cell.sm?.h ?? md.h, MAX_H) };
+  const lg = { w: clamp(cell.w, COLS.lg), h: clamp(cell.h, MAX_H, 0.25) };
+  const md = { w: clamp(cell.md?.w ?? lg.w, COLS.md), h: clamp(cell.md?.h ?? lg.h, MAX_H, 0.25) };
+  const sm = { w: clamp(cell.sm?.w ?? md.w, COLS.sm), h: clamp(cell.sm?.h ?? md.h, MAX_H, 0.25) };
   return { lg, md, sm };
 }
 
-/** Forma di un progetto scalata per ogni breakpoint (×1 sul tavolo e in archivio, ×2 nella hero).
-    Se non ci sta nelle colonne va a tutta larghezza con lo stesso rapporto: l'immagine non si deforma. */
-export function scaleShape(shape: Span, factor: number): Span & { md: Span; sm: Span } {
+/** Altezza in unità (a quarti) di una cella larga w unità con la proporzione r (larghezza / altezza): la cella è
+    4w−1 quadretti per 4h−1, quindi l'altezza in quadretti più quello dello spazio sotto, diviso 4 */
+export const altezzaInProporzione = (w: number, r: number) => (Math.max(3, Math.round((4 * w - 1) / r)) + 1) / 4;
+
+/** Forma di un progetto scalata per ogni breakpoint (×1 in archivio, ×2 nella hero); se non ci sta nelle colonne va
+    a tutta larghezza. Con `r` (la proporzione di quello che la cella mostra, video o copertina: `proporzione` in
+    data/projects.ts) la forma dà solo la larghezza e l'altezza, in quadretti, viene da `r`: la cella ha la stessa
+    proporzione che ha sul tavolo (6/11/2026, scelta di Roberto). Senza, il rapporto della forma. */
+export function scaleShape(shape: Span, factor: number, r?: number): Span & { md: Span; sm: Span } {
   const fit = (cols: number): Span => {
-    const w = shape.w * factor, h = shape.h * factor;
-    return w <= cols ? { w, h } : { w: cols, h: Math.round((h * cols) / w) };
+    const w = Math.min(shape.w * factor, cols);
+    return { w, h: r ? altezzaInProporzione(w, r) : Math.round((shape.h * factor * w) / (shape.w * factor)) };
   };
   return { ...fit(COLS.lg), md: fit(COLS.md), sm: fit(COLS.sm) };
 }

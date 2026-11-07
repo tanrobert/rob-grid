@@ -150,9 +150,13 @@ function principale() {
 function tavoloVivo(vivo: boolean) {
   html.classList.toggle('is-tavolo', vivo);
   if (tavolo) tavolo.v.el.inert = !vivo;
-  // la firma in alto a sinistra: sul tavolo solo segno, coi fogli porta al tavolo (components/Firma)
+  // la firma in alto a sinistra: sul tavolo solo segno (l'animazione sì, il link no), coi fogli porta al tavolo
+  // (components/Firma; il clic sul tavolo lo ferma il listener qui sotto)
   const firma = document.querySelector<HTMLElement>('[data-firma]');
-  if (firma) firma.inert = vivo;
+  if (firma) {
+    firma.tabIndex = vivo ? -1 : 0;
+    if (vivo) firma.setAttribute('aria-hidden', 'true'); else firma.removeAttribute('aria-hidden');
+  }
 }
 
 /**
@@ -367,6 +371,10 @@ document.addEventListener('click', e => {
   chiusura(!!x && !x.classList.contains('cell__go'));
 }, { capture: true });
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && !html.classList.contains('is-tavolo')) chiusura(); });
+// sul tavolo la firma è solo un segno: il clic non ricarica la home
+document.addEventListener('click', e => {
+  if (html.classList.contains('is-tavolo') && (e.target as Element).closest?.('[data-firma]')) e.preventDefault();
+}, { capture: true });
 
 /** Scarica la pagina prima di cambiare indirizzo: se non riesce, la pagina vera */
 async function prepara(a: HTMLAnchorElement, sostituisci = false) {

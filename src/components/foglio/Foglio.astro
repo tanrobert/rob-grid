@@ -69,10 +69,11 @@ const recapiti: Cell = { id: 'recapiti', type: 'contatti', w: 4, h: 2, tone: 're
     margin-inline: auto;
     padding: var(--qf);
   }
-  /* sopra il tavolo la firma (components/Firma) resta fissa in alto a sinistra: le celle partono sotto di lei, con
-     un quadretto di carta in mezzo. 25 e 18 = la sua altezza (Q.lg, Q.sm di lib/tavolo.ts) */
-  .foglio[data-foglio] { padding-top: calc(var(--m) + 25px + var(--qf)); }
-  @media (max-width: 599px) { .foglio[data-foglio] { padding-top: calc(var(--m) + 18px + var(--qf)); } }
+  /* sopra il tavolo la firma (components/Firma) resta ferma in alto a sinistra: sul computer a 25px dal bordo e alta
+     25 (Q.lg di lib/tavolo.ts), sul telefono a un quadretto del foglio e alta 18 (Q.sm). Le celle partono sotto di
+     lei, con un quadretto di carta in mezzo */
+  .foglio[data-foglio] { padding-top: calc(25px * 2 + var(--qf)); }
+  @media (max-width: 599px) { .foglio[data-foglio] { padding-top: calc(var(--qf) * 2 + 18px); } }
 
   /* colonne vuote chiuse (auto-fit) e quelle usate al centro: lo scarto è di mezze colonne, cioè quadretti interi.
      Non nell'archivio: filtrando le colonne usate cambiano e tutta la griglia si sposterebbe */

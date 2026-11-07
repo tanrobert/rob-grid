@@ -1,0 +1,37 @@
+---
+// Un muro di copertine che si alternano veloci (6/11/2026, Purple Piper: Caleidoscopio, l'archivio di copertine
+// progressive nato dai dati della radio, idea di Roberto). Copertine quadrate attaccate, `righe` righe alte quanto la
+// cella, tante colonne quante ci stanno (centrate: si tagliano uguali ai due lati). Le copertine sono WebP piccolissimi
+// in public (`cartella`), pescati a caso dall'archivio con tools/caleidoscopio-copertine.mjs; scripts/copertine.ts le
+// rimescola a ogni visita e ne cambia una alla volta, a caso, ogni poco. Ferme fuori vista, senza JavaScript e con
+// riduci movimento (rimescolate lo stesso).
+import fs from 'node:fs';
+import path from 'node:path';
+
+interface Props {
+  /** cartella in public/ con le copertine (es. /caleidoscopio/copertine) */
+  cartella: string;
+  alt: string;
+  righe?: number;
+}
+const { cartella, alt, righe = 3 } = Astro.props;
+const file = fs.readdirSync(path.join(process.cwd(), 'public', cartella)).filter(f => /\.(webp|jpe?g|png)$/i.test(f)).sort();
+if (!file.length) throw new Error(`[copertine] nessuna copertina in public${cartella}: node tools/caleidoscopio-copertine.mjs`);
+const tutte = file.map(f => `${cartella}/${f}`);
+// le tessere: abbastanza per la cella più larga (16 colonne) senza superare le copertine che ci sono
+const tessere = tutte.slice(0, Math.min(tutte.length, righe * 16));
+---
+
+<div class="copertine" role="img" aria-label={alt} data-copertine={JSON.stringify(tutte)} style={`--righe: ${righe}`}>
+  {tessere.map(src => <img src={src} alt="" width="160" height="160" loading="lazy" decoding="async" />)}
+</div>
+
+<style>
+  .copertine {
+    position: absolute; inset: 0; overflow: clip;
+    display: grid; grid-template-rows: repeat(var(--righe), 1fr); grid-auto-flow: column;
+    grid-auto-columns: calc(100cqb / var(--righe)); justify-content: center;
+    background: var(--inchiostro);
+  }
+  img { display: block; width: 100%; height: 100%; object-fit: cover; }
+</style>

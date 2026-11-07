@@ -1,44 +1,84 @@
 ---
-// ROBERTO piccolo col font del logotipo in alto a sinistra, fisso, maiuscole alte un quadretto del tavolo a 1×
-// (25px, 18 sul telefono; sta fuori da .tavolo, lo zoom non lo cambia).
-// - Sul tavolo è solo un segno (il nome lo dice già la cella `nome`): inerte, sotto si trascina il tavolo.
-// - Col foglio aperto resta dov'è e porta alla home (1/11/2026): data-close chiude tutta la pila, come le celle
-//   Indice (scripts/foglio, che lo rende inerte o vivo con il tavolo). In hover le lettere si riempiono di rosso
-//   una alla volta da sinistra, e lasciandolo si svuotano da destra.
+// Firma in alto a sinistra, fissa, alta un quadretto del tavolo a 1× (25px, 18 sul telefono; sta fuori da .tavolo,
+// lo zoom non la cambia).
+// - Di base è il marchio R (6/11/2026, idea di Roberto). Col mouse sopra (o col fuoco) il marchio lascia il posto alla R
+//   bucata del logotipo e da sotto di lei escono le altre lettere, scalettando verso destra; lasciando, il contrario.
+//   Solo CSS: la R del font è quadrata quanto il marchio (680 × 680 su 1000), quindi i due si sovrappongono esatti.
+// - Sul tavolo l'animazione c'è (6/11/2026), ma non è un link: il clic non fa niente, fuori dal Tab e dagli screen
+//   reader (il nome lo dice già la cella `nome`). scripts/foglio la cambia aprendo e chiudendo i fogli.
+// - Col foglio aperto resta dov'è e porta alla home (1/11/2026): data-close chiude tutta la pila, come le celle Indice.
 import { Q } from '../lib/tavolo';
+import SvgAsset from './SvgAsset.astro';
 
-interface Props { /** la pagina è il tavolo (home) */ inerte?: boolean }
+interface Props { /** la pagina è il tavolo (home): la firma non è un link */ inerte?: boolean }
 const { inerte = false } = Astro.props;
-/** lettere col loro turno: --i da sinistra, --j da destra */
-const lettere = [...'Roberto'].map((l, i, tutte) => ({ l, stile: `--i:${i};--j:${tutte.length - 1 - i}` }));
+/** avanzamenti delle lettere nel font del logotipo, in em (1000 unità; ROBERTO non ha crenatura) */
+const AVANZA: Record<string, number> = { R: 0.78, O: 0.765, B: 0.78, E: 0.7, T: 0.74 };
+/** lettere dopo la R col loro turno (--i da sinistra, --j da destra) e --da, quanto vanno indietro per stare sotto la R */
+let x = AVANZA.R;
+const lettere = [...'OBERTO'].map((l, i, tutte) => {
+  const stile = `--i:${i};--j:${tutte.length - 1 - i};--da:${-x}em`;
+  x += AVANZA[l];
+  return { l, stile };
+});
 ---
 
-<a class="firma logotipo" href="/" data-close data-firma inert={inerte} aria-label="Roberto Tanasi, torna al tavolo" style={`--q-lg:${Q.lg}px;--q-sm:${Q.sm}px`}>
-  <span aria-hidden="true">{lettere.map(({ l, stile }) => <span class="firma__l" style={stile}>{l}</span>)}</span>
+<a class="firma logotipo" href="/" data-close data-firma tabindex={inerte ? -1 : undefined} aria-hidden={inerte ? 'true' : undefined} aria-label="Roberto Tanasi, torna al tavolo" style={`--q-lg:${Q.lg}px;--q-sm:${Q.sm}px`}>
+  <span class="firma__r" aria-hidden="true">R</span>
+  <span class="firma__marchio"><SvgAsset name="logo-r" /></span>
+  <span class="firma__resto" aria-hidden="true">{lettere.map(({ l, stile }) => <span class="firma__l" style={stile}>{l}</span>)}</span>
 </a>
 
 <style>
+  /* al centro di un quadrato d'angolo, ferma (6/11/2026, scelte di Roberto): a un quadretto dal bordo sinistro e da
+     quello di sopra, lo stesso sul tavolo e coi fogli aperti (aprendo e chiudendo non si muove). Sul computer il
+     quadretto del tavolo (25); sul telefono quello dei fogli (--qf di Foglio.astro: 4 colonne a tutta finestra, 15
+     quadretti), così sta a filo dei testi delle celle, che toccano i bordi. Le celle del foglio partono un quadretto
+     sotto di lei (Foglio.astro).
+     Il riquadro è quello della sola R: le altre lettere stanno fuori (assolute), così il mouse la sveglia solo sul marchio */
   .firma {
+    --q-firma: var(--q-lg);
+    --uscita: 340ms;
+    --curva: cubic-bezier(0.22, 1, 0.36, 1);
     position: fixed; z-index: 40;
-    top: max(var(--gap), env(safe-area-inset-top));
-    left: max(var(--gap), env(safe-area-inset-left));
-    font-size: calc(var(--q-lg) / var(--maiuscole));
-    color: var(--inchiostro); text-decoration: none;
+    top: max(var(--margine-ui), env(safe-area-inset-top));
+    left: max(var(--margine-ui), env(safe-area-inset-left));
+    font-size: calc(var(--q-firma) / var(--maiuscole));
+    /* rossa (6/11/2026, scelta di Roberto): marchio e logotipo, come la R e ROBERTO del tavolo */
+    color: var(--rosso); text-decoration: none;
   }
-  @media (max-width: 599px) { .firma { font-size: calc(var(--q-sm) / var(--maiuscole)); } }
-  /* sul tavolo i gesti passano sotto */
-  :global(html.is-tavolo) .firma { pointer-events: none; }
+  @media (max-width: 599px) { .firma { --q-firma: var(--q-sm); } }
+  /* sul tavolo non porta da nessuna parte: la freccia */
+  :global(html.is-tavolo) .firma { cursor: var(--cursore); }
 
-  /* il ritardo è quello dello stato d'arrivo: entrando da sinistra (--i), uscendo da destra (--j). 35ms tra una
-     lettera e l'altra (stagger sotto i 50) */
+  /* marchio sopra l'inchiostro della R: .logotipo toglie il margine sinistro della R (0,07 em) e alza la riga di 0,03.
+     R e marchio stanno sopra le lettere, che passano sotto di loro: niente ritaglio, le copre solo il disegno */
+  .firma__r { position: relative; z-index: 1; opacity: 0; transition: opacity 0s 140ms; }
+  .firma__marchio {
+    position: absolute; z-index: 1; left: 0.07em; top: 0.03em;
+    width: calc(var(--maiuscole) * 1em); height: calc(var(--maiuscole) * 1em);
+    transition: opacity 140ms ease-out;
+  }
+  .firma__marchio :global(svg) { display: block; width: 100%; height: 100%; }
+
+  /* le altre lettere, dopo la R: a riposo tutte impilate sotto di lei (--da) e trasparenti. Uscendo parte prima
+     l'ultima (--j), così si allargano a scaletta verso destra senza scavalcarsi; compaiono appena partite. Rientrando
+     parte prima la prima (--i) e svaniscono mentre tornano, così non si ammucchiano accanto alla R. 25ms tra una lettera e l'altra (stagger sotto i 50) */
+  .firma__resto { position: absolute; left: 100%; top: 0; pointer-events: none; }
   .firma__l {
-    transition: color 60ms linear;
-    transition-delay: calc(var(--j) * 35ms);
+    display: inline-block;
+    translate: var(--da) 0;
+    opacity: 0;
+    transition: translate var(--uscita) var(--curva), opacity 100ms linear;
+    transition-delay: calc(var(--i) * 25ms), calc(var(--i) * 25ms + 50ms);
   }
   @media (hover: hover) and (pointer: fine) {
-    .firma:hover .firma__l {
-      color: var(--rosso);
-      transition-delay: calc(var(--i) * 35ms);
-    }
+    .firma:hover .firma__resto { pointer-events: auto; }
+    .firma:hover .firma__r { opacity: 1; transition-delay: 0s; }
+    .firma:hover .firma__marchio { opacity: 0; }
+    .firma:hover .firma__l { translate: 0 0; opacity: 1; transition-delay: calc(var(--j) * 25ms); }
   }
+  .firma:focus-visible .firma__r { opacity: 1; transition-delay: 0s; }
+  .firma:focus-visible .firma__marchio { opacity: 0; }
+  .firma:focus-visible .firma__l { translate: 0 0; opacity: 1; transition-delay: calc(var(--j) * 25ms); }
 </style>

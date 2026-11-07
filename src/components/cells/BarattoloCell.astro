@@ -1,6 +1,6 @@
 ---
 // Barattoli col mockup vero: l'etichetta piatta avvolta sul cilindro misurato nel PSD (tools/barattolo-mockup.py,
-// livelli in public/barattolo/<mockup>), che si gira trascinando e si sfoglia con ‹ ›. Ogni barattolo ha il suo vaso,
+// livelli in public/barattolo/<mockup>), che si gira trascinando e si sfoglia col righello. Ogni barattolo ha il suo vaso,
 // il più grande che ci sta e centrato (non più alla stessa scala degli altri). Disegnati da scripts/barattolo.ts, caricato solo se la cella c'è e quando si avvicina allo schermo.
 // In colonna: titolo in alto a sinistra (--titolone), sotto la parola della linea, poi i barattoli. Laboratorio: tools/pages/barattolo.html.
 import Paragrafi from '../Paragrafi.astro';
@@ -9,6 +9,7 @@ import path from 'node:path';
 import sharp from 'sharp';
 import type { Barattolo } from '../../data/grid-types';
 import { pad2 } from '../../lib/format';
+import Righello from '../Righello.astro';
 
 interface Props {
   barattoli: Barattolo[];
@@ -53,31 +54,31 @@ const primo = barattoli[0].nome;
       {Array.isArray(body) && body.map(p => <p class="body paragrafo">{p}</p>)}
     </div>
     <canvas class="tela" data-tela role="img" aria-label={`${primo}: trascina per girare il barattolo`}></canvas>
-    <div class="coda-info">
-      <span class="coda-info__testo" data-nome aria-live="polite">{primo}</span>
-      {barattoli.length > 1 && (
-        <span class="sfoglia mono">
-          <button type="button" data-passo="-1" aria-label="Barattolo precedente">‹</button>
-          <span data-conta>{pad2(1)}/{pad2(barattoli.length)}</span>
-          <button type="button" data-passo="1" aria-label="Barattolo successivo">›</button>
-        </span>
-      )}
+    {/* in fondo il righello dei barattoli (6/11/2026, scelta di Roberto: al posto della didascalia con ‹ 01/10 ›): il
+        segno sopra il quadrato è numero e nome; il nome per gli screen reader sta a parte (aria-live) */}
+    <div class="piede">
+      <span class="sr-only" data-nome aria-live="polite">{primo}</span>
+      {barattoli.length > 1
+        ? <Righello voci={barattoli.map(b => b.nome)} attivo={0} segno={`${pad2(1)} · ${primo}`} nome="Barattoli" />
+        : <span class="mono" aria-hidden="true">{primo}</span>}
     </div>
   </div>
 </div>
 
 <style>
   /* in colonna (la vetrina, a griglia): titolo e sotto la parola della linea, a tutta larghezza; sotto la tela dei
-     barattoli, fino alla didascalia. Tutti i vasi al centro (6/11/2026, scelta di Roberto; dal 29/10 il vaso alto andava
-     dal titolo alla didascalia). Il bordo dell'etichetta in fondo, subito sopra la didascalia */
+     barattoli, fino al righello. Tutti i vasi al centro (6/11/2026, scelta di Roberto; dal 29/10 il vaso alto andava
+     dal titolo al righello). Il bordo dell'etichetta in fondo, subito sopra il righello */
   .barattolo { position: absolute; inset: 0; }
-  /* il bordo dell'etichetta in fondo, sotto il barattolo e sopra la didascalia (scripts/barattolo.ts): la tela del barattolo è
+  /* il bordo dell'etichetta in fondo, sotto il barattolo e sopra il righello (scripts/barattolo.ts): la tela del barattolo è
      trasparente fuori dalla sagoma del vaso. Sopra la carta, la tela dell'ombra a terra (stessa misura) */
   .carta { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
-  .vetrina { position: absolute; inset: 0; display: grid; grid-template-rows: auto minmax(0, 1fr) var(--coda-info); }
+  .vetrina { position: absolute; inset: 0; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; }
   .tela {
     position: relative; z-index: 1;
-    grid-row: 2; grid-column: 1; width: 100%; height: 100%;
+    grid-row: 2; grid-column: 1; width: 100%;
+    /* sale fin quasi in cima alla parola corsiva (alta 22cqi): il vaso, più grande, le passa un poco sopra (6/11/2026, scelta di Roberto) */
+    margin-top: -17cqi; height: calc(100% + 17cqi);
     cursor: var(--cursore-aperta);
     /* col dito si gira e si sfoglia solo in orizzontale: il gesto verticale resta allo scroll della pagina */
     touch-action: pan-y;
@@ -94,13 +95,16 @@ const primo = barattoli[0].nome;
     opacity: 0;
     transition: background-color 520ms cubic-bezier(.45, 0, .55, 1);
   }
-  /* la didascalia è la coda informativa (global.css): nome del barattolo, e a destra ‹ 01/10 › */
-  .sfoglia { display: flex; align-items: center; flex-shrink: 0; font-variant-numeric: tabular-nums; }
-  .sfoglia button {
-    width: 30px; height: 30px; padding: 0;
-    border: 0; background: none; color: inherit; font: inherit; font-size: 15px;
-    touch-action: manipulation;
+  /* il piede col righello, sotto la fascia del bordo (scripts/barattolo.ts la dipinge sopra di lui) e del suo colore
+     (--fascia, dallo script), col righello tutto bianco (7/11/2026, scelta di Roberto). Finché il bordo non c'è, sulla
+     carta coi colori di sempre */
+  .piede { grid-row: 3; grid-column: 1; padding: var(--pad); position: relative; z-index: 1; transition: background-color 520ms cubic-bezier(.45, 0, .55, 1); }
+  .piede[style*='--fascia'] {
+    background-color: var(--fascia);
+    --righello-segno: var(--bianco); --righello-testo: var(--bianco); --righello-fondo: var(--fascia);
   }
+  /* i quadratini prendono il colore della fascia insieme al piede */
+  .piede :global(.tacca) { transition: background-color 520ms cubic-bezier(.45, 0, .55, 1); }
 
   /* sotto il barattolo, e non blocca i gesti */
   .testo {

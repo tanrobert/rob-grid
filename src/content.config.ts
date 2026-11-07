@@ -16,7 +16,9 @@ import { z } from 'astro/zod';
 
 const unit = z.number().int().positive();
 const colore = /^#[0-9a-f]{6}$/i;
-const span = { w: unit, h: unit };
+// altezze anche a quarti di unità: un quarto = un quadretto (le righe dei fogli sono quadretti)
+const quarti = z.number().positive().multipleOf(0.25);
+const span = { w: unit, h: quarti };
 // coda-link in fondo a una cella (components/CodaLink, es. Visita il sito): un indirizzo del sito (/archivio) o esterno (https://…)
 const palette = z.strictObject({
   nome: z.string(), title: z.string(), body: z.string(),
@@ -32,10 +34,12 @@ const base = {
   /** Facoltativo: senza id la cella prende c1, c2… */
   id: z.string().optional(),
   ...span,
-  md: z.strictObject({ w: unit.optional(), h: unit.optional() }).optional(),
-  sm: z.strictObject({ w: unit.optional(), h: unit.optional() }).optional(),
+  md: z.strictObject({ w: unit.optional(), h: quarti.optional() }).optional(),
+  sm: z.strictObject({ w: unit.optional(), h: quarti.optional() }).optional(),
   tone: z.enum(['paper', 'red']).optional(),
   label: z.literal(false).optional(),
+  /** false: senza filo (e una cella media con un disegno anche senza fondo, grande quanto la cella) */
+  frame: z.literal(false).optional(),
   hideOn: z.array(z.enum(['lg', 'md', 'sm'])).optional(),
 };
 
@@ -48,15 +52,22 @@ const progetti = defineCollection({
   }),
   schema: ({ image }) => {
     const cell = z.discriminatedUnion('type', [
-      // seconda: un'altra foto sotto la prima, nella stessa cella
+      // pila: altre foto sotto la prima, nella stessa cella, in colonna
       z.strictObject({
         ...base, type: z.literal('media'), image: image().optional(), video: z.string().optional(), alt: z.string(), caption: z.string().optional(),
-        seconda: z.strictObject({ image: image(), alt: z.string() }).optional(),
+        pila: z.array(z.strictObject({ image: image(), alt: z.string() })).min(1).optional(),
         // altre foto a turno con la prima, in un carosello che gira da solo (cells.ts). taglio: sopra = la foto
         // resta posata sul bordo di sotto e, se non ci sta, perde solo la parte alta
         immagini: z.array(z.strictObject({ image: image(), alt: z.string(), taglio: z.literal('sopra').optional() })).min(1).optional(),
         // le foto si ingrandiscono al clic (scripts/ingrandisci.ts)
         ingrandisci: z.literal(true).optional(),
+        // colore del campo sotto un disegno SVG (es. un logo sul fondo del suo sito): numero e freccia chiari
+        fondo: z.string().regex(colore, 'fondo: "#rrggbb"').optional(),
+      }),
+      // muro di copertine che si alternano (Caleidoscopio): le copertine in public/<cartella>
+      z.strictObject({
+        ...base, type: z.literal('copertine'), cartella: z.string().regex(/^\/[\w/-]+$/, 'cartella: "/cartella/in/public"'),
+        alt: z.string(), righe: unit.optional(),
       }),
       z.strictObject({
         ...base, type: z.literal('text'), eyebrow: z.string().optional(), title: z.string(),
@@ -64,6 +75,8 @@ const progetti = defineCollection({
         as: z.enum(['h2', 'p']).optional(), size: z.enum(['s', 'm', 'l']).optional(),
         // foto sotto il paragrafo, in un carosello che gira da solo (una sola: ferma)
         immagini: z.array(z.strictObject({ image: image(), alt: z.string() })).min(1).optional(),
+        // le foto si ingrandiscono al clic invece di passare alla dopo (scripts/ingrandisci.ts)
+        ingrandisci: z.literal(true).optional(),
         // sotto le foto: un altro paragrafo; button = coda in fondo alla cella
         after: z.string().optional(), button: bottone.optional(),
       }),
@@ -90,6 +103,8 @@ const progetti = defineCollection({
       z.strictObject({
         ...base, type: z.literal('sticker'), immagini: z.array(image()).min(2), alt: z.string(),
         eyebrow: z.string().optional(), title: z.string().optional(), body: z.string().optional(), button: bottone.optional(),
+        // fondo della testa: una forma (SVG) dietro occhiello e titolo, che sborda dalla cella e mostra solo il lato di sotto
+        testata: image().optional(),
       }),
       // affissioni nella loro strada, una dopo l'altra: foto intera e la stessa col solo cartellone scontornato (devono combaciare)
       z.strictObject({
@@ -156,6 +171,14 @@ const progetti = defineCollection({
       z.strictObject({
         ...base, type: z.literal('palette'), eyebrow: z.string().optional(), prima: palette, dopo: palette,
       }).refine(c => c.dopo.colori.length >= c.prima.colori.length, 'palette: dopo deve avere almeno i colori di prima'),
+      // due colori che sfumano, il primo sopra e il secondo sotto, con nome e HEX
+      z.strictObject({
+        ...base, type: z.literal('sfumatura'),
+        colori: z.tuple([
+          z.strictObject({ nome: z.string(), hex: z.string().regex(colore, 'hex: "#rrggbb"') }),
+          z.strictObject({ nome: z.string(), hex: z.string().regex(colore, 'hex: "#rrggbb"') }),
+        ]),
+      }),
       // le collezioni una alla volta, un clic per passare: per ognuna la foto, il velo del suo colore e il logo (SVG a un
       // colore, diventa bianco)
       z.strictObject({
@@ -179,8 +202,9 @@ const progetti = defineCollection({
       /** Forma della copertina in unità: cella in home e archivio, ×2 nella hero. Tavola: 600 px per unità */
       shape: z.strictObject(span).optional(),
       /** Foto di contesto (il posto, le persone): nella pagina progetto sotto titolo e descrizione.
-          `fondo` (colore del fondo della foto): foto intera, mai ingrandita, al centro di un campo di quel colore (immagini piccole) */
-      contesto: z.strictObject({ foto: image(), alt: z.string(), fondo: z.string().regex(/^#[0-9a-f]{6}$/i).optional() }).optional(),
+          `fondo` (colore del fondo della foto): foto intera, mai ingrandita, al centro di un campo di quel colore (immagini piccole).
+          `didascalia`: una riga in alto a sinistra sulla foto o sul campo (es. "Logo originale · prima del 2018") */
+      contesto: z.strictObject({ foto: image(), alt: z.string(), fondo: z.string().regex(/^#[0-9a-f]{6}$/i).optional(), didascalia: z.string().optional() }).optional(),
       /** Video in loop (percorso in /public), al posto della copertina, che gli fa da poster */
       video: z.string().optional(),
       /** PNG trasparente sopra video o copertina (es. il logo sopra il video), stessa tavola della copertina */

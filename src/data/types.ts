@@ -25,7 +25,7 @@ export interface Project {
   /** Numero, freccia e ✕ della copertina scuri (copertine chiare); di base chiari */
   etichette?: 'scure';
   /** Foto di contesto (il posto, le persone): nella pagina progetto sotto titolo e descrizione, nella cella 02 */
-  contesto?: { foto: ImageMetadata; alt: string; fondo?: string };
+  contesto?: { foto: ImageMetadata; alt: string; fondo?: string; didascalia?: string };
   /** Celle proprie della pagina progetto (cells in index.md), tra le celle fisse e precedente/successivo */
   cells?: Cell[];
 }

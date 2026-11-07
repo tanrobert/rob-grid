@@ -17,8 +17,9 @@ export const getStaticPaths = (() =>
 
 const { project: p } = Astro.props;
 
-// hero = forma del progetto ×2 (31/10/2026, scelta di Roberto: più grande, in proporzione; ×1,5 darebbe mezze unità);
-// tutta larghezza con lo stesso rapporto se non ci sta. Senza forma, il quadrato dell'archivio ×2.
+// hero = forma del progetto ×2 in larghezza (31/10/2026, scelta di Roberto: più grande; ×1,5 darebbe mezze unità),
+// tutta larghezza se non ci sta; alta nella proporzione di video o copertina, come sul tavolo (6/11/2026), così il
+// volo dell'apertura non cambia forma. Senza forma, il quadrato dell'archivio ×2.
 // Celle informative in moduli da 2 e 4 colonne: si incastrano accanto a qualsiasi hero.
 // se il marchio non è mio, lo dico in chiaro sotto la descrizione
 const marchio = p.marchio === 'cliente' ? 'Marchio esistente, del cliente.' : typeof p.marchio === 'object' ? `Marchio di ${p.marchio.di}.` : '';
@@ -27,7 +28,7 @@ const descrizione = [p.description, marchio].filter(Boolean).join(' ');
     larghezza, sul tablet 4×5 (orizzontale, un testo lungo come quello di Purple Piper non ci stava) */
 const contestoFondo = (hero: { w: number; h: number }, cols: number) =>
   hero.w + 4 <= cols ? { w: 4, h: hero.h } : cols === COLS.lg ? { w: cols, h: 3 } : { w: 4, h: 5 };
-const heroSpan = scaleShape(p.shape ?? (p.featured ? { w: 4, h: 4 } : { w: 2, h: 2 }), 2);
+const heroSpan = p.shape ? scaleShape(p.shape, 2, p.proporzione) : scaleShape(p.featured ? { w: 4, h: 4 } : { w: 2, h: 2 }, 2);
 
 // progetto precedente e successivo nell'ordine dell'archivio (dal più recente), in giro: dopo l'ultimo il primo
 const at = projectsByYear.findIndex(x => x.slug === p.slug);
@@ -43,7 +44,7 @@ const cells: Cell[] = [
   // spazio che resta e la cella è alta quanto la hero quando le sta accanto (2/11/2026, scelta di Roberto); se no
   // orizzontale, a tutta larghezza e bassa, il testo a sinistra e il campo a destra (6/11/2026, scelta di Roberto, G&A)
   p.contesto
-    ? { id: 'progetto', type: 'contesto', w: 4, h: 7, ...(p.contesto.fondo && { ...contestoFondo(heroSpan, COLS.lg), md: contestoFondo(heroSpan.md, COLS.md), sm: { w: 4, h: 5 } }), eyebrow: 'Contesto', title: p.title, body: descrizione, image: p.contesto.foto, alt: p.contesto.alt, fondo: p.contesto.fondo }
+    ? { id: 'progetto', type: 'contesto', w: 4, h: 7, ...(p.contesto.fondo && { ...contestoFondo(heroSpan, COLS.lg), md: contestoFondo(heroSpan.md, COLS.md), sm: { w: 4, h: 5 } }), eyebrow: 'Contesto', title: p.title, body: descrizione, image: p.contesto.foto, alt: p.contesto.alt, fondo: p.contesto.fondo, didascalia: p.contesto.didascalia }
     : { id: 'progetto', type: 'text', w: 4, h: 2, as: 'h1', size: 's', eyebrow: 'Progetto', title: p.title, body: descrizione },
   // celle proprie del progetto (cells in index.md); finché non ci sono, il segnaposto
   ...(p.cells ?? [{ id: 'nota', type: 'text', w: 4, h: 2, size: 's', title: 'Contenuto segnaposto: qui andranno immagini, processo e risultati.' }]),

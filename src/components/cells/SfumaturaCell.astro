@@ -1,0 +1,44 @@
+---
+// Due colori di un marchio che sfumano l'uno nell'altro (6/11/2026, Purple Piper: sopra il rosso, sotto il viola, idea di
+// Roberto). Cella alta e stretta: nel quadrato in alto (largo quanto la cella) il primo colore, nel quadrato in basso il
+// secondo, al centro di ognuno il nome e sotto l'HEX, come nella palette di G&A. In mezzo la sfumatura, che ondeggia
+// piano (scripts/sfumatura.ts, una tela piccola ingrandita): le onde muoiono verso i centri dei due quadrati, così sotto
+// i nomi il colore resta quello scritto.
+// Senza JavaScript o con riduci movimento: la sfumatura ferma (CSS sotto, la tela disegnata una volta).
+import type { Colore } from '../../data/grid-types';
+
+interface Props {
+  colori: [Pick<Colore, 'nome' | 'hex'>, Pick<Colore, 'nome' | 'hex'>];
+}
+const { colori } = Astro.props;
+const [sopra, sotto] = colori;
+---
+
+<div class="sfumatura" data-sfumatura={JSON.stringify(colori.map(c => c.hex))} style={`--sopra: ${sopra.hex}; --sotto: ${sotto.hex}`}>
+  <canvas aria-hidden="true"></canvas>
+  {colori.map((c, i) => (
+    <div class:list={['scheda', i ? 'scheda--sotto' : 'scheda--sopra']}>
+      <span class="nome titoletto">{c.nome}</span>
+      <span class="mono">HEX <span class="valore">{c.hex.toUpperCase()}</span></span>
+    </div>
+  ))}
+</div>
+
+<style>
+  /* la sfumatura ferma va dal centro del quadrato di sopra (mezza larghezza dall'alto) a quello di sotto, come la tela */
+  .sfumatura {
+    position: absolute; inset: 0; color: var(--chiaro);
+    background: linear-gradient(in oklab, var(--sopra) 50cqi, var(--sotto) calc(100cqb - 50cqi));
+  }
+  canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  /* i quadrati virtuali, larghi e alti quanto la cella: nome e, poco sotto, l'HEX al centro */
+  .scheda {
+    position: absolute; left: 0; right: 0; height: 100cqi;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--m);
+    padding: var(--pad); text-align: center;
+  }
+  .scheda--sopra { top: 0; }
+  .scheda--sotto { bottom: 0; }
+  .nome { font-size: min(var(--titoletto), 12cqi); }
+  .valore { white-space: nowrap; }
+</style>

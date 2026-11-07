@@ -21,9 +21,10 @@ function disegna({ cappelli, pollice }) {
   const g = Array.from({ length: H }, () => Array(W).fill(' '));
   const set = (x, y, c) => { if (x >= 0 && x < W && y >= 0 && y < H) g[y][x] = c; };
   // pancia: bordo destro e sinistro per riga (dalla manina), fondo pieno. Col pollice piegato il fianco sporge
-  // meno (dalla colonna 2 invece che dalla 0) e poi scende a scalini come nella manina
+  // meno (dritto sulla colonna 2 fino alla riga 14, ritocco di Roberto del 7/11/2026) e poi scende a scalini come
+  // nella manina
   const destro = y => (y <= 15 ? 16 : y <= 18 ? 15 : 14);
-  const sinistro = y => (y === 10 && pollice === 'piegato' ? 2 : y <= 11 ? (pollice === 'piegato' ? 1 : null)
+  const sinistro = y => (pollice === 'piegato' && y <= 12 ? 2 : y <= 11 ? null
     : y === 12 ? 1 : y <= 14 ? 2 : y <= 16 ? 3 : y <= 18 ? 4 : 5);
   for (let y = 10; y < H - 1; y++) {
     const sx = sinistro(y) ?? 1, dx = destro(y);
@@ -61,10 +62,10 @@ function svg(righe, commento) {
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" shape-rendering="crispEdges">\n<!-- ${commento} -->\n<path d="${path('#')}"/>\n<path fill="#fff" d="${path('.')}"/>\n</svg>\n`;
 }
 
-// colori della palette (global.css) e coppie contorno-riempimento. Il sito usa solo nero-carta (dal 1/11/2026);
-// le altre restano per provare colori diversi
+// colori della palette (global.css) e coppie contorno-riempimento. Il sito usa solo nero-rosso (in prova dal
+// 7/11/2026; prima nero-carta): per provare altri colori, aggiungere la coppia qui
 const COLORI = { rosso: '#f03f24', carta: '#f5f3f0', nero: '#1c1a17' };
-const COPPIE = [['rosso', 'carta'], ['carta', 'rosso'], ['nero', 'carta'], ['carta', 'nero']];
+const COPPIE = [['nero', 'rosso']];
 
 // matita = la penna di Windows 95 (sorgenti/roberto/penna-win95.svg, portata da Roberto il 27/10/2026), pixel per pixel ma senza
 // l'alone chiaro attorno (le altre icone non ce l'hanno): corpo nero, luce chiara dentro. Punta in alto a sinistra: 0 0
@@ -107,8 +108,8 @@ function scrivi(nome, righe, descrizione, coppie) {
 
 for (const [nome, mano] of Object.entries(MANI))
   scrivi(`mano-${nome}`, disegna(mano), `Mano ${nome} per il tavolo, nella serie della manina di Windows 95. Punta: 8 11`, COPPIE);
-// la matita è la mano di chi visita: sempre nera (come i suoi segni), con qualunque colore del sito
-scrivi('matita', MATITA, 'Matita: la penna di Windows 95. Punta: 0 0', [['nero', 'carta']]);
+// la matita è la mano di chi visita: contorno sempre nero (come i suoi segni), riempimento come gli altri cursori
+scrivi('matita', MATITA, 'Matita: la penna di Windows 95. Punta: 0 0', COPPIE);
 // la stessa penna appoggiata sul tavolo (cella `penna`, data/tavolo.ts): contorno = currentColor, dentro la carta
 // (senza variabili: il file fa anche da maschera all'ombra a sagoma, Tavolo.astro)
 fs.writeFileSync(new URL('../src/assets/matita.svg', import.meta.url),

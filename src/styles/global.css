@@ -1,6 +1,6 @@
 @import './fonts.css';
 
-/* ── Token ────────────────────────────────────────────── */
+/* â”€â”€ Token â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 :root {
   /* palette. Il sito usa nero e bianco (dal 1/11/2026, prima rosso e bianco), il rosso solo dove lo si sceglie
      (la R, ROBERTO): bianco = fondo di pagina e celle, e scritte/fili/loghi sulle celle piene */
@@ -22,15 +22,16 @@
   --roberto-w: 5.21;
   --maiuscole: 0.68;
 
-  /* retino dei fogli aperti: carta piena con un foro ogni 4px (components/foglio, foto ingrandite) */
-  --retino: radial-gradient(circle at 2px 2px, transparent 0 0.9px, var(--bianco) 1.1px) 0 0 / 4px 4px;
-
   /* altezza della coda informativa (.coda-info): chi la usa le lascia questo spazio in fondo alla cella */
   --coda-info: 40px;
 
   /* modulo di base */
   --m:    10px;
   --gap:  var(--m);
+  /* distanza dai bordi della finestra degli elementi fissi (firma, zoom, piede e bottoni del tavolo), presa dalla
+     firma (6/11/2026, scelta di Roberto): un quadretto del tavolo sul computer (25px = Q.lg di lib/tavolo.ts), sul
+     telefono un quadretto dei fogli (larghezza / 15), cosÃ¬ sta a filo dei testi delle celle */
+  --margine-ui: 25px;
   /* quadretto su cui si misurano i testi (--titolone, --titoletto, --paragrafo, regola sotto): quello del foglio
      (components/foglio) o quello di base del tavolo (components/tavolo); qui il quadretto di base */
   --q-testo: 25px;
@@ -39,24 +40,21 @@
   /* --line agganciato ai pixel reali, per le linee disegnate con i gradienti (vedi @supports sotto) */
   --line-dp: var(--line);
 
-  /* cursori a pixel di Windows 95 (public/cursori, dal 26/10/2026), misura 1×: freccia di base, manina su ciò che
-     si clicca. Contorno = inchiostro, riempimento = carta: un file per coppia di colori (un SVG da cursore non legge
-     le variabili). Numeri = punta del cursore in pixel */
-  --cursore:      url("/cursori/freccia-nero-carta.svg") 0 0, default;
-  --cursore-mano: url("/cursori/mano-nero-carta.svg") 5 0, pointer;
-  --cursore-aperta: url("/cursori/mano-aperta-nero-carta.svg") 8 11, grab;
-  --cursore-chiusa: url("/cursori/mano-chiusa-nero-carta.svg") 8 11, grabbing;
+  /* cursori a pixel di Windows 95 (public/cursori, dal 26/10/2026), misura 1Ã—: freccia di base, manina su ciÃ² che
+     si clicca. Contorno = inchiostro, riempimento = rosso (in prova dal 7/11/2026; prima carta, file tolti: si
+     rifanno con tools/cursori.mjs): un file per coppia di colori (un SVG da cursore non legge le variabili). Numeri = punta del cursore in pixel */
+  --cursore:      url("/cursori/freccia-nero-rosso.svg") 0 0, default;
+  --cursore-mano: url("/cursori/mano-nero-rosso.svg") 5 0, pointer;
+  --cursore-aperta: url("/cursori/mano-aperta-nero-rosso.svg") 8 11, grab;
+  --cursore-chiusa: url("/cursori/mano-chiusa-nero-rosso.svg") 8 11, grabbing;
 
-  /* colonne delle pagine (12, 8, 4): il foglio (components/foglio) ne ricava quadretto e unità */
+  /* colonne delle pagine (12, 8, 4): il foglio (components/foglio) ne ricava quadretto e unitÃ  */
   --cols: 12;
-  /* colore delle linee dei quadretti (carta del tavolo, foglio, 404): si dà a --carta-ink dove serve, che è
-     registrato e non si eredita (sotto) */
-  --carta-tinta: color-mix(in srgb, var(--inchiostro) 22%, transparent);
 
   --ease-out:   cubic-bezier(0.22, 1, 0.36, 1);
   --ease-morph: cubic-bezier(0.72, 0, 0.18, 1);  /* filo dell'intro */
-  --t-draw-u:   70ms;   /* intro: tempo del filo per ogni unità di perimetro (2×2 → 560ms, 4×2 → 840ms)… */
-  --t-draw-max: 900ms;  /* …fino a questo tetto: le celle più grandi disegnano il filo più veloci */
+  --t-draw-u:   70ms;   /* intro: tempo del filo per ogni unitÃ  di perimetro (2Ã—2 â†’ 560ms, 4Ã—2 â†’ 840ms)â€¦ */
+  --t-draw-max: 900ms;  /* â€¦fino a questo tetto: le celle piÃ¹ grandi disegnano il filo piÃ¹ veloci */
   --t-fill:     400ms;  /* intro: fondo e contenuto entrano a filo finito */
   --t-scaglione: 30ms;  /* intro: una cella dopo l'altra (--i = il suo turno) */
 
@@ -64,8 +62,26 @@
   cursor: var(--cursore);
 }
 
+/* Tavolo scuro (7/11/2026, idea di Roberto; scripts/tavolo/scuro.ts, html[data-scuro] scritto da Layout.astro prima
+   del primo disegno): inchiostro e carta si scambiano, solo sul tavolo e sulle sue barre (carta, celle, piede,
+   bottoni, zoom). I fogli restano chiari; firma, R e ROBERTO restano rossi, le foto come sono */
+html[data-scuro] :is(.tavolo, .barra, .zoom, .retino) {
+  --inchiostro: var(--chiaro);
+  --bianco: var(--nero);
+  color: var(--inchiostro);
+}
+/* colori che dipendono da inchiostro e carta: una variabile si calcola dove Ã¨ scritta, quindi vanno riscritti anche
+   dove i due si scambiano */
+:root, html[data-scuro] :is(.tavolo, .barra, .zoom, .retino) {
+  /* retino dei fogli aperti: carta piena con un foro ogni 4px (components/foglio, foto ingrandite) */
+  --retino: radial-gradient(circle at 2px 2px, transparent 0 0.9px, var(--bianco) 1.1px) 0 0 / 4px 4px;
+  /* colore delle linee dei quadretti (carta del tavolo, foglio, 404): si dÃ  a --carta-ink dove serve, che Ã¨
+     registrato e non si eredita (sotto) */
+  --carta-tinta: color-mix(in srgb, var(--inchiostro) 22%, transparent);
+}
+
 /* Tre livelli di testo nelle celle, tutti sul quadretto (30/10/2026, scelta di Roberto): stesse misure in celle di
-   larghezza diversa e quasi uguali a ogni finestra, tra un minimo e un massimo. Col quadretto da 25: 40 · 24 · 16
+   larghezza diversa e quasi uguali a ogni finestra, tra un minimo e un massimo. Col quadretto da 25: 40 Â· 24 Â· 16
    (titolone 64 fino al 6/11/2026: sulla pagina Kiale a Roberto sembrava "troppo poco serio").
    - titolone: celle coi mockup (barattoli, telefono, sticker, affissioni, sottologo); va a capo dove capita
      (29/10/2026: "i testi si possono sempre cambiare")
@@ -73,26 +89,26 @@
    - paragrafo: il testo di tutte le celle, 16 (la misura di base del browser) e 15 sul telefono (dal 30/10/2026,
      prima 14 e 13). Se non ci sta, nei fogli la cella si allunga da sola (scripts/mosaico.ts)
    Ricalcolati dove cambia il quadretto: nel foglio e sul tavolo, dove il clamp vale sul quadretto di base e poi tutto
-   segue lo zoom (--zoom, scripts/tavolo/vista.ts), anche sotto il minimo: rimpicciolire serve per vedere più tavolo.
+   segue lo zoom (--zoom, scripts/tavolo/vista.ts), anche sotto il minimo: rimpicciolire serve per vedere piÃ¹ tavolo.
    I titoli che riempiono la cella (TextCell 'm' e 'l', logotipo, numeri, orologio) restano in proporzione alla cella.
    Anche sulla copia della hero che vola tra tavolo e foglio (.in-volo, scripts/foglio): passa dalle misure dell'uno
    a quelle dell'altro */
 :root, .tavolo, html:is(.ha-foglio, .ha-pagina) body, .in-volo {
   /* in prova dal 6/11/2026: titoloni come i titoletti delle altre celle (prima Black 900, interlinea 0.85, spaziatura
-     -0.05em, corpo clamp(30px, quadretto × 1.6, 40px); fino a quel giorno 46–64px) */
+     -0.05em, corpo clamp(30px, quadretto Ã— 1.6, 40px); fino a quel giorno 46â€“64px) */
   --titolone: var(--titoletto);
   --titoletto: calc(clamp(18px, var(--q-testo) * 0.96, 24px) * var(--zoom, 1));
   --paragrafo: calc(clamp(15px, var(--q-testo) * 0.64, 16px) * var(--zoom, 1));
-  /* il quadretto vero, senza clamp: nel foglio --qf, sul tavolo quello di base × zoom (= --q) */
+  /* il quadretto vero, senza clamp: nel foglio --qf, sul tavolo quello di base Ã— zoom (= --q) */
   --quadretto: calc(var(--q-testo) * var(--zoom, 1));
-  /* margine interno delle celle, uguale sui quattro lati e per tutto (testi, disegni, numero, occhiello, freccia/✕,
-     didascalie): un quadretto (5/11/2026, scelta di Roberto: più aria; prima 0,4). Così anche dentro la cella le
+  /* margine interno delle celle, uguale sui quattro lati e per tutto (testi, disegni, numero, occhiello, freccia/âœ•,
+     didascalie): un quadretto (5/11/2026, scelta di Roberto: piÃ¹ aria; prima 0,4). CosÃ¬ anche dentro la cella le
      cose stanno sulle linee della carta, e zoom o finestra non le spostano */
   --pad: var(--quadretto);
   /* inizio del contenuto: la riga di testa sta nel primo quadretto, il contenuto parte dal secondo */
   --pad-label: calc(var(--quadretto) * 2);
-  /* corpo delle scritte .mono (linguette, occhielli, didascalie) e riga di testa delle celle (numero · occhiello,
-     freccia/✕), alta quanto lui: 11px, sul tavolo × zoom (1/11/2026) come margini e testi, così rimpicciolendo
+  /* corpo delle scritte .mono (linguette, occhielli, didascalie) e riga di testa delle celle (numero Â· occhiello,
+     freccia/âœ•), alta quanto lui: 11px, sul tavolo Ã— zoom (1/11/2026) come margini e testi, cosÃ¬ rimpicciolendo
      numero e occhiello restano in proporzione alla cella. La barra, la firma e lo zoom stanno fuori da .tavolo:
      restano a 11px */
   --corpo-mono: calc(11px * var(--zoom, 1));
@@ -108,9 +124,9 @@ a[href], button, [role="button"], [role="switch"], label[for], summary, select {
 }
 
 @media (max-width: 1023px) { :root { --cols: 8; } }
-@media (max-width: 599px)  { :root { --cols: 4; } }
+@media (max-width: 599px)  { :root { --cols: 4; --margine-ui: round(down, 100vw / 15, 1px); } }
 
-/* ── Base ─────────────────────────────────────────────── */
+/* â”€â”€ Base â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html {
@@ -121,7 +137,7 @@ html {
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   -webkit-text-size-adjust: 100%;
-  /* niente riquadro grigio al tocco su Android e iOS: la risposta è l'apertura della cella */
+  /* niente riquadro grigio al tocco su Android e iOS: la risposta Ã¨ l'apertura della cella */
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -132,7 +148,7 @@ html.is-tavolo, html.is-tavolo body { overflow: hidden; overscroll-behavior: non
 
 ::selection { background: var(--inchiostro); color: var(--bianco); }
 
-/* ── Righello al posto della scrollbar (scripts/ruler.ts) ── */
+/* â”€â”€ Righello al posto della scrollbar (scripts/ruler.ts) â”€â”€ */
 /* scrollbar nativa nascosta solo a righello attivo (.has-ruler, da ruler.ts):
    se il JavaScript non parte resta la scrollbar normale */
 html.has-ruler { scrollbar-width: none; }
@@ -171,13 +187,13 @@ body {
   position: absolute; top: 0; left: 0; right: 0;
   height: var(--thumb-h);
   display: flex; align-items: center; justify-content: center;
-  /* rettangolo rosso con la percentuale bianca; la posizione è agganciata ai pixel da ruler.ts */
+  /* rettangolo rosso con la percentuale bianca; la posizione Ã¨ agganciata ai pixel da ruler.ts */
   background: var(--inchiostro);
   color: var(--bianco);
   cursor: var(--cursore-aperta);
   touch-action: none;
 }
-/* area di presa più grande della linea: sopra, sotto e verso le celle */
+/* area di presa piÃ¹ grande della linea: sopra, sotto e verso le celle */
 .ruler__thumb::before { content: ''; position: absolute; inset: -12px 0 -12px -12px; }
 /* altezza in pixel reali: il bordo inferiore resta netto come quello superiore */
 @supports (width: round(down, 1px, 1px)) {
@@ -194,7 +210,7 @@ body {
   white-space: nowrap;
 }
 html.is-ruling, html.is-ruling * { cursor: var(--cursore-chiusa) !important; user-select: none; }
-/* su touch è solo un indicatore: si scorre col dito */
+/* su touch Ã¨ solo un indicatore: si scorre col dito */
 @media (pointer: coarse) { .ruler { pointer-events: none; } }
 
 a { color: inherit; text-decoration: none; }
@@ -213,14 +229,14 @@ p { text-wrap: pretty; }
   font-family: var(--font-numeri);
   font-size: var(--corpo-mono);
   line-height: 1.2;
-  letter-spacing: 0.02em;  /* JetBrains Mono è già arioso: 0.08em (col font proporzionale) staccava troppo */
+  letter-spacing: 0.02em;  /* JetBrains Mono Ã¨ giÃ  arioso: 0.08em (col font proporzionale) staccava troppo */
   text-transform: uppercase;
   font-variant-numeric: tabular-nums;
 }
 
-/* Logotipo: Roberto Grafica Black (fonts.css). La riga è alta quanto le maiuscole e il riquadro è
-   rifilato sull'inchiostro di ROBERTO, così si allinea e si centra come il vecchio SVG. Dal font (unità 1000):
-   ascendente 900 e discendente 160 → con interlinea 0,68 le maiuscole cadono 0,03 em sotto il riquadro;
+/* Logotipo: Roberto Grafica Black (fonts.css). La riga Ã¨ alta quanto le maiuscole e il riquadro Ã¨
+   rifilato sull'inchiostro di ROBERTO, cosÃ¬ si allinea e si centra come il vecchio SVG. Dal font (unitÃ  1000):
+   ascendente 900 e discendente 160 â†’ con interlinea 0,68 le maiuscole cadono 0,03 em sotto il riquadro;
    margine sinistro della R 0,07 em, destro della O 0,03. Il corpo lo decide chi lo usa */
 .logotipo {
   display: block;
@@ -256,9 +272,9 @@ p { text-wrap: pretty; }
 }
 .skip-link:focus { top: var(--gap); }
 
-/* ── Griglia delle pagine (components/foglio: --u e --gap in quadretti, larghezza = un numero intero di colonne,
-   almeno --cols: auto-fill le conta). Colonne a moduli, righe a quadretti (5/11/2026): una cella alta h unità
-   prende 4h righe, l'ultima è lo spazio sotto di lei (margine), e il mosaico la allunga di un quadretto alla volta ── */
+/* â”€â”€ Griglia delle pagine (components/foglio: --u e --gap in quadretti, larghezza = un numero intero di colonne,
+   almeno --cols: auto-fill le conta). Colonne a moduli, righe a quadretti (5/11/2026): una cella alta h unitÃ 
+   prende 4h righe, l'ultima Ã¨ lo spazio sotto di lei (margine), e il mosaico la allunga di un quadretto alla volta â”€â”€ */
 .grid {
   position: relative;
   display: grid;
@@ -269,10 +285,10 @@ p { text-wrap: pretty; }
 }
 .grid > .cell { margin-bottom: var(--gap); }
 
-/* ── Cella ────────────────────────────────────────────── */
+/* â”€â”€ Cella â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .cell {
   position: relative;
-  /* lati in unità al breakpoint corrente (--cw, --hu: le media query sotto cambiano solo questi). --ch serve al
+  /* lati in unitÃ  al breakpoint corrente (--cw, --hu: le media query sotto cambiano solo questi). --ch serve al
      disegno del filo nell'intro. --piu: quadretti aggiunti da scripts/mosaico.ts se il testo non ci sta.
      --riga: solo le celle di coda, messa da scripts/mosaico.ts (prima riga sotto le altre) */
   --cw: var(--w, 1);
@@ -287,8 +303,8 @@ p { text-wrap: pretty; }
   color: var(--inchiostro);
 }
 
-/* ── Cella della 404 (dopo .cell, che ha il suo fondo): la carta a quadretti della pagina vera, coi quadretti
-   del foglio (--qf) agganciati al bordo della cella ── */
+/* â”€â”€ Cella della 404 (dopo .cell, che ha il suo fondo): la carta a quadretti della pagina vera, coi quadretti
+   del foglio (--qf) agganciati al bordo della cella â”€â”€ */
 .cell--error {
   --carta-ink: var(--carta-tinta);
   background:
@@ -307,7 +323,7 @@ p { text-wrap: pretty; }
 @media (max-width: 599px) { .cell.hide-sm { display: none; } }
 
 /* filo sopra al contenuto, anche sui media: quattro lati disegnati con gradienti,
-   agganciati ai pixel reali. --l0…--l3 = quanto è lungo ogni lato (0–1),
+   agganciati ai pixel reali. --l0â€¦--l3 = quanto Ã¨ lungo ogni lato (0â€“1),
    in senso orario da in alto: alto, destra, basso, sinistra. Pieni fuori dall'intro. */
 .cell::after {
   content: '';
@@ -326,13 +342,13 @@ p { text-wrap: pretty; }
   pointer-events: none;
 }
 
-/* hover della cella (in prova dal 1/11/2026, idea di Roberto): il filo diventa rosso. Solo col mouse; --filo è
-   registrato, così il colore dei gradienti può sfumare */
+/* hover della cella (in prova dal 1/11/2026, idea di Roberto): il filo diventa rosso. Solo col mouse; --filo Ã¨
+   registrato, cosÃ¬ il colore dei gradienti puÃ² sfumare */
 @property --filo { syntax: '<color>'; inherits: false; initial-value: transparent; }
 @media (hover: hover) and (pointer: fine) {
   .cell::after { transition: --filo 160ms var(--ease-out); }
   .cell:hover::after { --filo: var(--rosso); }
-  /* le celle piene d'inchiostro (Bio, recapiti…) diventano rosse anche di fondo */
+  /* le celle piene d'inchiostro (Bio, recapitiâ€¦) diventano rosse anche di fondo */
   .cell--red { transition: background-color 160ms var(--ease-out); }
   .cell--red:hover { background-color: var(--rosso); }
   /* e la didascalia dei progetti (il rettangolo col titolo) si colora con lui */
@@ -342,12 +358,12 @@ p { text-wrap: pretty; }
 
 /* cella senza filo (frame: false): niente filo, nemmeno nell'intro */
 .cell--bare::after { content: none; }
-/* ROBERTO nudo: la cella è alta quanto la R, le O sbordano sopra e sotto (LogotipoCell) e non vanno rifilate */
+/* ROBERTO nudo: la cella Ã¨ alta quanto la R, le O sbordano sopra e sotto (LogotipoCell) e non vanno rifilate */
 .cell--bare.cell--logotipo { overflow: visible; }
 
 .cell--red { background: var(--inchiostro); color: var(--bianco); }
 
-/* Riga di testa (numero · occhiello), freccia/✕ e didascalia dei progetti: solo testo, senza fondo né filo,
+/* Riga di testa (numero Â· occhiello), freccia/âœ• e didascalia dei progetti: solo testo, senza fondo nÃ© filo,
    a --pad dai bordi come il contenuto. Sulle foto in bianco */
 .cell__label {
   position: absolute; top: var(--pad); left: var(--pad); z-index: 2;
@@ -366,29 +382,35 @@ p { text-wrap: pretty; }
   display: grid; place-items: center;
   width: var(--riga-label); height: var(--riga-label);
 }
-/* la ✕ si prende anche attorno al segno, come quando era un quadrato di 30px */
+/* la âœ• si prende anche attorno al segno, come quando era un quadrato di 30px */
 .cell__go::before { content: ''; position: absolute; inset: calc(var(--pad) * -1); }
 .cell__go span { display: block; }
 /* freccia (src/assets/arrow.svg): il colore segue il testo */
 .cell__go svg { width: var(--riga-label); height: var(--riga-label); }
 .cell__go svg * { fill: currentColor; }
 
-/* ✕ di chiusura delle hero (progetti, archivio, extra, info): tutta la hero chiude il foglio (scripts/foglio) */
+/* âœ• di chiusura delle hero (progetti, archivio, extra, info): tutta la hero chiude il foglio (scripts/foglio) */
 @media (hover: hover) and (pointer: fine) {
   .cell[data-hero] { cursor: var(--cursore-mano); }
 }
 
 /* scritte sulle foto: sempre chiare (d'inchiostro sulle foto non si leggevano) */
 .cell:has(> .duo) > :is(.cell__label, .cell__go) { color: var(--chiaro); }
-/* la radio è un blocco viola (RadioCell): numero e occhiello in carta */
+/* la radio Ã¨ un blocco viola (RadioCell): numero e occhiello in carta */
 .cell:has(> [data-radio]) > .cell__label { color: var(--bianco); }
+/* la sfumatura (SfumaturaCell) Ã¨ tutta colore: numero in carta */
+.cell:has(> [data-sfumatura]) > .cell__label { color: var(--chiaro); }
+/* la testata colorata degli sticker (StickerCell, Kiale): numero e occhiello in carta */
+.cell:has(> .sticker--testata) > :is(.cell__label, .cell__go) { color: var(--bianco); }
+/* il muro di copertine (CopertineCell): numero chiaro come sulle foto */
+.cell:has(> [data-copertine]) > .cell__label { color: var(--chiaro); }
 .cell:has(> .duo[data-etichette="scure"]) > :is(.cell__label, .cell__go) { color: var(--inchiostro); }
 
 /* Didascalia (titolo dei progetti, 30/10/2026, idea di Roberto): un rettangolo d'inchiostro grande quanto il testo,
-   attaccato sotto la cella a sinistra, fuori dalla cella (stacca dalla rigidità del quadrato). Alto un quadretto
+   attaccato sotto la cella a sinistra, fuori dalla cella (stacca dalla rigiditÃ  del quadrato). Alto un quadretto
    (quello della carta: sul tavolo segue lo zoom): riempie lo spazio tra una cella e quella sotto (nel foglio e sul
    tavolo le celle sono a un quadretto l'una dall'altra). Il testo parte al margine della cella, sotto il numero.
-   Sul tavolo la sua ombra è un rettangolo uguale nell'ombra della cella (components/tavolo) */
+   Sul tavolo la sua ombra Ã¨ un rettangolo uguale nell'ombra della cella (components/tavolo) */
 .cell:has(> .caption) { overflow: visible; }
 .cell > .caption {
   position: absolute; top: 100%; left: 0; z-index: 2;
@@ -421,21 +443,29 @@ p { text-wrap: pretty; }
   justify-content: center; padding: 0 var(--pad);
   background: var(--inchiostro); color: var(--bianco);
   text-decoration: none;
+  /* niente filo sopra: Ã¨ giÃ  piena (col rosso dell'hover il filo restava nero) */
+  border-top: 0;
 }
-.coda-info--link svg { width: var(--riga-label); height: var(--riga-label); flex: none; }
+/* la freccia delle celle (â†—) girata di 45Â°: punta a destra, verso dove porta il link (6/11/2026, scelta di Roberto) */
+.coda-info--link svg { width: var(--riga-label); height: var(--riga-label); flex: none; rotate: 45deg; }
 .coda-info--link svg * { fill: currentColor; }
+/* col mouse sopra diventa rossa (6/11/2026, scelta di Roberto), come il filo delle celle */
+@media (hover: hover) and (pointer: fine) {
+  .coda-info--link { transition: background-color 160ms var(--ease-out); }
+  .coda-info--link:hover { background-color: var(--rosso); }
+}
 
-/* ── Media: foto piena ───────────────────────────────── */
-/* Solo la foto: niente effetti né hover (ottobre 2026). Niente filtri né blend mode: su mobile rendevano lo
+/* â”€â”€ Media: foto piena â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* Solo la foto: niente effetti nÃ© hover (ottobre 2026). Niente filtri nÃ© blend mode: su mobile rendevano lo
    scroll scattoso (soprattutto in archivio, 20 foto). Effetti provati e salvati in tools/effetti/:
    velo a quadretti in hover (fino alla 1.4.95), dithering a 1 bit (17/10/2026) */
 .duo { position: absolute; inset: 0; background: var(--bianco); }
 .duo img, .duo video { width: 100%; height: 100%; object-fit: cover; }
-/* un logo non si taglia: intero anche se la forma della cella non è quella della tavola */
+/* un logo non si taglia: intero anche se la forma della cella non Ã¨ quella della tavola */
 .duo .duo__overlay { position: absolute; inset: 0; object-fit: contain; }
-/* due foto una sopra l'altra (MediaCell `seconda`), metà cella ciascuna, divise dal filo */
+/* foto una sopra l'altra (MediaCell `pila`), stessa altezza ciascuna, divise dal filo */
 /* carosello delle foto (celle di testo e media): le foto in fila, attaccate, una per volta; cells.ts sposta il nastro
-   di una foto con `--foto`. Classi col nome del carosello: `.nastro` e `.foto` ci sono già, scoped, in altre celle */
+   di una foto con `--foto`. Classi col nome del carosello: `.nastro` e `.foto` ci sono giÃ , scoped, in altre celle */
 .carosello { position: relative; overflow: clip; cursor: var(--cursore-mano); }
 .carosello--fermo { cursor: auto; }
 .carosello__nastro {
@@ -451,7 +481,7 @@ p { text-wrap: pretty; }
 .duo--pila img { flex: 1 1 0; min-height: 0; }
 .duo--pila img + img { border-top: var(--line) solid var(--inchiostro); }
 /* foto ingrandita (MediaCell `ingrandisci`, scripts/ingrandisci.ts): la foto in un <dialog> a tutta finestra, sopra
-   il retino come un foglio aperto; la ✕ in alto a destra, un clic ovunque chiude */
+   il retino come un foglio aperto; la âœ• in alto a destra, un clic ovunque chiude */
 .grande {
   position: fixed; inset: 0; width: 100%; height: 100%; max-width: none; max-height: none;
   margin: 0; padding: 0; border: 0; background: none; overflow: hidden; cursor: var(--cursore-mano);
@@ -465,18 +495,22 @@ p { text-wrap: pretty; }
   display: grid; place-items: center; width: var(--riga-label); height: var(--riga-label);
   color: var(--inchiostro); background: none; border: 0;
 }
-/* si prende anche attorno al segno, come la ✕ delle hero */
+/* si prende anche attorno al segno, come la âœ• delle hero */
 .grande__chiudi::before { content: ''; position: absolute; inset: calc(var(--pad) * -1); }
 .grande__chiudi svg { width: 100%; height: 100%; fill: currentColor; }
-/* un disegno SVG in pila: metà cella, intero, staccato dai bordi come da solo */
+/* un disegno SVG in pila: intero, alto in proporzione al disegno (flex-grow da MediaCell), staccato dai bordi come da solo */
 .duo.duo--pila .duo__disegno { position: static; width: 100%; height: auto; padding: var(--pad-label); }
 /* disegno SVG (MediaCell): intero, lontano da numero e freccia quanto il contenuto delle altre celle */
 .duo .duo__disegno {
   position: absolute; inset: var(--pad-label);
   width: calc(100% - 2 * var(--pad-label)); height: calc(100% - 2 * var(--pad-label)); object-fit: contain;
 }
+/* disegno in una cella senza filo (`frame: false`, i bollini tappabuchi di Kiale, 6/11/2026): grande quanto la cella,
+   senza fondo, sulla carta o sul retino. Niente numero (label: false), quindi niente margine per lui */
+.cell--bare.cell--media, .cell--bare .duo:has(> .duo__disegno) { background: transparent; }
+.cell--bare .duo .duo__disegno { inset: 0; width: 100%; height: 100%; }
 
-/* ── Intro (solo al primo caricamento) ────────────────── */
+/* â”€â”€ Intro (solo al primo caricamento) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 /* 1. il filo parte da un vertice (data-from, scelto a caso da Layout.astro) e fa il giro;
    2. finito il giro entrano fondo e contenuto. */
 @property --draw { syntax: '<number>'; inherits: false; initial-value: 1; }
@@ -488,13 +522,13 @@ p { text-wrap: pretty; }
 @property --giro { syntax: '<number>'; inherits: false; initial-value: 0; }
 @keyframes carta-in { from { --giro: 0; } to { --giro: 8; } }
 
-/* posizione del vertice di partenza sul perimetro (in unità, in senso orario dall'alto a sinistra).
-   Il filo va a velocità costante: la durata cresce col perimetro, le celle piccole compaiono prima.
+/* posizione del vertice di partenza sul perimetro (in unitÃ , in senso orario dall'alto a sinistra).
+   Il filo va a velocitÃ  costante: la durata cresce col perimetro, le celle piccole compaiono prima.
    Anche sul pezzo del tavolo (components/tavolo): la sua caduta nell'intro parte a filo finito. */
 .cell { --from: 0; }
 :is(.cell, .pezzo) {
   --per: calc((var(--cw) + var(--ch)) * 2);
-  /* tetto: sulle celle grandi (hero) il contenuto non aspetta più di --t-draw-max */
+  /* tetto: sulle celle grandi (hero) il contenuto non aspetta piÃ¹ di --t-draw-max */
   --t-draw: min(calc(var(--per) * var(--t-draw-u)), var(--t-draw-max));
   /* quando entrano fondo e contenuto: il turno della cella, poi il filo */
   --attesa: calc(var(--i, 0) * var(--t-scaglione) + var(--t-draw));
@@ -504,7 +538,7 @@ p { text-wrap: pretty; }
 .cell[data-from="3"] { --from: calc(var(--cw) * 2 + var(--ch)); }
 
 .is-intro .cell::after {
-  --run: calc(var(--draw) * var(--per));  /* tratto già disegnato */
+  --run: calc(var(--draw) * var(--per));  /* tratto giÃ  disegnato */
   /* ogni lato parte quando il tratto arriva al suo inizio: inizio = distanza dal vertice di partenza */
   --l0: clamp(0, (var(--run) - mod(0 - var(--from), var(--per))) / var(--cw), 1);
   --l1: clamp(0, (var(--run) - mod(var(--cw) - var(--from), var(--per))) / var(--ch), 1);
@@ -519,12 +553,12 @@ p { text-wrap: pretty; }
   animation-delay: var(--attesa);
 }
 .is-intro .cell > * {
-  /* backwards, non both: a fine animazione l'opacità torna libera (serve ai filtri) */
+  /* backwards, non both: a fine animazione l'opacitÃ  torna libera (serve ai filtri) */
   animation: fade-in var(--t-fill) var(--ease-out) backwards;
   animation-delay: var(--attesa);
 }
 /* titoli delle celle di testo: non sfumano, entrano a righe dal filo (scripts/righe.ts). Occhiello e testo
-   sotto sfumano come il resto; il titolo resta nascosto finché le righe non sono pronte (font caricato) */
+   sotto sfumano come il resto; il titolo resta nascosto finchÃ© le righe non sono pronte (font caricato) */
 .is-intro .cell > .text { animation: none; }
 .is-intro .cell > .text > :not(.title) {
   animation: fade-in var(--t-fill) var(--ease-out) backwards;
@@ -545,13 +579,13 @@ p { text-wrap: pretty; }
   .link-peso:hover { font-weight: 900; }
 }
 
-/* Lente dei titoloni (scripts/titoloni.ts): righe bloccate alla prima passata del mouse, così le parole
+/* Lente dei titoloni (scripts/titoloni.ts): righe bloccate alla prima passata del mouse, cosÃ¬ le parole
    che ingrassano non cambiano riga */
 .lente__riga { display: block; white-space: nowrap; }
 /* animazioni infinite in pausa fuori schermo */
 [data-offscreen] .loop { animation-play-state: paused !important; }
 
-/* ── Riduzione del movimento ──────────────────────────── */
+/* â”€â”€ Riduzione del movimento â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;

@@ -167,6 +167,7 @@ export function riordina(t: Tavolo) {
   const q = t.v.q;
   disponi(t);
   t.confina();
+  t.inOrdine();
   t.pezzi.forEach(p => alza(p, 0));
   t.zTop = 0;
   [...t.pezzi].sort((a, b) => Math.hypot(a.gx, a.gy) - Math.hypot(b.gx, b.gy)).forEach((p, i) => {

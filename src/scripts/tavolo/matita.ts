@@ -1,5 +1,5 @@
 /**
- * Matita (prototipo: tools/pages/tavolo.html). Segni neri, la mano di chi visita: il rosso è la stampa.
+ * Matita (prototipo: tools/pages/tavolo.html). Segni rossi (dal 7/11/2026, prima neri), come il dentro del cursore.
  * - Ogni tratto si taglia sui bordi delle celle: ogni pezzo appartiene al foglio su cui è stato tracciato
  *   (la cella più in alto in quel punto, o il tavolo) e lo segue quando si sposta.
  * - Coordinate in quadretti: allo zoom i segni si ridisegnano netti.

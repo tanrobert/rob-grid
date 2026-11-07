@@ -11,13 +11,16 @@ interface Props {
   size?: 's' | 'm' | 'l';
   /** foto sotto il paragrafo: un carosello che gira da solo (cells.ts), un tocco passa alla dopo; con una foto sola, ferma */
   immagini?: Array<{ image: ImageMetadata; alt: string }>;
+  /** le foto si ingrandiscono al clic (scripts/ingrandisci.ts, come le celle media) invece di passare alla dopo */
+  ingrandisci?: boolean;
   /** sotto le foto: un altro paragrafo */
   after?: string;
   /** coda in fondo alla cella (es. Visita il sito): CodaLink */
   button?: { label: string; href: string };
   sizes?: string;
 }
-const { title, body, as: Tag = 'h2', size = 'm', immagini, after, button, sizes } = Astro.props;
+const { title, body, as: Tag = 'h2', size = 'm', immagini, ingrandisci, after, button, sizes } = Astro.props;
+const grande = (testo: string) => ingrandisci ? { 'data-ingrandisci': '', tabindex: 0, role: 'button' as const, 'aria-label': `Ingrandisci: ${testo}` } : {};
 // un "_" finale diventa un cursore lampeggiante
 const caret = title.endsWith('_');
 const text = caret ? title.slice(0, -1) : title;
@@ -31,7 +34,7 @@ const text = caret ? title.slice(0, -1) : title;
     <div class:list={['carosello', immagini.length === 1 && 'carosello--fermo']} data-carosello={immagini.length > 1 || undefined}>
       <div class="carosello__nastro">
         {immagini.map(im => (
-          <div class="carosello__foto"><Image src={im.image} alt={im.alt} widths={[400, 800, 1200]} sizes={sizes} loading="lazy" decoding="async" /></div>
+          <div class="carosello__foto"><Image src={im.image} alt={im.alt} {...grande(im.alt)} widths={[400, 800, 1200, 1600]} sizes={sizes} loading="lazy" decoding="async" /></div>
         ))}
       </div>
     </div>

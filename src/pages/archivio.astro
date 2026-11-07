@@ -10,7 +10,8 @@ import { projectsByYear } from '../lib/projects';
 import { scaleShape } from '../lib/grid';
 import { site, pageTitle } from '../data/site';
 
-// Misure nell'archivio: la forma del progetto; senza forma, featured 4×4 e gli altri 2×2
+// Misure nell'archivio: la larghezza della forma del progetto, l'altezza nella proporzione di video o copertina (come
+// sul tavolo e nella hero, 6/11/2026); senza forma, featured 4×4 e gli altri 2×2
 const FEATURED = { w: 4, h: 4 };
 const REGULAR = { w: 2, h: 2 };
 
@@ -21,7 +22,7 @@ const cells: Cell[] = [
     id: `p-${p.slug}`,
     type: 'project',
     slug: p.slug,
-    ...(p.shape ? scaleShape(p.shape, 1) : p.featured ? FEATURED : REGULAR),
+    ...(p.shape ? scaleShape(p.shape, 1, p.proporzione) : p.featured ? FEATURED : REGULAR),
   })),
 ];
 // .tagbar: su mobile i filtri stanno in una striscia fissa in alto (la cella tags è nascosta)
