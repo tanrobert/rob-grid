@@ -37,12 +37,12 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <title>{titolo}</title>
     <meta name="description" content={descrizione} />
     {withCanonical && <link rel="canonical" href={canonical} />}
-    <link rel="icon" href="/favicon.ico" sizes="48x48" />
+    <link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="preload" href="/fonts/archivo.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="/fonts/jetbrains-mono.woff2" as="font" type="font/woff2" crossorigin />
-    <link rel="preload" href="/fonts/roberto-grafica-black.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/rob-display-black.woff2" as="font" type="font/woff2" crossorigin />
     <script is:inline>
       (function () {
         var root = document.documentElement;

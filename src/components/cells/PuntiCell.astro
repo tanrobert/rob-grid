@@ -1,6 +1,6 @@
 ---
 // Una cella divisa in riquadri da un filo (G&A: i quattro obiettivi del restyling, dalla tavola 4), ognuno con un
-// titoletto e un paragrafo in fondo, come le celle di testo. In riga quando la cella è larga, due per riga su una
+// titoletto e un paragrafo in alto, sotto l'icona, come le celle di testo (dal 9/11/2026; prima in fondo). In riga quando la cella è larga, due per riga su una
 // cella media (2×2), uno sotto l'altro su una stretta e sempre sul telefono (4/11/2026, scelta di Roberto). I riquadri
 // si dividono la cella in parti uguali (12×3, tablet 8×8, telefono 4×10: sul telefono l'icona e il testo con poca aria in mezzo, come sul computer,
 // 5/11/2026; con 4×16 erano quadrati alti il doppio del testo). Righe `1fr`, che non scendono sotto il contenuto: se un
@@ -87,14 +87,13 @@ const uid = Math.random().toString(36).slice(2, 8);
     position: absolute; inset: 0;
     display: grid; grid-template-columns: minmax(0, 1fr); grid-auto-rows: 1fr;
   }
-  /* il testo in fondo al riquadro, come nelle celle di testo; in alto il posto della riga di testa della cella */
+  /* in alto l'icona e subito sotto il testo (9/11/2026, scelta di Roberto: titoli e paragrafi mai in fondo alla cella) */
   .punto {
-    display: flex; flex-direction: column; justify-content: flex-end; gap: var(--m);
+    display: flex; flex-direction: column; justify-content: flex-start; gap: var(--m);
     padding: var(--pad-label) var(--pad) var(--pad);
   }
-  /* in alto nel riquadro, il testo resta in fondo */
   .punto__icona {
-    height: calc(var(--quadretto) * 3); width: auto; align-self: flex-start; margin-bottom: auto; flex: none; overflow: visible;
+    height: calc(var(--quadretto) * 3); width: auto; align-self: flex-start; margin-bottom: var(--pad); flex: none; overflow: visible;
     fill: none; stroke: var(--rosso); stroke-width: var(--line);
   }
   .punto__icona * { vector-effect: non-scaling-stroke; }

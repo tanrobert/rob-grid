@@ -8,7 +8,7 @@
  * - Apertura: le celle di quello che c'è sotto sfumano, la hero vola dalla cella cliccata al suo posto
  *   crescendo davvero (larghezza e altezza, come nel prototipo tools/pages/tavolo.html), le altre celle
  *   arrivano una dopo l'altra. Dal tavolo entra anche il retino.
- * - Chiusura (✕, Esc, clic sulla hero o fuori dalle celle): toglie il foglio in cima, la hero torna nella sua
+ * - Chiusura (✕, Esc, clic sulla hero o fuori dalle celle, sul telefono tirandolo giù dalla cima): toglie il foglio in cima, la hero torna nella sua
  *   cella del foglio sotto o del tavolo. Celle "Indice": tutta la pila, fino al tavolo.
  * - Cronologia: ogni voce sa a che livello della pila è ({ livello, origine }; il tavolo è −1). Indietro e
  *   avanti (popstate) fanno quello che serve per arrivarci: segui().
@@ -375,6 +375,88 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape' && !html.clas
 document.addEventListener('click', e => {
   if (html.classList.contains('is-tavolo') && (e.target as Element).closest?.('[data-firma]')) e.preventDefault();
 }, { capture: true });
+
+// ── Tirare giù per chiudere (telefono, 9/11/2026) ────────
+// Con la pagina in cima, un dito che tira verso il basso porta giù il foglio (a metà della sua corsa); lasciato oltre
+// SOGLIA, o lanciato, il foglio si chiude come con la ✕, se no torna su. Decide il primo movimento: se va in giù è un
+// tiro (e fermarlo toglie anche il "tira per aggiornare" del browser e il rimbalzo di iOS), se no tutto resta com'era.
+const SOGLIA = 72;     // px di foglio spostato
+const LANCIO = 0.6;    // px/ms del dito: un colpo veloce verso il basso chiude anche prima della soglia
+let tiro: { f: Foglio; x0: number; y0: number; dy: number; v: number; t: number; deciso: boolean } | null = null;
+let avviso: HTMLElement | null = null;
+
+/** Chi si tiene il dito in verticale: touch-action senza pan-y (l'indicatore del righello, il globo…) o un'area
+    interna già scorsa */
+const tieneIlDito = (t: Element, fin: Element) => {
+  for (let n: Element | null = t; n && n !== fin; n = n.parentElement) {
+    const ta = getComputedStyle(n).touchAction;
+    if (n.scrollTop > 0 || (ta !== 'auto' && ta !== 'manipulation' && !ta.includes('pan-y'))) return true;
+  }
+  return false;
+};
+
+/** La striscia in alto che dice cosa succede lasciando (nello stile della barra del tavolo) */
+function avvisa(y: number) {
+  if (!avviso) {
+    avviso = document.createElement('div');
+    avviso.className = 'tira mono';
+    avviso.setAttribute('aria-hidden', 'true');
+    document.body.append(avviso);
+  }
+  avviso.hidden = y < 8;
+  const testo = y >= SOGLIA ? 'Lascia per chiudere' : 'Tira per chiudere';
+  if (avviso.textContent === testo) return;
+  // passata la soglia, un tocco di vibrazione (Android), come la presa delle celle del tavolo
+  if (y >= SOGLIA) try { navigator.vibrate?.(8); } catch {}
+  avviso.textContent = testo;
+}
+
+function lascia(chiudi: boolean) {
+  const g = tiro;
+  tiro = null;
+  if (!g?.deciso) return;
+  if (avviso) avviso.hidden = true;
+  // il foglio resta giù: esce() fa volare la hero da dov'è adesso
+  if (chiudi && pila.at(-1) === g.f && !occupato) return chiusura();
+  gsap.to(g.f.el, { y: 0, duration: T(0.3), ease: 'power3.out', clearProps: 'transform' });
+}
+
+document.addEventListener('touchstart', e => {
+  // un secondo dito annulla il tiro
+  if (tiro) return lascia(false);
+  const f = pila.at(-1);
+  if (!f || occupato || e.touches.length !== 1 || html.classList.contains('is-tavolo') || scrollY > 0) return;
+  const t = e.target as Element;
+  // dentro il foglio o sul retino: i dialog (foto ingrandita, indice) e il righello stanno fuori
+  if (!(f.el.contains(t) || t === retino) || tieneIlDito(t, f.el)) return;
+  const p = e.touches[0];
+  tiro = { f, x0: p.clientX, y0: p.clientY, dy: 0, v: 0, t: e.timeStamp, deciso: false };
+}, { passive: true });
+
+document.addEventListener('touchmove', e => {
+  if (!tiro) return;
+  const p = e.touches[0];
+  const dx = p.clientX - tiro.x0, dy = p.clientY - tiro.y0;
+  if (!tiro.deciso) {
+    if (dy <= 0 || Math.abs(dx) > dy || !e.cancelable) { tiro = null; return; }
+    tiro.deciso = true;
+  }
+  e.preventDefault();
+  const dt = e.timeStamp - tiro.t;
+  if (dt > 0) tiro.v = 0.7 * ((dy - tiro.dy) / dt) + 0.3 * tiro.v;
+  tiro.dy = dy;
+  tiro.t = e.timeStamp;
+  const y = Math.max(0, dy) / 2;
+  gsap.set(tiro.f.el, { y });
+  avvisa(y);
+}, { passive: false });
+
+document.addEventListener('touchend', () => {
+  if (!tiro) return;
+  const y = Math.max(0, tiro.dy) / 2;
+  lascia(y >= SOGLIA || (tiro.v > LANCIO && y > 16));
+});
+document.addEventListener('touchcancel', () => lascia(false));
 
 /** Scarica la pagina prima di cambiare indirizzo: se non riesce, la pagina vera */
 async function prepara(a: HTMLAnchorElement, sostituisci = false) {

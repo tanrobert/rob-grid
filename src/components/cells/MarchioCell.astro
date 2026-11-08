@@ -1,0 +1,85 @@
+---
+// Rob Display: come è nato il marchio, a passi (pagina /rob-display). A sinistra titoletto e testo del passo e il
+// righello, a destra il marchio sulla griglia che si costruisce: i quadrati di Fibonacci, l'asta, la gamba (le sue due
+// diagonali e il perno P), la pancia (il cerchio e il punto Q), il buco che lo fa diventare la R, e alla fine i nodi.
+// Le linee di costruzione restano, in rosso. Un clic sul disegno fa il passo dopo (scripts/marchio.ts).
+// Senza JavaScript, o con riduci movimento: tutto costruito.
+import Paragrafi from '../Paragrafi.astro';
+import Righello from '../Righello.astro';
+import Glifo from '../Glifo.astro';
+import { marchio, erre, misure, fibonacci, passiMarchio, fasciaX, CAP, U } from '../../data/rob-display';
+
+const ultimo = passiMarchio.length - 1;
+// il passo in cui entra ogni pezzo del marchio, e i nodi
+const pezzi = { asta: 2, gamba: 3, pancia: 4 };
+const NODI = 6;
+const { gamba: gb, P, Q, pancia } = misure;
+// una retta da a a b, allungata di `piu` (frazione) da tutte e due le parti
+const retta = ([ax, ay]: number[], [bx, by]: number[], piu = 0.12) =>
+  ({ x1: ax - (bx - ax) * piu, y1: ay - (by - ay) * piu, x2: bx + (bx - ax) * piu, y2: by + (by - ay) * piu });
+const esterno = retta([gb.esterno_basso, 0], [gb.esterno_alto, CAP]);
+const interno = retta([gb.interno_basso, 0], [gb.interno_alto, CAP]);
+const buco = erre.pezzi.find(p => p.contro)!;
+const punto = (x: number, y: number) => `M${x} ${y}h0.01`;
+// le scritte stanno nel gruppo capovolto del glifo: si raddrizzano da sole
+const scritta = (x: number, y: number) => ({ x, y: -y, transform: 'scale(1,-1)' });
+---
+
+<div class="marchio" data-marchio data-pezzi={JSON.stringify({ ...pezzi })} data-nodi-passo={NODI}>
+  <div class="testo">
+    <div class="passi" aria-live="polite">
+      {passiMarchio.map((p, i) => (
+        <div class:list={['passo', i === ultimo && 'is-attivo']} data-testo>
+          <h2 class="titoletto">{p.title}</h2>
+          <div class="paragrafo"><Paragrafi testo={p.body} /></div>
+        </div>
+      ))}
+    </div>
+    <Righello voci={passiMarchio.map(p => p.nome)} attivo={ultimo} segno={passiMarchio[ultimo].nome} nome="Il marchio" />
+  </div>
+  <button class="tela" type="button" aria-label="Il passo dopo" data-tela>
+    <Glifo glifo={marchio} fascia={fasciaX(marchio, 4)} altezza={[-4 * U, CAP + 4 * U]} oltre={30} nodi
+      label="Il marchio R costruito sulla griglia di Fibonacci: asta, gamba e pancia">
+      <path class="pieno-carta" d={buco.d} data-passo="5" />
+      <g class="costruzione">
+        <g data-passo="1" data-uno-a-uno>{fibonacci.map(f => <rect x={f.x} y={f.y} width={f.w} height={f.h} />)}</g>
+        <g data-passo="3">
+          <line {...esterno} data-cresce />
+          <line {...interno} data-cresce />
+        </g>
+        <circle data-passo="4" cx={pancia.centro[0]} cy={pancia.centro[1]} r={pancia.raggio} />
+        <path data-passo="5" d={buco.d} />
+      </g>
+      <g class="punti">
+        <g data-passo="3"><path d={punto(P[0], P[1])} /><text class="mono" {...scritta(P[0] - 1.6 * U, P[1] + 0.8 * U)}>P</text></g>
+        <g data-passo="4"><path d={punto(Q[0], Q[1])} /><text class="mono" {...scritta(Q[0] + 0.8 * U, Q[1] + 0.8 * U)}>Q</text></g>
+      </g>
+    </Glifo>
+  </button>
+</div>
+
+<style>
+  /* come la lettera (GlifoCell): in colonna il testo e poi il disegno, nella cella orizzontale affiancati */
+  .marchio { position: absolute; inset: 0; display: grid; grid-template: auto minmax(80cqi, 1fr) / minmax(0, 1fr); }
+  .testo { display: flex; flex-direction: column; justify-content: space-between; gap: var(--pad-label); padding: var(--pad-label) var(--pad) var(--pad); }
+  .passi { display: grid; }
+  .passo { grid-area: 1 / 1; display: flex; flex-direction: column; gap: var(--m); }
+  .passo:not(.is-attivo) { visibility: hidden; }
+
+  .tela { position: relative; padding: 0; border: 0; border-top: var(--line) solid var(--inchiostro); background: none; overflow: hidden; }
+  .tela > :global(svg) { position: absolute; inset: var(--pad); width: calc(100% - 2 * var(--pad)); height: calc(100% - 2 * var(--pad)); }
+  /* i pezzi e i segni dei passi che non ci sono ancora (scripts/marchio.ts) */
+  .tela :global(.is-via) { visibility: hidden; }
+
+  /* la costruzione in rosso, a filo; il buco della R è carta sopra i pezzi (una controforma) */
+  .costruzione { fill: none; stroke: var(--rosso); stroke-width: var(--line); }
+  .costruzione [data-passo='5'] { stroke-dasharray: 4 3; }
+  .pieno-carta { fill: var(--bianco); }
+  .punti path { fill: none; stroke: var(--rosso); stroke-width: 7px; stroke-linecap: square; }
+  .punti text { fill: var(--rosso); font-family: var(--font-numeri); font-size: 22px; }
+
+  @container (min-aspect-ratio: 6 / 5) {
+    .marchio { grid-template: minmax(0, 1fr) / minmax(0, 1fr) min(100cqb, 60cqi); }
+    .tela { border-top: 0; border-left: var(--line) solid var(--inchiostro); }
+  }
+</style>

@@ -12,12 +12,13 @@
   /* inchiostro del sito. Unico colore di ruolo: testi, fili e celle piene usano questo, non --nero */
   --inchiostro: var(--nero);
 
-  /* due font (fonts.css): Archivo variabile per titoli e testi (in prova dal 25/10/2026 al posto di Schibsted Grotesk),
-     JetBrains Mono per numeri ed etichette: linguette, occhielli, didascalie, orologio, righello (.mono), cifre delle celle stat */
+  /* due font (fonts.css): Archivo variabile per titoli e testi,
+     JetBrains Mono per le sole cifre (unicode-range, dall'8/11/2026): in linguette, occhielli, didascalie, orologio, righello (.mono)
+     e cifre delle celle stat le cifre sono monospaziate, il resto in Archivo */
   --font-testo:  'Archivo', 'Helvetica Neue', Arial, sans-serif;
-  --font-numeri: 'JetBrains Mono', ui-monospace, 'Cascadia Mono', Menlo, monospace;
+  --font-numeri: 'JetBrains Mono', var(--font-testo);
   /* logotipo ROBERTO (classe .logotipo) */
-  --font-logo:   'Roberto Grafica', var(--font-testo);
+  --font-logo:   'Rob Display', var(--font-testo);
   /* ROBERTO nel font del logotipo, in em: largo 5,21 (inchiostro, senza i margini delle lettere), maiuscole alte 0,68 */
   --roberto-w: 5.21;
   --maiuscole: 0.68;
@@ -32,6 +33,9 @@
      firma (6/11/2026, scelta di Roberto): un quadretto del tavolo sul computer (25px = Q.lg di lib/tavolo.ts), sul
      telefono un quadretto dei fogli (larghezza / 15), cosÃ¬ sta a filo dei testi delle celle */
   --margine-ui: 25px;
+  /* strisce d'inchiostro con una scritta (barra e piede del tavolo, avviso "tira per chiudere" dei fogli): alte quanto
+     una riga mono più 3px sopra e sotto, arrotondato al pixel */
+  --barra: 19px;
   /* quadretto su cui si misurano i testi (--titolone, --titoletto, --paragrafo, regola sotto): quello del foglio
      (components/foglio) o quello di base del tavolo (components/tavolo); qui il quadretto di base */
   --q-testo: 25px;
@@ -210,8 +214,53 @@ body {
   white-space: nowrap;
 }
 html.is-ruling, html.is-ruling * { cursor: var(--cursore-chiusa) !important; user-select: none; }
-/* su touch Ã¨ solo un indicatore: si scorre col dito */
-@media (pointer: coarse) { .ruler { pointer-events: none; } }
+/* su touch il righello lascia scorrere col dito; l'indicatore si prende ancora (trascinato scorre, toccato apre l'indice) */
+@media (pointer: coarse) { .ruler { pointer-events: none; } .ruler__thumb { pointer-events: auto; } }
+
+/* indice del foglio (scripts/indice.ts, dal tocco sull'indicatore del righello): pannello d'inchiostro da destra coi
+   titoli delle celle; la voce della cella in lettura ha il numero in carta, come il quadrato pieno dei righelli */
+.indice {
+  position: fixed; inset: 0; width: 100%; height: 100%; max-width: none; max-height: none;
+  margin: 0; padding: 0; border: 0; background: none; overflow: hidden;
+}
+.indice::backdrop { background: none; }
+.indice__pannello {
+  position: absolute; top: 0; right: 0; bottom: 0;
+  width: min(100% - var(--margine-ui) * 3, 360px);
+  display: flex; flex-direction: column;
+  padding: max(var(--margine-ui), env(safe-area-inset-top)) max(var(--margine-ui), env(safe-area-inset-right))
+    max(var(--margine-ui), env(safe-area-inset-bottom)) var(--margine-ui);
+  background: var(--inchiostro); color: var(--bianco);
+}
+.indice__testa {
+  flex: none; display: flex; justify-content: space-between; align-items: center;
+  height: var(--riga-label); margin-bottom: var(--margine-ui);
+}
+.indice__chiudi { position: relative; width: var(--riga-label); height: var(--riga-label); padding: 0; color: inherit; background: none; border: 0; }
+.indice__chiudi::before { content: ''; position: absolute; inset: -12px; }
+.indice__chiudi svg { width: 100%; height: 100%; fill: currentColor; }
+.indice__elenco { min-height: 0; overflow-y: auto; margin: 0; padding: 0; list-style: none; }
+.indice__voce {
+  display: grid; grid-template-columns: 4ch 1fr; gap: var(--gap); align-items: baseline;
+  width: 100%; padding: 12px 0; text-align: left;
+  color: inherit; background: none; border: 0;
+  border-top: var(--line) solid color-mix(in srgb, var(--bianco) 45%, transparent);
+  font: 600 var(--paragrafo) / 1.25 var(--font-testo);
+}
+.indice__pannello:focus { outline: none; }
+.indice__numero { justify-self: start; padding: 0 3px; }
+.indice__occhiello { display: block; margin-bottom: 4px; font-weight: 400; }
+.indice__voce[aria-current] .indice__numero { background: var(--bianco); color: var(--inchiostro); }
+.indice :focus-visible { outline-color: var(--bianco); }
+
+/* tirando giù un foglio dalla cima (scripts/foglio): cosa succede lasciando, in alto al centro */
+.tira {
+  position: fixed; z-index: 50; left: 50%; transform: translateX(-50%);
+  top: max(var(--margine-ui), env(safe-area-inset-top));
+  display: flex; align-items: center; height: var(--barra); padding: 0 8px;
+  background: var(--inchiostro); color: var(--bianco); white-space: nowrap; pointer-events: none;
+}
+.tira[hidden] { display: none; }
 
 a { color: inherit; text-decoration: none; }
 a, button, [role="button"] { touch-action: manipulation; }
@@ -229,12 +278,12 @@ p { text-wrap: pretty; }
   font-family: var(--font-numeri);
   font-size: var(--corpo-mono);
   line-height: 1.2;
-  letter-spacing: 0.02em;  /* JetBrains Mono Ã¨ giÃ  arioso: 0.08em (col font proporzionale) staccava troppo */
+  letter-spacing: 0.02em;
   text-transform: uppercase;
   font-variant-numeric: tabular-nums;
 }
 
-/* Logotipo: Roberto Grafica Black (fonts.css). La riga Ã¨ alta quanto le maiuscole e il riquadro Ã¨
+/* Logotipo: Rob Display (fonts.css). La riga Ã¨ alta quanto le maiuscole e il riquadro Ã¨
    rifilato sull'inchiostro di ROBERTO, cosÃ¬ si allinea e si centra come il vecchio SVG. Dal font (unitÃ  1000):
    ascendente 900 e discendente 160 â†’ con interlinea 0,68 le maiuscole cadono 0,03 em sotto il riquadro;
    margine sinistro della R 0,07 em, destro della O 0,03. Il corpo lo decide chi lo usa */
@@ -360,6 +409,8 @@ p { text-wrap: pretty; }
 .cell--bare::after { content: none; }
 /* ROBERTO nudo: la cella Ã¨ alta quanto la R, le O sbordano sopra e sotto (LogotipoCell) e non vanno rifilate */
 .cell--bare.cell--logotipo { overflow: visible; }
+/* e senza fondo: la parola sta sulla carta del tavolo o sul retino del foglio (la hero di /rob-display, 9/11/2026) */
+.cell--bare.cell--logotipo { background: transparent; }
 
 .cell--red { background: var(--inchiostro); color: var(--bianco); }
 
@@ -388,6 +439,11 @@ p { text-wrap: pretty; }
 /* freccia (src/assets/arrow.svg): il colore segue il testo */
 .cell__go svg { width: var(--riga-label); height: var(--riga-label); }
 .cell__go svg * { fill: currentColor; }
+/* la parola ROBERTO nuda (cella logotipo senza filo): sul tavolo apre /rob-display e la parola stessa è il link (la
+   freccia finirebbe sopra la O); nella hero di /rob-display niente ✕ (9/11/2026, scelta di Roberto: la parola stessa
+   chiude, come Esc), che resta solo per la tastiera: compare quando prende il fuoco */
+.cell--logotipo.cell--bare > span.cell__go { display: none; }
+.cell--logotipo.cell--bare > a.cell__go:not(:focus-visible) { clip-path: inset(50%); }
 
 /* âœ• di chiusura delle hero (progetti, archivio, extra, info): tutta la hero chiude il foglio (scripts/foglio) */
 @media (hover: hover) and (pointer: fine) {

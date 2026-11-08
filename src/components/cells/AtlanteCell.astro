@@ -1,0 +1,46 @@
+---
+// Rob Display, tutti i glifi (pagina /rob-display): alla stessa scala, ognuno nel quadrato della sua tavola (la griglia
+// fine, a questa misura, sarebbe solo grigio), in tre gruppi.
+// Lettere e numeri sono bottoni: portano quel carattere nella cella della lettera (GlifoCell) e la fanno scorrere in
+// vista (scripts/glifo.ts). Il blocco è `data-intero`: se non ci sta, la cella cresce (scripts/mosaico.ts).
+import Glifo from '../Glifo.astro';
+import { marchio, lettere, numeri, segni, fasciaX } from '../../data/rob-display';
+import type { Glifo as G } from '../../data/rob-display';
+import { pad2 } from '../../lib/format';
+
+const gruppi: Array<{ nome: string; glifi: G[]; vai: boolean }> = [
+  { nome: 'Marchio e lettere', glifi: [marchio, ...lettere], vai: true },
+  { nome: 'Numeri', glifi: numeri, vai: true },
+  { nome: 'Segni', glifi: segni, vai: false },
+];
+const nome = (g: G) => (g.marchio ? 'Il marchio' : g.numero ? `Numero ${g.nome}` : g.segno ? g.nome : `Lettera ${g.nome}`);
+---
+
+<div class="atlante">
+  <div class="gruppi" data-intero>
+    {gruppi.map(gr => (
+      <section class="gruppo">
+        <h3 class="mono">{gr.nome} · {pad2(gr.glifi.length)}</h3>
+        <ul class="glifi">
+          {gr.glifi.map(g => (
+            <li>
+              {gr.vai && !g.marchio
+                ? <button type="button" aria-label={`${nome(g)}: mostrala sulla griglia`} data-atlante={g.carattere}><Glifo glifo={g} fascia={fasciaX(g, 1)} griglia="tavola" label={nome(g)} /></button>
+                : <Glifo glifo={g} fascia={fasciaX(g, 1)} griglia="tavola" label={nome(g)} />}
+            </li>
+          ))}
+        </ul>
+      </section>
+    ))}
+  </div>
+</div>
+
+<style>
+  .atlante { position: absolute; inset: 0; padding: var(--pad-label) var(--pad) var(--pad); }
+  .gruppi { display: flex; flex-direction: column; gap: var(--pad-label); }
+  .gruppo { display: flex; flex-direction: column; gap: var(--m); }
+  /* tutti alla stessa scala: stessa altezza, larghi quanto il loro disegno */
+  .glifi { display: flex; flex-wrap: wrap; gap: var(--line); margin: 0; padding: 0; list-style: none; }
+  .glifi :global(svg) { height: calc(3.5 * var(--quadretto)); width: auto; }
+  .glifi button { display: block; padding: 0; border: 0; background: none; }
+</style>

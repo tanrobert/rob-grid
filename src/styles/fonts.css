@@ -1,6 +1,6 @@
 /* ── Font ─────────────────────────────────────────────────
-   Archivo, variabile (asse wght 400 → 900; larghezza fissata a 100), tondo e corsivo. In prova dal 25/10/2026
-   al posto di Schibsted Grotesk (i suoi file restano in public/fonts: per tornare, rimettere le due righe sotto).
+   Archivo, variabile (asse wght 400 → 900; larghezza fissata a 100), tondo e corsivo: titoli e testi (--font-testo),
+   dal 25/10/2026.
    Licenza SIL OFL (public/fonts/OFL-archivo.txt): libera anche sul web. Sorgente: github.com/google/fonts (ofl/archivo),
    larghezza fissata con fontTools.varLib.instancer (wdth=100 wght=400:900), ridotta ai caratteri latini e
    convertita in woff2 con fontTools (vedi CLAUDE.md, "Font").
@@ -9,16 +9,16 @@
 
 @font-face { font-family: 'Archivo'; src: url('/fonts/archivo.woff2') format('woff2'); font-weight: 400 900; font-style: normal; font-display: swap; }
 @font-face { font-family: 'Archivo'; src: url('/fonts/archivo-italic.woff2') format('woff2'); font-weight: 400 900; font-style: italic; font-display: swap; }
-/* Schibsted Grotesk, fino al 25/10/2026:
-@font-face { font-family: 'Schibsted Grotesk'; src: url('/fonts/schibsted-grotesk.woff2') format('woff2'); font-weight: 400 900; font-style: normal; font-display: swap; }
-@font-face { font-family: 'Schibsted Grotesk'; src: url('/fonts/schibsted-grotesk-italic.woff2') format('woff2'); font-weight: 400 900; font-style: italic; font-display: swap; } */
 
-/* JetBrains Mono, variabile (wght 400 → 800), solo tondo: numeri ed etichette (--font-numeri, dal 25/10/2026).
-   Monospaziato: cifre già tabellari. Licenza SIL OFL (public/fonts/OFL-jetbrains-mono.txt). Sorgente: github.com/google/fonts
-   (ofl/jetbrainsmono), ridotto ai caratteri latini e SENZA le legature da codice (calt: -> != www…): fontTools.subset
-   con --layout-features='case,ccmp,frac,locl,ordn,sinf,subs,sups,zero,kern,mark,mkmk' */
-@font-face { font-family: 'JetBrains Mono'; src: url('/fonts/jetbrains-mono.woff2') format('woff2'); font-weight: 400 800; font-style: normal; font-display: swap; }
+/* JetBrains Mono, variabile (wght 400 → 800), solo tondo (--font-numeri, dal 25/10/2026). Licenza SIL OFL
+   (public/fonts/OFL-jetbrains-mono.txt). Sorgente: github.com/google/fonts (ofl/jetbrainsmono), ridotto ai caratteri latini
+   e SENZA le legature da codice (calt: -> != www…): fontTools.subset
+   con --layout-features='case,ccmp,frac,locl,ordn,sinf,subs,sups,zero,kern,mark,mkmk'
+   Dall'8/11/2026 SOLO LE CIFRE 0-9 (unicode-range): lettere e segni di --font-numeri passano ad Archivo, il font dopo
+   nella pila.
+   Per avere in mono anche altri segni (: . % +): aggiungerli a unicode-range; per tornare a tutto mono: toglierlo */
+@font-face { font-family: 'JetBrains Mono'; src: url('/fonts/jetbrains-mono.woff2') format('woff2'); font-weight: 400 800; font-style: normal; font-display: swap; unicode-range: U+0030-0039; }
 
-/* Roberto Grafica Black: il font di Roberto, solo per il logotipo (maiuscole, un peso). block: col font di riserva
+/* Rob Display (fino all'8/11/2026 Roberto Grafica Black): il font di Roberto, solo per il logotipo (maiuscole, un peso). block: col font di riserva
    il nome comparirebbe in un altro carattere e poi cambierebbe; è 4 KB e ha il preload in Layout.astro */
-@font-face { font-family: 'Roberto Grafica'; src: url('/fonts/roberto-grafica-black.woff2') format('woff2'); font-weight: 900; font-style: normal; font-display: block; }
+@font-face { font-family: 'Rob Display'; src: url('/fonts/rob-display-black.woff2') format('woff2'); font-weight: 900; font-style: normal; font-display: block; }

@@ -1,0 +1,30 @@
+---
+// Rob Display da provare (pagina /rob-display): una riga da scrivere col font vero, con la sua spaziatura e il suo
+// kerning, sempre in maiuscolo. Il corpo si adatta alla larghezza della cella mentre si scrive, fino a un massimo
+// (scripts/prova.ts); senza JavaScript resta fisso. In fondo la coda con quello che il font sa scrivere.
+interface Props {
+  /** il testo di partenza */
+  testo: string;
+}
+const { testo } = Astro.props;
+---
+
+<div class="prova" data-prova>
+  <label class="sr-only" for="prova-rob-display">Scrivi con Rob Display</label>
+  <input id="prova-rob-display" class="riga" type="text" value={testo} maxlength="60" spellcheck="false" autocomplete="off" data-riga />
+  <p class="coda-info"><span class="coda-info__testo mono">Scrivi qui · 26 lettere, 10 numeri e 28 segni</span></p>
+</div>
+
+<style>
+  .prova { position: absolute; inset: 0; display: flex; align-items: center; padding: var(--pad-label) var(--pad) calc(var(--coda-info) + var(--pad)); }
+  /* --corpo: lo scrive lo script; senza, maiuscole alte tre quadretti */
+  .riga {
+    width: 100%; min-width: 0; padding: 0; border: 0; background: none; color: var(--inchiostro);
+    font-family: var(--font-logo); font-weight: 900; text-transform: uppercase;
+    font-size: var(--corpo, calc(3 * var(--quadretto) / var(--maiuscole)));
+    line-height: 1; caret-color: var(--rosso); font-kerning: normal;
+  }
+  .riga:focus-visible { outline: 0; }
+  /* il fuoco da tastiera: il bordo della cella, dentro (il filo della riga sarebbe troppo stretto attorno al testo) */
+  .prova:has(.riga:focus-visible) { outline: 2px solid var(--rosso); outline-offset: -2px; }
+</style>

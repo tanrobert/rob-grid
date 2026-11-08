@@ -4,8 +4,9 @@
  * anticipo, quando il browser è libero, con la foto della hero: al clic il foglio è quasi sempre già pronto.
  */
 
-/** Le pagine che si aprono come foglio sopra il tavolo */
-export const eFoglio = (percorso: string) => /^\/(info|extra|archivio|progetti\/[^/]+)\/?$/.test(percorso);
+/** Le pagine che si aprono come foglio sopra il tavolo. Una pagina nuova (`<Layout foglio>`) va aggiunta qui, se no il
+ *  clic fa un caricamento vero (con l'arrivo animato sopra: sembra aprirsi, ma la pagina si ricarica; /rob-display, 9/11/2026) */
+export const eFoglio = (percorso: string) => /^\/(info|extra|archivio|rob-display|progetti\/[^/]+)\/?$/.test(percorso);
 
 const cache = new Map<string, Promise<Document>>();
 

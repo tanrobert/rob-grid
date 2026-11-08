@@ -11,6 +11,7 @@ import { inQuadretti, pack, FINESTRE, Q, versione } from '../../lib/tavolo';
 import { BREAKPOINTS } from '../../lib/grid';
 import { svgs } from '../../data/svgs';
 import { piede } from '../../data/piede';
+import { site } from '../../data/site';
 import Matita from '../../assets/matita.svg';
 
 interface Props {
@@ -20,6 +21,8 @@ interface Props {
   sotto?: boolean;
 }
 const { sotto = false } = Astro.props;
+// nel piede del tavolo, prima della P.IVA, anche il nome, nel font del logotipo (8/11/2026, scelte di Roberto;
+// .mono lo mette in maiuscolo); la cella recapiti dei fogli no: lì il nome c'è già
 // sul tavolo il numero ce l'hanno solo i progetti (30/10/2026, scelta di Roberto): le altre celle tengono l'occhiello
 const cells = Astro.props.cells
   .map(c => (c.type === 'project' ? c : { ...c, label: false as const }))
@@ -106,7 +109,7 @@ const sagoma = (c: Cell) => (c.frame === false && c.type === 'svg' ? svgs[c.svg]
 <Firma inerte={!sotto} />
 {/* zoom del tavolo in alto a destra (scripts/tavolo/vista.ts, scala): 1× = quadretto di base */}
 <span class="zoom mono" data-zoom aria-hidden="true">1×</span>
-{/* la barra in basso: a sinistra le scritte piccole dei recapiti (P.IVA, informativa, anno, versione), a destra i
+{/* la barra in basso: a sinistra le scritte piccole dei recapiti (nome, P.IVA, informativa, anno, versione), a destra i
     bottoni del tavolo. Se le scritte non ci stanno scorrono (scripts/tavolo/piede.ts): due serie uguali, la striscia
     si sposta di una (50%) e riparte senza stacco; la seconda serie e lo stacco servono solo quando scorre */}
 <div class="barra">
@@ -114,7 +117,7 @@ const sagoma = (c: Cell) => (c.frame === false && c.type === 'svg' ? svgs[c.svg]
     <span class="piede__nastro">
       {[0, 1].map(n => (
         <span class:list={['piede__serie', n === 1 && 'piede__copia']} aria-hidden={n === 1 ? 'true' : undefined}>
-          {piede.join(' · ')}<span class="piede__stacco" aria-hidden="true">{' · '}</span>
+          <span class="piede__nome">{site.name}</span>{' · ' + piede.join(' · ')}<span class="piede__stacco" aria-hidden="true">{' · '}</span>
         </span>
       ))}
     </span>
@@ -311,9 +314,8 @@ const sagoma = (c: Cell) => (c.frame === false && c.type === 'svg' ? svgs[c.svg]
   /* la barra in basso, ai margini della firma (--margine-ui, global.css): scritte a sinistra, bottoni a destra,
      sempre sulla stessa riga: se manca spazio le scritte si stringono e scorrono */
   .barra {
-    /* piede e bottoni nello stesso stile (7/11/2026, scelte di Roberto): strisce piene d'inchiostro alte quanto una
-       riga mono più 3px sopra e sotto (arrotondato al pixel); la matita no, solo la penna */
-    --barra: 19px;
+    /* piede e bottoni nello stesso stile (7/11/2026, scelte di Roberto): strisce piene d'inchiostro alte --barra
+       (global.css); la matita no, solo la penna */
     position: fixed; z-index: 40;
     bottom: max(var(--margine-ui), env(safe-area-inset-bottom));
     right: max(var(--margine-ui), env(safe-area-inset-right));
@@ -341,6 +343,8 @@ const sagoma = (c: Cell) => (c.frame === false && c.type === 'svg' ? svgs[c.svg]
     color: var(--bianco);
   }
   .piede__nastro { display: flex; }
+  /* il nome nel font del logotipo, stesso corpo: le maiuscole sono alte quasi come quelle di Archivo (0,68 e 0,686 em) */
+  .piede__nome { font-family: var(--font-logo); font-weight: 900; letter-spacing: 0; }
   .piede:not(.is-scorre) :is(.piede__copia, .piede__stacco) { display: none; }
   .piede.is-scorre .piede__nastro { animation: piede-scorre var(--durata, 30s) linear infinite; }
   @keyframes piede-scorre { to { transform: translate3d(-50%, 0, 0); } }

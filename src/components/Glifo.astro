@@ -1,0 +1,88 @@
+---
+// Un glifo di Rob Display sulla sua griglia (pagina /rob-display), dal laboratorio del font
+// (wanama/font/lab/src/components/Glifo.astro). Due usi:
+// - un <svg> intero (atlante, marchio): `fascia` e `altezza` danno il viewBox, `griglia` la griglia sotto;
+// - un gruppo <g> dentro l'<svg> di chi lo usa (`gruppo`: la cella della lettera, tutte le lettere su una griglia sola).
+// Coordinate del font (y in su): l'<svg> le capovolge con <g transform="scale(1,-1)">. Le linee sono di 1px reale a
+// ogni misura (vector-effect); nodi e maniglie sono tratti lunghi zero con l'estremità quadrata o tonda: quadratini e
+// pallini di misura fissa, a ogni scala. Un tracciato per tipo di segno (pagina leggera).
+// Lo slot di base va sopra i pezzi (la costruzione del marchio), lo slot `sotto` (solo nel gruppo) sotto di loro.
+import type { Glifo } from '../data/rob-display';
+import { Y_MIN, Y_MAX, U, griglia as linee, segniNodi, viewBox as vb } from '../data/rob-display';
+
+interface Props {
+  glifo: Glifo;
+  /** intervallo orizzontale del viewBox, in unità del font */
+  fascia?: [number, number];
+  /** intervallo verticale del viewBox (di base da −10u a 44u, uguale per tutti i glifi) */
+  altezza?: [number, number];
+  /** la griglia sotto: tutti gli u, solo il quadrato della tavola, o niente */
+  griglia?: 'u' | 'tavola' | false;
+  /** u di griglia oltre il viewBox, su ogni lato (celle grandi: riempie lo spazio che avanza attorno) */
+  oltre?: number;
+  /** contorni dei pezzi in rosso */
+  pezzi?: boolean;
+  /** nodi e maniglie */
+  nodi?: boolean;
+  /** solo il gruppo, dentro l'<svg> di chi lo usa, spostato di `sposta` in orizzontale */
+  gruppo?: boolean;
+  sposta?: number;
+  /** nome per gli screen reader (svg) */
+  label?: string;
+  class?: string;
+}
+const { glifo: g, fascia = [0, 0], altezza = [Y_MIN, Y_MAX], griglia = 'u', oltre = 0, pezzi = false, nodi = false,
+  gruppo = false, sposta = 0, label, class: classe } = Astro.props;
+const reticolo = griglia && linee(fascia[0] - oltre * U, fascia[1] + oltre * U, altezza[0] - oltre * U, altezza[1] + oltre * U);
+const segni = nodi ? segniNodi(g) : null;
+---
+
+{gruppo ? (
+  <g class:list={['glifo', classe]} transform={sposta ? `translate(${sposta} 0)` : undefined} data-glifo>
+    <slot name="sotto" />
+    <g class="glifo__pieno" data-pieni>{g.pezzi.filter(p => !p.contro).map((p, i) => <path id={`rd-${g.slug}-${i}`} d={p.d} data-pezzo={p.nome} />)}</g>
+    {/* i contorni rossi riusano i tracciati dei pezzi (<use>): niente forme scritte due volte */}
+    {pezzi && <g class="glifo__pezzi">{g.pezzi.filter(p => !p.contro).map((_, i) => <use href={`#rd-${g.slug}-${i}`} />)}{g.pezzi.filter(p => p.contro).map(p => <path class="contro" d={p.d} />)}</g>}
+    {segni && (
+      <g class="glifo__nodi" data-nodi>
+        <path class="leva" d={segni.leve} /><path class="maniglia" d={segni.maniglie} /><path class="nodo" d={segni.nodi} />
+        <path class="nodo nodo--scelto" d="" data-scelto />
+      </g>
+    )}
+    <slot />
+  </g>
+) : (
+  <svg class:list={['glifo', classe]} viewBox={vb(fascia, ...altezza)} role="img" aria-label={label} overflow="visible">
+    <g transform="scale(1,-1)">
+      {reticolo && (
+        <g class="glifo__griglia" aria-hidden="true">
+          {griglia === 'u' && <path d={reticolo.sottili} />}
+          <path class="glifo__tavola" d={reticolo.verticali + reticolo.orizzontali} />
+        </g>
+      )}
+      <g class="glifo__pieno" data-pieni>{g.pezzi.filter(p => !p.contro).map(p => <path d={p.d} data-pezzo={p.nome} />)}</g>
+      {pezzi && <g class="glifo__pezzi" aria-hidden="true">{g.pezzi.map(p => <path class:list={[p.contro && 'contro']} d={p.d} />)}</g>}
+      {segni && (
+        <g class="glifo__nodi" aria-hidden="true" data-nodi>
+          <path class="leva" d={segni.leve} /><path class="maniglia" d={segni.maniglie} /><path class="nodo" d={segni.nodi} />
+        </g>
+      )}
+      <slot />
+    </g>
+  </svg>
+)}
+
+<style is:global>
+  /* globali (niente attributo di scope su ogni tracciato): le classi sono solo di questo componente */
+  .glifo path, .glifo line, .glifo circle, .glifo rect, .glifo use { vector-effect: non-scaling-stroke; }
+  .glifo__griglia path { fill: none; stroke: color-mix(in srgb, var(--inchiostro) 15%, var(--bianco)); stroke-width: var(--line); shape-rendering: crispEdges; }
+  .glifo__griglia .glifo__tavola { stroke: color-mix(in srgb, var(--inchiostro) 35%, var(--bianco)); }
+  .glifo__pieno { fill: var(--inchiostro); }
+  .glifo__pezzi path, .glifo__pezzi use { fill: none; stroke: var(--rosso); stroke-width: var(--line); }
+  .glifo__pezzi .contro { stroke-dasharray: 4 3; }
+  .glifo__nodi .leva { fill: none; stroke: var(--rosso); stroke-width: var(--line); }
+  /* nodo: quadratino rosso pieno di 7px; maniglia: pallino rosso di 5px (come in Illustrator); il nodo scelto col clic, d'inchiostro */
+  .glifo__nodi .nodo { fill: none; stroke: var(--rosso); stroke-width: 7px; stroke-linecap: square; }
+  .glifo__nodi .maniglia { fill: none; stroke: var(--rosso); stroke-width: 5px; stroke-linecap: round; }
+  .glifo__nodi .nodo--scelto { stroke: var(--inchiostro); stroke-width: 11px; }
+</style>

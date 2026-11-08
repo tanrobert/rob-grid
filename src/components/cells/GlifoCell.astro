@@ -1,0 +1,85 @@
+---
+// Rob Display, una lettera alla volta (pagina /rob-display): a destra la lettera grande sulla sua griglia, coi pezzi
+// separati (contorni rossi), i nodi e le maniglie; a sinistra la lettera scritta col font e due righe su come è fatta;
+// sotto il righello delle 26 lettere e dei 10 numeri. Un clic sul disegno fa la dopo; un clic su un punto rosso scrive
+// nella coda in fondo il pezzo e la regola che lo genera (scripts/glifo.ts). Le lettere hanno tutte la stessa scala:
+// il disegno è largo quanto la lettera più larga (la W), ognuna centrata.
+// Come le altre celle a passi (palette, ridisegno): testo sopra o a sinistra, disegno sotto o a destra, staccato da un filo.
+// Senza JavaScript: la A.
+import Paragrafi from '../Paragrafi.astro';
+import Righello from '../Righello.astro';
+import Glifo from '../Glifo.astro';
+import { lettere, numeri, testi, griglia, viewBox, datiNodi, U, Y_MIN, Y_MAX, CAP } from '../../data/rob-display';
+import type { Glifo as G } from '../../data/rob-display';
+
+const glifi = [...lettere, ...numeri];
+const nome = (g: G) => `${g.numero ? 'Numero' : 'Lettera'} ${g.nome}`;
+// stessa scala per tutte, su una griglia sola: ogni lettera è spostata di un numero intero di u perché il suo centro
+// cada sullo 0 (così resta sulla griglia), e il disegno è largo quanto la più larga, con 2u di margine
+const centro = (g: G) => Math.round((g.riquadro[0] + g.riquadro[2]) / 2 / U) * U;
+const meta = Math.max(...glifi.map(g => Math.max(centro(g) - g.riquadro[0], g.riquadro[2] - centro(g)))) + 2 * U;
+const fascia: [number, number] = [-meta, meta];
+const reticolo = griglia(-meta - 40 * U, meta + 40 * U, Y_MIN - 40 * U, Y_MAX + 40 * U);
+const REGOLA = 'Clic su un punto rosso: la sua regola';
+---
+
+<div class="lettere" data-glifo-cella>
+  <div class="testo">
+    <div class="passi" aria-live="polite">
+      {glifi.map((g, i) => (
+        <div class:list={['passo', i === 0 && 'is-attivo']} data-testo data-carattere={g.carattere}>
+          <h2 class="sr-only">{nome(g)}</h2>
+          <p class="carattere" aria-hidden="true">{g.carattere}</p>
+          <div class="paragrafo"><Paragrafi testo={testi[g.nome] ?? ''} /></div>
+        </div>
+      ))}
+    </div>
+    <Righello voci={glifi.map(nome)} attivo={0} segno={glifi[0].carattere} nome="Lettere e numeri" />
+  </div>
+  <div class="disegno">
+    <button class="tela" type="button" aria-label="La lettera dopo" data-tela>
+      <svg class="glifo" viewBox={viewBox(fascia)} role="img" aria-label="La lettera sulla griglia, a pezzi, coi suoi nodi" overflow="visible">
+        <g transform="scale(1,-1)">
+          <g class="glifo__griglia" aria-hidden="true"><path d={reticolo.sottili} /><path class="glifo__tavola" d={reticolo.orizzontali} /></g>
+          {glifi.map((g, i) => (
+            <Glifo glifo={g} gruppo sposta={-centro(g)} pezzi nodi class={i === 0 ? 'is-attivo' : undefined}>
+              <path slot="sotto" class="glifo__tavola-lati" d={`M0 ${Y_MIN - 40 * U}V${Y_MAX + 40 * U}M${CAP} ${Y_MIN - 40 * U}V${Y_MAX + 40 * U}`} />
+            </Glifo>
+          ))}
+        </g>
+      </svg>
+    </button>
+    <script type="application/json" data-nodi-json set:html={datiNodi(glifi)} />
+    <p class="coda-info"><span class="coda-info__testo mono" data-regola data-base={REGOLA}>{REGOLA}</span></p>
+  </div>
+</div>
+
+<style>
+  /* in colonna: il testo, poi il disegno nello spazio che resta (mai più basso di così: se il testo non ci sta cresce
+     la cella, scripts/mosaico.ts) */
+  .lettere { position: absolute; inset: 0; display: grid; grid-template: auto minmax(80cqi, 1fr) / minmax(0, 1fr); }
+  .testo { display: flex; flex-direction: column; justify-content: space-between; gap: var(--pad-label); padding: var(--pad-label) var(--pad) var(--pad); }
+
+  /* i testi uno sopra l'altro: la colonna è alta quanto il più lungo, cambiando lettera niente salta */
+  .passi { display: grid; }
+  .passo { grid-area: 1 / 1; display: flex; flex-direction: column; gap: var(--pad); }
+  .passo:not(.is-attivo) { visibility: hidden; }
+  /* la lettera scritta col font: maiuscole alte tre quadretti */
+  .carattere {
+    font-family: var(--font-logo); font-weight: 900; text-transform: uppercase;
+    font-size: calc(3 * var(--quadretto) / var(--maiuscole)); line-height: var(--maiuscole);
+  }
+
+  .disegno { position: relative; border-top: var(--line) solid var(--inchiostro); }
+  .tela { position: absolute; inset: 0 0 var(--coda-info); padding: 0; border: 0; background: none; overflow: hidden; }
+  .tela > :global(svg) { position: absolute; inset: var(--pad); width: calc(100% - 2 * var(--pad)); height: calc(100% - 2 * var(--pad)); }
+  .tela :global([data-glifo]:not(.is-attivo)) { display: none; }
+  /* i lati della tavola di ogni lettera (la base e l'altezza sono della griglia comune) */
+  .tela :global(.glifo__tavola-lati) { fill: none; stroke: color-mix(in srgb, var(--inchiostro) 35%, var(--bianco)); stroke-width: var(--line); shape-rendering: crispEdges; }
+
+  /* cella orizzontale: il testo a sinistra, il disegno a destra (largo quanto la cella è alta, mai più di due terzi) */
+  @container (min-aspect-ratio: 6 / 5) {
+    .lettere { grid-template: minmax(0, 1fr) / minmax(0, 1fr) min(100cqb * 1.2, 66cqi); }
+    .disegno { border-top: 0; border-left: var(--line) solid var(--inchiostro); }
+  }
+</style>

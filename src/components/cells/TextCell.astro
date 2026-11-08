@@ -44,9 +44,10 @@ const text = caret ? title.slice(0, -1) : title;
 </div>
 
 <style>
+  /* titolo e paragrafo in alto, mai in fondo alla cella (9/11/2026, scelta di Roberto: "da nessuna parte nel sito") */
   .text {
     position: absolute; inset: 0;
-    display: flex; flex-direction: column; justify-content: flex-end;
+    display: flex; flex-direction: column; justify-content: flex-start;
     gap: var(--m);
     padding: var(--pad-label) var(--pad) var(--pad);
   }
@@ -69,7 +70,6 @@ const text = caret ? title.slice(0, -1) : title;
   /* con le foto: titolo e paragrafo in alto, il carosello in tutto lo spazio che resta, a filo della cella
      su tre lati (esce dal margine interno). Mai più basso di poco più di metà della larghezza: se il testo
      cresce, la cella si allunga (scripts/mosaico.ts) invece di schiacciare le foto */
-  .text--foto { justify-content: flex-start; }
   .carosello { flex: 1 0 0; min-height: 55cqi; margin: var(--m) calc(-1 * var(--pad)) calc(-1 * var(--pad)); }
   /* con un paragrafo sotto: le foto si staccano dal fondo, a filo solo dei lati */
   .carosello:not(:last-child):not(:has(+ .coda-info)) { margin-bottom: var(--m); }

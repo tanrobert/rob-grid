@@ -168,6 +168,15 @@ export type Cell = CellBase & (
   /** la palette di un marchio prima e dopo (G&A): a sinistra titolo e testo dello stato e il righello Prima · Dopo, a destra
    *  i colori in bande, coi contrasti WCAG; un clic passa all'altro stato (scripts/palette.ts) */
   | { type: 'palette'; eyebrow?: string; prima: Palette; dopo: Palette }
+  /** Rob Display (pagina /rob-display, dati in data/rob-display.ts): il marchio che si costruisce a passi sulla griglia
+   *  di Fibonacci (scripts/marchio.ts) */
+  | { type: 'marchio'; eyebrow?: string }
+  /** Rob Display: una lettera o un numero alla volta sulla griglia, a pezzi, coi nodi e la loro regola (scripts/glifo.ts) */
+  | { type: 'glifo'; eyebrow?: string }
+  /** Rob Display: una riga da scrivere col font, corpo adattato alla cella (scripts/prova.ts) */
+  | { type: 'prova'; eyebrow?: string; testo: string }
+  /** Rob Display: tutti i glifi alla stessa scala; lettere e numeri portano alla cella `glifo` */
+  | { type: 'atlante'; eyebrow?: string }
   /** due colori che sfumano l'uno nell'altro, il primo sopra e il secondo sotto (Purple Piper), nome e HEX al centro dei
    *  quadrati in alto e in basso; la sfumatura ondeggia (scripts/sfumatura.ts) */
   | { type: 'sfumatura'; colori: [Pick<Colore, 'nome' | 'hex'>, Pick<Colore, 'nome' | 'hex'>] }

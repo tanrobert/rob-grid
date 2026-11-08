@@ -1,0 +1,43 @@
+---
+import type { Cell } from '../data/grid-types';
+import Layout from '../layouts/Layout.astro';
+import Tavolo from '../components/tavolo/Tavolo.astro';
+import Foglio from '../components/foglio/Foglio.astro';
+import { tavolo } from '../data/tavolo';
+import { lettere, numeri, segni, font } from '../data/rob-display';
+import { pad2 } from '../lib/format';
+import { site, pageTitle } from '../data/site';
+
+// Rob Display, il font del logotipo (9/11/2026, idea di Roberto): si apre dalla parola ROBERTO del tavolo.
+// In testa l'arrivo della parola, larga quanto la pagina, fino al bordo destro delle celle sotto (9/11/2026, scelta di
+// Roberto): la cella è più alta della parola, così il corpo lo decide la larghezza (LogotipoCell nuda). Senza la ✕
+// (la parola stessa chiude, come Esc; global.css). Poi la presentazione, i numeri, il marchio che si costruisce, le lettere sulla
+// griglia, la prova da scrivere e tutti i glifi. Tono semplice (Roberto: "senza fare troppo gli scienziati").
+const cells: Cell[] = [
+  { id: 'nome', type: 'logotipo', w: 12, h: 2, md: { w: 8, h: 1.5 }, sm: { w: 4, h: 1 }, heroOf: '/rob-display', frame: false, label: false },
+  {
+    id: 'font', type: 'text', w: 6, h: 4, md: { w: 8, h: 3 }, as: 'h1', size: 's', eyebrow: 'Il mio font', title: 'Rob Display',
+    body: "Il carattere del mio logotipo, da titoli: **solo maiuscole**, un peso solo.\n\nL'ho disegnato in **Illustrator** sulla griglia aurea, poi l'ho **ridisegnato col codice**, così ogni curva è esatta.",
+  },
+  { id: 'lettere', type: 'stat', w: 2, h: 2, value: pad2(lettere.length), caption: 'Lettere', countUp: true },
+  { id: 'numeri',  type: 'stat', w: 2, h: 2, value: pad2(numeri.length),  caption: 'Numeri', countUp: true },
+  { id: 'segni',   type: 'stat', w: 2, h: 2, value: pad2(segni.length),   caption: 'Segni e accenti', countUp: true },
+  { id: 'altezza', type: 'stat', w: 2, h: 2, value: '34', caption: 'Moduli di altezza' },
+  { id: 'asta',    type: 'stat', w: 2, h: 2, value: '13', caption: "Moduli dell'asta" },
+  { id: 'coppie',  type: 'stat', w: 2, h: 2, value: String(font.coppie), caption: 'Coppie di kerning', countUp: true },
+  { id: 'marchio', type: 'marchio', w: 12, h: 6, md: { w: 8, h: 8 }, sm: { w: 4, h: 10 }, eyebrow: 'Il marchio' },
+  { id: 'glifo',   type: 'glifo',   w: 12, h: 7, md: { w: 8, h: 9 }, sm: { w: 4, h: 9 }, eyebrow: 'Lettere e numeri' },
+  { id: 'prova',   type: 'prova',   w: 12, h: 3, md: { w: 8, h: 2 }, sm: { w: 4, h: 2 }, eyebrow: 'Prova a scrivere', testo: site.name },
+  { id: 'atlante', type: 'atlante', w: 12, h: 6, md: { w: 8 }, sm: { w: 4 }, eyebrow: 'Tutti i glifi' },
+  { id: 'indietro', type: 'text', w: 4, h: 2, tone: 'red', href: '/', as: 'p', size: 'm', eyebrow: 'Chiudi', title: 'Indice' },
+];
+---
+
+<Layout
+  foglio
+  titolo={pageTitle('Rob Display')}
+  descrizione={`Rob Display, il font del logotipo di ${site.name}: maiuscole disegnate sulla griglia aurea e ridisegnate col codice. Lettere, numeri e segni da provare.`}
+>
+  <Tavolo cells={tavolo} sotto />
+  <Foglio cells={cells} centrato />
+</Layout>

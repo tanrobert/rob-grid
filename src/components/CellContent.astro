@@ -35,6 +35,10 @@ import CopertineCell from './cells/CopertineCell.astro';
 import VersioniCell from './cells/VersioniCell.astro';
 import PuntiCell from './cells/PuntiCell.astro';
 import CollezioniCell from './cells/CollezioniCell.astro';
+import MarchioCell from './cells/MarchioCell.astro';
+import GlifoCell from './cells/GlifoCell.astro';
+import ProvaCell from './cells/ProvaCell.astro';
+import AtlanteCell from './cells/AtlanteCell.astro';
 import RadioCell from './cells/RadioCell.astro';
 import ArchiveHeadCell from './cells/ArchiveHeadCell.astro';
 import TagsCell from './cells/TagsCell.astro';
@@ -99,6 +103,10 @@ if (cell.type === 'project' && !p) throw new Error(`[grid] progetto non trovato:
     {cell.type === 'ridisegno' && <RidisegnoCell svg={cell.svg} alt={cell.alt} title={cell.title} body={cell.body} />}
     {cell.type === 'animato' && <AnimatoCell svg={cell.svg} alt={cell.alt} title={cell.title} body={cell.body} fondo={cell.fondo} />}
     {cell.type === 'palette' && <PaletteCell prima={cell.prima} dopo={cell.dopo} />}
+    {cell.type === 'marchio' && <MarchioCell />}
+    {cell.type === 'glifo' && <GlifoCell />}
+    {cell.type === 'prova' && <ProvaCell testo={cell.testo} />}
+    {cell.type === 'atlante' && <AtlanteCell />}
     {cell.type === 'sfumatura' && <SfumaturaCell colori={cell.colori} />}
     {cell.type === 'copertine' && <CopertineCell cartella={cell.cartella} alt={cell.alt} righe={cell.righe} />}
     {cell.type === 'versioni' && <VersioniCell versioni={cell.versioni} alt={cell.alt} />}

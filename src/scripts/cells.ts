@@ -93,6 +93,16 @@ export function initCells() {
   if (FINE && !REDUCED && document.querySelector('svg[data-icona]')) {
     import('./punti').then(m => signal.aborted || m.initPunti(signal));
   }
+  // Rob Display (pagina /rob-display): il marchio che si costruisce, le lettere sulla griglia (con l'atlante), la prova
+  if (document.querySelector('[data-marchio]')) {
+    import('./marchio').then(m => signal.aborted || m.initMarchi(signal));
+  }
+  if (document.querySelector('[data-glifo-cella]')) {
+    import('./glifo').then(m => signal.aborted || m.initGlifi(signal));
+  }
+  if (document.querySelector('[data-prova]')) {
+    import('./prova').then(m => signal.aborted || m.initProve(signal));
+  }
   // collezioni: una alla volta, foto, velo e logo, un clic per la dopo, solo se la cella c'è
   if (document.querySelector('[data-collezioni]')) {
     import('./collezioni').then(m => signal.aborted || m.initCollezioni(signal));

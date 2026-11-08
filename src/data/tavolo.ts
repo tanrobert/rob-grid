@@ -37,8 +37,9 @@ export const tavolo: Cell[] = [
   { id: 'logo',     type: 'svg',      w: 2, h: 2, svg: 'logo-r', fit: 'bleed', label: false, frame: false, riordina: true },
   // ROBERTO senza filo né fondo, sulla carta (31/10/2026): la cella è la parola, sollevata fa l'ombra delle lettere
   // (Tavolo.astro). Maiuscole (la R) alte 3 quadretti: la parola è larga 3 × 5,21 / 0,68 = 22,99 quadretti.
-  // Agganciata sotto la R (8×8 quadretti), a un quadretto, a filo a sinistra: si apre col marchio intero
-  { id: 'nome',     type: 'logotipo', w: 6, h: 1, q: { w: 23, h: 3 }, frame: false, presso: { id: 'logo', x: 0, y: 9 } },
+  // Agganciata sotto la R (8×8 quadretti), a un quadretto, a filo a sinistra: si apre col marchio intero.
+  // Un clic apre la pagina del font, Rob Display (9/11/2026, idea di Roberto)
+  { id: 'nome',     type: 'logotipo', w: 6, h: 1, q: { w: 23, h: 3 }, frame: false, presso: { id: 'logo', x: 0, y: 9 }, href: '/rob-display' },
   {
     id: 'intro', type: 'text', w: 5, h: 3, q: { w: 20, h: 10 }, as: 'h1', size: 'l',
     eyebrow: 'Graphic designer',

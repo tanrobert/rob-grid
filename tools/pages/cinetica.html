@@ -1,6 +1,6 @@
 <!doctype html>
 <!--
-  Laboratorio di tipografia cinetica: Schibsted Grotesk variabile (asse wght 400 → 900) dentro celle come
+  Laboratorio di tipografia cinetica: Archivo variabile (asse wght 400 → 900) dentro celle come
   quelle del sito. Solo sviluppo: il sito non cambia. Niente hover (scelta del 17/10/2026): le animazioni
   partono da sole, allo scroll, al tocco o col tempo.
     npx astro build && npm run vt:serve → /_vt/cinetica.html (il font lo serve dist/fonts)
@@ -11,10 +11,10 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Cinetica lab</title>
 <style>
-  @font-face { font-family: 'Schibsted Grotesk'; src: url('/fonts/schibsted-grotesk.woff2') format('woff2'); font-weight: 400 900; font-display: block; }
+  @font-face { font-family: 'Archivo'; src: url('/fonts/archivo.woff2') format('woff2'); font-weight: 400 900; font-display: block; }
   :root { --rosso: #f03f24; --chiaro: #e7dfdf; --k: 1; }
   * { box-sizing: border-box; margin: 0; }
-  body { background: var(--chiaro); color: var(--rosso); font: 500 16px/1.2 'Schibsted Grotesk', sans-serif; }
+  body { background: var(--chiaro); color: var(--rosso); font: 500 16px/1.2 'Archivo', sans-serif; }
   .mono { font-size: 11px; font-weight: 400; letter-spacing: 0.08em; text-transform: uppercase; font-variant-numeric: tabular-nums; }
   .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
@@ -81,7 +81,7 @@
 <body>
 <header>
   <strong>Cinetica lab</strong>
-  <span class="mono">Schibsted Grotesk · wght 400 → 900</span>
+  <span class="mono">Archivo · wght 400 → 900</span>
   <button id="again">rilancia tutto</button>
   <button id="slow" aria-pressed="false">rallenta ×4</button>
   <span id="fps" class="mono">—</span>

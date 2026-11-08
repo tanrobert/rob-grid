@@ -20,6 +20,9 @@ const { nudo = false } = Astro.props;
     font-size: min((100cqw - 2 * var(--pad)) / var(--roberto-w), (100cqh - 2 * var(--pad)) / var(--maiuscole));
   }
   /* ROBERTO sulla carta, sotto la R: rosso come lei (1/11/2026) */
-  .logotipo-cella--nudo { padding: 0; justify-items: start; color: var(--rosso); }
-  .logotipo-cella--nudo .logotipo { font-size: calc(100cqh / var(--maiuscole)); }
+  /* overflow-x: clip: la scatola del testo (non l'inchiostro) sborda a destra di qualche px, e sul telefono, con le
+     celle a filo dello schermo, faceva scorrere la pagina di lato (la hero di /rob-display). In verticale la O sborda e resta */
+  .logotipo-cella--nudo { padding: 0; justify-items: start; color: var(--rosso); overflow-x: clip; }
+  /* la R alta quanto la cella, ma mai più larga di lei (la hero di /rob-display, sul tablet e sul telefono) */
+  .logotipo-cella--nudo .logotipo { font-size: min(100cqh / var(--maiuscole), 100cqw / var(--roberto-w)); }
 </style>
