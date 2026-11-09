@@ -12,7 +12,7 @@
  * viewBox, segni (quadratini e maniglie sempre della stessa misura in pixel, qualunque sia lo zoom).
  * Parte quando se ne vede metà, ricomincia ogni volta che torna in vista. Righello Prima · Dopo (6/11/2026), come
  * l'evoluzione: il quadrato salta subito sullo stato scelto e l'animazione ci va; Dopo la fa (da capo se era al marchio
- * storico), Prima la riavvolge più veloce (INDIETRO), un clic sul disegno passa all'altro stato.
+ * storico), Prima torna subito al marchio storico con una sfumata breve (SFUMA), un clic sul disegno passa all'altro stato.
  * Senza script, o con riduci movimento, resta il marchio nuovo.
  */
 
@@ -23,7 +23,7 @@ const ZOOM = 1.4;        // s, zoom avanti e indietro
 const FORMA = 1.8;       // s per tappa, il braccio che prende la forma nuova
 const QUADRATINO = 7;    // px, lato dei quadratini sugli ancoraggi
 const PRESA = 2.5;       // px, raggio del pallino in cima alle maniglie
-const INDIETRO = 4;      // il ritorno al marchio storico è 4 volte più veloce
+const SFUMA = 0.3;       // s, la sfumata del ritorno al marchio storico (subito, senza riavvolgere)
 
 const NS = 'http://www.w3.org/2000/svg';
 type P = [number, number];
@@ -165,28 +165,34 @@ export function initRidisegni(signal: AbortSignal) {
     ro.observe(box);
 
     const daCapo = () => { tl.pause(0); inizio(); segna(0); };
-    // dopo: il ridisegno (da capo se si era al marchio storico); prima: indietro, più veloce
-    const avanti = () => { if (tl.progress() === 0) daCapo(); segna(1); tl.timeScale(1).play(); partita = true; };
-    const indietro = () => { segna(0); tl.timeScale(INDIETRO).reverse(); partita = true; };
+    // dopo: il ridisegno (da capo se si era al marchio storico); prima: subito il marchio storico, con una sfumata breve
+    // (9/11/2026, scelta di Roberto: riavvolta faceva rivedere l'animazione; come l'evoluzione tornando al passo 1)
+    const avanti = () => { if (tl.progress() === 0) daCapo(); segna(1); tl.play(); partita = true; };
+    const indietro = () => {
+      daCapo();
+      gsap.fromTo(svg, { opacity: 0 }, { opacity: 1, duration: SFUMA, ease: 'power1.out', overwrite: true });
+      partita = true;
+    };
     const io = new IntersectionObserver(([e]) => {
-      if (!e.isIntersecting) { tl.timeScale(1); daCapo(); partita = false; }
+      if (!e.isIntersecting) { daCapo(); partita = false; }
       else if (e.intersectionRatio >= 0.5 && !partita) avanti();
     }, { threshold: [0, 0.5] });
     io.observe(box);
     // un clic sul disegno: verso l'altro stato (se sta andando avanti torna indietro, e il contrario)
-    box.addEventListener('click', () => (tl.progress() === 0 || tl.reversed() ? avanti() : indietro()), { signal });
+    box.addEventListener('click', () => (tl.progress() === 0 ? avanti() : indietro()), { signal });
     tacche.forEach((b, i) => b.addEventListener('click', i === 0 ? indietro : avanti, { signal }));
     signal.addEventListener('abort', () => {
       io.disconnect();
       ro.disconnect();
       box.toggleAttribute('data-fatto', partita);
       tl.kill();
+      gsap.killTweensOf(svg);
       // il file torna com'era: il marchio nuovo
       guide.replaceChildren();
       svg.setAttribute('viewBox', fine.vista);
       braccio.setAttribute('d', fine.d);
       gsap.set(braccio, { clearProps: 'fill' });
-      gsap.set([prima, dopo], { clearProps: 'opacity' });
+      gsap.set([prima, dopo, svg], { clearProps: 'opacity' });
     });
   });
 }

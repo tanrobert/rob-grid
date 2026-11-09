@@ -203,6 +203,15 @@ export function initCells() {
   document.querySelectorAll('.cell').forEach(el => io.observe(el));
   teardown.push(() => io.disconnect());
 
+  // ── Portatile: lo schermo segue la misura della cella ─
+  // il matrix3d porta lo schermo in unità della scena; --k = pixel veri per unità (PortatileCell)
+  document.querySelectorAll<HTMLElement>('[data-vetro]').forEach(vetro => {
+    const unita = Number(vetro.dataset.vetro);
+    const ro = new ResizeObserver(() => vetro.style.setProperty('--k', String(vetro.clientWidth / unita)));
+    ro.observe(vetro);
+    teardown.push(() => ro.disconnect());
+  });
+
   // ── Orologio ───────────────────────────────────────────
   document.querySelectorAll<HTMLElement>('[data-clock]').forEach(el => {
     const tz = el.dataset.tz ?? 'Europe/Rome';
@@ -267,7 +276,9 @@ export function initCells() {
     const text = el.textContent?.trim() ?? '';
     const target = Number(text);
     if (!text || !Number.isFinite(target)) return;
-    const key = el.closest<HTMLElement>('[data-id]')?.dataset.id ?? text;
+    // più contatori nella stessa cella (le cifre di una cella text): uno per posizione
+    const cella = el.closest<HTMLElement>('[data-id]');
+    const key = cella ? `${cella.dataset.id}:${[...cella.querySelectorAll('[data-countup]')].indexOf(el)}` : text;
     if (counted.has(key)) return;
     const show = (n: number) => { el.textContent = String(n).padStart(text.length, '0'); };
     // stessa curva per tutti, durata proporzionale al valore (come il filo dell'intro): i numeri piccoli finiscono prima

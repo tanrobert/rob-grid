@@ -21,6 +21,7 @@ import EyeCell from './cells/EyeCell.astro';
 import GlobeCell from './cells/GlobeCell.astro';
 import BarattoloCell from './cells/BarattoloCell.astro';
 import TelefonoCell from './cells/TelefonoCell.astro';
+import PortatileCell from './cells/PortatileCell.astro';
 import StickerCell from './cells/StickerCell.astro';
 import AffissioneCell from './cells/AffissioneCell.astro';
 import ContestoCell from './cells/ContestoCell.astro';
@@ -82,7 +83,7 @@ if (cell.type === 'project' && !p) throw new Error(`[grid] progetto non trovato:
     {cell.type === 'svg' && <SvgCell svg={cell.svg} fit={cell.fit} riordina={cell.riordina} />}
     {cell.type === 'logotipo' && <LogotipoCell nudo={cell.frame === false} />}
     {cell.type === 'marquee' && <MarqueeCell text={cell.text} speed={cell.speed} ruotato={cell.ruotato} />}
-    {cell.type === 'text' && <TextCell title={cell.title} body={cell.body} as={cell.as} size={cell.size} immagini={cell.immagini} ingrandisci={cell.ingrandisci} after={cell.after} button={cell.button} sizes={sizes} />}
+    {cell.type === 'text' && <TextCell title={cell.title} body={cell.body} as={cell.as} size={cell.size} immagini={cell.immagini} ingrandisci={cell.ingrandisci} after={cell.after} button={cell.button} cifre={cell.cifre} sizes={sizes} />}
     {cell.type === 'list' && <ListCell items={cell.items} />}
     {cell.type === 'stat' && <StatCell value={cell.value} caption={cell.caption} countUp={cell.countUp} heading={cell.heading} />}
     {cell.type === 'media' && <MediaCell image={cell.image} video={cell.video} overlay={cell.overlay} etichette={cell.etichette} alt={cell.alt} sizes={sizes} title={cell.caption} priority={!!cell.heroOf} pila={cell.pila} immagini={cell.immagini} ingrandisci={cell.ingrandisci} fondo={cell.fondo} />}
@@ -93,6 +94,7 @@ if (cell.type === 'project' && !p) throw new Error(`[grid] progetto non trovato:
     {cell.type === 'eye' && <EyeCell />}
     {cell.type === 'globe' && <GlobeCell />}
     {cell.type === 'barattolo' && <BarattoloCell barattoli={cell.barattoli} title={cell.title} body={cell.body} />}
+    {cell.type === 'portatile' && <PortatileCell cartella={cell.cartella} alt={cell.alt} title={cell.title} body={cell.body} button={cell.button} />}
     {cell.type === 'telefono' && <TelefonoCell video={cell.video} alt={cell.alt} title={cell.title} body={cell.body} logo={cell.logo} logoAlt={cell.logoAlt} />}
     {cell.type === 'sticker' && <StickerCell immagini={cell.immagini} alt={cell.alt} title={cell.title} body={cell.body} button={cell.button} testata={cell.testata} />}
     {cell.type === 'affissione' && <AffissioneCell affissioni={cell.affissioni} title={cell.title} sizes={sizes} />}

@@ -11,8 +11,9 @@ export interface Project {
   featured?: boolean;
   /** Chi ha fatto il marchio: se non è mio, la pagina del progetto lo dice e il progetto non ha il tag Logo */
   marchio?: 'mio' | 'cliente' | { di: string };
-  /** Forma dell'immagine in unità (desktop): cella in home e archivio, ×2 nella hero.
-      Tavola Photoshop: w×600 × h×600 px, margini 300 sopra/sotto e 200 ai lati. */
+  /** Forma dell'immagine in unità (desktop): cella in home e archivio, ×2 nella hero. Con una copertina vera conta
+      solo `w`: l'altezza viene dalla proporzione di copertina o video (`proporzione`). La build avvisa se la copertina
+      è troppo stretta per la hero (data/projects.ts). */
   shape?: Span;
   image?: ImageMetadata;
   /** Proporzione (larghezza / altezza) di quello che la cella mostra, video o copertina (data/projects.ts): sul tavolo

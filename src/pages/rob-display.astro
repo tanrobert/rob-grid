@@ -16,15 +16,18 @@ import { site, pageTitle } from '../data/site';
 const cells: Cell[] = [
   { id: 'nome', type: 'logotipo', w: 12, h: 2, md: { w: 8, h: 1.5 }, sm: { w: 4, h: 1 }, heroOf: '/rob-display', frame: false, label: false },
   {
-    id: 'font', type: 'text', w: 6, h: 4, md: { w: 8, h: 3 }, as: 'h1', size: 's', eyebrow: 'Il mio font', title: 'Rob Display',
+    id: 'font', type: 'text', w: 12, h: 4, md: { w: 8, h: 4 }, sm: { w: 4, h: 4 }, as: 'h1', size: 's', eyebrow: 'Il mio font', title: 'Rob Display',
     body: "Il carattere del mio logotipo, da titoli: **solo maiuscole**, un peso solo.\n\nL'ho disegnato in **Illustrator** sulla griglia aurea, poi l'ho **ridisegnato col codice**, così ogni curva è esatta.",
+    // i numeri del font in fondo alla cella, in riga (9/11/2026, scelta di Roberto: prima sei celle quadrate)
+    cifre: [
+      { value: pad2(lettere.length), caption: 'Lettere', countUp: true },
+      { value: pad2(numeri.length), caption: 'Numeri', countUp: true },
+      { value: pad2(segni.length), caption: 'Segni e accenti', countUp: true },
+      { value: '34', caption: 'Moduli di altezza' },
+      { value: '13', caption: "Moduli dell'asta" },
+      { value: String(font.coppie), caption: 'Coppie di kerning', countUp: true },
+    ],
   },
-  { id: 'lettere', type: 'stat', w: 2, h: 2, value: pad2(lettere.length), caption: 'Lettere', countUp: true },
-  { id: 'numeri',  type: 'stat', w: 2, h: 2, value: pad2(numeri.length),  caption: 'Numeri', countUp: true },
-  { id: 'segni',   type: 'stat', w: 2, h: 2, value: pad2(segni.length),   caption: 'Segni e accenti', countUp: true },
-  { id: 'altezza', type: 'stat', w: 2, h: 2, value: '34', caption: 'Moduli di altezza' },
-  { id: 'asta',    type: 'stat', w: 2, h: 2, value: '13', caption: "Moduli dell'asta" },
-  { id: 'coppie',  type: 'stat', w: 2, h: 2, value: String(font.coppie), caption: 'Coppie di kerning', countUp: true },
   { id: 'marchio', type: 'marchio', w: 12, h: 6, md: { w: 8, h: 8 }, sm: { w: 4, h: 10 }, eyebrow: 'Il marchio' },
   { id: 'glifo',   type: 'glifo',   w: 12, h: 7, md: { w: 8, h: 9 }, sm: { w: 4, h: 9 }, eyebrow: 'Lettere e numeri' },
   { id: 'prova',   type: 'prova',   w: 12, h: 3, md: { w: 8, h: 2 }, sm: { w: 4, h: 2 }, eyebrow: 'Prova a scrivere', testo: site.name },

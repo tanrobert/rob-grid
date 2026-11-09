@@ -3,6 +3,7 @@ import type { ImageMetadata } from 'astro';
 import { Image } from 'astro:assets';
 import Paragrafi from '../Paragrafi.astro';
 import CodaLink from '../CodaLink.astro';
+import type { Cifra } from '../../data/grid-types';
 
 interface Props {
   title: string;
@@ -17,9 +18,11 @@ interface Props {
   after?: string;
   /** coda in fondo alla cella (es. Visita il sito): CodaLink */
   button?: { label: string; href: string };
+  /** numeri in fondo, in riga, divisi da un filo alto quanto loro (9/11/2026, Rob Display: prima sei celle stat) */
+  cifre?: Cifra[];
   sizes?: string;
 }
-const { title, body, as: Tag = 'h2', size = 'm', immagini, ingrandisci, after, button, sizes } = Astro.props;
+const { title, body, as: Tag = 'h2', size = 'm', immagini, ingrandisci, after, button, cifre, sizes } = Astro.props;
 const grande = (testo: string) => ingrandisci ? { 'data-ingrandisci': '', tabindex: 0, role: 'button' as const, 'aria-label': `Ingrandisci: ${testo}` } : {};
 // un "_" finale diventa un cursore lampeggiante
 const caret = title.endsWith('_');
@@ -40,6 +43,19 @@ const text = caret ? title.slice(0, -1) : title;
     </div>
   )}
   {after && <div class="body paragrafo"><Paragrafi testo={after} /></div>}
+  {cifre && (
+    <ul class="cifre">
+      {cifre.map((c, i) => (
+        <>
+          {i > 0 && <li class="cifre__filo" aria-hidden="true" />}
+          <li class="cifre__voce">
+            <span class="cifre__numero" data-countup={c.countUp ? '' : undefined}>{c.value}</span>
+            <span class="mono">{c.caption}</span>
+          </li>
+        </>
+      ))}
+    </ul>
+  )}
   {button && <CodaLink {...button} />}
 </div>
 
@@ -75,6 +91,28 @@ const text = caret ? title.slice(0, -1) : title;
   .carosello:not(:last-child):not(:has(+ .coda-info)) { margin-bottom: var(--m); }
   /* con la coda (Visita il sito) il contenuto le sta sopra */
   .text:has(> .coda-info) { padding-bottom: calc(var(--coda-info) + var(--pad)); }
+
+  /* cifre: in fondo alla cella (come nelle celle stat), in riga, spazi uguali fra numeri e fili (space-between: conta
+     il contenuto, non colonne uguali); il filo è alto quanto la voce, numero e didascalia. Sul telefono tre per riga */
+  .cifre {
+    list-style: none;
+    margin-top: auto; padding-top: calc(2 * var(--pad));
+    display: flex; justify-content: space-between; gap: var(--pad);
+  }
+  .cifre__voce { display: flex; flex-direction: column; gap: var(--m); }
+  .cifre__numero {
+    font-family: var(--font-numeri); font-weight: 500;
+    font-size: clamp(32px, 7cqi, 96px);
+    line-height: 0.78; letter-spacing: -0.06em;
+    font-variant-numeric: tabular-nums;
+    margin-left: -0.06em;
+  }
+  .cifre__filo { border-left: var(--line) solid var(--inchiostro); }
+  @container (width < 600px) {
+    .cifre { display: grid; grid-template-columns: auto auto auto auto auto; justify-content: space-between; row-gap: var(--pad); }
+    .cifre__numero { font-size: 12cqi; }
+    .cifre__filo:nth-child(6n) { display: none; }
+  }
 
   .caret { animation: caret-blink 1.1s steps(1) infinite; }
   @keyframes caret-blink { 50% { opacity: 0; } }

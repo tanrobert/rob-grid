@@ -42,6 +42,8 @@ export interface Affissione {
 
 /** Coda in fondo a una cella che porta altrove (components/CodaLink.astro): un link esterno si apre in una scheda nuova */
 export interface Bottone { label: string; href: string }
+/** un numero con la sua didascalia (celle text con `cifre`) */
+export interface Cifra { value: string; caption: string; countUp?: boolean }
 
 /** un colore della cella palette; `secondario` = banda larga la metà */
 export interface Colore { nome: string; hex: string; secondario?: true }
@@ -113,6 +115,8 @@ export type Cell = CellBase & (
       ingrandisci?: true;
       /** sotto le foto: un altro paragrafo; button = coda in fondo alla cella (CodaLink) */
       after?: string; button?: Bottone;
+      /** numeri in fondo alla cella, in riga, divisi da un filo (Rob Display): come le celle stat, countUp = sale da 0 */
+      cifre?: Cifra[];
     }
   | { type: 'list'; title: string; items: Array<string | { label: string; href: string }> }
   | { type: 'stat'; value: string; caption: string; /** il numero sale da 0 quando la cella entra in vista */ countUp?: boolean; /** h1 nascosto: la cella fa da hero di una pagina */ heading?: string }
@@ -135,6 +139,9 @@ export type Cell = CellBase & (
   | { type: 'barattolo'; barattoli: Barattolo[]; eyebrow?: string; title?: string; body?: string | string[] }
   /** mano col telefono (public/telefono) e una registrazione dello schermo che scorre dentro (mp4 in public, .webm e poster .webp accanto); testo sopra.
    *  `logo`: SVG del cliente (testo in tracciati) in basso a sinistra, sopra la mano, con la sua descrizione `logoAlt` */
+  /** portatile col sito che scorre fino al footer e torna su, in loop (tools/portatile-mockup.py → public/portatile/
+   *  <cartella>: scena, pagina e barra fissa); testo sopra, coda (button) in fondo */
+  | { type: 'portatile'; cartella: string; alt: string; eyebrow?: string; title?: string; body?: string; button?: Bottone }
   | { type: 'telefono'; video: string; alt: string; eyebrow?: string; title?: string; body?: string | string[]; logo?: ImageMetadata; logoAlt?: string }
   /** sticker (WebP col bordo bianco, tools/sticker.mjs) in un nastro infinito sotto il titolone, da destra a
    *  sinistra (solo CSS), e un paragrafo in fondo. `alt` descrive l'insieme. `testata`: forma dietro occhiello e titolo

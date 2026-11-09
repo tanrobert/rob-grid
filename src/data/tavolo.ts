@@ -45,10 +45,10 @@ export const tavolo: Cell[] = [
     eyebrow: 'Graphic designer',
     title: 'Progetto identità visive e punti di contatto fisici e digitali.',
   },
-  // progetti sul tavolo: Kiale, quello su cui si lavora, ed Eurofish col video del mare (il caso più pesante,
-  // tenuto apposta per misurare il tavolo). Gli altri progetti del tavolo più in giù, gli altri ancora in archivio
+  // progetti sul tavolo: solo quelli con le celle già inserite (9/11/2026, scelta di Roberto: Kiale, Purple Piper, G&A, Spazioquadro;
+  // tolti Eurofish, La Torre Rossa, Cardogna e Luca Lebone, che restano in archivio finché non hanno contenuti).
+  // Kiale vicino al marchio, gli altri più in giù
   projectCell('kiale', 'kiale'),
-  projectCell('eurofish', 'eurofish'),
   { id: 'archivio', type: 'stat',     w: 2, h: 2, href: '/archivio', value: pad2(projects.length), caption: 'Progetti in archivio', countUp: true },
   { id: 'info',     type: 'text',     w: 2, h: 2, tone: 'red', href: '/info', title: 'Bio', as: 'p', size: 'm', eyebrow: 'Chi sono' },
   {
@@ -61,7 +61,7 @@ export const tavolo: Cell[] = [
     id: 'contatti', type: 'text', w: 3, h: 2, q: { w: 12, h: 8 }, size: 'm', href: '/info',
     eyebrow: 'Nuovi progetti', title: 'Scrivimi_',
   },
-  // altri progetti (dal 25/10/2026; Luca Lebone dal 26/10): dopo le celle che portano in giro (archivio, Bio, extra),
+  // altri progetti (dal 25/10/2026): dopo le celle che portano in giro (archivio, Bio, extra),
   // così quelle restano attorno al marchio
   projectCell('purple', 'purple-piper'),
   // la radio Purple Piper (2/11/2026): nascosta finché il visitatore non la aggiunge (coda "Aggiungi il player alla home"
@@ -69,9 +69,7 @@ export const tavolo: Cell[] = [
   // provata posata sopra il suo fondo); la ✕ la ferma e la toglie (un solo lettore, scripts/radio.ts)
   { id: 'radio', type: 'radio', w: 4, h: 2, q: { w: 16, h: 5 }, eyebrow: 'Radio live player', nascosta: { sotto: 'purple', y: 0 } },
   projectCell('gea', 'gea'),
-  projectCell('torre', 'la-torre-rossa'),
-  projectCell('cardogna', 'cardogna'),
-  projectCell('luca', 'luca-lebone'),
+  projectCell('spazioquadro', 'spazioquadro'),
   // il nastro "Roberto · progettazione visiva" girato in verticale, col font del logotipo. speed = secondi per giro:
   // il testo è lungo ~31 maiuscole, 155s = stessa velocità del vecchio logo (22,5 in 112s)
   { id: 'nastro',   type: 'marquee',  w: 1, h: 6, text: 'Roberto · progettazione visiva ·', speed: 155, ruotato: true },

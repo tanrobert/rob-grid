@@ -55,6 +55,32 @@ cells:
         alt: "Pomodoro fresco in bottiglia e in vasetto e filetti di melanzane sott'olio di Kiale, in una confezione regalo di Natale"
       - image: ./etichette-cesto.jpg
         alt: "Una scatola regalo con i vasetti di Kiale: filetti di melanzane e di carote, pomodoro fresco e confettura di albicocche"
+  # i colori (9/11/2026, tavola di Roberto): prima solo il verde, poi la palette allargata. Il verde primo anche dopo, così
+  # resta fermo; sopra i due verdi e il rosso, sotto nero, oro e crema (le due colonne della tavola). Nomi provvisori
+  # (nella tavola solo gli HEX), testi: bozza
+  - type: palette
+    w: 12
+    h: 5
+    md: { w: 8, h: 5 }
+    sm: { w: 4, h: 8 }
+    eyebrow: "Colori"
+    prima:
+      nome: "Prima"
+      title: "Il colore di prima"
+      body: "Un solo colore, il **verde** del marchio: riconoscibile, ma da solo non bastava per etichette, menù e vetrine."
+      colori:
+        - { nome: "Verde Kiale", hex: "#1d9449" }
+    dopo:
+      nome: "Dopo"
+      title: "La palette nuova"
+      body: "Il verde resta, con un **verde bosco** più profondo e un **rosso pomodoro**. Sotto, un nero, un **oro** e una **crema** per i fondi: i colori di una cucina di casa."
+      colori:
+        - { nome: "Verde Kiale", hex: "#1d9449" }
+        - { nome: "Verde Bosco", hex: "#07471f" }
+        - { nome: "Rosso Pomodoro", hex: "#a11e17" }
+        - { nome: "Nero Oliva", hex: "#021208", secondario: true }
+        - { nome: "Oro Grano", hex: "#e1bf59", secondario: true }
+        - { nome: "Crema", hex: "#f9f2de", secondario: true }
   # canale WhatsApp: registrazione dello schermo (tema chiaro, primi 11 secondi: ffmpeg -t 11) con un margine bianco attorno (gli angoli tondi
   # non tagliano ora e tasti), messa in prospettiva nello schermo del telefono da tools/telefono-mockup.py ("sorgenti/mockup/mockup-tel-3.psd"
   # → public/telefono e public/media/kiale-canale). Cella stretta come i barattoli: titolo e testo sopra, il telefono sotto

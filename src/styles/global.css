@@ -172,7 +172,7 @@ body {
       var(--inchiostro) 25% calc(25% + var(--line-dp)), transparent calc(25% + var(--line-dp)) 50%,
       var(--inchiostro) 50% calc(50% + var(--line-dp)), transparent calc(50% + var(--line-dp)) 75%,
       var(--inchiostro) 75% calc(75% + var(--line-dp)), transparent calc(75% + var(--line-dp)));
-  background-size: var(--gap) var(--ruler-step), var(--tick-short) var(--ruler-step);
+  background-size: var(--barra) var(--ruler-step), var(--tick-short) var(--ruler-step);
   background-position: right top calc((var(--gap) - var(--line-dp)) / 2);
   background-repeat: repeat-y;
 }
@@ -180,14 +180,18 @@ body {
   body { --tick-short: round(5px, var(--dp)); }
 }
 
-/* indicatore: rettangolo rosso con la percentuale, fisso nella finestra */
+/* indicatore: rettangolo d'inchiostro con la percentuale, fisso nella finestra. Largo --barra (9/11/2026, scelta di
+   Roberto: come le strisce del piede e dei bottoni del tavolo; prima --gap di :root, 10px, la griglia vecchia).
+   Alto quanto basta perché attorno alla percentuale ci sia lo stesso spazio sui quattro lati: "000%" a 9px è
+   d'inchiostro 24,25 × 6,9px, quindi (19 − 6,9) / 2 ≈ 6px per lato e 24,25 + 12 ≈ 36px.
+   Se cambiano corpo o font della percentuale, rimisurare (inchiostro dallo screenshot, non dal riquadro del testo) */
 .ruler {
   position: fixed; top: 0; right: 0; bottom: 0; z-index: 50;
-  width: var(--gap);
+  width: var(--barra);
   cursor: var(--cursore-mano);
 }
 .ruler__thumb {
-  --thumb-h: 32px;
+  --thumb-h: 36px;
   position: absolute; top: 0; left: 0; right: 0;
   height: var(--thumb-h);
   display: flex; align-items: center; justify-content: center;
@@ -201,14 +205,16 @@ body {
 .ruler__thumb::before { content: ''; position: absolute; inset: -12px 0 -12px -12px; }
 /* altezza in pixel reali: il bordo inferiore resta netto come quello superiore */
 @supports (width: round(down, 1px, 1px)) {
-  .ruler__thumb { --thumb-h: round(32px, var(--dp)); }
+  .ruler__thumb { --thumb-h: round(36px, var(--dp)); }
 }
-/* percentuale in verticale, larga quanto il margine */
+/* percentuale in verticale, larga quanto il righello. Centrata sull'inchiostro, non sul riquadro del testo: le cifre
+   cadono 0,8px a sinistra (sotto la linea di base del carattere girato) e 0,4px in basso (spazi laterali di 0 e %) */
 .ruler__pct {
   writing-mode: vertical-rl;
   transform: rotate(180deg);  /* si legge dal basso verso l'alto */
+  translate: 0.09em -0.045em;
   font-family: var(--font-numeri);
-  font-size: 9px; line-height: var(--gap);
+  font-size: 9px; line-height: var(--barra);
   letter-spacing: 0.04em;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;

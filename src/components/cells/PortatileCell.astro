@@ -1,0 +1,87 @@
+---
+// Portatile col sito che scorre fino al footer e torna su, in loop (9/11/2026, Spazioquadro, idea di Roberto).
+// Tutto da tools/portatile-mockup.py: in public/portatile la geometria dello schermo e la sua maschera (tacca, angoli,
+// la base che ne copre il fondo), in public/portatile/<cartella> la scena col sito fermo in cima, la pagina intera e la
+// barra fissa. Niente video: la pagina è un'immagine alta, messa in prospettiva con un matrix3d (gli angoli dello schermo
+// del PSD) e fatta scorrere col CSS (.loop: ferma fuori vista, niente con riduci movimento). Il matrix3d porta lo schermo
+// in unità della scena: cells.ts scrive --k (pixel per unità) quando la cella cambia misura; finché non c'è, si vede la
+// scena col sito fermo (anche senza JavaScript). Testo sopra, la scena a filo dei lati, la coda (button) in fondo.
+import fs from 'node:fs';
+import path from 'node:path';
+import Paragrafi from '../Paragrafi.astro';
+import CodaLink from '../CodaLink.astro';
+
+interface Props {
+  cartella: string;
+  alt: string;
+  title?: string;
+  body?: string;
+  button?: { label: string; href: string };
+}
+const { cartella, alt, title, body, button } = Astro.props;
+
+const leggi = (...p: string[]) => JSON.parse(fs.readFileSync(path.join(process.cwd(), 'public', 'portatile', ...p), 'utf8'));
+const G = leggi('geometria.json');
+const sito: { pagina: number; barra: number } = leggi(cartella, 'sito.json');
+const [larga, alta] = G.schermo as [number, number];
+const dir = `/portatile/${cartella}`;
+
+// la corsa: dalla cima finché il fondo della pagina arriva al fondo dello schermo; giù a VELOCITA px dello schermo al
+// secondo (60% del giro, dopo una pausa in cima), su in un quarto del giro, poi la pausa in cima (keyframes sotto)
+const VELOCITA = 330;
+const corsa = larga * sito.pagina - alta;
+const durata = corsa / VELOCITA / 0.6;
+const v = G.vetro;
+---
+
+<div class="portatile">
+  {(title || body) && (
+    <div class="testo">
+      {title && <h2 class="titoletto">{title}</h2>}
+      {body && <div class="paragrafo"><Paragrafi testo={body} /></div>}
+    </div>
+  )}
+  <div class="scena" style={`--rapporto: ${G.rapporto}`} data-intero>
+    <img class="scena__foto" src={`${dir}/scena.webp`} alt={alt} width="2000" height={Math.round(2000 / G.rapporto)} loading="lazy" decoding="async" />
+    <div class="vetro" style={`left: ${v.left}%; top: ${v.top}%; width: ${v.width}%; height: ${v.height}%`} data-vetro={G.unita} aria-hidden="true">
+      <div class="schermo" style={`width: ${larga}px; height: ${alta}px; --matrice: matrix3d(${G.matrice.join(',')})`}>
+        <img class="pagina loop" src={`${dir}/pagina.webp`} alt="" width="1100" height={Math.round(1100 * sito.pagina)} loading="lazy" decoding="async"
+          style={`--corsa: ${(-corsa).toFixed(1)}px; --durata: ${durata.toFixed(1)}s`} />
+        <img class="barra" src={`${dir}/barra.webp`} alt="" width="1100" height={Math.round(1100 * sito.barra)} loading="lazy" decoding="async" />
+      </div>
+    </div>
+  </div>
+  {/* il posto della coda: data-intero, così il mosaico allunga la cella anche per lei (la coda sta sopra il fondo) */}
+  {button && <div class="posto-coda" data-intero aria-hidden="true" />}
+  {button && <CodaLink {...button} />}
+</div>
+
+<style>
+  .portatile {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; gap: var(--pad);
+  }
+  .posto-coda { flex: none; height: var(--coda-info); margin-top: calc(-1 * var(--pad)); }
+  .testo { display: flex; flex-direction: column; gap: var(--m); padding: var(--pad-label) var(--pad) 0; }
+  /* come i titoletti delle celle di testo (TextCell, size s) */
+  .titoletto { font-weight: 600; line-height: 1; letter-spacing: -0.025em; }
+  /* la scena nella sua proporzione, a filo dei lati; se il testo la spinge fuori la cella cresce (data-intero) */
+  .scena { position: relative; flex: none; margin-top: auto; aspect-ratio: var(--rapporto); overflow: hidden; }
+  .scena__foto { display: block; width: 100%; height: 100%; }
+  /* il riquadro della maschera dello schermo; dentro lo schermo nelle sue misure, portato sugli angoli dal matrix3d e
+     ingrandito di --k (senza --k non si vede: resta il sito fermo della scena) */
+  .vetro { position: absolute; mask: url('/portatile/schermo.png') 0 0 / 100% 100% no-repeat; }
+  .schermo {
+    position: absolute; left: 0; top: 0; overflow: hidden;
+    transform-origin: 0 0;
+    transform: scale(var(--k, 0)) var(--matrice);
+  }
+  .pagina, .barra { position: absolute; left: 0; top: 0; display: block; width: 100%; height: auto; }
+  .pagina { animation: portatile-scorre var(--durata) infinite; }
+  /* giù piano, una pausa sul footer, su più svelto, una pausa in cima */
+  @keyframes portatile-scorre {
+    0%, 6% { translate: 0 0; animation-timing-function: ease-in-out; }
+    66%, 72% { translate: 0 var(--corsa); animation-timing-function: ease-in-out; }
+    97%, 100% { translate: 0 0; }
+  }
+</style>

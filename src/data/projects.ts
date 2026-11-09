@@ -5,6 +5,7 @@ import path from 'node:path';
 import sharp from 'sharp';
 import type { Project } from './types';
 import dummyImg from '../assets/dummy.png';
+import { COLS, QF_MAX_PROGETTI } from '../lib/grid';
 
 /*
  * I progetti stanno in src/content/progetti/<slug>/ (schema in src/content.config.ts).
@@ -20,8 +21,10 @@ const covers = byFolder(import.meta.glob<Img>('../content/progetti/*/copertina.{
 const disegni = new Map(Object.entries(import.meta.glob<string>('../content/progetti/*/{costruzione,evoluzione,ridisegno,animato,versione}-*.svg', { query: '?raw', import: 'default', eager: true }))
   .map(([p, svg]) => [p.split('/').slice(-2).join('/'), svg]));
 
-/** Tavola Photoshop: 600 px per unità della forma */
-const UNIT_PX = 600;
+/** Larghezza in px che serve alla copertina per essere nitida nella hero della pagina progetto, la misura più grande
+    in cui si vede: la forma ×2 (al massimo le colonne del computer), 4w−1 quadretti col quadretto più grande, su
+    schermo 2×. L'altezza no: la cella prende la proporzione della copertina (6/11/2026) */
+const larghezzaHero = (w: number) => (4 * Math.min(w * 2, COLS.lg) - 1) * QF_MAX_PROGETTI * 2;
 
 /** Proporzione (larghezza / altezza) di un video in public/: dal poster .webp accanto, se c'è, se no dal box `tkhd`
     dell'.mp4 (la traccia video ha larghezza e altezza, in 16.16, negli ultimi 8 byte del box), così niente ffprobe */
@@ -45,9 +48,9 @@ async function proporzioneVideo(video: string): Promise<number | undefined> {
 export const projects: Project[] = await Promise.all((await getCollection('progetti')).map(async ({ id: slug, data }) => {
   const image = covers.get(slug);
   const { shape } = data;
-  // avviso, non errore: diverse copertine sono ancora da rifare sul modulo
-  if (image && shape && (image.width !== shape.w * UNIT_PX || image.height !== shape.h * UNIT_PX)) {
-    console.warn(`[progetti] ${slug}: copertina ${image.width}×${image.height}, la forma ${shape.w}×${shape.h} vuole ${shape.w * UNIT_PX}×${shape.h * UNIT_PX}`);
+  // avviso, non errore: copertina troppo stretta per la hero (col video si vede il video, che ha la sua misura)
+  if (image && shape && !data.video && image.width < larghezzaHero(shape.w)) {
+    console.warn(`[progetti] ${slug}: copertina larga ${image.width}px, nella hero ne servono ${larghezzaHero(shape.w)} (forma larga ${shape.w})`);
   }
   // marchio e tag Logo devono dire la stessa cosa
   const { marchio, tags } = data;

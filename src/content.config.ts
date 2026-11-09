@@ -94,6 +94,11 @@ const progetti = defineCollection({
           pezzi: z.string().regex(colore, 'colore esadecimale, es. "#c8202a"').optional(),
         })).min(1),
       }),
+      // portatile col sito che scorre fino al footer e torna su (tools/portatile-mockup.py → public/portatile/<cartella>)
+      z.strictObject({
+        ...base, type: z.literal('portatile'), cartella: z.string().regex(/^[\w-]+$/, 'cartella: il nome in public/portatile'), alt: z.string(),
+        eyebrow: z.string().optional(), title: z.string().optional(), body: z.string().optional(), button: bottone.optional(),
+      }),
       // mano col telefono e registrazione dello schermo dentro (video in public, .webm e poster .webp accanto)
       z.strictObject({
         ...base, type: z.literal('telefono'), video: z.string(), alt: z.string(), logo: image().optional(), logoAlt: z.string().optional(),
