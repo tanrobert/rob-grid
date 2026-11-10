@@ -15,6 +15,7 @@ import { initMatita, type Matita } from './matita';
 import { initSuono } from '../suono';
 import { initScuro } from './scuro';
 import { initPiede } from './piede';
+import { initIndice } from './indice';
 
 gsap.registerPlugin(InertiaPlugin);
 
@@ -136,6 +137,7 @@ function initTavolo(el: HTMLElement): Tavolo {
   // Riordina: il tasto della barra e la R al centro
   document.querySelectorAll('[data-riordina]').forEach(b => b.addEventListener('click', () => riordina(t), { signal: ac.signal }));
   initPiede(ac.signal);
+  initIndice(t);
 
   // uscendo dalla pagina (anche verso la cache del browser, per tornare con indietro): il tavolo com'è adesso,
   // anche a metà inerzia

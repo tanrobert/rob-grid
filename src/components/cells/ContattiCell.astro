@@ -1,15 +1,16 @@
 ---
 // Recapiti come cella (il footer di prima, ridotto ai dati), sul tavolo, in fondo ai fogli e nella 404:
-// email e luogo in alto, P.IVA, informativa, anno e versione in basso. Sul tavolo senza le scritte in basso
-// (`piede: false`): lì stanno nel box in basso a sinistra (Tavolo.astro)
+// email e luogo in alto, P.IVA, informativa, anno e versione in basso. Sul tavolo solo P.IVA e informativa
+// (`piede: 'legale'`, 10/11/2026): anno e versione stanno nella striscia in basso a sinistra (Tavolo.astro)
 import { site } from '../../data/site';
-import { piede as scritte } from '../../data/piede';
+import { legale, firma } from '../../data/piede';
 
 interface Props {
-  piede?: boolean;
+  piede?: 'tutto' | 'legale';
 }
-const { piede = true } = Astro.props;
-const [piva, privacy, anno, versione] = scritte;
+const { piede = 'tutto' } = Astro.props;
+const [piva, privacy] = legale;
+const [anno, versione] = firma;
 ---
 
 <div class="contatti">
@@ -17,12 +18,10 @@ const [piva, privacy, anno, versione] = scritte;
     <li><a href={`mailto:${site.email}`} class="link-peso">{site.email}</a></li>
     <li>{site.place}</li>
   </ul>
-  {piede && (
-    <div class="contatti__piede mono">
-      <p><span>{piva}</span><span>{privacy}</span></p>
-      <p><span>{anno}</span><span>{versione}</span></p>
-    </div>
-  )}
+  <div class="contatti__piede mono">
+    <p><span>{piva}</span><span>{privacy}</span></p>
+    {piede === 'tutto' && <p><span>{anno}</span><span>{versione}</span></p>}
+  </div>
 </div>
 
 <style>

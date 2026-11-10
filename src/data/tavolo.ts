@@ -39,7 +39,8 @@ export const tavolo: Cell[] = [
   // (Tavolo.astro). Maiuscole (la R) alte 3 quadretti: la parola è larga 3 × 5,21 / 0,68 = 22,99 quadretti.
   // Agganciata sotto la R (8×8 quadretti), a un quadretto, a filo a sinistra: si apre col marchio intero.
   // Un clic apre la pagina del font, Rob Display (9/11/2026, idea di Roberto)
-  { id: 'nome',     type: 'logotipo', w: 6, h: 1, q: { w: 23, h: 3 }, frame: false, presso: { id: 'logo', x: 0, y: 9 }, href: '/rob-display' },
+  { id: 'nome',     type: 'logotipo', w: 6, h: 1, q: { w: 23, h: 3 }, frame: false, presso: { id: 'logo', x: 0, y: 9 }, href: '/rob-display',
+    indice: 'Roberto, marchio e font display' },
   {
     id: 'intro', type: 'text', w: 5, h: 3, q: { w: 20, h: 10 }, as: 'h1', size: 'l',
     eyebrow: 'Graphic designer',
@@ -57,6 +58,8 @@ export const tavolo: Cell[] = [
     body: ['Grafica essenziale e funzionale.', 'Design accessibile e immediato.', 'Comunicazione chiara ed efficace.'],
   },
   { id: 'extra',    type: 'stat',     w: 2, h: 2, href: '/extra', value: pad2(extraCells.length), caption: 'Celle extra', countUp: true },
+  // ora e meteo di Itri (10/11/2026, tornata dalle celle extra): sotto il disegno del paese, il meteo sopra il castello
+  { id: 'ora',      type: 'clock',    w: 3, h: 4, paese: true },
   {
     id: 'contatti', type: 'text', w: 3, h: 2, q: { w: 12, h: 8 }, size: 'm', href: '/info',
     eyebrow: 'Nuovi progetti', title: 'Scrivimi_',
@@ -73,7 +76,7 @@ export const tavolo: Cell[] = [
   // il nastro "Roberto · progettazione visiva" girato in verticale, col font del logotipo. speed = secondi per giro:
   // il testo è lungo ~31 maiuscole, 155s = stessa velocità del vecchio logo (22,5 in 112s)
   { id: 'nastro',   type: 'marquee',  w: 1, h: 6, text: 'Roberto · progettazione visiva ·', speed: 155, ruotato: true },
-  // il footer di oggi, come cella: email e luogo. P.IVA, informativa, anno e versione (27/10/2026) nella striscia
-  // d'inchiostro in basso a sinistra (Tavolo.astro)
-  { id: 'recapiti', type: 'contatti', w: 4, h: 2, tone: 'red', piede: false },
+  // il footer di oggi, come cella: email e luogo, in fondo P.IVA e informativa (10/11/2026, scelta di Roberto); anno e
+  // versione nella striscia d'inchiostro in basso a sinistra (Tavolo.astro)
+  { id: 'recapiti', type: 'contatti', w: 4, h: 2, tone: 'red', piede: 'legale' },
 ];

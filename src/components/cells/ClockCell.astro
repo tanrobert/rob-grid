@@ -1,6 +1,12 @@
 ---
 // Ora e meteo di Itri (LT). Meteo da Open-Meteo, senza chiave API.
+// `paese` (home, 10/11/2026, idea di Roberto): in basso il disegno di Itri (castello e borgo, src/assets/itri.svg) e
+// l'icona del meteo nel cielo sopra il castello; sopra i testi. Senza, l'icona sta in mezzo (Info, Extra)
 import { PLACE } from '../../data/place';
+import Itri from '../../assets/itri.svg';
+
+interface Props { paese?: boolean }
+const { paese } = Astro.props;
 
 // Il nuvolone di base (48×48) riusato da più icone
 const cloud = 'M13 34H35A7 7 0 0 0 35 20A10 10 0 0 0 16 19A7.5 7.5 0 0 0 13 34Z';
@@ -11,7 +17,10 @@ const rays = Array.from({ length: 8 }, (_, i) => {
 }).join('');
 ---
 
-<div class="clock" data-clock data-tz={PLACE.tz}>
+<div class:list={['clock', paese && 'clock--paese']} data-clock data-tz={PLACE.tz}>
+  {paese && <p class="time"><span data-hm>--:--</span><span class="sec" data-s>--</span></p>}
+  {paese && <p class="meta mono" aria-live="polite"><span>{PLACE.name} <span data-temp></span></span><span data-date>--.--.--</span></p>}
+  <div class="paese">
   <div class="sky" data-weather data-place={PLACE.name} data-lat={PLACE.lat} data-lon={PLACE.lon}>
     <svg viewBox="0 0 48 48" role="img" aria-label="Meteo non disponibile" data-icon>
       <g data-w="sun"><circle cx="24" cy="24" r="8" /><path d={rays} /></g>
@@ -27,8 +36,10 @@ const rays = Array.from({ length: 8 }, (_, i) => {
       <g data-w="storm"><path d={cloud} transform="translate(0 -4)" /><path d="M26 32L21 39H27L22 46" /></g>
     </svg>
   </div>
-  <p class="time"><span data-hm>--:--</span><span class="sec" data-s>--</span></p>
-  <p class="meta mono" aria-live="polite"><span>{PLACE.name} <span data-temp></span></span><span data-date>--.--.--</span></p>
+  {paese && <Itri class="itri" aria-hidden="true" />}
+  </div>
+  {!paese && <p class="time"><span data-hm>--:--</span><span class="sec" data-s>--</span></p>}
+  {!paese && <p class="meta mono" aria-live="polite"><span>{PLACE.name} <span data-temp></span></span><span data-date>--.--.--</span></p>}
 </div>
 
 <style>
@@ -37,7 +48,7 @@ const rays = Array.from({ length: 8 }, (_, i) => {
     display: flex; flex-direction: column; gap: var(--m);
     padding: var(--pad-label) var(--pad) var(--pad);
   }
-  .sky {
+  .paese, .sky {
     flex: 1; min-height: 0;
     display: grid; place-items: center;
   }
@@ -64,4 +75,21 @@ const rays = Array.from({ length: 8 }, (_, i) => {
   }
   .sec { font-size: 0.36em; line-height: 1; letter-spacing: 0; }
   .meta { display: flex; justify-content: space-between; }
+
+  /* col paese: testi in alto, il disegno posato in fondo e largo quanto la cella dentro i margini; l'icona nel cielo
+     sopra il castello (--castello: il suo centro, in frazione della larghezza del disegno), a mezzo quadretto da lui.
+     Fili di 1px come tutte le linee del sito: lo spessore scritto nel file a quella misura sparirebbe */
+  .clock--paese .paese {
+    flex: none; margin-top: auto;
+    position: relative; display: block;
+    --castello: 0.6;
+  }
+  .clock--paese .sky {
+    position: absolute; bottom: calc(100% + var(--quadretto) / 2); left: calc(var(--castello) * 100%);
+    translate: -50% 0;
+  }
+  .clock--paese .sky svg { height: 15cqi; stroke-linecap: round; stroke-linejoin: round; }
+  /* (:global: il disegno è un componente, non prende l'attributo di scope) */
+  .clock--paese :global(.itri) { display: block; width: 100%; height: auto; }
+  .clock--paese :global(.itri *) { vector-effect: non-scaling-stroke; stroke-width: var(--line); }
 </style>

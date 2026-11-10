@@ -6,7 +6,6 @@ import type { Cell } from './grid-types';
  *  (script e animazioni girano solo qui). In home la cella "extra" ne mostra il numero.
  */
 export const extraCells: Cell[] = [
-  { id: 'ora',      type: 'clock',  w: 2, h: 2 },
   { id: 'misure',   type: 'meter',  w: 2, h: 2 },
   { id: 'cursore',  type: 'cursor', w: 2, h: 2 },
   { id: 'registro', type: 'mark',   w: 2, h: 2 },

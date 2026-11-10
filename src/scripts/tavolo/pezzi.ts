@@ -87,12 +87,9 @@ export interface Presa {
   skew: (deg: number) => void;
 }
 
-/** Prende la cella nel punto (sx, sy) dello schermo: sale sopra le altre, si solleva con l'ombra */
-export function prendi(t: Tavolo, p: Pezzo, sx: number, sy: number, touch: boolean): Presa {
+/** La cella sale sopra le altre e si solleva con l'ombra, dal punto (ox, oy) del foglio (px dal suo angolo) */
+export function solleva(t: Tavolo, p: Pezzo, ox: number, oy: number) {
   const { el } = p;
-  const r = el.getBoundingClientRect();
-  // punto di presa dentro il foglio: da lì ruota e da lì si solleva
-  const ox = sx - r.left, oy = sy - r.top;
   gsap.killTweensOf(el);
   alza(p, ++t.zTop);
   gsap.set(el, { transformOrigin: `${ox}px ${oy}px` });
@@ -104,9 +101,27 @@ export function prendi(t: Tavolo, p: Pezzo, sx: number, sy: number, touch: boole
     p.ombra.style.opacity = '1';
     gsap.to(p.ombra, { x: t.v.q * 0.55, y: t.v.q * 0.55, duration: T(0.18), ease: 'power2.out', overwrite: true });
   }
+  suona('presa');
+}
+
+/** E torna giù dov'è: l'ombra rientra appena dopo */
+export function abbassa(p: Pezzo, ease = 'power2.inOut') {
+  gsap.to(p.el, { scale: 1, duration: T(0.18), ease });
+  if (p.ombra) {
+    const ombra = p.ombra;
+    gsap.to(ombra, { x: 0, y: 0, duration: T(0.18), ease, overwrite: true, onComplete: () => { ombra.style.visibility = ombra.style.opacity = ''; } });
+  }
+}
+
+/** Prende la cella nel punto (sx, sy) dello schermo: sale sopra le altre, si solleva con l'ombra */
+export function prendi(t: Tavolo, p: Pezzo, sx: number, sy: number, touch: boolean): Presa {
+  const { el } = p;
+  const r = el.getBoundingClientRect();
+  // punto di presa dentro il foglio: da lì ruota e da lì si solleva
+  const ox = sx - r.left, oy = sy - r.top;
+  solleva(t, p, ox, oy);
   InertiaPlugin.track(el, 'x,y');
   if (touch) try { navigator.vibrate?.(8); } catch {}
-  suona('presa');
   return {
     p,
     x0: Number(gsap.getProperty(el, 'x')), y0: Number(gsap.getProperty(el, 'y')),
@@ -140,11 +155,7 @@ export function lascia(t: Tavolo, pr: Presa, vx: number, vy: number) {
     p.gx = Math.round(Number(gsap.getProperty(el, 'x')) / q);
     p.gy = Math.round(Number(gsap.getProperty(el, 'y')) / q);
     // il foglio si posa: l'ombra rientra appena dopo l'aggancio
-    gsap.to(el, { scale: 1, duration: T(0.18), ease: 'power2.inOut' });
-    if (p.ombra) {
-      const ombra = p.ombra;
-      gsap.to(ombra, { x: 0, y: 0, duration: T(0.18), ease: 'power2.inOut', onComplete: () => { ombra.style.visibility = ombra.style.opacity = ''; } });
-    }
+    abbassa(p);
     t.salva();
   };
   // raddrizzarsi con una piccola oscillazione, senza un ritorno secco

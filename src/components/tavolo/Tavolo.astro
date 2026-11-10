@@ -10,7 +10,7 @@ import Firma from '../Firma.astro';
 import { inQuadretti, pack, FINESTRE, Q, versione } from '../../lib/tavolo';
 import { BREAKPOINTS } from '../../lib/grid';
 import { svgs } from '../../data/svgs';
-import { piede } from '../../data/piede';
+import { anno, versione as versioneSito } from '../../data/piede';
 import { site } from '../../data/site';
 import Matita from '../../assets/matita.svg';
 
@@ -21,7 +21,7 @@ interface Props {
   sotto?: boolean;
 }
 const { sotto = false } = Astro.props;
-// nel piede del tavolo, prima della P.IVA, anche il nome, nel font del logotipo (8/11/2026, scelte di Roberto;
+// nel piede del tavolo, prima dell'anno, anche il nome, nel font del logotipo (8/11/2026, scelte di Roberto;
 // .mono lo mette in maiuscolo); la cella recapiti dei fogli no: lì il nome c'è già
 // sul tavolo il numero ce l'hanno solo i progetti (30/10/2026, scelta di Roberto): le altre celle tengono l'occhiello
 const cells = Astro.props.cells
@@ -107,9 +107,11 @@ const sagoma = (c: Cell) => (c.frame === false && c.type === 'svg' ? svgs[c.svg]
 </Radice>
 
 <Firma inerte={!sotto} />
-{/* zoom del tavolo in alto a destra (scripts/tavolo/vista.ts, scala): 1× = quadretto di base */}
-<span class="zoom mono" data-zoom aria-hidden="true">1×</span>
-{/* la barra in basso: a sinistra le scritte piccole dei recapiti (nome, P.IVA, informativa, anno, versione), a destra i
+{/* indice del tavolo in alto a destra (scripts/tavolo/indice.ts, 10/11/2026): le celle con un titolo, un tocco porta
+    lì. Nello stile del piede; senza JavaScript non serve */}
+<button type="button" class="tasto-indice mono" data-indice aria-haspopup="dialog" hidden>Indice</button>
+{/* la barra in basso: a sinistra le scritte piccole dei recapiti (nome, anno, versione: P.IVA e informativa stanno nella
+    cella con la mail dal 10/11/2026), a destra i
     bottoni del tavolo. Se le scritte non ci stanno scorrono (scripts/tavolo/piede.ts): due serie uguali, la striscia
     si sposta di una (50%) e riparte senza stacco; la seconda serie e lo stacco servono solo quando scorre */}
 <div class="barra">
@@ -117,12 +119,15 @@ const sagoma = (c: Cell) => (c.frame === false && c.type === 'svg' ? svgs[c.svg]
     <span class="piede__nastro">
       {[0, 1].map(n => (
         <span class:list={['piede__serie', n === 1 && 'piede__copia']} aria-hidden={n === 1 ? 'true' : undefined}>
-          <span class="piede__nome">{site.name}</span>{' · ' + piede.join(' · ')}<span class="piede__stacco" aria-hidden="true">{' · '}</span>
+          <span class="piede__nome">{site.name}</span>{` · ${anno} · ${versioneSito}`}<span class="piede__stacco" aria-hidden="true">{' · '}</span>
         </span>
       ))}
     </span>
   </p>
 <div class="attrezzi" role="group" aria-label="Tavolo" data-attrezzi hidden>
+  {/* zoom del tavolo (scripts/tavolo/vista.ts, scala): 1× = quadretto di base. Dal 10/11/2026 qui, prima della
+      matita (in alto a destra c'è l'indice) */}
+  <span class="zoom mono" data-zoom aria-hidden="true">1×</span>
   {/* "Cancella tutto" c'è solo quando ci sono segni: spento sarebbe un rosso a metà (rosa) */}
   <button type="button" class="mono" data-cancella hidden>Cancella tutto</button>
   {/* la scatolina: dentro la matita, la penna di Windows 95 a pixel (tools/cursori.mjs, come il cursore); presa, ne
@@ -337,7 +342,7 @@ const sagoma = (c: Cell) => (c.frame === false && c.type === 'svg' ? svgs[c.svg]
     display: flex; align-items: center; overflow: hidden;
     white-space: nowrap;
   }
-  .piede, .attrezzi button {
+  .piede, .attrezzi button, .tasto-indice {
     height: var(--barra); padding: 0 8px;
     background: var(--inchiostro);
     color: var(--bianco);
@@ -349,16 +354,18 @@ const sagoma = (c: Cell) => (c.frame === false && c.type === 'svg' ? svgs[c.svg]
   .piede.is-scorre .piede__nastro { animation: piede-scorre var(--durata, 30s) linear infinite; }
   @keyframes piede-scorre { to { transform: translate3d(-50%, 0, 0); } }
   .attrezzi[hidden], .attrezzi [hidden] { display: none; }
-  /* zoom in alto a destra, ai margini della firma (--margine-ui) */
-  .zoom {
+  /* zoom nella barra, prima della matita: solo la cifra, d'inchiostro sulla carta */
+  .attrezzi .zoom { color: var(--inchiostro); pointer-events: none; }
+  /* indice in alto a destra, ai margini della firma (--margine-ui), come i bottoni della barra */
+  .tasto-indice {
     position: fixed; z-index: 40;
     top: max(var(--margine-ui), env(safe-area-inset-top));
     right: max(var(--margine-ui), env(safe-area-inset-right));
-    color: var(--inchiostro);
-    pointer-events: none;
+    appearance: none; margin: 0; border: 0;
   }
+  .tasto-indice[hidden] { display: none; }
   /* col foglio aperto i comandi del tavolo non servono */
-  :global(html.ha-foglio:not(.is-tavolo)) :is(.barra, .zoom) { display: none; }
+  :global(html.ha-foglio:not(.is-tavolo)) :is(.barra, .tasto-indice) { display: none; }
   .attrezzi button { appearance: none; margin: 0; border: 0; }
 
   /* ── Matita (scripts/tavolo/matita.ts): segni rossi (7/11/2026, scelta di Roberto; prima neri), uguali col tavolo chiaro e scuro. Spessore in

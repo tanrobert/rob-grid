@@ -69,6 +69,8 @@ interface CellBase extends Span {
   /** Fogli: la cella sta dopo tutte le altre, sulla prima riga libera sotto la composizione, non nei buchi
       (precedente/successivo, recapiti; scripts/mosaico.ts) */
   coda?: boolean;
+  /** Nome nell'indice (scripts/indice.ts) quando titolo e occhiello non dicono cos'è (ROBERTO sul tavolo) */
+  indice?: string;
   /** Linguetta in alto a sinistra: solo il numero della cella. `false` per nasconderla. */
   label?: false;
   /** `false` = cella senza filo (es. il logo a tutta cella). */
@@ -128,7 +130,8 @@ export type Cell = CellBase & (
       immagini?: Array<{ image: ImageMetadata; alt: string; taglio?: 'sopra' }>;
       /** le foto si ingrandiscono al clic, sopra il retino (scripts/ingrandisci.ts) */ ingrandisci?: true }
   | { type: 'project'; slug: string }
-  | { type: 'clock' }
+  /** ora e meteo di Itri; `paese`: sotto il disegno di Itri col meteo sopra il castello (home, 10/11/2026) */
+  | { type: 'clock'; paese?: true }
   | { type: 'cursor' }
   | { type: 'meter' }
   | { type: 'mark' }
@@ -204,7 +207,7 @@ export type Cell = CellBase & (
   /** pagina d'errore: codice grande con glitch, titolo (h1) e link all'indice, su carta a quadretti */
   | { type: 'error'; code: string; title: string }
   /** recapiti (email, luogo, P.IVA, versione): cella del tavolo e dei fogli */
-  | { type: 'contatti'; /** `false` = senza le scritte in basso (sul tavolo stanno nel box in basso a sinistra) */ piede?: false }
+  | { type: 'contatti'; /** `'legale'` = in fondo solo P.IVA e informativa (sul tavolo: anno e versione stanno nella striscia in basso a sinistra) */ piede?: 'legale' }
   // solo archivio
   | { type: 'archive-head'; total: number }
   | { type: 'tags'; tags: TagCount[] }

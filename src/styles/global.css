@@ -68,15 +68,16 @@
 
 /* Tavolo scuro (7/11/2026, idea di Roberto; scripts/tavolo/scuro.ts, html[data-scuro] scritto da Layout.astro prima
    del primo disegno): inchiostro e carta si scambiano, solo sul tavolo e sulle sue barre (carta, celle, piede,
-   bottoni, zoom). I fogli restano chiari; firma, R e ROBERTO restano rossi, le foto come sono */
-html[data-scuro] :is(.tavolo, .barra, .zoom, .retino) {
+   bottoni, zoom, indice). I fogli restano chiari; firma, R e ROBERTO restano rossi, le foto come sono */
+html[data-scuro] :is(.tavolo, .barra, .tasto-indice, .retino) {
   --inchiostro: var(--chiaro);
   --bianco: var(--nero);
-  color: var(--inchiostro);
 }
+/* il testo dei contenitori; il tasto dell'indice no: è lui la striscia e si colora da sé (scritta in carta) */
+html[data-scuro] :is(.tavolo, .barra, .retino) { color: var(--inchiostro); }
 /* colori che dipendono da inchiostro e carta: una variabile si calcola dove Ã¨ scritta, quindi vanno riscritti anche
    dove i due si scambiano */
-:root, html[data-scuro] :is(.tavolo, .barra, .zoom, .retino) {
+:root, html[data-scuro] :is(.tavolo, .barra, .tasto-indice, .retino) {
   /* retino dei fogli aperti: carta piena con un foro ogni 4px (components/foglio, foto ingrandite) */
   --retino: radial-gradient(circle at 2px 2px, transparent 0 0.9px, var(--bianco) 1.1px) 0 0 / 4px 4px;
   /* colore delle linee dei quadretti (carta del tavolo, foglio, 404): si dÃ  a --carta-ink dove serve, che Ã¨

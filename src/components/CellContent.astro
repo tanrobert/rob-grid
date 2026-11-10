@@ -87,7 +87,7 @@ if (cell.type === 'project' && !p) throw new Error(`[grid] progetto non trovato:
     {cell.type === 'list' && <ListCell items={cell.items} />}
     {cell.type === 'stat' && <StatCell value={cell.value} caption={cell.caption} countUp={cell.countUp} heading={cell.heading} />}
     {cell.type === 'media' && <MediaCell image={cell.image} video={cell.video} overlay={cell.overlay} etichette={cell.etichette} alt={cell.alt} sizes={sizes} title={cell.caption} priority={!!cell.heroOf} pila={cell.pila} immagini={cell.immagini} ingrandisci={cell.ingrandisci} fondo={cell.fondo} />}
-    {cell.type === 'clock' && <ClockCell />}
+    {cell.type === 'clock' && <ClockCell paese={cell.paese} />}
     {cell.type === 'meter' && <MeterCell />}
     {cell.type === 'cursor' && <CursorCell />}
     {cell.type === 'mark' && <MarkCell />}
@@ -118,6 +118,6 @@ if (cell.type === 'project' && !p) throw new Error(`[grid] progetto non trovato:
     {cell.type === 'error' && <ErrorCell code={cell.code} title={cell.title} />}
     {cell.type === 'archive-head' && <ArchiveHeadCell total={cell.total} />}
     {cell.type === 'tags' && <TagsCell tags={cell.tags} total={projects} />}
-    {cell.type === 'contatti' && <ContattiCell piede={cell.piede !== false} />}
+    {cell.type === 'contatti' && <ContattiCell piede={cell.piede ?? 'tutto'} />}
   </Cell>
 )}
